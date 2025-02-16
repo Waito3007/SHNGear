@@ -1,4 +1,5 @@
 import React from 'react';
+import Navbar from "../../components/Navbar/Navbar"; // Import component Menu
 import HeroBanner from '../../components/HeroBanner/HeroBanner';
 import FeaturedCategories from '../../components/FeaturedCategories/FeaturedCategories';
 import BestSellers from '../../components/BestSellers/BestSellers';
@@ -10,6 +11,7 @@ import './Home.css';
 const Home = () => {
   return (
     <div className="home-container">
+      <Navbar />
       <HeroBanner />
       <FeaturedCategories />
       <BestSellers />

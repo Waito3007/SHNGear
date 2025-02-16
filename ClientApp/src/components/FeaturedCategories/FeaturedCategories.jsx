@@ -1,7 +1,7 @@
 import React from 'react';
-import Laptops from '../../Asset/img/Laptop/laptops.jpg';
-import Headphone from '../../Asset/img/HeadPhone/headphones.jpg'
-import Smartphones from '../../Asset/img/Phone/smartphones.jpg'
+import Laptops from '../../Assets/img/Laptop/laptops.jpg';
+import Headphone from '../../Assets/img/HeadPhone/headphones.jpg'
+import Smartphones from '../../Assets/img/Phone/smartphones.jpg'
 import './FeaturedCategories.css';
 
 const FeaturedCategories = () => {

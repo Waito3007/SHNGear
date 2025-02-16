@@ -1,12 +1,15 @@
-
-import  Home  from "./pages/Home/Home";
+import Home from "./pages/Home/Home";
+import Login from "./components/LoginAndRegister/Login";
 
 const AppRoutes = [
   {
     index: true,
-    element: <HomePage />,
+    element: <Home />,
   },
-
+  {
+    path: "/login",
+    element: <Login />,
+  },
 ];
 
 export default AppRoutes;

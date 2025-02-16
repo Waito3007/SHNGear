@@ -1,7 +1,7 @@
 import React from 'react';
-import SamsungS24 from "../../Asset/img/Phone/samsung_S24.jpg";
-import SonyWH1000XM5 from "../../Asset/img/HeadPhone/SonyWH-1000XM5.jpg";
-import LaptopDellXPS13 from "../../Asset/img/Laptop/Laptop_Dell_XPS_13.jpg";
+import SamsungS24 from "../../Assets/img/Phone/samsung_S24.jpg";
+import SonyWH1000XM5 from "../../Assets/img/HeadPhone/SonyWH-1000XM5.jpg";
+import LaptopDellXPS13 from "../../Assets/img/Laptop/Laptop_Dell_XPS_13.jpg";
 import './BestSellers.css';
 
 const BestSellers = () => {
