@@ -1,5 +1,5 @@
 import React from 'react';
-import heroBanner from '../../Assets/img/herobanner.JPG'; // Đường dẫn tương đối
+import heroBanner from '../../Assets/img/anhcuanghia/herobanner.JPG'; // Đường dẫn tương đối
 import './HeroBanner.css';
 
 const HeroBanner = () => {

@@ -1,0 +1,43 @@
+.hero-slider {
+    width: 100%;
+    margin: 0 auto;
+  }
+  
+  .hero-slider img {
+    width: 100%;
+    height: auto;
+    max-height: 400px; /* Điều chỉnh chiều cao tối đa của slider */
+    object-fit: cover;
+  }
+  
+  .slick-prev,
+  .slick-next {
+    z-index: 1;
+  }
+  
+  .slick-prev {
+    left: 25px;
+  }
+  
+  .slick-next {
+    right: 25px;
+  }
+  
+  .slick-prev:before,
+  .slick-next:before {
+    font-size: 30px;
+    color: #fff;
+  }
+  
+  .slick-dots {
+    bottom: 20px;
+  }
+  
+  .slick-dots li button:before {
+    font-size: 12px;
+    color: #fff;
+  }
+  
+  .slick-dots li.slick-active button:before {
+    color: #007bff;
+  }
