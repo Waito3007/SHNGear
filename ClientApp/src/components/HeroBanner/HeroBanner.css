@@ -1,8 +1,9 @@
 .hero-banner {
+  margin-top: 60px;
   position: relative;
   width: 100%;
   height: 400px; /* Đảm bảo banner có kích thước đẹp */
-  background: url('../../Asset/img/IMG_3341.JPG') no-repeat center center/cover;
+  background: url("../../Asset/img/IMG_3341.JPG") no-repeat center center/cover;
   display: flex;
   align-items: center;
   justify-content: center;
