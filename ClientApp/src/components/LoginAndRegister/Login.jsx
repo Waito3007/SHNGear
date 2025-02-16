@@ -10,7 +10,7 @@ const Login = () => {
       <div className={`container ${isSignUp ? 'right-panel-active' : ''}`}>
         <div className="form-container sign-up-container">
           <form>
-            <h1>Create Account</h1>
+            <h1>Đăng kí tài khoản</h1>
             <div className="social-container">
       <a href="#" className="social"><FaFacebookF /></a>
       <a href="#" className="social"><FaGooglePlusG /></a>
