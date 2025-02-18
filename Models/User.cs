@@ -16,7 +16,7 @@ namespace SHN_Gear.Models
         public string OtpCode { get; set; } = string.Empty;  // Mã OTP (lưu tạm thời)
         public DateTime OtpExpiry { get; set; }  // Thời gian hết hạn OTP
 
-        // Quan hệ với Role
+        // Quan hệ với Role 
         public int RoleId { get; set; }  
         public Role Role { get; set; } = null!;
     }

@@ -1,24 +1,8 @@
-using FirebaseAdmin;
-using FirebaseAdmin.Auth;
-using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using SHN_Gear.Data;
 using SHN_Gear.Models;
-using System;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
+using SHN_Gear.Services;
+using SHN_Gear.Models.DTOs;
 using System.Threading.Tasks;
-using System;
-using System.Net.Http;
-using System.Threading.Tasks;
-
-using Newtonsoft.Json;
-
 
 namespace SHN_Gear.Controllers
 {
@@ -26,135 +10,89 @@ namespace SHN_Gear.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        private readonly IConfiguration _configuration;
+        private readonly EmailService _emailService;
+        private readonly UserService _userService;
 
-        public AuthController(AppDbContext context, IConfiguration configuration)
+        public AuthController(EmailService emailService, UserService userService)
         {
-            _context = context;
-            _configuration = configuration;
-
-            // Khởi tạo Firebase chỉ một lần
-            if (FirebaseApp.DefaultInstance == null)
-            {
-                FirebaseApp.Create(new AppOptions
-                {
-                    Credential = GoogleCredential.FromFile("ClientApp/assets/firebase_connect/adminsdk.json")
-                });
-            }
+            _emailService = emailService;
+            _userService = userService;
         }
 
-        // 🔹 1️⃣ API Gửi OTP (Tích hợp Firebase)
-        [HttpPost("send-otp")]
-        public async Task<IActionResult> SendOtp([FromBody] OtpRequest request)
+        // Đăng ký tài khoản
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterRequestDTO request)
         {
-            try
+            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.FullName))
             {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == request.PhoneNumber);
-
-                if (user == null)
-                {
-                    // Đăng ký tự động nếu số điện thoại chưa tồn tại
-                    user = new User
-                    {
-                        FullName = "Người dùng mới",
-                        PhoneNumber = request.PhoneNumber,
-                        Gender = "Khác",
-                        DateOfBirth = DateTime.UtcNow,
-                        CreatedAt = DateTime.UtcNow,
-                        Points = 0,
-                        RoleId = 2 // Mặc định VIP 1
-                    };
-
-                    _context.Users.Add(user);
-                    await _context.SaveChangesAsync();
-                }
-
-                // 🔥 Gửi OTP qua Firebase Authentication REST API
-                var firebaseApiKey = "AIzaSyBdiEVqtxxMFw2FdhHwE7UdRDtwjyrxx70"; // Thay bằng API Key của Firebase
-                var client = new HttpClient();
-                var requestUri = $"https://identitytoolkit.googleapis.com/v1/accounts:sendVerificationCode?key={firebaseApiKey}";
-
-                var requestBody = new
-                {
-                    phoneNumber = request.PhoneNumber,
-                    recaptchaToken = "" // Nếu chưa có reCAPTCHA, có thể thử bỏ trống
-                };
-
-                var jsonRequest = JsonConvert.SerializeObject(requestBody);
-                var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
-
-                var response = await client.PostAsync(requestUri, content);
-                var responseString = await response.Content.ReadAsStringAsync();
-
-                return Ok(new { Message = "OTP đã được gửi qua SMS", FirebaseResponse = responseString });
+                return BadRequest("Email và họ tên không được để trống.");
             }
-            catch (Exception ex)
+
+            var userExists = await _userService.UserExistsByEmailAsync(request.Email);
+            if (userExists)
             {
-                return BadRequest($"Lỗi gửi OTP: {ex.Message}");
+                return BadRequest("Email đã tồn tại.");
             }
-        }
 
-        // 🔹 2️⃣ API Xác thực OTP (Firebase)
-        [HttpPost("verify-otp")]
-        public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequest request)
-        {
-            try
+            var newUser = new User
             {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == request.PhoneNumber);
-                if (user == null) return BadRequest("Số điện thoại không tồn tại.");
-
-                // Xác minh OTP bằng Firebase
-                var signInResult = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(request.Otp);
-                
-                if (signInResult == null) return BadRequest("OTP không hợp lệ.");
-
-                // Tạo JWT Token cho người dùng
-                var token = GenerateJwtToken(user);
-
-                return Ok(new { Token = token, Message = "Đăng nhập thành công!" });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Lỗi xác thực OTP: {ex.Message}");
-            }
-        }
-
-        // 🔹 3️⃣ Hàm tạo JWT Token
-        private string GenerateJwtToken(User user)
-        {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var claims = new[]
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("PhoneNumber", user.PhoneNumber),
-                new Claim("Role", user.RoleId.ToString())
+                FullName = request.FullName,
+                PhoneNumber = request.PhoneNumber,
+                Gender = request.Gender,
+                DateOfBirth = request.DateOfBirth,
+                Email = request.Email,
+                CreatedAt = DateTime.UtcNow,
+                Points = 0,
+                RoleId = 1 // Giả sử mặc định là User
             };
 
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.UtcNow.AddHours(24),
-                signingCredentials: creds
-            );
+            var result = await _userService.CreateUserAsync(newUser);
+            if (result)
+            {
+                // Gửi OTP sau khi đăng ký thành công
+                await _emailService.SendOTPAsync(request.Email);
+                return Ok(new { message = "Đăng ký thành công, mã OTP đã được gửi đến email." });
+            }
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return StatusCode(500, "Không thể tạo tài khoản.");
         }
-    }
 
-    // 🔹 4️⃣ Model Request
-    public class OtpRequest
-    {
-        public string PhoneNumber { get; set; }
-    }
+        // Đăng nhập
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequestDTO request)
+        {
+            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.OtpCode))
+            {
+                return BadRequest("Email và OTP không được để trống.");
+            }
 
-    public class VerifyOtpRequest
-    {
-        public string PhoneNumber { get; set; }
-        public string Otp { get; set; }
+            var user = await _userService.GetUserByEmailAsync(request.Email);
+            if (user == null)
+            {
+                return NotFound("Người dùng không tồn tại.");
+            }
+
+            // Kiểm tra OTP
+            if (user.OtpCode == request.OtpCode && user.OtpExpiry > DateTime.UtcNow)
+            {
+                return Ok(new { message = "Đăng nhập thành công!" });
+            }
+
+            return BadRequest("Mã OTP không hợp lệ hoặc đã hết hạn.");
+        }
+
+        // Xác thực và gửi OTP mới
+        [HttpPost("send-otp")]
+        public async Task<IActionResult> SendOtp([FromBody] string email)
+        {
+            var user = await _userService.GetUserByEmailAsync(email);
+            if (user == null)
+            {
+                return NotFound("Người dùng không tồn tại.");
+            }
+
+            await _emailService.SendOTPAsync(email);
+            return Ok(new { message = "Mã OTP đã được gửi lại." });
+        }
     }
 }
