@@ -2,14 +2,13 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   ShoppingCart,
   User,
-  ChevronDown,
   Monitor,
   Smartphone,
   Headphones,
 } from "lucide-react";
 import "./Navbar.css";
-import menu from "../../assets/icon/menu.svg"
-import logo from "../../assets/img/Phone/logo.png"; // Import logo
+import menu from "../../Assets/icon/menu.svg"
+import logo from "../../Assets/img/Phone/logo.png"; // Import logo
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);

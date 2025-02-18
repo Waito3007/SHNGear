@@ -2,9 +2,9 @@ import React from 'react';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import slider1 from '../../assets/img/HeadPhone/banner_headphone.jpg';
-import slider2 from '../../assets/img/Laptop/banner_laptop.jpg';
-import slider3 from '../../assets/img/Phone/banner_iphone.jpg';
+import slider1 from '../../Assets/img/HeadPhone/banner_headphone.jpg';
+import slider2 from '../../Assets/img/Laptop/banner_laptop.jpg';
+import slider3 from '../../Assets/img/Phone/banner_iphone.jpg';
 import './HeroSlider.css';
 
 const HeroSlider = () => {

@@ -122,7 +122,7 @@ background-color: #090d14;
   background-color: rgb(255 255 255/ 1);
   padding: .25rem;
   max-width: 400px; /* Kích thước tối đa */
-  width: 100%; /* Đảm bảo độ rộng đầy đủ */
+  width: 500px; /* Đảm bảo độ rộng đầy đủ */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Hiệu ứng bóng đổ */
 }
 
@@ -215,5 +215,52 @@ background-color: #090d14;
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .navbar-container {
+    padding: 0 15px;
+  }
+
+  .search-bar {
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar-container {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .menu-container {
+    display: none; /* Ẩn menu trên mobile */
+  }
+
+  .menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+    cursor: pointer;
+  }
+
+  .search-bar {
+    max-width: 200px;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-bar {
+    display: none; /* Ẩn ô tìm kiếm trên màn hình rất nhỏ */
+  }
+
+  .avatarandcart {
+    flex-direction: row;
+    gap: 5px;
   }
 }
