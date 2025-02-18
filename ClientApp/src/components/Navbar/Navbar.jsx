@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  Menu,
   ShoppingCart,
   User,
   ChevronDown,
@@ -9,7 +8,8 @@ import {
   Headphones,
 } from "lucide-react";
 import "./Navbar.css";
-import logo from "../../Assets/img/Phone/logo.png"; // Import logo
+import menu from "../../assets/icon/menu.svg"
+import logo from "../../assets/img/Phone/logo.png"; // Import logo
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -40,9 +40,8 @@ const Navbar = () => {
         {/* Nút Danh mục */}
         <div className="menu-container" ref={dropdownRef}>
           <button className="menu-button" onClick={toggleDropdown}>
-            <Menu size={22} strokeWidth={2} />
+            <img src={menu} alt="Menu" />
             Danh mục
-            <ChevronDown size={20} />
           </button>
 
           {/* Dropdown menu */}
@@ -63,17 +62,24 @@ const Navbar = () => {
             </div>
           )}
         </div>
-
+        
         {/* Ô tìm kiếm */}
-        <input type="text" placeholder="Tìm kiếm sản phẩm..." className="search-input" />
+<div className="search-bar">
+  <input type="text" placeholder="Tìm kiếm sản phẩm..." className="search-input" />
+  <button type="submit" title="Tìm kiếm" className="search-button">
+  <svg class="feather feather-search" fill="none" height="24" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+  </button>
+</div>
 
+          <div className="avatarandcart">
         {/* Avatar */}
         <User size={35} strokeWidth={2} className="avatar-icon" />
-
         {/* Nút Giỏ hàng */}
         <button className="cart-button">
           <ShoppingCart size={22} strokeWidth={2} />
+          Giỏ Hàng
         </button>
+        </div>
       </div>
     </nav>
   );

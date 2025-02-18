@@ -1,8 +1,6 @@
-﻿/* ----- Navbar với thiết kế màu đỏ hiện đại ----- */
-.navbar {
+﻿.navbar {
   width: 100%;
-  background: linear-gradient(to right, #b71c1c, #d32f2f, #e53935);
-  padding: 14px 0;
+  background: linear-gradient(5deg, #cb1c22 67.61%, #d9503f 95.18%);
   position: fixed;
   top: 0;
   left: 0;
@@ -42,23 +40,45 @@
 .cart-button {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.15);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.6);
-  border-radius: 10px;
-  padding: 14px 26px;
-  font-weight: 600;
-  font-size: 16px;
+  justify-content: center; /* Để căn giữa biểu tượng */
+  line-height: 1.5rem;
+  color: rgb(255 255 255 / var(--tw-text-opacity));
+  border-radius: 1.5rem; /* Bo góc, điều chỉnh giá trị này để thay đổi độ bo tròn */
+  padding: .625rem 1rem; /* Tạo khoảng cách giữa nội dung và viền */
+  font-size: 1rem;
   cursor: pointer;
-  transition: all 0.3s ease-in-out;
+  transition: all .3s ease 0s;
   gap: 12px;
+  --tw-text-opacity: 1;
+  white-space: nowrap; /* Ngăn ngừa việc xuống dòng */
+  width: auto; /* Tự động điều chỉnh chiều rộng */
+  border: none; /* Loại bỏ viền */
 }
+
+.menu-button{
+  background-color: #090d1466;
+  border: none;
+}
+.cart-button{
+background-color: #090d14;
+}
+
+.menu-button:hover,
+.cart-button:hover {
+  background: rgba(255, 255, 255, 0.15); /* Thêm hiệu ứng hover */
+}
+
+.menu-button svg, /* Nếu sử dụng biểu tượng SVG */
+.cart-button svg {
+  color: white; /* Đảm bảo biểu tượng có màu trắng */
+  font-size: 24px; /* Kích thước biểu tượng */
+}
+
 
 .menu-button:hover,
 .cart-button:hover {
   background: rgba(255, 255, 255, 0.25);
   border-color: white;
-  transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(255, 255, 255, 0.3);
 }
 
@@ -93,42 +113,98 @@
 }
 
 /* ----- Ô tìm kiếm ----- */
+.search-bar {
+  display: inline-flex ;
+  align-items: center;
+  justify-content: center;
+  border-radius: 35px; /* Bo tròn các góc */
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 255 255/ 1);
+  padding: .25rem;
+  max-width: 400px; /* Kích thước tối đa */
+  width: 100%; /* Đảm bảo độ rộng đầy đủ */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Hiệu ứng bóng đổ */
+}
+
 .search-input {
-  flex: 1;
-  width: 100%;
-  max-width: 720px;
-  padding: 14px 30px;
-  border-radius: 15px;
-  border: 2px solid #ffffffaa;
+  border: none;
   outline: none;
-  font-size: 16px;
-  background: rgba(255, 255, 255, 0.3);
-  color: white;
-  transition: all 0.3s ease-in-out;
+  padding: 8px 16px;
+  font-size: 14px;
+  width: 100%; /* Đảm bảo input chiếm toàn bộ không gian */
+  border-radius: 25px;
+  background-color: transparent;
 }
 
-.search-input::placeholder {
-  color: rgba(255, 255, 255, 0.7);
+.search-button {
+  background-color: #FEE2E2;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+  padding: 6px 12px;
+  margin-left: .75rem;
+  flex-shrink: 0;
+  border-radius: 50%;  /* Đảm bảo nút bo tròn */
+  transition: background-color 0.3s ease;
+  width: 32px;  /* Chiều rộng 32px */
+  height: 32px;  /* Chiều cao 32px */
+}
+.search-button {
+  background-color: #FEE2E2;
+  border: none;
+  cursor: pointer;
+  padding: 6px; /* Tạo khoảng cách cho nút */
+  width: 32px; /* Chiều rộng của nút */
+  height: 32px; /* Chiều cao của nút */
+  border-radius: 50%; /* Bo tròn hoàn toàn */
+  display: flex;
+  justify-content: center; /* Căn giữa theo chiều ngang */
+  align-items: center; /* Căn giữa theo chiều dọc */
+  transition: background-color 0.3s ease;
 }
 
-.search-input:focus {
-  border-color: #ffebee;
-  box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.4);
+.feather.feather-search {
+  width: 16px; /* Kích thước biểu tượng */
+  height: 16px; /* Kích thước biểu tượng */
+}
+
+.search-button:hover {
+  background-color: #e53935; /* Màu nền khi hover */
+}
+
+.search-button svg {
+  fill: #fff; /* Màu biểu tượng */
+}
+
+.search-button:focus {
+  outline: none;
+}
+
+
+.avatarandcart {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1400px;
+  gap:10px;
 }
 
 /* ----- Avatar ----- */
 .avatar-icon {
   cursor: pointer;
+  background: #7d161c;
+  border: 0;
+  border-radius: 50%;
+  padding: 10px;
   transition: transform 0.2s ease-in-out, color 0.3s ease-in-out;
   color: white;
   margin-left: 30px;
+  height: 2.75rem;
+  width: 2.75rem;
+  font-weight: 500;
 }
 
-.avatar-icon:hover {
-  transform: scale(1.2);
-  color: #ffebee;
-}
 
 /* ----- Dropdown xuất hiện mượt mà ----- */
 @keyframes fadeIn {

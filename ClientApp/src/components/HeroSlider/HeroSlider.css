@@ -1,43 +1,92 @@
 .hero-slider {
-    width: 100%;
-    margin: 0 auto;
-  }
-  
+  width: 100%; /* Đảm bảo slider chiếm toàn bộ chiều rộng */
+  margin: 0 auto; /* Căn giữa theo chiều ngang */
+  position: relative;
+  max-width: 1200px; /* Nếu muốn giới hạn chiều rộng tối đa của slider */
+}
+
+.hero-slider img {
+  width: 100%; /* Đảm bảo ảnh chiếm toàn bộ chiều rộng của container */
+  height: 100%; /* Đảm bảo chiều cao của ảnh chiếm toàn bộ chiều cao của container */
+  max-width: 100%; /* Giới hạn chiều rộng tối đa của ảnh */
+  max-height: 500px; /* Tăng chiều cao tối đa cho slider */
+  object-fit: contain; /* Hiển thị ảnh đầy đủ mà không bị cắt */
+  transition: transform 0.3s ease-in-out; /* Thêm hiệu ứng chuyển động */
+  display: block; /* Đảm bảo ảnh không có khoảng trống phía dưới */
+  margin: 0 auto; /* Căn giữa ảnh theo chiều ngang */
+}
+
+
+/* Hiệu ứng zoom khi di chuyển */
+.hero-slider .slick-slide img:hover {
+  transform: scale(1.05);
+}
+
+.slick-prev,
+.slick-next {
+  z-index: 1;
+  width: 40px;
+  height: 40px;
+  background-color: #fff;  /* Nền trắng cho nút */
+  border-radius: 50%;      /* Bo tròn */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);  /* Đổ bóng nhẹ */
+  cursor: pointer;
+  transition: all 0.3s ease;  /* Hiệu ứng khi hover */
+}
+
+.slick-prev:hover,
+.slick-next:hover {
+  background-color: #ff0000;  /* Chuyển sang nền đen khi hover */
+  color: #fff;             /* Màu chữ đổi sang trắng */
+  transform: scale(1.1);    /* Phóng to nhẹ khi hover */
+}
+
+.slick-prev:before,
+.slick-next:before {
+  font-size: 20px;
+  color: #000;  /* Màu mũi tên */
+}
+
+.slick-prev {
+  left: 15px;  /* Vị trí nút trước */
+}
+
+.slick-next {
+  right: 15px; /* Vị trí nút sau */
+}
+
+
+.slick-dots {
+  bottom: 20px;
+  display: flex !important;
+  justify-content: center;
+  gap: 10px;
+}
+
+.slick-dots li button:before {
+  font-size: 14px; /* Tăng kích thước các dot */
+  color: #fff;
+}
+
+.slick-dots li.slick-active button:before {
+  color: #007bff;
+}
+
+.slick-dots li {
+  margin: 0 5px; /* Tạo khoảng cách giữa các dot */
+}
+
+/* Responsive Design: Điều chỉnh slider cho các màn hình nhỏ */
+@media (max-width: 768px) {
   .hero-slider img {
-    width: 100%;
-    height: auto;
-    max-height: 400px; /* Điều chỉnh chiều cao tối đa của slider */
-    object-fit: cover;
+    max-height: 300px; /* Giảm chiều cao slider trên màn hình nhỏ */
   }
-  
+
   .slick-prev,
   .slick-next {
-    z-index: 1;
+    font-size: 24px; /* Giảm kích thước nút điều hướng trên màn hình nhỏ */
   }
-  
-  .slick-prev {
-    left: 25px;
-  }
-  
-  .slick-next {
-    right: 25px;
-  }
-  
-  .slick-prev:before,
-  .slick-next:before {
-    font-size: 30px;
-    color: #fff;
-  }
-  
-  .slick-dots {
-    bottom: 20px;
-  }
-  
-  .slick-dots li button:before {
-    font-size: 12px;
-    color: #fff;
-  }
-  
-  .slick-dots li.slick-active button:before {
-    color: #007bff;
-  }
+}

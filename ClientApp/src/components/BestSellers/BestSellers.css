@@ -1,9 +1,7 @@
 .best-sellers {
   padding: 50px 20px;
   text-align: center;
-  background: linear-gradient(135deg, #f8f9fa, #e3f2fd);
   color: #333;
-  border-radius: 12px;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
 }
 

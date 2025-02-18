@@ -2,9 +2,9 @@ import React from 'react';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import slider1 from '../../Assets/img/anhcuanghia/IMG_3351.JPG'
-import slider2 from '../../Assets/img/anhcuanghia/IMG_4202.JPG'
-import slider3 from '../../Assets/img/anhcuanghia/IMG_4242.JPG'
+import slider1 from '../../assets/img/HeadPhone/banner_headphone.jpg';
+import slider2 from '../../assets/img/Laptop/banner_laptop.jpg';
+import slider3 from '../../assets/img/Phone/banner_iphone.jpg';
 import './HeroSlider.css';
 
 const HeroSlider = () => {
@@ -17,6 +17,7 @@ const HeroSlider = () => {
     autoplay: true, // Tự động chuyển slide
     autoplaySpeed: 3000, // Thời gian chuyển slide (3 giây)
     pauseOnHover: true, // Dừng tự động chuyển khi hover
+    fade: true, // Thêm hiệu ứng fade mượt mà
   };
 
   return (

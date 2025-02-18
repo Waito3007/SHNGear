@@ -1,5 +1,6 @@
 import React from 'react';
 import Navbar from "../../components/Navbar/Navbar";
+import Notification from "../../components/NotificationBar/notification"
 import HeroBanner from '../../components/HeroBanner/HeroBanner';
 import FeaturedCategories from '../../components/FeaturedCategories/FeaturedCategories';
 import BestSellers from '../../components/BestSellers/BestSellers';
@@ -13,8 +14,9 @@ const Home = () => {
   return (
     <div className="home-container">
       <Navbar />
-      <HeroSlider/>
+      <Notification/>
       <HeroBanner />
+      <HeroSlider/>
       <FeaturedCategories />
       <BestSellers />
       <SpecialOffers />

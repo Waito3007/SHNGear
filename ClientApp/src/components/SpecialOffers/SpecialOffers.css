@@ -3,7 +3,6 @@
   text-align: center;
   background: linear-gradient(45deg, #ffafbd, #ffc3a0, #ffdde1);
   color: #333;
-  border-radius: 12px;
   box-shadow: 0 0 15px rgba(255, 175, 189, 0.6);
   animation: glow 1.5s infinite alternate;
 }
