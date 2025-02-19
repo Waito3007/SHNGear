@@ -5,12 +5,27 @@ using System.Text;
 using FirebaseAdmin;
 using SHN_Gear.Data; // Thay YourNamespace bằng namespace của bạn
 using Google.Apis.Auth.OAuth2;
+using Microsoft.Data.SqlClient;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // 🔹 Thêm kết nối SQL Server
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Kiểm tra kết nối đến database
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+try
+{
+    using (var connection = new SqlConnection(connectionString))
+    {
+        connection.Open();
+        Console.WriteLine("✅ Kết nối đến database thành công!");
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"❌ Lỗi kết nối database: {ex.Message}");
+}
 
 // Thêm JWT Authentication
 var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
