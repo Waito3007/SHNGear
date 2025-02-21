@@ -1,0 +1,249 @@
+.profile-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  max-width: 1200px;
+  margin: auto;
+  font-family: Arial, sans-serif;
+}
+.profile-layout {
+  display: flex;
+  flex-direction: row-reverse; /* Đảo ngược vị trí */
+  gap: 24px;
+  align-items: flex-start;
+}
+/* Sidebar bên trái */
+.profile-container {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  max-width: 1200px;
+  margin: auto;
+  align-items: flex-start; /* Căn các phần tử theo chiều cao của phần cao nhất */
+}
+
+.profile-sidebar {
+  width: 270px;
+  background: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  flex: none; /* Ngăn sidebar kéo dài */
+}
+
+.profile-content {
+  flex: 1; /* Chiếm phần còn lại của container */
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.profile-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.profile-sidebar li {
+  padding: 12px 16px;
+  cursor: pointer;
+  font-size: 16px;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+}
+
+.profile-sidebar li:hover {
+  color: #444;
+  font-weight: bold;
+}
+
+.profile-sidebar li:last-child {
+  color: #333;
+  font-weight: bold;
+}
+
+/* Nội dung profile */
+.profile-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Thông tin cá nhân */
+.profile-info {
+  flex: 2;
+  background: #fff;
+  padding: 24px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.profile-info h2 {
+  font-size: 22px;
+  margin-bottom: 16px;
+  font-weight: bold;
+  color: #222;
+}
+
+.profile-info-container {
+  width: 100%;
+  max-width: 1200px; /* Cùng max-width với toàn bộ layout */
+  padding: 20px;
+  background-color: #f8f9fa;
+}
+
+.profile-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: left;
+  width: 100%;
+}
+
+.profile-card {
+  width: 340%; /* Mở rộng toàn bộ không gian */
+  background-color: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.avatar-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.profile-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.profile-row {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 8px;
+}
+
+.profile-label {
+  color: gray;
+}
+
+.profile-value {
+  font-weight: bold;
+}
+
+.edit-profile-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.edit-profile-btn:hover {
+  background-color: #c82333;
+}
+
+/* Sản phẩm đã xem */
+.viewed-products {
+  background: #fff;
+  padding: 24px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.viewed-products h2 {
+  font-size: 22px;
+  margin-bottom: 16px;
+  font-weight: bold;
+  color: #222;
+}
+
+/* Grid sản phẩm */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+/* Mỗi sản phẩm */
+.products-row {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.product-item {
+  min-width: 180px;
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 14px;
+  border-radius: 8px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.product-item:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transform: translateY(-3px);
+}
+
+.product-item img {
+  width: 100%;
+  height: 200px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.product-item p {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #444;
+}
+
+.product-item .price {
+  color: #d70018;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.product-item .discount {
+  color: #666;
+  font-size: 13px;
+}
+.price-container {
+  display: flex;
+  gap: 8px;
+  max-width: 200px;
+  margin: auto;
+}
+
+.old-price {
+  font-size: 14px;
+  color: #888;
+  margin-left: 50px;
+}
+.discount {
+  margin-right: 10px;
+}

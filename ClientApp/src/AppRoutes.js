@@ -1,6 +1,7 @@
 import React from "react";
 import Home from "./pages/Home";
 import ProductPage from "./pages/ProductPage";
+import ProfilePage from "./pages/ProfilePage";
 
 const AppRoutes = [
   {
@@ -10,6 +11,10 @@ const AppRoutes = [
   {
     path: "/ProductPage/:id",
     element: <ProductPage />,
+  },
+  {
+    path: "/Profile/:id",
+    element: <ProfilePage />,
   },
 ];
 

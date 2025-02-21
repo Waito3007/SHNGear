@@ -3,6 +3,7 @@ import { Route, Routes } from "react-router-dom";
 import AppRoutes from "./AppRoutes";
 import { Layout } from "./components/Layout";
 import ProductPage from "./pages/ProductPage";
+import ProfilePage from "./pages/ProfilePage";
 import "./custom.css";
 
 export default class App extends Component {
@@ -12,6 +13,7 @@ export default class App extends Component {
     return (
       <Layout>
         <Routes>
+          <Route path="/profile/:id" element={<ProfilePage />} />
           <Route path="/product/:id" element={<ProductPage />} />
           {AppRoutes.map((route, index) => {
             const { element, ...rest } = route;
