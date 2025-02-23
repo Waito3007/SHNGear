@@ -60,7 +60,7 @@ const FeaturedCategories = () => {
   modules={[Navigation]}
   navigation
   spaceBetween={10}
-  slidesPerView={1}
+  slidesPerView={2}
   className="custom-swiper"
 >
 

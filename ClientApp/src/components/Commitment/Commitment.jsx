@@ -1,39 +1,44 @@
 import React from "react";
-import { ShieldCheck, Truck, Headphones } from "lucide-react"; // Import icons từ Lucide React
-import "./Commitment.css";
+import "./Commitment.css"; // Import CSS
 
-const commitments = [
+const policies = [
   {
-    icon: <ShieldCheck size={50} color="#007bff" />,
-    title: "Chất lượng hàng đầu",
-    description: "Chúng tôi cam kết cung cấp sản phẩm chất lượng cao, chính hãng.",
+    icon: "https://fptshop.com.vn/img/icons/policy3.svg?w=128&q=100",
+    title: "Thương hiệu đảm bảo",
+    description: "Nhập khẩu, bảo hành chính hãng",
   },
   {
-    icon: <Truck size={50} color="#28a745" />,
-    title: "Giao hàng nhanh chóng",
-    description: "Giao hàng toàn quốc trong vòng 1-3 ngày làm việc.",
+    icon: "https://fptshop.com.vn/img/icons/policy1.svg?w=128&q=100",
+    title: "Đổi trả dễ dàng",
+    description: "Theo chính sách đổi trả tại SHN Gear",
   },
   {
-    icon: <Headphones size={50} color="#ff4e50" />,
-    title: "Hỗ trợ 24/7",
-    description: "Đội ngũ hỗ trợ khách hàng luôn sẵn sàng giúp đỡ bạn.",
+    icon: "https://fptshop.com.vn/img/icons/policy4.svg?w=128&q=100",
+    title: "Sản phẩm chất lượng",
+    description: "Đảm bảo tương thích và độ bền cao",
+  },
+  {
+    icon: "https://fptshop.com.vn/img/icons/policy2.svg?w=128&q=100",
+    title: "Giao hàng tận nơi",
+    description: "Tại 63 tỉnh thành",
   },
 ];
 
 const Commitment = () => {
   return (
-    <section className="commitment-section">
-      <h2>Cam kết của chúng tôi</h2>
-      <div className="commitment-grid">
-        {commitments.map((item, index) => (
-          <div className="commitment-card" key={index}>
-            <div className="icon-container">{item.icon}</div>
-            <h3>{item.title}</h3>
-            <p>{item.description}</p>
+    <div className="feature-policy">
+      <div className="policy-container">
+        {policies.map((policy, index) => (
+          <div className="policy-item" key={index}>
+            <img src={policy.icon} alt={policy.title} className="policy-icon" />
+            <div className="policy-text">
+              <p className="policy-title">{policy.title}</p>
+              <p className="policy-description">{policy.description}</p>
+            </div>
           </div>
         ))}
       </div>
-    </section>
+    </div>
   );
 };
 

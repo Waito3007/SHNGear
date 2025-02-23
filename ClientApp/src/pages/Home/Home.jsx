@@ -5,7 +5,7 @@ import HeroBanner from '../../components/HeroBanner/HeroBanner';
 import FeaturedCategories from '../../components/FeaturedCategories/FeaturedCategories';
 import BestSellers from '../../components/BestSellers/BestSellers';
 import SpecialOffers from '../../components/SpecialOffers/SpecialOffers';
-import TechNews from '../../components/TechNews/TechNews';
+import ServiceSlider from '../../components/TechNews/ServiceSlider';
 import Commitment from '../../components/Commitment/Commitment';
 import HeroSlider from '../../components/HeroSlider/HeroSlider';
 import './Home.css';
@@ -19,9 +19,10 @@ const Home = () => {
       <HeroSlider/>
       <FeaturedCategories />
       <BestSellers />
+      <ServiceSlider />
       <SpecialOffers />
       <Commitment /> {/* Thêm component Commitment vào đây */}
-      <TechNews />
+      
     </div>
   );
 };
