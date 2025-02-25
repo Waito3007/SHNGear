@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { Edit, Search, Trash2 } from "lucide-react";
+import { Edit, Search, Trash2, Plus } from "lucide-react";
 import { useState } from "react";
+import AddProductDrawer from "./AddProductDrawer";
 
 const PRODUCT_DATA = [
 	{ id: 1, name: "Wireless Earbuds", category: "Electronics", price: 59.99, stock: 143, sales: 1200 },
@@ -13,6 +14,7 @@ const PRODUCT_DATA = [
 const ProductsTable = () => {
 	const [searchTerm, setSearchTerm] = useState("");
 	const [filteredProducts, setFilteredProducts] = useState(PRODUCT_DATA);
+	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
 	const handleSearch = (e) => {
 		const term = e.target.value.toLowerCase();
@@ -22,6 +24,10 @@ const ProductsTable = () => {
 		);
 
 		setFilteredProducts(filtered);
+	};
+
+	const handleAddProduct = (newProduct) => {
+		setFilteredProducts([...filteredProducts, { ...newProduct, id: filteredProducts.length + 1 }]);
 	};
 
 	return (
@@ -43,6 +49,9 @@ const ProductsTable = () => {
 					/>
 					<Search className='absolute left-3 top-2.5 text-gray-400' size={18} />
 				</div>
+				<button onClick={() => setIsDrawerOpen(true)} className='text-indigo-400 hover:text-indigo-300'>
+					<Plus size={18} />
+				</button>
 			</div>
 
 			<div className='overflow-x-auto'>
@@ -109,6 +118,12 @@ const ProductsTable = () => {
 					</tbody>
 				</table>
 			</div>
+
+			<AddProductDrawer
+				isOpen={isDrawerOpen}
+				onClose={() => setIsDrawerOpen(false)}
+				onAddProduct={handleAddProduct}
+			/>
 		</motion.div>
 	);
 };
