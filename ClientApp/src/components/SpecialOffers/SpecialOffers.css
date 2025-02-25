@@ -1,11 +1,10 @@
-/* SpecialOffers.css */
 
 .container {
   max-width: 1200px;
   margin: 0 auto;
 }
 
-.slider-container {
+.productsales {
   background-color: #fff;
   padding: 20px;
   border-radius: 10px;

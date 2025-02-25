@@ -130,6 +130,7 @@ background-color: #090d14;
   border: none;
   outline: none;
   padding: 8px 16px;
+  margin-left: 10px;
   font-size: 14px;
   width: 100%; /* Đảm bảo input chiếm toàn bộ không gian */
   border-radius: 25px;

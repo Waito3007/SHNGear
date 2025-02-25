@@ -6,3 +6,16 @@
 body {
     font-family: 'Roboto', sans-serif;
 }
+
+.swiper {
+    z-index: auto !important;
+  }
+  
+  .swiper-slide {
+    z-index: auto !important;
+  }
+  
+  .swiper-wrapper {
+    z-index: auto !important;
+  }
+  
