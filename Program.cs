@@ -1,15 +1,49 @@
 using Microsoft.EntityFrameworkCore;
-using SHN_Gear.Data;
-using SHN_Gear.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using FirebaseAdmin;
+using SHN_Gear.Data; // Thay YourNamespace bằng namespace của bạn
+using Google.Apis.Auth.OAuth2;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // 🔹 Thêm kết nối SQL Server
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-// Thêm Dịch vụ gửi mail
-builder.Services.AddSingleton<EmailService>();
-// Đăng ký UserService vào DI container
-builder.Services.AddScoped<UserService>();
+
+// Thêm JWT Authentication
+var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(key)
+        };
+    });
+//firebase
+var firebasePath = Path.Combine(Directory.GetCurrentDirectory(), "ClientApp/src/assets/firebase_connect/adminsdk.json");
+
+if (!File.Exists(firebasePath))
+{
+    Console.WriteLine($"❌ Không tìm thấy file: {firebasePath}");
+}
+else
+{
+    Console.WriteLine($"✅ Đã tìm thấy file: {firebasePath}");
+    FirebaseApp.Create(new AppOptions
+    {
+        Credential = GoogleCredential.FromFile(firebasePath)
+    });
+}
+
 // Thêm Swagger ( kiểm thử api)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -21,6 +55,13 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();
 }
+// Cấu hình Swagger UI
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+//
 // Cấu hình Swagger UI
 if (app.Environment.IsDevelopment())
 {

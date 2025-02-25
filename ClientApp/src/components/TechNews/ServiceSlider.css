@@ -1,0 +1,38 @@
+.service-container {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.service-wrapper {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding: 10px;
+}
+
+.service-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  text-align: center;
+  text-decoration: none;
+  transition: transform 0.3s ease-in-out;
+}
+
+.service-item:hover {
+  transform: scale(1.1);
+}
+
+.service-icon {
+  width: 52px;
+  height: 52px;
+}
+
+.service-title {
+  font-size: 14px;
+  color: #333;
+  font-weight: bold;
+  margin-top: 5px;
+}

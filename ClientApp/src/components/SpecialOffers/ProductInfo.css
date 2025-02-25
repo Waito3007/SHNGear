@@ -1,0 +1,43 @@
+.product-info {
+    text-align: center;
+  }
+  
+  .product-name a {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    text-decoration: none;
+  }
+  
+  .product-name a:hover {
+    color: #ff5a5a;
+  }
+  
+  .price-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .original-price {
+    text-decoration: line-through;
+    color: #888;
+  }
+  
+  .discount {
+    color: red;
+    font-weight: bold;
+  }
+  
+  .current-price {
+    font-size: 18px;
+    font-weight: bold;
+    color: #222;
+  }
+  
+  .discount-amount {
+    color: green;
+    font-size: 14px;
+  }
+  
