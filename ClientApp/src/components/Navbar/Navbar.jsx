@@ -7,16 +7,28 @@ import {
   Headphones,
 } from "lucide-react";
 import "./Navbar.css";
-import menu from "../../assets/icon/menu.svg"
+import menu from "../../assets/icon/menu.svg";
 import logo from "../../assets/img/Phone/logo.png"; // Import logo
+import AuthModal from "../Auth/AuthModal"; // Import AuthModal
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false); // State for AuthModal
   const dropdownRef = useRef(null);
 
   // Toggle dropdown
   const toggleDropdown = () => {
     setIsDropdownOpen((prev) => !prev);
+  };
+
+  // Open AuthModal
+  const openAuthModal = () => {
+    setIsAuthModalOpen(true);
+  };
+
+  // Close AuthModal
+  const closeAuthModal = () => {
+    setIsAuthModalOpen(false);
   };
 
   // Đóng dropdown khi click ra ngoài
@@ -63,23 +75,26 @@ const Navbar = () => {
         </div>
         
         {/* Ô tìm kiếm */}
-<div className="search-bar">
-  <input type="text" placeholder="Tìm kiếm sản phẩm..." className="search-input" />
-  <button type="submit" title="Tìm kiếm" className="search-button">
-  <svg class="feather feather-search" fill="none" height="24" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
-  </button>
-</div>
+        <div className="search-bar">
+          <input type="text" placeholder="Tìm kiếm sản phẩm..." className="search-input" />
+          <button type="submit" title="Tìm kiếm" className="search-button">
+          <svg class="feather feather-search" fill="none" height="24" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+          </button>
+        </div>
 
-          <div className="avatarandcart">
-        {/* Avatar */}
-        <User size={35} strokeWidth={2} className="avatar-icon" />
-        {/* Nút Giỏ hàng */}
-        <button className="cart-button">
-          <ShoppingCart size={22} strokeWidth={2} />
-          Giỏ Hàng
-        </button>
+        <div className="avatarandcart">
+          {/* Avatar */}
+          <User size={35} strokeWidth={2} className="avatar-icon" onClick={openAuthModal} />
+          {/* Nút Giỏ hàng */}
+          <button className="cart-button">
+            <ShoppingCart size={22} strokeWidth={2} />
+            Giỏ Hàng
+          </button>
         </div>
       </div>
+
+      {/* AuthModal */}
+      <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
     </nav>
   );
 };
