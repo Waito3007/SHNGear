@@ -62,6 +62,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 //
+// Cấu hình Swagger UI
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+//
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 

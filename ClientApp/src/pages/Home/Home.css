@@ -1,0 +1,7 @@
+.home-container {
+  font-family: Arial, sans-serif;
+  color: #333;
+  margin-top: 10px;
+  padding-top: 60px; /* Điều chỉnh giá trị theo chiều cao của Navbar */
+  background: linear-gradient(to bottom, #d9503f, #f8f8f8); /* Dải màu từ #d9503f (đỏ cam) đến #000 (đen) */
+}

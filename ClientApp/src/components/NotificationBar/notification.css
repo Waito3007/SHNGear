@@ -1,0 +1,39 @@
+/* Thêm phông chữ Poppins từ Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+.notification-container {
+  width: 100%;               /* Chiều rộng 100% */
+  height: 40px;              /* Chiều cao 40px */
+  background-color: #fff;    /* Nền trắng */
+  display: flex;             /* Sử dụng flex để xếp các phần tử theo chiều ngang */
+  justify-content: flex-start; /* Căn trái các item */
+  align-items: center;       /* Căn giữa các item theo chiều dọc */
+  padding: 0 16px;           /* Thêm khoảng cách bên trái và phải */
+  box-sizing: border-box;    /* Đảm bảo padding không ảnh hưởng đến chiều rộng */
+  font-family: 'Poppins', sans-serif; /* Chọn phông chữ Poppins */
+}
+
+.notification-container a {
+    text-decoration: none; /* Xóa gạch chân */
+    color: black; /* Đặt màu chữ thành đen */
+  }
+
+  
+.notification-container ul {
+  display: flex;             /* Xếp các phần tử con (li) theo chiều ngang */
+  margin: 0;                  /* Xóa margin mặc định */
+  padding: 0;                 /* Xóa padding mặc định */
+  gap: 10px;                  /* Khoảng cách giữa các phần tử */
+  list-style: none; /* Xóa dấu chấm đầu dòng */
+
+}
+
+.notification-container li {
+  margin-right: 0;           /* Đặt margin-right là 0 vì gap đã thay thế */
+  margin-left: 20px;
+}
+
+.notification-container img {
+  max-height: 32px;          /* Giới hạn chiều cao hình ảnh */
+  margin-right: 5px;
+}
