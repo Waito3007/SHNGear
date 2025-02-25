@@ -12,5 +12,11 @@ namespace SHN_Gear.Models
         public List<ProductImage> Images { get; set; } = new();
         public string Category { get; set; } = null!; // Điện thoại, laptop, tai nghe
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public int StockQuantity { get; set; }  // Số lượng tồn kho
+
+        public bool IsOutOfStock()
+        {
+            return StockQuantity <= 0;
+        }
     }
 }
