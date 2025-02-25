@@ -2,9 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using FirebaseAdmin;
-using SHN_Gear.Data; // Thay YourNamespace bằng namespace của bạn
-using Google.Apis.Auth.OAuth2;
+using SHN_Gear.Data;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,49 +27,49 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(key)
         };
     });
-//firebase
-var firebasePath = Path.Combine(Directory.GetCurrentDirectory(), "ClientApp/src/assets/firebase_connect/adminsdk.json");
 
-if (!File.Exists(firebasePath))
+// Thêm CORS
+builder.Services.AddCors(options =>
 {
-    Console.WriteLine($"❌ Không tìm thấy file: {firebasePath}");
-}
-else
-{
-    Console.WriteLine($"✅ Đã tìm thấy file: {firebasePath}");
-    FirebaseApp.Create(new AppOptions
+    options.AddDefaultPolicy(policy =>
     {
-        Credential = GoogleCredential.FromFile(firebasePath)
+        policy.WithOrigins("https://localhost:44479") // Thay đổi URL này thành URL của frontend nếu khác
+               .AllowAnyHeader()
+               .AllowAnyMethod();
     });
-}
+});
 
 // Thêm Swagger ( kiểm thử api)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-// Add services to the container.
-builder.Services.AddControllersWithViews();
+
+// Cấu hình JsonSerializerOptions để hỗ trợ vòng lặp tham chiếu
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+    });
+
 var app = builder.Build();
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();
 }
+
 // Cấu hình Swagger UI
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-//
-// Cấu hình Swagger UI
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-//
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+// Sử dụng CORS
+app.UseCors();
 
 app.MapControllerRoute(
     name: "default",

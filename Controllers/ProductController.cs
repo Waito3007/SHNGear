@@ -33,6 +33,15 @@ namespace SHN_Gear.Controllers
                 CreatedAt = DateTime.UtcNow
             };
 
+            if (dto.ImageUrls != null && dto.ImageUrls.Any())
+            {
+                product.Images = dto.ImageUrls.Select(url => new ProductImage
+                {
+                    ImageUrl = url,
+                    IsPrimary = false // Hoặc bạn có thể thêm logic để xác định ảnh chính
+                }).ToList();
+            }
+
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import Banner1 from "../../Assets/img/anhcuanghia/banner1.png";
-import Banner2 from "../../Assets/img/anhcuanghia/banner_honor.png";
-import Banner3 from "../../Assets/img/anhcuanghia/banner2.png";
-import Background1 from "../../Assets/img/anhcuanghia/background1.png";
-import Background2 from "../../Assets/img/anhcuanghia/background2.png";
-import Background3 from "../../Assets/img/anhcuanghia/background3.png";
+import Banner1 from "../../assets/img/anhcuanghia/banner1.png";
+import Banner2 from "../../assets/img/anhcuanghia/banner_honor.png";
+import Banner3 from "../../assets/img/anhcuanghia/banner2.png";
+import Background1 from "../../assets/img/anhcuanghia/background1.png";
+import Background2 from "../../assets/img/anhcuanghia/background2.png";
+import Background3 from "../../assets/img/anhcuanghia/background3.png";
 
 import "./HeroBanner.css"; // Import file CSS riêng
 

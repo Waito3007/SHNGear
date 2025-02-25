@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Modal, Button } from "flowbite-react";
+import "./AuthModal.css"; // Import the CSS file
 
 const AuthModal = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState("");
@@ -24,7 +25,7 @@ const AuthModal = ({ isOpen, onClose }) => {
 
   return (
     <Modal show={isOpen} onClose={onClose}>
-      <div className="fixed inset-0 flex items-center justify-center p-4">
+      <div className="modal-overlay">
         <div className="relative bg-white rounded-xl shadow-lg text-black w-full max-w-md max-h-full">
           {/* Modal Header */}
           <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t border-gray-200">

@@ -11,6 +11,7 @@ namespace SHN_Gear.Models
         public string AvatarUrl { get; set; } = string.Empty;  // Link ảnh đại diện
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;  // Ngày tạo tài khoản
         public int Points { get; set; } = 0;  // Điểm thành viên
+        public string Password { get; set; } = string.Empty;  // Mật khẩu
 
         // OTP Login
         public string OtpCode { get; set; } = string.Empty;  // Mã OTP (lưu tạm thời)
