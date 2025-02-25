@@ -1,12 +1,16 @@
-import { useState } from "react";
-import axios from "axios";
+import React, { useState } from 'react';
+import Drawer from '@mui/material/Drawer';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import MenuItem from '@mui/material/MenuItem';
+import axios from 'axios';
 
-const AddProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
+const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
     const [product, setProduct] = useState({
         name: "",
         description: "",
         price: 0,
-        category: "Electronics",
+        category: "SmartPhone",
         stockQuantity: 0,
         images: []
     });
@@ -19,7 +23,7 @@ const AddProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post("/api/products", {
+            const response = await axios.post("https://localhost:7107/api/products", {
                 name: product.name,
                 description: product.description,
                 price: product.price,
@@ -34,92 +38,78 @@ const AddProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
         }
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-end">
-            <div className="bg-white w-1/3 p-6">
-                <h2 className="text-xl font-semibold mb-4">Add New Product</h2>
+        <Drawer anchor='right' open={isOpen} onClose={onClose}>
+            <div style={{ width: 400, padding: 20 }}>
+                <h2>Add New Product</h2>
                 <form onSubmit={handleSubmit}>
-                    <div className="mb-4">
-                        <label className="block text-gray-700">Name</label>
-                        <input
-                            type="text"
-                            name="name"
-                            value={product.name}
-                            onChange={handleChange}
-                            className="w-full p-2 border border-gray-300 rounded"
-                            required
-                        />
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-700">Description</label>
-                        <textarea
-                            name="description"
-                            value={product.description}
-                            onChange={handleChange}
-                            className="w-full p-2 border border-gray-300 rounded"
-                            required
-                        />
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-700">Price</label>
-                        <input
-                            type="number"
-                            name="price"
-                            value={product.price}
-                            onChange={handleChange}
-                            className="w-full p-2 border border-gray-300 rounded"
-                            required
-                        />
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-700">Category</label>
-                        <select
-                            name="category"
-                            value={product.category}
-                            onChange={handleChange}
-                            className="w-full p-2 border border-gray-300 rounded"
-                            required
-                        >
-                            <option value="Electronics">Electronics</option>
-                            <option value="Laptop">Laptop</option>
-                            <option value="Headphone">Headphone</option>
-                        </select>
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-700">Stock Quantity</label>
-                        <input
-                            type="number"
-                            name="stockQuantity"
-                            value={product.stockQuantity}
-                            onChange={handleChange}
-                            className="w-full p-2 border border-gray-300 rounded"
-                            required
-                        />
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-700">Images</label>
-                        <input
-                            type="file"
-                            name="images"
-                            multiple
-                            onChange={(e) => setProduct({ ...product, images: [...e.target.files] })}
-                            className="w-full p-2 border border-gray-300 rounded"
-                        />
-                    </div>
-                    <div className="flex justify-end">
-                        <button type="button" onClick={onClose} className="mr-4 p-2 bg-gray-500 text-white rounded">
-                            Cancel
-                        </button>
-                        <button type="submit" className="p-2 bg-blue-500 text-white rounded">
-                            Add Product
-                        </button>
+                    <TextField
+                        label="Name"
+                        name="name"
+                        value={product.name}
+                        onChange={handleChange}
+                        fullWidth
+                        margin="normal"
+                        required
+                    />
+                    <TextField
+                        label="Description"
+                        name="description"
+                        value={product.description}
+                        onChange={handleChange}
+                        fullWidth
+                        margin="normal"
+                        required
+                    />
+                    <TextField
+                        label="Price"
+                        name="price"
+                        type="number"
+                        value={product.price}
+                        onChange={handleChange}
+                        fullWidth
+                        margin="normal"
+                        required
+                    />
+                    <TextField
+                        label="Category"
+                        name="category"
+                        select
+                        value={product.category}
+                        onChange={handleChange}
+                        fullWidth
+                        margin="normal"
+                        required
+                    >
+                        <MenuItem value="SmartPhone">Electronics</MenuItem>
+                        <MenuItem value="Laptop">Laptop</MenuItem>
+                        <MenuItem value="Headphone">Headphone</MenuItem>
+                    </TextField>
+                    <TextField
+                        label="Stock Quantity"
+                        name="stockQuantity"
+                        type="number"
+                        value={product.stockQuantity}
+                        onChange={handleChange}
+                        fullWidth
+                        margin="normal"
+                        required
+                    />
+                    <input
+                        type="file"
+                        name="images"
+                        multiple
+                        onChange={(e) => setProduct({ ...product, images: [...e.target.files] })}
+                        style={{ margin: '20px 0' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <Button onClick={onClose} style={{ marginRight: 10 }}>Cancel</Button>
+                        <Button type="submit" variant="contained" color="primary">Add Product</Button>
                     </div>
                 </form>
             </div>
-        </div>
+        </Drawer>
     );
 };
 
-export default AddProductDrawer;
+export default ProductDrawer;
