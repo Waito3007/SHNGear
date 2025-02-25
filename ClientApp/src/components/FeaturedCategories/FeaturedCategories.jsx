@@ -9,12 +9,12 @@ import CategoryLarge from "./CategoryLarge";
 import CategorySmallGroup from "./CategorySmallGroup";
 
 // Import hình ảnh
-import phoneImg from "../../Assets/img/anhcuanghia/dienthoai_banner.png";
-import laptopImg from "../../Assets/img/anhcuanghia/laptop_thumb_2_4df0fab60f.png";
-import accessoriesImg from "../../Assets/img/anhcuanghia/phu_kien_thum_2_21c419aa09.png";
-import refrigeratorImg from "../../Assets/img/anhcuanghia/tu_lanh_cate_thumb_77da11d0c4.png";
-import tvImg from "../../Assets/img/anhcuanghia/tivi_baber.png";
-import homeApplianceImg from "../../Assets/img/anhcuanghia/dien_gia_dung_thumb_2_54c5efa451.png";
+import phoneImg from "../../assets/img/anhcuanghia/dienthoai_banner.png";
+import laptopImg from "../../assets/img/anhcuanghia/laptop_thumb_2_4df0fab60f.png";
+import accessoriesImg from "../../assets/img/anhcuanghia/phu_kien_thum_2_21c419aa09.png";
+import refrigeratorImg from "../../assets/img/anhcuanghia/tu_lanh_cate_thumb_77da11d0c4.png";
+import tvImg from "../../assets/img/anhcuanghia/tivi_baber.png";
+import homeApplianceImg from "../../assets/img/anhcuanghia/dien_gia_dung_thumb_2_54c5efa451.png";
 
 // Dữ liệu danh mục sản phẩm
 const categoryGroups = [
