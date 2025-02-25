@@ -2,12 +2,23 @@ import { motion } from "framer-motion";
 import { Edit, Search, Trash2, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import ProductDrawer from './AddProductDrawer'; // Import the new ProductDrawer component
+import EditProductDrawer from './EditProductDrawer'; // Import the EditProductDrawer component
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import Button from '@mui/material/Button';
 
 const ProductsTable = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [products, setProducts] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [productToDelete, setProductToDelete] = useState(null);
 
     useEffect(() => {
         fetch('https://localhost:7107/api/products')
@@ -38,6 +49,43 @@ const ProductsTable = () => {
         setFilteredProducts([...products, newProduct]);
     };
 
+    const handleEditProduct = (product) => {
+        setSelectedProduct(product);
+        setIsEditDrawerOpen(true);
+    };
+
+    const handleUpdateProduct = (updatedProduct) => {
+        const updatedProducts = products.map((product) =>
+            product.id === updatedProduct.id ? updatedProduct : product
+        );
+        setProducts(updatedProducts);
+        setFilteredProducts(updatedProducts);
+    };
+
+    const handleDeleteProduct = (product) => {
+        setProductToDelete(product);
+        setIsDeleteDialogOpen(true);
+    };
+
+    const confirmDeleteProduct = async () => {
+        try {
+            const response = await fetch(`https://localhost:7107/api/products/${productToDelete.id}`, {
+                method: 'DELETE',
+            });
+            if (response.ok) {
+                const updatedProducts = products.filter((product) => product.id !== productToDelete.id);
+                setProducts(updatedProducts);
+                setFilteredProducts(updatedProducts);
+                setIsDeleteDialogOpen(false);
+                setProductToDelete(null);
+            } else {
+                console.error('Failed to delete product');
+            }
+        } catch (error) {
+            console.error('Error deleting product:', error);
+        }
+    };
+
     return (
         <motion.div
             className='bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700 mb-8'
@@ -48,7 +96,7 @@ const ProductsTable = () => {
             <div className='flex justify-between items-center mb-6'>
                 <h2 className='text-xl font-semibold text-gray-100'>Danh sách sản phẩm</h2>
                 
-				<div className='relative'>
+                <div className='relative'>
                     <input
                         type='text'
                         placeholder='Tìm kiếm sản phẩm...'
@@ -58,7 +106,7 @@ const ProductsTable = () => {
                     />
                     <Search className='absolute left-3 top-2.5 text-gray-400' size={18} />
                 </div>
-				<button className='text-indigo-400 hover:text-indigo-300 mr-2' onClick={() => setIsDrawerOpen(true)}>
+                <button className='text-indigo-400 hover:text-indigo-300 mr-2' onClick={() => setIsDrawerOpen(true)}>
                 <Plus size={18} />
                 </button>
             </div>
@@ -115,11 +163,10 @@ const ProductsTable = () => {
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>{product.stockQuantity}</td>
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>{product.sales}</td>
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    
-                                    <button className='text-indigo-400 hover:text-indigo-300 mr-2'>
+                                    <button className='text-indigo-400 hover:text-indigo-300 mr-2' onClick={() => handleEditProduct(product)}>
                                         <Edit size={18} />
                                     </button>
-                                    <button className='text-red-400 hover:text-red-300'>
+                                    <button className='text-red-400 hover:text-red-300' onClick={() => handleDeleteProduct(product)}>
                                         <Trash2 size={18} />
                                     </button>
                                 </td>
@@ -130,6 +177,34 @@ const ProductsTable = () => {
             </div>
 
             <ProductDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} onAddProduct={handleAddProduct} />
+            <EditProductDrawer
+                isOpen={isEditDrawerOpen}
+                onClose={() => setIsEditDrawerOpen(false)}
+                product={selectedProduct}
+                onUpdateProduct={handleUpdateProduct}
+            />
+
+            <Dialog
+                open={isDeleteDialogOpen}
+                onClose={() => setIsDeleteDialogOpen(false)}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">{"Xác nhận xóa sản phẩm"}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        Bạn có chắc chắn muốn xóa sản phẩm này không? Hành động này không thể hoàn tác.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setIsDeleteDialogOpen(false)} color="primary">
+                        Hủy
+                    </Button>
+                    <Button onClick={confirmDeleteProduct} color="primary" autoFocus>
+                        Xóa
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </motion.div>
     );
 };
