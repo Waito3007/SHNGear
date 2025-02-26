@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import Drawer from '@mui/material/Drawer';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
-import { Edit } from 'lucide-react';
+import MenuItem from '@mui/material/MenuItem';
+import CircularProgress from '@mui/material/CircularProgress';
+import axios from 'axios';
 
 const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
     const [formData, setFormData] = useState({
@@ -12,7 +14,10 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
         discountPrice: '',
         category: '',
         stockQuantity: '',
+        images: []
     });
+
+    const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
         if (product) {
@@ -23,6 +28,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
                 discountPrice: product.discountPrice,
                 category: product.category,
                 stockQuantity: product.stockQuantity,
+                images: Array.isArray(product.images) ? product.images : []
             });
         }
     }, [product]);
@@ -32,6 +38,36 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
         setFormData((prevData) => ({
             ...prevData,
             [name]: value,
+        }));
+    };
+
+    const handleImageUpload = async (files) => {
+        setUploading(true);
+        const uploadedImages = await Promise.all(
+            [...files].map(async (file) => {
+                const formData = new FormData();
+                formData.append("file", file);
+    
+                try {
+                    const response = await axios.post(
+                        "https://localhost:7107/api/products/upload-image",
+                        formData,
+                        {
+                            headers: { "Content-Type": "multipart/form-data" }
+                        }
+                    );
+                    return response.data.imageUrl; // API trả về { ImageUrl: "URL" }
+                } catch (error) {
+                    console.error("Upload ảnh thất bại", error);
+                    return null;
+                }
+            })
+        );
+    
+        setUploading(false);
+        setFormData((prev) => ({
+            ...prev,
+            images: [...prev.images, ...uploadedImages.filter((url) => url !== null)],
         }));
     };
 
@@ -97,13 +133,19 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
                         margin='normal'
                     />
                     <TextField
-                        label='Category'
-                        name='category'
+                        label="Category"
+                        name="category"
+                        select
                         value={formData.category}
                         onChange={handleChange}
                         fullWidth
-                        margin='normal'
-                    />
+                        margin="normal"
+                        required
+                    >
+                        <MenuItem value="SmartPhone">SmartPhone</MenuItem>
+                        <MenuItem value="Laptop">Laptop</MenuItem>
+                        <MenuItem value="Headphone">Headphone</MenuItem>
+                    </TextField>
                     <TextField
                         label='Stock Quantity'
                         name='stockQuantity'
@@ -113,8 +155,25 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
                         fullWidth
                         margin='normal'
                     />
-                    <Button type='submit' variant='contained' color='primary'>
-                        Save
+                    <input
+                        type="file"
+                        name="images"
+                        multiple
+                        onChange={(e) => handleImageUpload(e.target.files)}
+                        style={{ margin: "20px 0" }}
+                    />
+                    {uploading && (
+                        <div style={{ display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
+                            <CircularProgress />
+                        </div>
+                    )}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px' }}>
+                        {formData.images.map((url, index) => (
+                            <img key={index} src={url} alt={`Product Image ${index + 1}`} style={{ width: '100px', height: '100px', objectFit: 'cover' }} />
+                        ))}
+                    </div>
+                    <Button type='submit' variant='contained' color='primary' disabled={uploading}>
+                        {uploading ? 'Uploading...' : 'Save'}
                     </Button>
                 </form>
             </div>

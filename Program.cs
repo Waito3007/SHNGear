@@ -4,6 +4,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using SHN_Gear.Data;
 using System.Text.Json.Serialization;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +52,20 @@ builder.Services.AddControllersWithViews()
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
     });
+
+// Đăng ký Cloudinary trước khi build app
+builder.Services.AddSingleton(provider =>
+{
+    var config = builder.Configuration;
+    var account = new Account(
+        config["Cloudinary:CloudName"],
+        config["Cloudinary:ApiKey"],
+        config["Cloudinary:ApiSecret"]
+    );
+    return new Cloudinary(account);
+});
+
+builder.Services.AddScoped<CloudinaryService>();  // Đăng ký CloudinaryService tại đây
 
 var app = builder.Build();
 

@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using SHN_Gear.Data;
 using SHN_Gear.DTOs;
 using SHN_Gear.Models;
+using System.Text.RegularExpressions;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SHN_Gear.Controllers
 {
@@ -12,9 +15,25 @@ namespace SHN_Gear.Controllers
     {
         private readonly AppDbContext _context;
 
-        public ProductController(AppDbContext context)
+        private readonly CloudinaryService _cloudinaryService;
+
+        public ProductController(AppDbContext context, CloudinaryService cloudinaryService)
         {
             _context = context;
+            _cloudinaryService = cloudinaryService;
+        }
+
+        [HttpPost("upload-image")]
+        public async Task<IActionResult> UploadImage(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("Ảnh không hợp lệ");
+
+            using (var stream = file.OpenReadStream())
+            {
+                var imageUrl = await _cloudinaryService.UploadImageAsync(stream, file.FileName);
+                return Ok(new { ImageUrl = imageUrl });
+            }
         }
 
         // 🟢 Thêm sản phẩm mới
@@ -30,7 +49,8 @@ namespace SHN_Gear.Controllers
                 FlashSaleStart = dto.FlashSaleStart,
                 FlashSaleEnd = dto.FlashSaleEnd,
                 Category = dto.Category,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                StockQuantity = dto.StockQuantity,
             };
 
             if (dto.ImageUrls != null && dto.ImageUrls.Any())
@@ -76,7 +96,9 @@ namespace SHN_Gear.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductDto dto)
         {
-            var product = await _context.Products.FindAsync(id);
+            var product = await _context.Products
+                .Include(p => p.Images)
+                .FirstOrDefaultAsync(p => p.Id == id);
             if (product == null) return NotFound("Sản phẩm không tồn tại.");
 
             product.Name = dto.Name;
@@ -86,10 +108,52 @@ namespace SHN_Gear.Controllers
             product.FlashSaleStart = dto.FlashSaleStart;
             product.FlashSaleEnd = dto.FlashSaleEnd;
             product.Category = dto.Category;
+            product.StockQuantity = dto.StockQuantity;
+
+            // Cập nhật ảnh sản phẩm
+            if (dto.ImageUrls != null && dto.ImageUrls.Any())
+            {
+                // Xóa ảnh cũ không có trong danh sách mới
+                var existingImageUrls = product.Images.Select(img => img.ImageUrl).ToList();
+                var newImageUrls = dto.ImageUrls.Except(existingImageUrls).ToList();
+                var removedImageUrls = existingImageUrls.Except(dto.ImageUrls).ToList();
+
+                foreach (var url in removedImageUrls)
+                {
+                    var image = product.Images.FirstOrDefault(img => img.ImageUrl == url);
+                    if (image != null)
+                    {
+                        _context.ProductImages.Remove(image);
+                        // Xóa ảnh từ Cloudinary
+                        var publicId = GetPublicIdFromUrl(url);
+                        if (publicId != null)
+                        {
+                            await _cloudinaryService.DeleteImageAsync(publicId);
+                        }
+                    }
+                }
+
+                // Thêm ảnh mới
+                foreach (var url in newImageUrls)
+                {
+                    product.Images.Add(new ProductImage
+                    {
+                        ImageUrl = url,
+                        IsPrimary = false // Hoặc bạn có thể thêm logic để xác định ảnh chính
+                    });
+                }
+            }
 
             await _context.SaveChangesAsync();
 
             return Ok(new { Message = "Sản phẩm đã được cập nhật." });
+        }
+
+        // Hàm lấy publicId từ URL của Cloudinary
+        private string GetPublicIdFromUrl(string url)
+        {
+            var matches = Regex.Match(url, @"\/v\d+\/(.+)\.(jpg|jpeg|png|gif|webp)");
+            return matches.Success ? matches.Groups[1].Value : null;
         }
 
         // 🔴 Xóa sản phẩm và tất cả thông tin liên quan (thông số kỹ thuật & ảnh sản phẩm)

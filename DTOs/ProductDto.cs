@@ -10,5 +10,6 @@ namespace SHN_Gear.DTOs
         public DateTime? FlashSaleEnd { get; set; } // Thời gian kết thúc flash sale
         public string Category { get; set; } = null!;
         public List<string>? ImageUrls { get; set; } // Danh sách URL ảnh sản phẩm
+        public int StockQuantity { get; set; } // Số lượng tồn kho
     }
 }
