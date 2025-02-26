@@ -6,39 +6,49 @@ import SalesPage from "./pages/Admin/SalesPage";
 import OrdersPage from "./pages/Admin/OrdersPage";
 import AnalyticsPage from "./pages/Admin/AnalyticsPage";
 import SettingsPage from "./pages/Admin/SettingsPage";
+import ProductPage from "./pages/ProductPage";
+import ProfilePage from "./pages/ProfilePage";
 
 const AppRoutes = [
   {
-    path: '/',
+    path: "/",
     element: <Home />,
   },
   {
-    path: '/admin/overview',
+    path: "/admin/overview",
     element: <OverviewPage />,
   },
   {
-    path: '/admin/products',
+    path: "/admin/products",
     element: <ProductsPage />,
   },
   {
-    path: '/admin/users',
+    path: "/admin/users",
     element: <UsersPage />,
   },
   {
-    path: '/admin/sales',
+    path: "/admin/sales",
     element: <SalesPage />,
   },
   {
-    path: '/admin/orders',
+    path: "/admin/orders",
     element: <OrdersPage />,
   },
   {
-    path: '/admin/analytics',
+    path: "/admin/analytics",
     element: <AnalyticsPage />,
   },
   {
-    path: '/admin/settings',
+    path: "/admin/settings",
     element: <SettingsPage />,
+  },
+  {
+    path: "/ProductPage/",
+    element: <ProductPage />,
+  },
+  {
+    path: "/Profile/",
+    element: <ProfilePage />,
   },
 ];
 
