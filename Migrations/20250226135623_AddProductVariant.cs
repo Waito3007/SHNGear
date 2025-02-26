@@ -5,30 +5,28 @@
 namespace SHN_Gear.Migrations
 {
     /// <inheritdoc />
-    public partial class AddCreatedAtToProductAndImages : Migration
+    public partial class AddProductVariant : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "ImageUrl",
-                table: "Products");
-
             migrationBuilder.CreateTable(
-                name: "ProductImages",
+                name: "ProductVariants",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ProductId = table.Column<int>(type: "int", nullable: false),
-                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsPrimary = table.Column<bool>(type: "bit", nullable: false)
+                    Color = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Storage = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    StockQuantity = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ProductImages", x => x.Id);
+                    table.PrimaryKey("PK_ProductVariants", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ProductImages_Products_ProductId",
+                        name: "FK_ProductVariants_Products_ProductId",
                         column: x => x.ProductId,
                         principalTable: "Products",
                         principalColumn: "Id",
@@ -36,8 +34,8 @@ namespace SHN_Gear.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ProductImages_ProductId",
-                table: "ProductImages",
+                name: "IX_ProductVariants_ProductId",
+                table: "ProductVariants",
                 column: "ProductId");
         }
 
@@ -45,14 +43,7 @@ namespace SHN_Gear.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "ProductImages");
-
-            migrationBuilder.AddColumn<string>(
-                name: "ImageUrl",
-                table: "Products",
-                type: "nvarchar(max)",
-                nullable: false,
-                defaultValue: "");
+                name: "ProductVariants");
         }
     }
 }

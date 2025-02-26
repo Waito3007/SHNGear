@@ -13,7 +13,8 @@ const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
         price: 0,
         category: "SmartPhone",
         stockQuantity: 0,
-        images: []
+        images: [],
+        variants: [{ color: "", storage: "", price: 0, stockQuantity: 0 }]
     });
     
     const [uploading, setUploading] = useState(false);
@@ -21,6 +22,22 @@ const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setProduct({ ...product, [name]: value });
+    };
+
+    const handleVariantChange = (index, e) => {
+        const { name, value } = e.target;
+        const updatedVariants = [...product.variants];
+        updatedVariants[index] = { ...updatedVariants[index], [name]: value };
+        setProduct({ ...product, variants: updatedVariants });
+    };
+
+    const handleAddVariant = () => {
+        setProduct({ ...product, variants: [...product.variants, { color: "", storage: "", price: 0, stockQuantity: 0 }] });
+    };
+
+    const handleRemoveVariant = (index) => {
+        const updatedVariants = product.variants.filter((_, i) => i !== index);
+        setProduct({ ...product, variants: updatedVariants });
     };
 
     const handleImageUpload = async (files) => {
@@ -62,7 +79,8 @@ const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
                 price: product.price,
                 category: product.category,
                 stockQuantity: product.stockQuantity,
-                imageUrls: product.images // Gửi URL ảnh từ API
+                imageUrls: product.images, // Gửi URL ảnh từ API
+                variants: product.variants // Gửi các biến thể sản phẩm
             });
             onAddProduct(response.data);
             onClose();
@@ -140,6 +158,55 @@ const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
                             <CircularProgress />
                         </div>
                     )}
+                    <h3>Variants</h3>
+                    {product.variants.map((variant, index) => (
+                        <div key={index} style={{ marginBottom: 20 }}>
+                            <TextField
+                                label="Color"
+                                name="color"
+                                value={variant.color}
+                                onChange={(e) => handleVariantChange(index, e)}
+                                fullWidth
+                                margin="normal"
+                                required
+                            />
+                            <TextField
+                                label="Storage"
+                                name="storage"
+                                value={variant.storage}
+                                onChange={(e) => handleVariantChange(index, e)}
+                                fullWidth
+                                margin="normal"
+                                required
+                            />
+                            <TextField
+                                label="Price"
+                                name="price"
+                                type="number"
+                                value={variant.price}
+                                onChange={(e) => handleVariantChange(index, e)}
+                                fullWidth
+                                margin="normal"
+                                required
+                            />
+                            <TextField
+                                label="Stock Quantity"
+                                name="stockQuantity"
+                                type="number"
+                                value={variant.stockQuantity}
+                                onChange={(e) => handleVariantChange(index, e)}
+                                fullWidth
+                                margin="normal"
+                                required
+                            />
+                            <Button onClick={() => handleRemoveVariant(index)} style={{ marginTop: 10 }} color="secondary">
+                                Remove Variant
+                            </Button>
+                        </div>
+                    ))}
+                    <Button onClick={handleAddVariant} style={{ marginBottom: 20 }} color="primary">
+                        Add Variant
+                    </Button>
                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                         <Button onClick={onClose} style={{ marginRight: 10 }}>Cancel</Button>
                         <Button type="submit" variant="contained" color="primary" disabled={uploading}>

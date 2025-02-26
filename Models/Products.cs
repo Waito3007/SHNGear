@@ -14,6 +14,8 @@ namespace SHN_Gear.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public int StockQuantity { get; set; }  // Số lượng tồn kho
 
+        public List<ProductVariant> Variants { get; set; } = new(); // Danh sách biến thể sản phẩm
+
         public bool IsOutOfStock()
         {
             return StockQuantity <= 0;

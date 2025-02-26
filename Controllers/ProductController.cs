@@ -14,7 +14,6 @@ namespace SHN_Gear.Controllers
     public class ProductController : ControllerBase
     {
         private readonly AppDbContext _context;
-
         private readonly CloudinaryService _cloudinaryService;
 
         public ProductController(AppDbContext context, CloudinaryService cloudinaryService)
@@ -51,6 +50,13 @@ namespace SHN_Gear.Controllers
                 Category = dto.Category,
                 CreatedAt = DateTime.UtcNow,
                 StockQuantity = dto.StockQuantity,
+                Variants = dto.Variants.Select(v => new ProductVariant
+                {
+                    Color = v.Color,
+                    Storage = v.Storage,
+                    Price = v.Price,
+                    StockQuantity = v.StockQuantity
+                }).ToList()
             };
 
             if (dto.ImageUrls != null && dto.ImageUrls.Any())
@@ -98,6 +104,7 @@ namespace SHN_Gear.Controllers
         {
             var product = await _context.Products
                 .Include(p => p.Images)
+                .Include(p => p.Variants)
                 .FirstOrDefaultAsync(p => p.Id == id);
             if (product == null) return NotFound("Sản phẩm không tồn tại.");
 
@@ -144,6 +151,16 @@ namespace SHN_Gear.Controllers
                 }
             }
 
+            // Cập nhật biến thể sản phẩm
+            product.Variants.Clear();
+            product.Variants = dto.Variants.Select(v => new ProductVariant
+            {
+                Color = v.Color,
+                Storage = v.Storage,
+                Price = v.Price,
+                StockQuantity = v.StockQuantity
+            }).ToList();
+
             await _context.SaveChangesAsync();
 
             return Ok(new { Message = "Sản phẩm đã được cập nhật." });
@@ -162,6 +179,7 @@ namespace SHN_Gear.Controllers
         {
             var product = await _context.Products
                 .Include(p => p.Images)
+                .Include(p => p.Variants)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null) return NotFound("Sản phẩm không tồn tại.");
@@ -178,6 +196,7 @@ namespace SHN_Gear.Controllers
 
             // Xóa ảnh sản phẩm liên quan
             _context.ProductImages.RemoveRange(product.Images);
+            _context.ProductVariants.RemoveRange(product.Variants);
 
             // Xóa sản phẩm
             _context.Products.Remove(product);

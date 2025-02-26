@@ -15,6 +15,9 @@ namespace SHN_Gear.Data
         public DbSet<LaptopSpecification> LaptopSpecifications { get; set; }
         public DbSet<HeadphoneSpecification> HeadphoneSpecifications { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
+        public DbSet<Cart> Carts { get; set; }
+        public DbSet<CartItem> CartItems { get; set; }
+        public DbSet<ProductVariant> ProductVariants { get; set; } // Thêm DbSet cho ProductVariant
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
