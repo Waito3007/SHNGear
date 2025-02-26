@@ -1,115 +1,212 @@
 import { motion } from "framer-motion";
-import { Edit, Search, Trash2 } from "lucide-react";
-import { useState } from "react";
-
-const PRODUCT_DATA = [
-	{ id: 1, name: "Wireless Earbuds", category: "Electronics", price: 59.99, stock: 143, sales: 1200 },
-	{ id: 2, name: "Leather Wallet", category: "Accessories", price: 39.99, stock: 89, sales: 800 },
-	{ id: 3, name: "Smart Watch", category: "Electronics", price: 199.99, stock: 56, sales: 650 },
-	{ id: 4, name: "Yoga Mat", category: "Fitness", price: 29.99, stock: 210, sales: 950 },
-	{ id: 5, name: "Coffee Maker", category: "Home", price: 79.99, stock: 78, sales: 720 },
-];
+import { Edit, Search, Trash2, Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import ProductDrawer from './AddProductDrawer'; // Import the new ProductDrawer component
+import EditProductDrawer from './EditProductDrawer'; // Import the EditProductDrawer component
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import Button from '@mui/material/Button';
 
 const ProductsTable = () => {
-	const [searchTerm, setSearchTerm] = useState("");
-	const [filteredProducts, setFilteredProducts] = useState(PRODUCT_DATA);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [products, setProducts] = useState([]);
+    const [filteredProducts, setFilteredProducts] = useState([]);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [productToDelete, setProductToDelete] = useState(null);
 
-	const handleSearch = (e) => {
-		const term = e.target.value.toLowerCase();
-		setSearchTerm(term);
-		const filtered = PRODUCT_DATA.filter(
-			(product) => product.name.toLowerCase().includes(term) || product.category.toLowerCase().includes(term)
-		);
+    useEffect(() => {
+        fetch('https://localhost:7107/api/products')
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.$values && Array.isArray(data.$values)) {
+                    setProducts(data.$values);
+                    setFilteredProducts(data.$values);
+                } else {
+                    console.error('Error: Data is not in the expected format');
+                }
+            })
+            .catch(error => console.error('Error fetching products:', error));
+    }, []);
 
-		setFilteredProducts(filtered);
-	};
+    const handleSearch = (e) => {
+        const term = e.target.value.toLowerCase();
+        setSearchTerm(term);
+        const filtered = products.filter(
+            (product) => product.name.toLowerCase().includes(term) || product.category.toLowerCase().includes(term)
+        );
 
-	return (
-		<motion.div
-			className='bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700 mb-8'
-			initial={{ opacity: 0, y: 20 }}
-			animate={{ opacity: 1, y: 0 }}
-			transition={{ delay: 0.2 }}
-		>
-			<div className='flex justify-between items-center mb-6'>
-				<h2 className='text-xl font-semibold text-gray-100'>Product List</h2>
-				<div className='relative'>
-					<input
-						type='text'
-						placeholder='Search products...'
-						className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-						onChange={handleSearch}
-						value={searchTerm}
-					/>
-					<Search className='absolute left-3 top-2.5 text-gray-400' size={18} />
-				</div>
-			</div>
+        setFilteredProducts(filtered);
+    };
 
-			<div className='overflow-x-auto'>
-				<table className='min-w-full divide-y divide-gray-700'>
-					<thead>
-						<tr>
-							<th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-								Name
-							</th>
-							<th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-								Category
-							</th>
-							<th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-								Price
-							</th>
-							<th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-								Stock
-							</th>
-							<th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-								Sales
-							</th>
-							<th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-								Actions
-							</th>
-						</tr>
-					</thead>
+    const handleAddProduct = (newProduct) => {
+        setProducts([...products, newProduct]);
+        setFilteredProducts([...products, newProduct]);
+    };
 
-					<tbody className='divide-y divide-gray-700'>
-						{filteredProducts.map((product) => (
-							<motion.tr
-								key={product.id}
-								initial={{ opacity: 0 }}
-								animate={{ opacity: 1 }}
-								transition={{ duration: 0.3 }}
-							>
-								<td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100 flex gap-2 items-center'>
-									<img
-										src='https://images.unsplash.com/photo-1627989580309-bfaf3e58af6f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8d2lyZWxlc3MlMjBlYXJidWRzfGVufDB8fDB8fHww'
-										alt='Product img'
-										className='size-10 rounded-full'
-									/>
-									{product.name}
-								</td>
+    const handleEditProduct = (product) => {
+        setSelectedProduct(product);
+        setIsEditDrawerOpen(true);
+    };
 
-								<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-									{product.category}
-								</td>
+    const handleUpdateProduct = (updatedProduct) => {
+        const updatedProducts = products.map((product) =>
+            product.id === updatedProduct.id ? updatedProduct : product
+        );
+        setProducts(updatedProducts);
+        setFilteredProducts(updatedProducts);
+    };
 
-								<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-									${product.price.toFixed(2)}
-								</td>
-								<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>{product.stock}</td>
-								<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>{product.sales}</td>
-								<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-									<button className='text-indigo-400 hover:text-indigo-300 mr-2'>
-										<Edit size={18} />
-									</button>
-									<button className='text-red-400 hover:text-red-300'>
-										<Trash2 size={18} />
-									</button>
-								</td>
-							</motion.tr>
-						))}
-					</tbody>
-				</table>
-			</div>
-		</motion.div>
-	);
+    const handleDeleteProduct = (product) => {
+        setProductToDelete(product);
+        setIsDeleteDialogOpen(true);
+    };
+
+    const confirmDeleteProduct = async () => {
+        try {
+            const response = await fetch(`https://localhost:7107/api/products/${productToDelete.id}`, {
+                method: 'DELETE',
+            });
+            if (response.ok) {
+                const updatedProducts = products.filter((product) => product.id !== productToDelete.id);
+                setProducts(updatedProducts);
+                setFilteredProducts(updatedProducts);
+                setIsDeleteDialogOpen(false);
+                setProductToDelete(null);
+            } else {
+                console.error('Failed to delete product');
+            }
+        } catch (error) {
+            console.error('Error deleting product:', error);
+        }
+    };
+
+    return (
+        <motion.div
+            className='bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700 mb-8'
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+        >
+            <div className='flex justify-between items-center mb-6'>
+                <h2 className='text-xl font-semibold text-gray-100'>Danh sách sản phẩm</h2>
+                
+                <div className='relative'>
+                    <input
+                        type='text'
+                        placeholder='Tìm kiếm sản phẩm...'
+                        className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                        onChange={handleSearch}
+                        value={searchTerm}
+                    />
+                    <Search className='absolute left-3 top-2.5 text-gray-400' size={18} />
+                </div>
+                <button className='text-indigo-400 hover:text-indigo-300 mr-2' onClick={() => setIsDrawerOpen(true)}>
+                <Plus size={18} />
+                </button>
+            </div>
+
+            <div className='overflow-x-auto'>
+                <table className='min-w-full divide-y divide-gray-700'>
+                    <thead>
+                        <tr>
+                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+                                Tên
+                            </th>
+                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+                                Danh mục
+                            </th>
+                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+                                Giá
+                            </th>
+                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+                                Tồn kho
+                            </th>
+                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+                                Bán
+                            </th>
+                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+                                Hành động
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody className='divide-y divide-gray-700'>
+                        {filteredProducts.map((product) => (
+                            <motion.tr
+                                key={product.id}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100 flex gap-2 items-center'>
+                                    <img
+                                        src={product.images && product.images.$values && product.images.$values.length > 0 ? product.images.$values[0].imageUrl : 'https://via.placeholder.com/50'}
+                                        alt='Product img'
+                                        className='size-10 rounded-full'
+                                    />
+                                    {product.name}
+                                </td>
+
+                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
+                                    {product.category}
+                                </td>
+
+                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
+                                    ${product.price ? product.price.toFixed(2) : 'N/A'}
+                                </td>
+                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>{product.stockQuantity}</td>
+                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>{product.sales}</td>
+                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
+                                    <button className='text-indigo-400 hover:text-indigo-300 mr-2' onClick={() => handleEditProduct(product)}>
+                                        <Edit size={18} />
+                                    </button>
+                                    <button className='text-red-400 hover:text-red-300' onClick={() => handleDeleteProduct(product)}>
+                                        <Trash2 size={18} />
+                                    </button>
+                                </td>
+                            </motion.tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            <ProductDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} onAddProduct={handleAddProduct} />
+            <EditProductDrawer
+                isOpen={isEditDrawerOpen}
+                onClose={() => setIsEditDrawerOpen(false)}
+                product={selectedProduct}
+                onUpdateProduct={handleUpdateProduct}
+            />
+
+            <Dialog
+                open={isDeleteDialogOpen}
+                onClose={() => setIsDeleteDialogOpen(false)}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">{"Xác nhận xóa sản phẩm"}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        Bạn có chắc chắn muốn xóa sản phẩm này không? Hành động này không thể hoàn tác.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setIsDeleteDialogOpen(false)} color="primary">
+                        Hủy
+                    </Button>
+                    <Button onClick={confirmDeleteProduct} color="primary" autoFocus>
+                        Xóa
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </motion.div>
+    );
 };
+
 export default ProductsTable;

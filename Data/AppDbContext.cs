@@ -15,6 +15,10 @@ namespace SHN_Gear.Data
         public DbSet<LaptopSpecification> LaptopSpecifications { get; set; }
         public DbSet<HeadphoneSpecification> HeadphoneSpecifications { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
+        public DbSet<Cart> Carts { get; set; }
+        public DbSet<CartItem> CartItems { get; set; }
+        public DbSet<ProductVariant> ProductVariants { get; set; } // Thêm DbSet cho ProductVariant
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Seed dữ liệu mặc định cho Role
@@ -29,6 +33,15 @@ namespace SHN_Gear.Data
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.PhoneNumber)
                 .IsUnique();
+
+            // Specify the SQL Server column type for the Price and DiscountPrice properties
+            modelBuilder.Entity<Product>()
+                .Property(p => p.Price)
+                .HasColumnType("decimal(18,2)");
+
+            modelBuilder.Entity<Product>()
+                .Property(p => p.DiscountPrice)
+                .HasColumnType("decimal(18,2)");
         }
     }
 }

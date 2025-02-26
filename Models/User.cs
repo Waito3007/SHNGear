@@ -7,7 +7,7 @@ namespace SHN_Gear.Models
         public string PhoneNumber { get; set; } = string.Empty;  // Số điện thoại (dùng để đăng nhập)
         public string Gender { get; set; } = "Khác";  // Giới tính (Nam, Nữ, Khác)
         public DateTime DateOfBirth { get; set; }  // Ngày sinh
-        public string Email { get; set; } = string.Empty;  // Email (không bắt buộc)
+        public string Email { get; set; } = string.Empty;  // Email 
         public string AvatarUrl { get; set; } = string.Empty;  // Link ảnh đại diện
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;  // Ngày tạo tài khoản
         public int Points { get; set; } = 0;  // Điểm thành viên

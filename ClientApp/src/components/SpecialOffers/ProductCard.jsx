@@ -7,6 +7,7 @@ import "./ProductCard.css";
 const ProductCard = ({ product }) => {
   return (
     <div className="product-card">
+      <div className="product-card-form">
       <div className="product-image">
         <a href="/smartwatch/amazfit-bip-5-46mm">
           <img
@@ -18,6 +19,7 @@ const ProductCard = ({ product }) => {
         </a>
       </div>
       <ProductFeatures features={product.features} />
+      </div>
       <ProductLabels labels={product.labels} />
       <ProductInfo {...product} />
     </div>
