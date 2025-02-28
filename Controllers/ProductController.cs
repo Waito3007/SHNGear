@@ -173,7 +173,7 @@ namespace SHN_Gear.Controllers
             return matches.Success ? matches.Groups[1].Value : null;
         }
 
-        // 🔴 Xóa sản phẩm và tất cả thông tin liên quan (thông số kỹ thuật & ảnh sản phẩm)
+        // Xóa sản phẩm và tất cả thông tin liên quan (thông số kỹ thuật & ảnh sản phẩm)
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
@@ -195,6 +195,14 @@ namespace SHN_Gear.Controllers
             if (headphoneSpec != null) _context.HeadphoneSpecifications.Remove(headphoneSpec);
 
             // Xóa ảnh sản phẩm liên quan
+            foreach (var image in product.Images)
+            {
+                var publicId = GetPublicIdFromUrl(image.ImageUrl);
+                if (publicId != null)
+                {
+                    await _cloudinaryService.DeleteImageAsync(publicId);
+                }
+            }
             _context.ProductImages.RemoveRange(product.Images);
             _context.ProductVariants.RemoveRange(product.Variants);
 

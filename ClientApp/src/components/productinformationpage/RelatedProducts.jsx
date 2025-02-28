@@ -10,7 +10,7 @@ const RelatedProducts = ({ relatedProducts }) => {
             <img src={relatedProduct.image} alt={relatedProduct.name} />
             <h3>{relatedProduct.name}</h3>
             <p className="price">{relatedProduct.price}</p>
-            <button className="add-to-cart">Thêm vào giỏ hàng</button>
+            <button className="add-to-carts ">Thêm vào giỏ hàng</button>
           </div>
         ))}
       </div>

@@ -27,6 +27,9 @@
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column; /* Đảm bảo các phần tử luôn xếp dọc */
+  height: 100%; /* Đảm bảo chiều cao cố định */
 }
 
 .product-card:hover {
@@ -45,9 +48,14 @@
 }
 
 .product-card h3 {
-  font-size: 20px;
-  margin: 10px 0;
+  font-size: 18px;
   color: #34495e;
+  margin: 10px 0;
+  height: 48px; /* Giữ chiều cao cố định */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Chỉ hiển thị tối đa 2 dòng */
+  -webkit-box-orient: vertical;
 }
 
 .product-card .price {
@@ -65,6 +73,14 @@
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.3s ease, transform 0.2s ease;
+  width: 100%; /* Đảm bảo nút có cùng chiều rộng */
+  height: 45px; /* Chiều cao cố định để nút luôn bằng nhau */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap; /* Ngăn chữ xuống dòng */
+  overflow: hidden; /* Ẩn chữ nếu quá dài */
+  text-overflow: ellipsis; /* Thêm "..." nếu chữ bị cắt */
 }
 
 .add-to-cart:hover {

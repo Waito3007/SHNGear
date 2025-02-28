@@ -1,4 +1,5 @@
 import React from "react";
+import { FaShoppingCart } from "react-icons/fa";
 
 const ProductInfo = ({ product }) => {
   return (
@@ -7,13 +8,13 @@ const ProductInfo = ({ product }) => {
       <div className="price-details">
         <div>
           <div className="price">
-            <span>Mua ngay với giá:</span>
+            <span>Mua ngay với giá</span>
           </div>
           <div className="price-number">{product.price}</div>
         </div>
         <div>
           <div className="price">
-            <span>Trả góp:</span>
+            <span>Trả góp</span>
           </div>
           <div className="price-bernum">{product.installmentPrice}</div>
         </div>
@@ -35,6 +36,9 @@ const ProductInfo = ({ product }) => {
         </table>
       </div>
       <div className="purchase-options">
+        <button className="add-to-cart">
+          <FaShoppingCart className="cart-icon" />
+        </button>
         <button className="buy-now">Mua ngay</button>
         <button className="installment">Trả góp</button>
       </div>
