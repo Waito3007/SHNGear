@@ -62,9 +62,11 @@
   font-size: 18px;
   color: #d63031;
   font-weight: bold;
+  justify-content: center; /* Căn giữa ngang */
+  display: flex; /* Hiển thị theo chiều ngang */
 }
 
-.add-to-cart {
+.add-to-cartt {
   background: #6c5ce7;
   color: white;
   padding: 12px 20px;
@@ -83,7 +85,7 @@
   text-overflow: ellipsis; /* Thêm "..." nếu chữ bị cắt */
 }
 
-.add-to-cart:hover {
+.add-to-cartt:hover {
   background: #a29bfe;
   transform: scale(1.05);
 }

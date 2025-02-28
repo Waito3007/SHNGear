@@ -26,7 +26,7 @@ const BestSellers = () => {
             <img src={product.img} alt={product.name} />
             <h3>{product.name}</h3>
             <p className="price">{product.price}</p>
-            <button className="add-to-cart">🛒 Thêm vào giỏ hàng</button>
+            <button className="add-to-cartt">🛒 Thêm vào giỏ hàng</button>
           </div>
         ))}
       </div>
