@@ -41,9 +41,8 @@ const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
             .catch(error => console.error('Error fetching brands:', error));
     }, []);
 
-    // 📌 Upload ảnh lên Cloudinary thông qua backend
     const handleImageUpload = async (e) => {
-        const files = Array.from(e.target.files); // Lấy danh sách file
+        const files = Array.from(e.target.files);
         if (!files.length) return;
     
         setUploadingImage(true);
@@ -62,7 +61,7 @@ const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
             });
     
             const uploadedImages = await Promise.all(uploadPromises);
-            uploadedImages.forEach(img => appendImage(img)); // Thêm tất cả ảnh đã tải lên vào danh sách
+            uploadedImages.forEach(img => appendImage(img));
         } catch (error) {
             console.error('Image upload failed:', error);
             setImageError('Tải ảnh thất bại, vui lòng thử lại.');
@@ -70,9 +69,9 @@ const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
             setUploadingImage(false);
         }
     };
-    
 
     const onSubmit = async (data) => {
+        console.log('Submitting data:', data); // Debugging line
         try {
             const response = await axios.post('https://localhost:7107/api/Products', data);
             onAddProduct(response.data);
@@ -91,24 +90,23 @@ const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
                     <button onClick={onClose} className='text-gray-400 hover:text-white'><X size={20} /></button>
                 </div>
                 <form onSubmit={handleSubmit(onSubmit)}>
-                    <label className='block text-sm'>Tên sản phẩm</label>
+                    <label className='block text-sm whitespace-nowrap'>Tên sản phẩm</label>
                     <input {...register('name')} className='w-full p-2 mb-3 bg-gray-800 border border-gray-700 rounded-md' required />
 
-                    <label className='block text-sm'>Mô tả</label>
+                    <label className='block text-sm whitespace-nowrap'>Mô tả</label>
                     <textarea {...register('description')} className='w-full p-2 mb-3 bg-gray-800 border border-gray-700 rounded-md' required />
 
-                    <label className='block text-sm'>Danh mục</label>
+                    <label className='block text-sm whitespace-nowrap'>Danh mục</label>
                     <select {...register('categoryId')} className='w-full p-2 mb-3 bg-gray-800 border border-gray-700 rounded-md'>
                         {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                     </select>
 
-                    <label className='block text-sm'>Thương hiệu</label>
+                    <label className='block text-sm whitespace-nowrap'>Thương hiệu</label>
                     <select {...register('brandId')} className='w-full p-2 mb-3 bg-gray-800 border border-gray-700 rounded-md'>
                         {brands.map(brand => <option key={brand.id} value={brand.id}>{brand.name}</option>)}
                     </select>
 
-                    {/* Hình ảnh */}
-                    <label className='block text-sm'>Hình ảnh</label>
+                    <label className='block text-sm whitespace-nowrap'>Hình ảnh</label>
                     <input 
                         type='file' 
                         accept='image/*' 
@@ -126,28 +124,27 @@ const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
                         ))}
                     </div>
 
-                    {/* Biến thể sản phẩm */}
-                    <label className='block text-sm mt-3'>Biến thể sản phẩm</label>
+                    <label className='block text-sm mt-3 whitespace-nowrap'>Biến thể sản phẩm</label>
                     {variantFields.map((variant, index) => (
                         <div key={index} className="p-3 mb-3 border border-gray-700 rounded-md">
-                            <label className='block text-xs'>Màu sắc</label>
+                            <label className='block text-xs whitespace-nowrap'>Màu sắc</label>
                             <input {...register(`variants.${index}.color`)} className='w-full p-1 mb-2 bg-gray-800 border border-gray-700 rounded-md' required />
 
-                            <label className='block text-xs'>Dung lượng</label>
+                            <label className='block text-xs whitespace-nowrap'>Dung lượng</label>
                             <input {...register(`variants.${index}.storage`)} className='w-full p-1 mb-2 bg-gray-800 border border-gray-700 rounded-md' required />
 
-                            <label className='block text-xs'>Giá</label>
+                            <label className='block text-xs whitespace-nowrap'>Giá</label>
                             <input type='number' {...register(`variants.${index}.price`)} className='w-full p-1 mb-2 bg-gray-800 border border-gray-700 rounded-md' required />
 
-                            <label className='block text-xs'>Giá giảm</label>
+                            <label className='block text-xs whitespace-nowrap'>Giá giảm</label>
                             <input type='number' {...register(`variants.${index}.discountPrice`)} className='w-full p-1 mb-2 bg-gray-800 border border-gray-700 rounded-md' />
 
-                            <button type="button" onClick={() => removeVariant(index)} className="text-red-500 mt-2">Xóa biến thể</button>
+                            <button type="button" onClick={() => removeVariant(index)} className="text-red-500 mt-2 whitespace-nowrap">Xóa biến thể</button>
                         </div>
                     ))}
-                    <button type="button" onClick={() => appendVariant({})} className="text-blue-500">Thêm biến thể</button>
+                    <button type="button" onClick={() => appendVariant({})} className="text-blue-500 whitespace-nowrap">Thêm biến thể</button>
 
-                    <button type='submit' className='w-full bg-indigo-600 hover:bg-indigo-500 p-2 rounded-md text-white mt-4'>Thêm sản phẩm</button>
+                    <button type='submit' className='w-full bg-indigo-600 hover:bg-indigo-500 p-2 rounded-md text-white mt-4 whitespace-nowrap'>Thêm sản phẩm</button>
                 </form>
             </div>
         </Drawer>

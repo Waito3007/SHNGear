@@ -5,6 +5,7 @@ import {
   Monitor,
   Smartphone,
   Headphones,
+  House,
 } from "lucide-react";
 import "./Navbar.css";
 import menu from "../../assets/icon/menu.svg";
@@ -60,7 +61,7 @@ const Navbar = () => {
             <div className="dropdown-menu">
               <div className="dropdown-item">
                 <Monitor size={18} />
-                Laptop & PC
+                Laptop
               </div>
               <div className="dropdown-item">
                 <Smartphone size={18} />
@@ -69,6 +70,10 @@ const Navbar = () => {
               <div className="dropdown-item">
                 <Headphones size={18} />
                 Phụ kiện
+              </div>
+              <div className="dropdown-item">
+                <House size={18} />
+                Điện gia dụng
               </div>
             </div>
           )}

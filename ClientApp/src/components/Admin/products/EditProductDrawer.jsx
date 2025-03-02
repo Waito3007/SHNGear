@@ -3,7 +3,6 @@ import Drawer from '@mui/material/Drawer';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
-import CircularProgress from '@mui/material/CircularProgress';
 import axios from 'axios';
 
 const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
@@ -13,25 +12,64 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
         price: '',
         discountPrice: '',
         category: '',
-        stockQuantity: '',
-        images: []
+        brand: '',
+        stockQuantity: ''
     });
 
-    const [uploading, setUploading] = useState(false);
+    const [categories, setCategories] = useState([]);
+    const [brands, setBrands] = useState([]);
 
     useEffect(() => {
         if (product) {
             setFormData({
-                name: product.name,
-                description: product.description,
-                price: product.price,
-                discountPrice: product.discountPrice,
-                category: product.category,
-                stockQuantity: product.stockQuantity,
-                images: Array.isArray(product.images) ? product.images : []
+                name: product.name || '',
+                description: product.description || '',
+                price: product.price || '',
+                discountPrice: product.discountPrice || '',
+                category: product.categoryId || '',
+                brand: product.brandId || '',
+                stockQuantity: product.stockQuantity || ''
             });
         }
     }, [product]);
+
+    // Fetch danh mục sản phẩm từ API
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await axios.get("https://localhost:7107/api/categories");
+                if (response.data && Array.isArray(response.data.$values)) {
+                    setCategories(response.data.$values);
+                } else {
+                    setCategories([]);
+                }
+            } catch (error) {
+                console.error("Lỗi khi lấy danh mục:", error);
+                setCategories([]);
+            }
+        };
+
+        fetchCategories();
+    }, []);
+
+    // Fetch danh sách thương hiệu từ API
+    useEffect(() => {
+        const fetchBrands = async () => {
+            try {
+                const response = await axios.get("https://localhost:7107/api/brands");
+                if (response.data && Array.isArray(response.data.$values)) {
+                    setBrands(response.data.$values);
+                } else {
+                    setBrands([]);
+                }
+            } catch (error) {
+                console.error("Lỗi khi lấy thương hiệu:", error);
+                setBrands([]);
+            }
+        };
+
+        fetchBrands();
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -41,55 +79,33 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
         }));
     };
 
-    const handleImageUpload = async (files) => {
-        setUploading(true);
-        const uploadedImages = await Promise.all(
-            [...files].map(async (file) => {
-                const formData = new FormData();
-                formData.append("file", file);
-    
-                try {
-                    const response = await axios.post(
-                        "https://localhost:7107/api/products/upload-image",
-                        formData,
-                        {
-                            headers: { "Content-Type": "multipart/form-data" }
-                        }
-                    );
-                    return response.data.imageUrl; // API trả về { ImageUrl: "URL" }
-                } catch (error) {
-                    console.error("Upload ảnh thất bại", error);
-                    return null;
-                }
-            })
-        );
-    
-        setUploading(false);
-        setFormData((prev) => ({
-            ...prev,
-            images: [...prev.images, ...uploadedImages.filter((url) => url !== null)],
-        }));
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`https://localhost:7107/api/products/${product.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData),
-            });
-            if (response.ok) {
-                const updatedProduct = await response.json();
-                onUpdateProduct(updatedProduct);
+            const updatedData = {
+                name: formData.name,
+                description: formData.description,
+                categoryId: formData.category,
+                brandId: formData.brand,  // Thêm brandId vào dữ liệu cập nhật
+                price: parseFloat(formData.price),
+                discountPrice: parseFloat(formData.discountPrice),
+                stockQuantity: parseInt(formData.stockQuantity, 10),
+            };
+
+            const response = await axios.put(
+                `https://localhost:7107/api/products/${product.id}`,
+                updatedData,
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+
+            if (response.status === 200) {
+                onUpdateProduct(response.data);
                 onClose();
             } else {
-                console.error('Failed to update product');
+                console.error('Cập nhật sản phẩm thất bại:', response);
             }
         } catch (error) {
-            console.error('Error updating product:', error);
+            console.error('Lỗi khi cập nhật sản phẩm:', error);
         }
     };
 
@@ -140,12 +156,39 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
                         onChange={handleChange}
                         fullWidth
                         margin="normal"
-                        required
                     >
-                        <MenuItem value="SmartPhone">SmartPhone</MenuItem>
-                        <MenuItem value="Laptop">Laptop</MenuItem>
-                        <MenuItem value="Headphone">Headphone</MenuItem>
+                        {categories.length > 0 ? (
+                            categories.map((cat) => (
+                                <MenuItem key={cat.id} value={cat.id}>
+                                    {cat.name}
+                                </MenuItem>
+                            ))
+                        ) : (
+                            <MenuItem disabled>Không có danh mục nào</MenuItem>
+                        )}
                     </TextField>
+
+                    {/* Chọn thương hiệu */}
+                    <TextField
+                        label="Brand"
+                        name="brand"
+                        select
+                        value={formData.brand}
+                        onChange={handleChange}
+                        fullWidth
+                        margin="normal"
+                    >
+                        {brands.length > 0 ? (
+                            brands.map((brand) => (
+                                <MenuItem key={brand.id} value={brand.id}>
+                                    {brand.name}
+                                </MenuItem>
+                            ))
+                        ) : (
+                            <MenuItem disabled>Không có thương hiệu nào</MenuItem>
+                        )}
+                    </TextField>
+
                     <TextField
                         label='Stock Quantity'
                         name='stockQuantity'
@@ -155,25 +198,8 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
                         fullWidth
                         margin='normal'
                     />
-                    <input
-                        type="file"
-                        name="images"
-                        multiple
-                        onChange={(e) => handleImageUpload(e.target.files)}
-                        style={{ margin: "20px 0" }}
-                    />
-                    {uploading && (
-                        <div style={{ display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
-                            <CircularProgress />
-                        </div>
-                    )}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px' }}>
-                        {formData.images.map((url, index) => (
-                            <img key={index} src={url} alt={`Product Image ${index + 1}`} style={{ width: '100px', height: '100px', objectFit: 'cover' }} />
-                        ))}
-                    </div>
-                    <Button type='submit' variant='contained' color='primary' disabled={uploading}>
-                        {uploading ? 'Uploading...' : 'Save'}
+                    <Button type='submit' variant='contained' color='primary'>
+                        Save
                     </Button>
                 </form>
             </div>
