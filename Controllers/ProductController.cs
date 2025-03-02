@@ -39,6 +39,12 @@ namespace SHN_Gear.Controllers
         [HttpPost]
         public async Task<IActionResult> AddProduct([FromBody] ProductDto dto)
         {
+            var category = await _context.Categories.FindAsync(dto.CategoryId);
+            if (category == null) return NotFound("Danh mục không tồn tại.");
+
+            var brands = await _context.Brands.Where(b => dto.BrandIds.Contains(b.Id)).ToListAsync();
+            if (brands.Count != dto.BrandIds.Count) return NotFound("Một hoặc nhiều thương hiệu không tồn tại.");
+
             var product = new Product
             {
                 Name = dto.Name,
@@ -47,7 +53,7 @@ namespace SHN_Gear.Controllers
                 DiscountPrice = dto.DiscountPrice,
                 FlashSaleStart = dto.FlashSaleStart,
                 FlashSaleEnd = dto.FlashSaleEnd,
-                Category = dto.Category,
+                Category = category,
                 CreatedAt = DateTime.UtcNow,
                 StockQuantity = dto.StockQuantity,
                 Variants = dto.Variants.Select(v => new ProductVariant
@@ -80,6 +86,7 @@ namespace SHN_Gear.Controllers
         {
             var products = await _context.Products
                 .Include(p => p.Images)
+                .Include(p => p.Category)
                 .ToListAsync();
 
             return Ok(products);
@@ -91,6 +98,7 @@ namespace SHN_Gear.Controllers
         {
             var product = await _context.Products
                 .Include(p => p.Images)
+                .Include(p => p.Category)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null) return NotFound("Sản phẩm không tồn tại.");
@@ -108,13 +116,19 @@ namespace SHN_Gear.Controllers
                 .FirstOrDefaultAsync(p => p.Id == id);
             if (product == null) return NotFound("Sản phẩm không tồn tại.");
 
+            var category = await _context.Categories.FindAsync(dto.CategoryId);
+            if (category == null) return NotFound("Danh mục không tồn tại.");
+
+            var brands = await _context.Brands.Where(b => dto.BrandIds.Contains(b.Id)).ToListAsync();
+            if (brands.Count != dto.BrandIds.Count) return NotFound("Một hoặc nhiều thương hiệu không tồn tại.");
+
             product.Name = dto.Name;
             product.Description = dto.Description;
             product.Price = dto.Price;
             product.DiscountPrice = dto.DiscountPrice;
             product.FlashSaleStart = dto.FlashSaleStart;
             product.FlashSaleEnd = dto.FlashSaleEnd;
-            product.Category = dto.Category;
+            product.Category = category;
             product.StockQuantity = dto.StockQuantity;
 
             // Cập nhật ảnh sản phẩm

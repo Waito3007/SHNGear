@@ -9,6 +9,9 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Button from '@mui/material/Button';
+import CategoryBrandDrawer from './CategoryBrandDrawer'; // Import the CategoryBrandDrawer component
+import BrandDrawer from './BrandDrawer'; // Import the BrandDrawer component
+import Pagination from '@mui/material/Pagination';
 
 const ProductsTable = () => {
     const [searchTerm, setSearchTerm] = useState("");
@@ -19,9 +22,13 @@ const ProductsTable = () => {
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [productToDelete, setProductToDelete] = useState(null);
+    const [isCategoryBrandDrawerOpen, setIsCategoryBrandDrawerOpen] = useState(false);
+    const [isBrandDrawerOpen, setIsBrandDrawerOpen] = useState(false);
+    const [page, setPage] = useState(1);
+    const productsPerPage = 11;
 
     useEffect(() => {
-        fetch('https://localhost:7107/api/products')
+        fetch('https://localhost:7107/api/Products')
             .then(response => response.json())
             .then(data => {
                 if (data && data.$values && Array.isArray(data.$values)) {
@@ -69,7 +76,7 @@ const ProductsTable = () => {
 
     const confirmDeleteProduct = async () => {
         try {
-            const response = await fetch(`https://localhost:7107/api/products/${productToDelete.id}`, {
+            const response = await fetch(`https://localhost:7107/api/Products/${productToDelete.id}`, {
                 method: 'DELETE',
             });
             if (response.ok) {
@@ -85,6 +92,15 @@ const ProductsTable = () => {
             console.error('Error deleting product:', error);
         }
     };
+
+    const handlePageChange = (event, value) => {
+        setPage(value);
+    };
+
+    // Calculate the products to display on the current page
+    const indexOfLastProduct = page * productsPerPage;
+    const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+    const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
 
     return (
         <motion.div
@@ -106,8 +122,14 @@ const ProductsTable = () => {
                     />
                     <Search className='absolute left-3 top-2.5 text-gray-400' size={18} />
                 </div>
-                <button className='text-indigo-400 hover:text-indigo-300 mr-2' onClick={() => setIsDrawerOpen(true)}>
-                <Plus size={18} />
+                <button className='text-indigo-400 hover:text-indigo-300 mr-2 text-sm rounded-lg px-3 py-1 border border-indigo-400' onClick={() => setIsDrawerOpen(true)}>
+                    Thêm Sản Phẩm
+                </button>
+                <button className='text-indigo-400 hover:text-indigo-300 mr-2 text-sm rounded-lg px-3 py-1 border border-indigo-400' onClick={() => setIsCategoryBrandDrawerOpen(true)}>
+                    Thêm Danh Mục
+                </button>
+                <button className='text-indigo-400 hover:text-indigo-300 mr-2 text-sm rounded-lg px-3 py-1 border border-indigo-400' onClick={() => setIsBrandDrawerOpen(true)}>
+                    Thêm Thương hiệu
                 </button>
             </div>
 
@@ -119,13 +141,13 @@ const ProductsTable = () => {
                                 Tên
                             </th>
                             <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+                                Brand
+                            </th>
+                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
                                 Danh mục
                             </th>
                             <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
                                 Giá
-                            </th>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                                Tồn kho
                             </th>
                             <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
                                 Bán
@@ -137,7 +159,7 @@ const ProductsTable = () => {
                     </thead>
 
                     <tbody className='divide-y divide-gray-700'>
-                        {filteredProducts.map((product) => (
+                        {currentProducts.map((product) => (
                             <motion.tr
                                 key={product.id}
                                 initial={{ opacity: 0 }}
@@ -154,14 +176,17 @@ const ProductsTable = () => {
                                 </td>
 
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    {product.category}
+                                    {product.brand ? product.brand.name : "Không có thương hiệu"
+                                    }
                                 </td>
 
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    ${product.price ? product.price.toFixed(2) : 'N/A'}
+                                    {product.category ? product.category.name : 'Chưa có danh mục'}
                                 </td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>{product.stockQuantity}</td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>{product.sales}</td>
+                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
+                                    {product.variants ? product.price: 'Chưa có mặt hàng này'}</td>
+                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
+                                    {product.variants ? product.variants.color: "Chưa có màu"}</td>
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
                                     <button className='text-indigo-400 hover:text-indigo-300 mr-2' onClick={() => handleEditProduct(product)}>
                                         <Edit size={18} />
@@ -175,6 +200,14 @@ const ProductsTable = () => {
                     </tbody>
                 </table>
             </div>
+
+            <Pagination
+                count={Math.ceil(filteredProducts.length / productsPerPage)}
+                page={page}
+                onChange={handlePageChange}
+                color='primary'
+                className='mt-4 flex justify-center'
+            />
 
             <ProductDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} onAddProduct={handleAddProduct} />
             <EditProductDrawer
@@ -205,6 +238,9 @@ const ProductsTable = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            <CategoryBrandDrawer open={isCategoryBrandDrawerOpen} onClose={() => setIsCategoryBrandDrawerOpen(false)} />
+            <BrandDrawer open={isBrandDrawerOpen} onClose={() => setIsBrandDrawerOpen(false)} />
         </motion.div>
     );
 };

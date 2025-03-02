@@ -18,6 +18,8 @@ namespace SHN_Gear.Data
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<ProductVariant> ProductVariants { get; set; } // Thêm DbSet cho ProductVariant
+        public DbSet<Category> Categories { get; set; } // Thêm DbSet cho Category
+        public DbSet<Brand> Brands { get; set; } // Thêm DbSet cho Brand
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -41,6 +43,11 @@ namespace SHN_Gear.Data
 
             modelBuilder.Entity<Product>()
                 .Property(p => p.DiscountPrice)
+                .HasColumnType("decimal(18,2)");
+
+            // Specify the SQL Server column type for the Price property in ProductVariant
+            modelBuilder.Entity<ProductVariant>()
+                .Property(pv => pv.Price)
                 .HasColumnType("decimal(18,2)");
         }
     }

@@ -10,7 +10,7 @@ namespace SHN_Gear.Models
         public DateTime? FlashSaleStart { get; set; } // Thời gian bắt đầu flash sale
         public DateTime? FlashSaleEnd { get; set; } // Thời gian kết thúc flash sale
         public List<ProductImage> Images { get; set; } = new();
-        public string Category { get; set; } = null!; // Điện thoại, laptop, tai nghe
+        public Category Category { get; set; } = null!; // Điện thoại, laptop, tai nghe
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public int StockQuantity { get; set; }  // Số lượng tồn kho
 

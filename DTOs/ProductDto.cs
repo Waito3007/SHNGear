@@ -8,7 +8,8 @@ namespace SHN_Gear.DTOs
         public decimal? DiscountPrice { get; set; }  // Giá sau khi giảm, có thể null
         public DateTime? FlashSaleStart { get; set; } // Thời gian bắt đầu flash sale
         public DateTime? FlashSaleEnd { get; set; } // Thời gian kết thúc flash sale
-        public string Category { get; set; } = null!;
+        public int CategoryId { get; set; } // ID của danh mục
+        public List<int> BrandIds { get; set; } = new(); // Danh sách ID của các thương hiệu
         public List<string>? ImageUrls { get; set; } // Danh sách URL ảnh sản phẩm
         public int StockQuantity { get; set; } // Số lượng tồn kho
         public List<ProductVariantDto> Variants { get; set; } = new(); // Danh sách biến thể sản phẩm
