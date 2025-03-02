@@ -36,19 +36,15 @@ namespace SHN_Gear.Data
                 .HasIndex(u => u.PhoneNumber)
                 .IsUnique();
 
-            // Specify the SQL Server column type for the Price and DiscountPrice properties
-            modelBuilder.Entity<Product>()
-                .Property(p => p.Price)
-                .HasColumnType("decimal(18,2)");
-
-            modelBuilder.Entity<Product>()
-                .Property(p => p.DiscountPrice)
-                .HasColumnType("decimal(18,2)");
-
             // Specify the SQL Server column type for the Price property in ProductVariant
             modelBuilder.Entity<ProductVariant>()
                 .Property(pv => pv.Price)
                 .HasColumnType("decimal(18,2)");
+
+            // Specify the SQL Server column type for the DiscountPrice property in ProductVariant
+            modelBuilder.Entity<ProductVariant>()
+                .Property(pv => pv.DiscountPrice)
+                .HasPrecision(18, 2);
         }
     }
 }

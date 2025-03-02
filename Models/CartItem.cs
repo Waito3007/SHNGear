@@ -1,16 +1,17 @@
 namespace SHN_Gear.Models
 {
     public class CartItem
-    {
-        public int Id { get; set; }
-        public int CartId { get; set; } // Khóa ngoại liên kết với giỏ hàng
-        public Cart Cart { get; set; } = null!; // Khóa ngoại
+{
+    public int Id { get; set; }
+    public int CartId { get; set; }
+    public Cart Cart { get; set; } = null!;
 
-        public int ProductId { get; set; } // Khóa ngoại liên kết với sản phẩm
-        public Product Product { get; set; } = null!; // Khóa ngoại
+    public int ProductVariantId { get; set; }  // 🔹 Thay đổi từ ProductId sang ProductVariantId
+    public ProductVariant ProductVariant { get; set; } = null!;  // 🔹 Liên kết đến ProductVariant
 
-        public int Quantity { get; set; } // Số lượng sản phẩm
-        public DateTime AddedAt { get; set; } = DateTime.UtcNow; // Thời gian thêm sản phẩm vào giỏ hàng
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow; // Thời gian cập nhật sản phẩm trong giỏ hàng
-    }
+    public int Quantity { get; set; }
+    public DateTime AddedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+}
+
 }

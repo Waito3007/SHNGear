@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SHN_Gear.Data;
 
@@ -11,9 +12,11 @@ using SHN_Gear.Data;
 namespace SHN_Gear.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250302091720_UpdateProductVariantFlashSale")]
+    partial class UpdateProductVariantFlashSale
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,6 +33,9 @@ namespace SHN_Gear.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -43,6 +49,8 @@ namespace SHN_Gear.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
 
                     b.ToTable("Brands");
                 });
@@ -297,9 +305,6 @@ namespace SHN_Gear.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("BrandId")
-                        .HasColumnType("int");
-
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
@@ -315,8 +320,6 @@ namespace SHN_Gear.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("BrandId");
 
                     b.HasIndex("CategoryId");
 
@@ -489,6 +492,13 @@ namespace SHN_Gear.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("SHN_Gear.Models.Brand", b =>
+                {
+                    b.HasOne("SHN_Gear.Models.Category", null)
+                        .WithMany("Brands")
+                        .HasForeignKey("CategoryId");
+                });
+
             modelBuilder.Entity("SHN_Gear.Models.CartItem", b =>
                 {
                     b.HasOne("SHN_Gear.Models.Cart", "Cart")
@@ -543,19 +553,11 @@ namespace SHN_Gear.Migrations
 
             modelBuilder.Entity("SHN_Gear.Models.Product", b =>
                 {
-                    b.HasOne("SHN_Gear.Models.Brand", "Brand")
-                        .WithMany("Products")
-                        .HasForeignKey("BrandId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("SHN_Gear.Models.Category", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Brand");
 
                     b.Navigation("Category");
                 });
@@ -593,14 +595,14 @@ namespace SHN_Gear.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("SHN_Gear.Models.Brand", b =>
-                {
-                    b.Navigation("Products");
-                });
-
             modelBuilder.Entity("SHN_Gear.Models.Cart", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.Category", b =>
+                {
+                    b.Navigation("Brands");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Product", b =>
