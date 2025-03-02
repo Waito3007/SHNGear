@@ -1,3 +1,4 @@
+using Microsoft.Extensions.FileProviders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -6,7 +7,6 @@ using SHN_Gear.Data;
 using System.Text.Json.Serialization;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,7 +42,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Thêm Swagger ( kiểm thử api)
+// Thêm Swagger ( kiểm thử API)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
