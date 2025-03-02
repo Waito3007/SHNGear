@@ -50,10 +50,13 @@ public class ProductsController : ControllerBase
 
     // 📌 Thêm sản phẩm mới
     [HttpPost]
-    public async Task<ActionResult<Product>> PostProduct(ProductDto productDto)
+    public async Task<ActionResult<Product>> PostProduct([FromBody] ProductDto productDto)
     {
         if (productDto == null)
             return BadRequest("Dữ liệu sản phẩm không hợp lệ.");
+
+        if (string.IsNullOrWhiteSpace(productDto.Name) || productDto.CategoryId <= 0 || productDto.BrandId <= 0)
+            return BadRequest("Tên, danh mục hoặc thương hiệu không hợp lệ.");
 
         var product = new Product
         {
@@ -61,12 +64,12 @@ public class ProductsController : ControllerBase
             Description = productDto.Description,
             CategoryId = productDto.CategoryId,
             BrandId = productDto.BrandId,
-            Images = productDto.Images.Select(img => new ProductImage
+            Images = productDto.Images?.Select(img => new ProductImage
             {
                 ImageUrl = img.ImageUrl,
                 IsPrimary = img.IsPrimary
-            }).ToList(),
-            Variants = productDto.Variants.Select(v => new ProductVariant
+            }).ToList() ?? new List<ProductImage>(),
+            Variants = productDto.Variants?.Select(v => new ProductVariant
             {
                 Color = v.Color,
                 Storage = v.Storage,
@@ -75,7 +78,7 @@ public class ProductsController : ControllerBase
                 StockQuantity = v.StockQuantity,
                 FlashSaleStart = v.FlashSaleStart,
                 FlashSaleEnd = v.FlashSaleEnd
-            }).ToList()
+            }).ToList() ?? new List<ProductVariant>()
         };
 
         _context.Products.Add(product);

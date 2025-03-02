@@ -29,6 +29,7 @@ const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
     const [categories, setCategories] = useState([]);
     const [brands, setBrands] = useState([]);
     const [uploadingImage, setUploadingImage] = useState(false);
+    const [imageError, setImageError] = useState('');
 
     useEffect(() => {
         axios.get('https://localhost:7107/api/categories')
@@ -40,26 +41,36 @@ const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
             .catch(error => console.error('Error fetching brands:', error));
     }, []);
 
+    // 📌 Upload ảnh lên Cloudinary thông qua backend
     const handleImageUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
+        const files = Array.from(e.target.files); // Lấy danh sách file
+        if (!files.length) return;
+    
         setUploadingImage(true);
-        const formData = new FormData();
-        formData.append('file', file);
-
+        setImageError('');
+    
         try {
-            const response = await axios.post('https://localhost:7107/api/upload', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
+            const uploadPromises = files.map(async (file) => {
+                const formData = new FormData();
+                formData.append('file', file);
+    
+                const response = await axios.post('https://localhost:7107/api/upload', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+    
+                return { imageUrl: response.data, isPrimary: imageFields.length === 0 };
             });
-
-            appendImage({ imageUrl: response.data.url, isPrimary: imageFields.length === 0 });
+    
+            const uploadedImages = await Promise.all(uploadPromises);
+            uploadedImages.forEach(img => appendImage(img)); // Thêm tất cả ảnh đã tải lên vào danh sách
         } catch (error) {
             console.error('Image upload failed:', error);
+            setImageError('Tải ảnh thất bại, vui lòng thử lại.');
         } finally {
             setUploadingImage(false);
         }
     };
+    
 
     const onSubmit = async (data) => {
         try {
@@ -98,8 +109,14 @@ const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
 
                     {/* Hình ảnh */}
                     <label className='block text-sm'>Hình ảnh</label>
-                    <input type='file' accept='image/*' onChange={handleImageUpload} className='w-full p-2 mb-3 bg-gray-800 border border-gray-700 rounded-md' />
-                    {uploadingImage && <p className="text-sm text-gray-400">Đang tải ảnh...</p>}
+                    <input 
+                        type='file' 
+                        accept='image/*' 
+                        multiple
+                        onChange={handleImageUpload} 
+                        className='w-full p-2 mb-3 bg-gray-800 border border-gray-700 rounded-md' 
+                    />
+
                     <div className="mt-2">
                         {imageFields.map((img, index) => (
                             <div key={index} className="flex items-center space-x-2">
@@ -124,15 +141,6 @@ const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
 
                             <label className='block text-xs'>Giá giảm</label>
                             <input type='number' {...register(`variants.${index}.discountPrice`)} className='w-full p-1 mb-2 bg-gray-800 border border-gray-700 rounded-md' />
-
-                            <label className='block text-xs'>Số lượng tồn</label>
-                            <input type='number' {...register(`variants.${index}.stockQuantity`)} className='w-full p-1 mb-2 bg-gray-800 border border-gray-700 rounded-md' required />
-
-                            <label className='block text-xs'>Flash Sale - Ngày bắt đầu</label>
-                            <input type='datetime-local' {...register(`variants.${index}.flashSaleStart`)} className='w-full p-1 mb-2 bg-gray-800 border border-gray-700 rounded-md' />
-
-                            <label className='block text-xs'>Flash Sale - Ngày kết thúc</label>
-                            <input type='datetime-local' {...register(`variants.${index}.flashSaleEnd`)} className='w-full p-1 mb-2 bg-gray-800 border border-gray-700 rounded-md' />
 
                             <button type="button" onClick={() => removeVariant(index)} className="text-red-500 mt-2">Xóa biến thể</button>
                         </div>
