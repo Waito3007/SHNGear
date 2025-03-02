@@ -169,9 +169,10 @@ namespace SHN_Gear.Controllers
         // Hàm lấy publicId từ URL của Cloudinary
         private string GetPublicIdFromUrl(string url)
         {
-            var matches = Regex.Match(url, @"\/v\d+\/(.+)\.(jpg|jpeg|png|gif|webp)");
+            var matches = Regex.Match(url, @"\/upload\/(?:v\d+\/)?([^\.]+)");
             return matches.Success ? matches.Groups[1].Value : null;
         }
+
 
         // Xóa sản phẩm và tất cả thông tin liên quan (thông số kỹ thuật & ảnh sản phẩm)
         [HttpDelete("{id}")]
