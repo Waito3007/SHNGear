@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { toast } from 'react-toastify'; // Import the toast module
 import { Edit, Search, Trash2, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import ProductDrawer from './AddProductDrawer'; // Import the new ProductDrawer component
@@ -9,9 +10,13 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Button from '@mui/material/Button';
+import CategoryBrandDrawer from './CategoryBrandDrawer'; // Import the CategoryBrandDrawer component
+import BrandDrawer from './BrandDrawer'; // Import the BrandDrawer component
+import Pagination from '@mui/material/Pagination';
 
 const ProductsTable = () => {
     const [searchTerm, setSearchTerm] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
     const [products, setProducts] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -19,9 +24,13 @@ const ProductsTable = () => {
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [productToDelete, setProductToDelete] = useState(null);
+    const [isCategoryBrandDrawerOpen, setIsCategoryBrandDrawerOpen] = useState(false);
+    const [isBrandDrawerOpen, setIsBrandDrawerOpen] = useState(false);
+    const [page, setPage] = useState(1);
+    const productsPerPage = 11;
 
     useEffect(() => {
-        fetch('https://localhost:7107/api/products')
+        fetch('https://localhost:7107/api/Products')
             .then(response => response.json())
             .then(data => {
                 if (data && data.$values && Array.isArray(data.$values)) {
@@ -68,23 +77,42 @@ const ProductsTable = () => {
     };
 
     const confirmDeleteProduct = async () => {
-        try {
-            const response = await fetch(`https://localhost:7107/api/products/${productToDelete.id}`, {
-                method: 'DELETE',
-            });
-            if (response.ok) {
-                const updatedProducts = products.filter((product) => product.id !== productToDelete.id);
-                setProducts(updatedProducts);
-                setFilteredProducts(updatedProducts);
-                setIsDeleteDialogOpen(false);
-                setProductToDelete(null);
-            } else {
-                console.error('Failed to delete product');
-            }
-        } catch (error) {
-            console.error('Error deleting product:', error);
+    if (!productToDelete) return;
+
+    setIsLoading(true);
+    try {
+        const response = await fetch(`https://localhost:7107/api/Products/${productToDelete.id}`, {
+            method: 'DELETE',
+        });
+
+        if (response.ok) {
+            const updatedProducts = products.filter((p) => p.id !== productToDelete.id);
+            setProducts(updatedProducts);
+            setFilteredProducts(updatedProducts);
+            toast.success("Sản phẩm đã được xóa thành công!"); // Hiển thị thông báo
+            setIsDeleteDialogOpen(false);
+            setProductToDelete(null);
+        } else {
+            const errorMessage = await response.text();
+            toast.error(`Lỗi: ${errorMessage || 'Không thể xóa sản phẩm'}`);
         }
+    } catch (error) {
+        toast.error("Lỗi khi xóa sản phẩm, vui lòng thử lại!");
+        console.error("Error deleting product:", error);
+    } finally {
+        setIsLoading(false);
+    }
+};
+
+
+    const handlePageChange = (event, value) => {
+        setPage(value);
     };
+
+    // Calculate the products to display on the current page
+    const indexOfLastProduct = page * productsPerPage;
+    const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+    const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
 
     return (
         <motion.div
@@ -106,8 +134,14 @@ const ProductsTable = () => {
                     />
                     <Search className='absolute left-3 top-2.5 text-gray-400' size={18} />
                 </div>
-                <button className='text-indigo-400 hover:text-indigo-300 mr-2' onClick={() => setIsDrawerOpen(true)}>
-                <Plus size={18} />
+                <button className='text-indigo-400 hover:text-indigo-300 mr-2 text-sm rounded-lg px-3 py-1 border border-indigo-400' onClick={() => setIsDrawerOpen(true)}>
+                    Thêm Sản Phẩm
+                </button>
+                <button className='text-indigo-400 hover:text-indigo-300 mr-2 text-sm rounded-lg px-3 py-1 border border-indigo-400' onClick={() => setIsCategoryBrandDrawerOpen(true)}>
+                    Thêm Danh Mục
+                </button>
+                <button className='text-indigo-400 hover:text-indigo-300 mr-2 text-sm rounded-lg px-3 py-1 border border-indigo-400' onClick={() => setIsBrandDrawerOpen(true)}>
+                    Thêm Thương hiệu
                 </button>
             </div>
 
@@ -119,13 +153,13 @@ const ProductsTable = () => {
                                 Tên
                             </th>
                             <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
+                                Brand
+                            </th>
+                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
                                 Danh mục
                             </th>
                             <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
                                 Giá
-                            </th>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
-                                Tồn kho
                             </th>
                             <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
                                 Bán
@@ -137,7 +171,7 @@ const ProductsTable = () => {
                     </thead>
 
                     <tbody className='divide-y divide-gray-700'>
-                        {filteredProducts.map((product) => (
+                        {currentProducts.map((product) => (
                             <motion.tr
                                 key={product.id}
                                 initial={{ opacity: 0 }}
@@ -152,16 +186,22 @@ const ProductsTable = () => {
                                     />
                                     {product.name}
                                 </td>
-
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    {product.category}
+                                    {product.brand ? product.brand.name : "Không có thương hiệu"}
                                 </td>
-
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    ${product.price ? product.price.toFixed(2) : 'N/A'}
+                                    {product.category ? product.category.name : 'Chưa có danh mục'}
                                 </td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>{product.stockQuantity}</td>
-                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>{product.sales}</td>
+                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
+                                    {product.variants && product.variants.$values && product.variants.$values.length > 0 
+                                        ? `${product.variants.$values[0].price.toLocaleString()} VND` 
+                                        : 'Chưa có giá'}
+                                </td>
+                                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
+                                    {product.variants && product.variants.$values && product.variants.$values.length > 0 
+                                        ? `${product.variants.$values[0].discountPrice.toLocaleString()} VND` 
+                                        : 'Không có giá giảm'}
+                                </td>
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
                                     <button className='text-indigo-400 hover:text-indigo-300 mr-2' onClick={() => handleEditProduct(product)}>
                                         <Edit size={18} />
@@ -175,6 +215,14 @@ const ProductsTable = () => {
                     </tbody>
                 </table>
             </div>
+
+            <Pagination
+                count={Math.ceil(filteredProducts.length / productsPerPage)}
+                page={page}
+                onChange={handlePageChange}
+                color='primary'
+                className='mt-4 flex justify-center'
+            />
 
             <ProductDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} onAddProduct={handleAddProduct} />
             <EditProductDrawer
@@ -205,6 +253,9 @@ const ProductsTable = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            <CategoryBrandDrawer open={isCategoryBrandDrawerOpen} onClose={() => setIsCategoryBrandDrawerOpen(false)} />
+            <BrandDrawer open={isBrandDrawerOpen} onClose={() => setIsBrandDrawerOpen(false)} />
         </motion.div>
     );
 };
