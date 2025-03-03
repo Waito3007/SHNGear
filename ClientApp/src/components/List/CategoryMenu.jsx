@@ -2,7 +2,7 @@ import React from "react";
 import { FaMobileAlt, FaLaptop, FaHeadphones } from "react-icons/fa";
 
 const categories = [
-  { name: "Laptop & PC", icon: <FaLaptop /> },
+  { name: "Laptop", icon: <FaLaptop /> },
   { name: "Điện thoại", icon: <FaMobileAlt /> },
   { name: "Phụ kiện", icon: <FaHeadphones /> },
 ];

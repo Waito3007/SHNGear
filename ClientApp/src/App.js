@@ -14,7 +14,7 @@ export default class App extends Component {
       <Routes>
         <Route path="/productlist" element={<ProductList />} />
         <Route path="/profile/" element={<ProfilePage />} />
-        <Route path="/product/" element={<ProductPage />} />
+        <Route path="/product/:id" element={<ProductPage />} />
         {AppRoutes.map((route, index) => {
           const { element, path } = route;
           const isAdminRoute = path && path.startsWith("/admin");
