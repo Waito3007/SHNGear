@@ -1,57 +1,82 @@
-import React, { useState, useEffect } from 'react';
-import Drawer from '@mui/material/Drawer';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import MenuItem from '@mui/material/MenuItem';
-import IconButton from '@mui/material/IconButton';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import Drawer from "@mui/material/Drawer";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import MenuItem from "@mui/material/MenuItem";
+import IconButton from "@mui/material/IconButton";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
+import axios from "axios";
 
 const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
     const [formData, setFormData] = useState({
-        name: '',
-        description: '',
-        categoryId: '',
-        brandId: '',
-        variants: [],
-        images: [], // Thêm trường images để chứa danh sách link ảnh
+        name: "",
+        description: "",
+        categoryId: "",
+        brandId: "",
+        images: [{ imageUrl: "", isPrimary: false }],
+        variants: [
+            {
+                color: "",
+                storage: "",
+                price: "",
+                discountPrice: "",
+                stockQuantity: "",
+                flashSaleStart: "",
+                flashSaleEnd: "",
+            },
+        ],
     });
     const [categories, setCategories] = useState([]);
     const [brands, setBrands] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
+    // Khởi tạo formData từ product
     useEffect(() => {
         if (product) {
             setFormData({
-                name: product.name || '',
-                description: product.description || '',
-                categoryId: product.categoryId || '',
-                brandId: product.brandId || '',
-                variants: product.variants?.$values?.length > 0
-                    ? product.variants.$values.map(variant => ({
-                        color: variant.color || '',
-                        storage: variant.storage || '',
-                        price: variant.price || '',
-                        discountPrice: variant.discountPrice || '',
-                        stockQuantity: variant.stockQuantity || '',
-                        flashSaleStart: variant.flashSaleStart || '',
-                        flashSaleEnd: variant.flashSaleEnd || '',
-                    }))
-                    : [{ color: '', storage: '', price: '', discountPrice: '', stockQuantity: '', flashSaleStart: '', flashSaleEnd: '' }],
-                images: product.images?.$values?.length > 0
-                    ? product.images.$values.map(img => ({ imageUrl: img.imageUrl || '', isPrimary: img.isPrimary || false }))
-                    : [{ imageUrl: '', isPrimary: false }], // Khởi tạo với một ô ảnh trống
+                name: product.name || "",
+                description: product.description || "",
+                categoryId: product.categoryId || "",
+                brandId: product.brandId || "",
+                images: product.images?.length > 0
+                    ? product.images.map((img) => ({
+                          imageUrl: img.imageUrl || "",
+                          isPrimary: img.isPrimary || false,
+                      }))
+                    : [{ imageUrl: "", isPrimary: false }],
+                variants: product.variants?.length > 0
+                    ? product.variants.map((variant) => ({
+                          color: variant.color || "",
+                          storage: variant.storage || "",
+                          price: variant.price || "",
+                          discountPrice: variant.discountPrice || "",
+                          stockQuantity: variant.stockQuantity || "",
+                          flashSaleStart: variant.flashSaleStart || "",
+                          flashSaleEnd: variant.flashSaleEnd || "",
+                      }))
+                    : [
+                          {
+                              color: "",
+                              storage: "",
+                              price: "",
+                              discountPrice: "",
+                              stockQuantity: "",
+                              flashSaleStart: "",
+                              flashSaleEnd: "",
+                          },
+                      ],
             });
         }
     }, [product]);
 
+    // Lấy danh sách categories
     useEffect(() => {
         const fetchCategories = async () => {
             try {
                 const response = await axios.get("https://localhost:7107/api/categories");
-                setCategories(response.data.$values || []);
+                setCategories(response.data.$values || response.data || []);
             } catch (error) {
                 console.error("Lỗi khi lấy danh mục:", error);
                 setCategories([]);
@@ -60,11 +85,12 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
         fetchCategories();
     }, []);
 
+    // Lấy danh sách brands
     useEffect(() => {
         const fetchBrands = async () => {
             try {
                 const response = await axios.get("https://localhost:7107/api/brands");
-                setBrands(response.data.$values || []);
+                setBrands(response.data.$values || response.data || []);
             } catch (error) {
                 console.error("Lỗi khi lấy thương hiệu:", error);
                 setBrands([]);
@@ -73,94 +99,107 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
         fetchBrands();
     }, []);
 
+    // Xử lý thay đổi giá trị trong form
     const handleChange = (e, index, type) => {
         const { name, value } = e.target;
-        if (type === 'variant' && index !== undefined) {
-            // Cập nhật biến thể
-            setFormData(prev => {
+        if (type === "variant" && index !== undefined) {
+            setFormData((prev) => {
                 const newVariants = [...prev.variants];
                 newVariants[index] = { ...newVariants[index], [name]: value };
                 return { ...prev, variants: newVariants };
             });
-        } else if (type === 'image' && index !== undefined) {
-            // Cập nhật ảnh
-            setFormData(prev => {
+        } else if (type === "image" && index !== undefined) {
+            setFormData((prev) => {
                 const newImages = [...prev.images];
                 newImages[index] = { ...newImages[index], [name]: value };
                 return { ...prev, images: newImages };
             });
         } else {
-            // Cập nhật các trường khác
-            setFormData(prev => ({ ...prev, [name]: value }));
+            setFormData((prev) => ({ ...prev, [name]: value }));
         }
     };
 
     const addVariant = () => {
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
-            variants: [...prev.variants, { color: '', storage: '', price: '', discountPrice: '', stockQuantity: '', flashSaleStart: '', flashSaleEnd: '' }],
+            variants: [
+                ...prev.variants,
+                {
+                    color: "",
+                    storage: "",
+                    price: "",
+                    discountPrice: "",
+                    stockQuantity: "",
+                    flashSaleStart: "",
+                    flashSaleEnd: "",
+                },
+            ],
         }));
     };
 
     const removeVariant = (index) => {
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
             variants: prev.variants.filter((_, i) => i !== index),
         }));
     };
 
     const addImage = () => {
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
-            images: [...prev.images, { imageUrl: '', isPrimary: false }],
+            images: [...prev.images, { imageUrl: "", isPrimary: false }],
         }));
     };
 
     const removeImage = (index) => {
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
             images: prev.images.filter((_, i) => i !== index),
         }));
     };
 
+    // Gửi dữ liệu cập nhật lên API
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
+
         try {
             const updatedData = {
                 name: formData.name,
                 description: formData.description,
-                categoryId: formData.categoryId,
-                brandId: formData.brandId,
-                variants: formData.variants.map(variant => ({
+                categoryId: parseInt(formData.categoryId), // Chuyển sang số
+                brandId: parseInt(formData.brandId), // Chuyển sang số
+                images: formData.images.map((img) => ({
+                    imageUrl: img.imageUrl,
+                    isPrimary: img.isPrimary || false, // Đảm bảo có giá trị
+                })),
+                variants: formData.variants.map((variant) => ({
                     color: variant.color,
                     storage: variant.storage,
-                    price: parseFloat(variant.price),
-                    discountPrice: parseFloat(variant.discountPrice),
-                    stockQuantity: parseInt(variant.stockQuantity, 10),
+                    price: parseFloat(variant.price) || 0, // Chuyển sang số, mặc định 0 nếu rỗng
+                    discountPrice: variant.discountPrice ? parseFloat(variant.discountPrice) : null,
+                    stockQuantity: parseInt(variant.stockQuantity) || 0, // Chuyển sang số, mặc định 0 nếu rỗng
                     flashSaleStart: variant.flashSaleStart || null,
                     flashSaleEnd: variant.flashSaleEnd || null,
                 })),
-                images: formData.images.map(img => ({
-                    imageUrl: img.imageUrl,
-                    isPrimary: img.isPrimary,
-                })),
             };
+
+            console.log("Submitting data:", updatedData); // Debug dữ liệu gửi lên
 
             const response = await axios.put(
                 `https://localhost:7107/api/products/${product.id}`,
                 updatedData,
-                { headers: { 'Content-Type': 'application/json' } }
+                { headers: { "Content-Type": "application/json" } }
             );
 
             if (response.status === 204 || response.status === 200) {
-                onUpdateProduct({ ...product, ...updatedData });
+                onUpdateProduct({ ...product, ...updatedData }); // Cập nhật sản phẩm trong state cha
                 onClose();
             }
         } catch (error) {
-            setError('Lỗi khi cập nhật sản phẩm: ' + error.message);
-            console.error('Lỗi khi cập nhật sản phẩm:', error);
+            setError("Lỗi khi cập nhật sản phẩm: " + (error.response?.data?.message || error.message));
+            console.error("Lỗi khi cập nhật sản phẩm:", error);
         } finally {
             setLoading(false);
         }
@@ -170,7 +209,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
         <Drawer anchor="right" open={isOpen} onClose={onClose}>
             <div style={{ width: 500, padding: 20 }}>
                 <h2>Edit Product</h2>
-                {error && <p style={{ color: 'red' }}>{error}</p>}
+                {error && <p style={{ color: "red" }}>{error}</p>}
                 <form onSubmit={handleSubmit}>
                     <TextField
                         label="Name"
@@ -179,6 +218,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
                         onChange={handleChange}
                         fullWidth
                         margin="normal"
+                        required
                     />
                     <TextField
                         label="Description"
@@ -187,6 +227,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
                         onChange={handleChange}
                         fullWidth
                         margin="normal"
+                        required
                     />
                     <TextField
                         label="Category"
@@ -196,6 +237,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
                         onChange={handleChange}
                         fullWidth
                         margin="normal"
+                        required
                     >
                         {categories.length > 0 ? (
                             categories.map((cat) => (
@@ -215,6 +257,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
                         onChange={handleChange}
                         fullWidth
                         margin="normal"
+                        required
                     >
                         {brands.length > 0 ? (
                             brands.map((brand) => (
@@ -229,14 +272,18 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
 
                     <h3>Images</h3>
                     {formData.images.map((image, index) => (
-                        <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+                        <div
+                            key={index}
+                            style={{ display: "flex", alignItems: "center", marginBottom: 10 }}
+                        >
                             <TextField
                                 label="Image URL"
                                 name="imageUrl"
                                 value={image.imageUrl}
-                                onChange={(e) => handleChange(e, index, 'image')}
+                                onChange={(e) => handleChange(e, index, "image")}
                                 fullWidth
                                 margin="normal"
+                                required
                             />
                             <IconButton onClick={() => removeImage(index)} color="error">
                                 <DeleteIcon />
@@ -254,38 +301,44 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
 
                     <h3>Variants</h3>
                     {formData.variants.map((variant, index) => (
-                        <div key={index} style={{ border: '1px solid #ccc', padding: 10, marginBottom: 10 }}>
+                        <div
+                            key={index}
+                            style={{ border: "1px solid #ccc", padding: 10, marginBottom: 10 }}
+                        >
                             <TextField
                                 label="Color"
                                 name="color"
                                 value={variant.color}
-                                onChange={(e) => handleChange(e, index, 'variant')}
+                                onChange={(e) => handleChange(e, index, "variant")}
                                 fullWidth
                                 margin="normal"
+                                required
                             />
                             <TextField
                                 label="Storage"
                                 name="storage"
                                 value={variant.storage}
-                                onChange={(e) => handleChange(e, index, 'variant')}
+                                onChange={(e) => handleChange(e, index, "variant")}
                                 fullWidth
                                 margin="normal"
+                                required
                             />
                             <TextField
                                 label="Price"
                                 name="price"
                                 type="number"
                                 value={variant.price}
-                                onChange={(e) => handleChange(e, index, 'variant')}
+                                onChange={(e) => handleChange(e, index, "variant")}
                                 fullWidth
                                 margin="normal"
+                                required
                             />
                             <TextField
                                 label="Discount Price"
                                 name="discountPrice"
                                 type="number"
                                 value={variant.discountPrice}
-                                onChange={(e) => handleChange(e, index, 'variant')}
+                                onChange={(e) => handleChange(e, index, "variant")}
                                 fullWidth
                                 margin="normal"
                             />
@@ -294,16 +347,17 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
                                 name="stockQuantity"
                                 type="number"
                                 value={variant.stockQuantity}
-                                onChange={(e) => handleChange(e, index, 'variant')}
+                                onChange={(e) => handleChange(e, index, "variant")}
                                 fullWidth
                                 margin="normal"
+                                required
                             />
                             <TextField
                                 label="Flash Sale Start"
                                 name="flashSaleStart"
                                 type="datetime-local"
                                 value={variant.flashSaleStart}
-                                onChange={(e) => handleChange(e, index, 'variant')}
+                                onChange={(e) => handleChange(e, index, "variant")}
                                 fullWidth
                                 margin="normal"
                                 InputLabelProps={{ shrink: true }}
@@ -313,7 +367,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
                                 name="flashSaleEnd"
                                 type="datetime-local"
                                 value={variant.flashSaleEnd}
-                                onChange={(e) => handleChange(e, index, 'variant')}
+                                onChange={(e) => handleChange(e, index, "variant")}
                                 fullWidth
                                 margin="normal"
                                 InputLabelProps={{ shrink: true }}
@@ -339,7 +393,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
                         disabled={loading}
                         fullWidth
                     >
-                        {loading ? 'Saving...' : 'Save'}
+                        {loading ? "Saving..." : "Save"}
                     </Button>
                 </form>
             </div>
