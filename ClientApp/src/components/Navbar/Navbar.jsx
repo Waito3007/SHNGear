@@ -7,6 +7,7 @@ import {
   Headphones,
   House,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import "./Navbar.css";
 import menu from "../../assets/icon/menu.svg";
 import logo from "../../assets/img/Phone/logo.png"; // Import logo
@@ -16,6 +17,7 @@ const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false); // State for AuthModal
   const dropdownRef = useRef(null);
+  const navigate = useNavigate(); // Khai báo navigate
 
   // Toggle dropdown
   const toggleDropdown = () => {
@@ -46,8 +48,14 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        {/* Logo */}
-        <img src={logo} alt="SHN Gear" className="navbar-logo" />
+        {/* Logo có sự kiện onClick */}
+        <img
+          src={logo}
+          alt="SHN Gear"
+          className="navbar-logo"
+          onClick={() => navigate("/")} // Điều hướng về trang chủ
+          style={{ cursor: "pointer" }} // Con trỏ chuột dạng clickable
+        />
 
         {/* Nút Danh mục */}
         <div className="menu-container" ref={dropdownRef}>
@@ -78,18 +86,41 @@ const Navbar = () => {
             </div>
           )}
         </div>
-        
+
         {/* Ô tìm kiếm */}
         <div className="search-bar">
-          <input type="text" placeholder="Tìm kiếm sản phẩm..." className="search-input" />
+          <input
+            type="text"
+            placeholder="Tìm kiếm sản phẩm..."
+            className="search-input"
+          />
           <button type="submit" title="Tìm kiếm" className="search-button">
-          <svg class="feather feather-search" fill="none" height="24" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+            <svg
+              className="feather feather-search"
+              fill="none"
+              height="24"
+              stroke="black"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" x2="16.65" y1="21" y2="16.65" />
+            </svg>
           </button>
         </div>
 
         <div className="avatarandcart">
           {/* Avatar */}
-          <User size={35} strokeWidth={2} className="avatar-icon" onClick={openAuthModal} />
+          <User
+            size={35}
+            strokeWidth={2}
+            className="avatar-icon"
+            onClick={openAuthModal}
+          />
           {/* Nút Giỏ hàng */}
           <button className="cart-button">
             <ShoppingCart size={22} strokeWidth={2} />

@@ -6,8 +6,9 @@ import {
   Card,
   CardContent,
   CardActionArea,
+  Button,
 } from "@mui/material";
-import { CheckCircle } from "@mui/icons-material";
+import { CheckCircle, ShoppingCart } from "@mui/icons-material";
 
 const ProductVariants = ({ variants }) => {
   const [selectedVariant, setSelectedVariant] = useState(variants[0]);
@@ -20,7 +21,12 @@ const ProductVariants = ({ variants }) => {
   return (
     <Box mt={4}>
       {/* Chọn Dung Lượng */}
-      <Typography variant="h6" fontWeight="bold" gutterBottom>
+      <Typography
+        variant="h6"
+        fontWeight="bold"
+        gutterBottom
+        sx={{ marginTop: "-40px" }}
+      >
         Dung lượng
       </Typography>
       <Grid container spacing={2}>
@@ -87,12 +93,17 @@ const ProductVariants = ({ variants }) => {
                 }}
               >
                 <CardActionArea onClick={() => handleSelect("color", color)}>
+                  {/* Hiển thị ảnh màu sắc */}
                   <Box
                     sx={{
                       width: "100%",
                       height: 80,
-                      backgroundImage: `url(${variant.imageUrl})`,
-                      backgroundSize: "cover",
+                      backgroundImage: `url(${
+                        variant.imageUrl ||
+                        "https://cdn2.fptshop.com.vn/unsafe/750x0/filters:quality(100)/iphone_16_pro_natural_titan_412b47e840.png"
+                      })`,
+                      backgroundSize: "contain",
+                      backgroundRepeat: "no-repeat",
                       backgroundPosition: "center",
                       borderRadius: "5px 5px 0 0",
                     }}
@@ -118,6 +129,38 @@ const ProductVariants = ({ variants }) => {
           );
         })}
       </Grid>
+
+      {/* Buttons: Thêm vào giỏ hàng & Mua ngay */}
+      <Box mt={3} display="flex" gap={2}>
+        <Button
+          variant="outlined"
+          startIcon={<ShoppingCart />}
+          sx={{
+            flex: 1,
+            borderColor: "#d32f2f",
+            color: "#d32f2f",
+            "&:hover": {
+              borderColor: "#b71c1c",
+              backgroundColor: "rgba(211, 47, 47, 0.1)",
+            },
+          }}
+        >
+          Thêm vào giỏ hàng
+        </Button>
+        <Button
+          variant="contained"
+          sx={{
+            flex: 1,
+            backgroundColor: "#d32f2f",
+            color: "#fff",
+            "&:hover": {
+              backgroundColor: "#b71c1c",
+            },
+          }}
+        >
+          Mua ngay
+        </Button>
+      </Box>
     </Box>
   );
 };

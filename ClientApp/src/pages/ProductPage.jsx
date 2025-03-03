@@ -7,6 +7,9 @@ import ProductVariants from "../components/productinformationpage/ProductVariant
 import Footer from "../components/Footer/Footer";
 import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
+import ProductReviews from "../components/productinformationpage/ProductReviews";
+import RelatedProducts from "../components/productinformationpage/RelatedProducts";
+import Commitment from "../components/Commitment/Commitment";
 
 const ProductPage = () => {
   const { id } = useParams();
@@ -65,8 +68,18 @@ const ProductPage = () => {
             <ProductVariants variants={product?.variants} />
           </div>
         </div>
-      </div>
 
+        {/* Đánh giá sản phẩm */}
+        <div className="md:col-span-2 mt-16s">
+          <ProductReviews reviews={product?.reviews} />
+        </div>
+
+        {/* Sản phẩm liên quan */}
+        <div className="md:col-span-2 mt-16">
+          <RelatedProducts category={product?.category} currentProductId={id} />
+        </div>
+      </div>
+      <Commitment />
       {/* Footer */}
       <Footer />
     </div>
