@@ -1,68 +1,76 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 
-const products = [
-  {
-    id: 1,
-    name: "iPhone 16 Pro Max 256GB",
-    oldPrice: 34990000,
-    newPrice: 31490000,
-    discount: "-10%",
-    discountAmount: 3500000,
-    image: "/images/iphone16.jpg",
-    features: ["6.9 inch", "Chip A18 Pro", "Nút Camera Control"],
-  },
-  {
-    id: 2,
-    name: "MacBook Air 13 M3 2024",
-    oldPrice: 27990000,
-    newPrice: 26990000,
-    discount: "-4%",
-    discountAmount: 1000000,
-    image: "/images/macbook.jpg",
-    features: ["Chip Apple M3", "8CPU/16GB RAM", "Mỏng nhẹ"],
-  },
-  {
-    id: 3,
-    name: "iPad Pro 11 inch M4 256GB",
-    oldPrice: 28990000,
-    newPrice: 27790000,
-    discount: "-4%",
-    discountAmount: 1200000,
-    image: "/images/ipad.jpg",
-    features: ["Màn hình Ultra Retina XDR", "Chip M4 AI", "Pin 18 giờ"],
-  },
-  {
-    id: 4,
-    name: "Samsung Smart TV 55 inch 4K",
-    oldPrice: 15390000,
-    newPrice: 14390000,
-    discount: "-6%",
-    discountAmount: 1000000,
-    image: "/images/tv.jpg",
-    features: ["Điều khiển giọng nói", "Crystal UHD", "Motion Xcelerator"],
-  },
-  {
-    id: 5,
-    name: "Tủ lạnh Casper 430L Inverter",
-    oldPrice: 16490000,
-    newPrice: 11990000,
-    discount: "-27%",
-    discountAmount: 4500000,
-    image: "/images/fridge.jpg",
-    features: ["4 - 5 người dùng", "Làm lạnh đa chiều", "Bảng cảm ứng"],
-  },
-];
-
 const DiscountProductSlider = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch("https://localhost:7107/api/Products");
+        const data = await response.json();
+
+        if (data && data.$values && Array.isArray(data.$values)) {
+          // Lọc các sản phẩm thuộc danh mục "Điện thoại"
+          const phoneProducts = data.$values
+            .filter((product) => product.category?.name === "Điện Thoại")
+            .map((product) => {
+              const variant = product.variants?.$values?.[0] || {};
+              const image = product.images?.$values?.[0]?.imageUrl || "/images/placeholder.jpg";
+              const oldPrice = variant.price || 0;
+              const newPrice = variant.discountPrice || oldPrice;
+              const discountAmount = oldPrice - newPrice;
+              const discount = oldPrice > 0 ? `-${Math.round((discountAmount / oldPrice) * 100)}%` : "0%";
+
+              return {
+                id: product.id,
+                name: product.name,
+                oldPrice,
+                newPrice,
+                discount,
+                discountAmount,
+                image,
+                features: [
+                  variant.storage || "Không xác định",
+                  product.brand?.name || "Không có thương hiệu",
+                  "Hiệu suất cao", // Có thể thay đổi tùy theo dữ liệu thực tế
+                ],
+              };
+            });
+
+          setProducts(phoneProducts);
+        } else {
+          throw new Error("Dữ liệu không đúng định dạng");
+        }
+      } catch (err) {
+        setError("Không thể tải sản phẩm: " + err.message);
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  if (loading) {
+    return <div className="text-center py-6">Đang tải sản phẩm...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-6 text-red-500">{error}</div>;
+  }
+
   return (
     <div className="w-full flex justify-center py-6">
       <div className="max-w-[1200px] w-full px-4 bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-          Mua đúng quà - Nàng "hiền hòa"
+          Mua đúng quà - Điện thoại "Hiền Hòa"
         </h2>
 
         <Swiper
@@ -99,6 +107,11 @@ const DiscountProductSlider = () => {
                     Giảm {product.discountAmount.toLocaleString()} đ
                   </p>
                   <p className="text-gray-800 text-sm">{product.name}</p>
+                  <ul className="text-xs text-gray-600 list-disc pl-4">
+                    {product.features.map((feature, index) => (
+                      <li key={index}>{feature}</li>
+                    ))}
+                  </ul>
                 </div>
               </div>
             </SwiperSlide>

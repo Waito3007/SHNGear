@@ -1,46 +1,119 @@
-import React from "react";
-import ProductCard from "./ProductCard";
+import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
-import { Navigation } from "swiper/modules";
-import "./SpecialOffers.css";
 
-const SpecialOffers = () => {
-  const products = [
-    {
-      id: 1,
-      image: "https://cdn2.fptshop.com.vn/unsafe/360x0/filters:quality(100)/amazfit_bip_5_46mm_den_1_e3af4bcd30.png",
-      title: "Amazfit BIP 5 46mm",
-      features: [
-        { icon: "https://cdn2.fptshop.com.vn/svg/ic_water_resistant_f2193d2539.svg?w=32&q=100", text: "Kháng nước & bụi IP68" },
-        { icon: "https://cdn2.fptshop.com.vn/svg/ic_body_test_ce4043f1ac.svg?w=32&q=100", text: "Đo sức khỏe toàn diện" },
-        { icon: "https://cdn2.fptshop.com.vn/svg/ic_gps_f2857d1b8b.svg?w=32&q=100", text: "Định vị chính xác" },
-      ],
-      originalPrice: "1.990.000 ₫",
-      discount: "-50%",
-      currentPrice: "990.000 ₫",
-      discountAmount: "Giảm 1.000.000 ₫",
-    },
-  ];
+const DiscountProductSlider = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch("https://localhost:7107/api/Products");
+        const data = await response.json();
+
+        if (data && data.$values && Array.isArray(data.$values)) {
+          // Lọc các sản phẩm thuộc danh mục "Laptop"
+          const laptopProducts = data.$values
+            .filter((product) => product.category?.name === "Laptop")
+            .map((product) => {
+              const variant = product.variants?.$values?.[0] || {};
+              const image = product.images?.$values?.[0]?.imageUrl || "/images/placeholder.jpg";
+              const oldPrice = variant.price || 0;
+              const newPrice = variant.discountPrice || oldPrice;
+              const discountAmount = oldPrice - newPrice;
+              const discount = oldPrice > 0 ? `-${Math.round((discountAmount / oldPrice) * 100)}%` : "0%";
+
+              return {
+                id: product.id,
+                name: product.name,
+                oldPrice,
+                newPrice,
+                discount,
+                discountAmount,
+                image,
+                features: [
+                  variant.storage || "Không xác định",
+                  product.brand?.name || "Không có thương hiệu",
+                  "Hiệu suất cao", // Có thể thay đổi tùy theo dữ liệu thực tế
+                ],
+              };
+            });
+
+          setProducts(laptopProducts);
+        } else {
+          throw new Error("Dữ liệu không đúng định dạng");
+        }
+      } catch (err) {
+        setError("Không thể tải sản phẩm: " + err.message);
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  if (loading) {
+    return <div className="text-center py-6">Đang tải sản phẩm...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-6 text-red-500">{error}</div>;
+  }
 
   return (
-    <div className="container py-3 md:py-2.5">
-      <div className="productsales">
-        <div className="slider-header">
-          <h2 className="slider-title">Khuyến mãi đặc biệt</h2>
-        </div>
+    <div className="w-full flex justify-center py-6">
+      <div className="max-w-[1200px] w-full px-4 bg-white rounded-lg shadow-lg p-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+          Mua đúng quà - Laptop "Hiền Hòa"
+        </h2>
+
         <Swiper
           modules={[Navigation]}
-          spaceBetween={20}
-          slidesPerView={3}
           navigation
-          loop={true}
-          className="swiper-container"
+          spaceBetween={20}
+          slidesPerView={1}
+          breakpoints={{
+            640: { slidesPerView: 2 },
+            768: { slidesPerView: 3 },
+            1024: { slidesPerView: 4 },
+          }}
+          className="pb-6"
         >
           {products.map((product) => (
-            <SwiperSlide key={product.id}>
-              <ProductCard product={product} />
+            <SwiperSlide key={product.id} className="flex justify-center">
+              <div className="bg-white p-4 rounded-lg shadow-md border w-[250px]">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-40 object-contain mb-3"
+                />
+                <div className="text-gray-700 text-sm space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 line-through">
+                      {product.oldPrice.toLocaleString()} đ
+                    </span>
+                    <span className="text-red-500 text-sm">{product.discount}</span>
+                  </div>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {product.newPrice.toLocaleString()} đ
+                  </p>
+                  <p className="text-green-600 text-sm">
+                    Giảm {product.discountAmount.toLocaleString()} đ
+                  </p>
+                  <p className="text-gray-800 text-sm">{product.name}</p>
+                  <ul className="text-xs text-gray-600 list-disc pl-4">
+                    {product.features.map((feature, index) => (
+                      <li key={index}>{feature}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             </SwiperSlide>
           ))}
         </Swiper>
@@ -49,4 +122,4 @@ const SpecialOffers = () => {
   );
 };
 
-export default SpecialOffers;
+export default DiscountProductSlider;

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { toast } from 'react-toastify'; // Import the toast module
 import { Edit, Search, Trash2, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import ProductDrawer from './AddProductDrawer'; // Import the new ProductDrawer component
@@ -15,6 +16,7 @@ import Pagination from '@mui/material/Pagination';
 
 const ProductsTable = () => {
     const [searchTerm, setSearchTerm] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
     const [products, setProducts] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -75,23 +77,33 @@ const ProductsTable = () => {
     };
 
     const confirmDeleteProduct = async () => {
-        try {
-            const response = await fetch(`https://localhost:7107/api/Products/${productToDelete.id}`, {
-                method: 'DELETE',
-            });
-            if (response.ok) {
-                const updatedProducts = products.filter((product) => product.id !== productToDelete.id);
-                setProducts(updatedProducts);
-                setFilteredProducts(updatedProducts);
-                setIsDeleteDialogOpen(false);
-                setProductToDelete(null);
-            } else {
-                console.error('Failed to delete product');
-            }
-        } catch (error) {
-            console.error('Error deleting product:', error);
+    if (!productToDelete) return;
+
+    setIsLoading(true);
+    try {
+        const response = await fetch(`https://localhost:7107/api/Products/${productToDelete.id}`, {
+            method: 'DELETE',
+        });
+
+        if (response.ok) {
+            const updatedProducts = products.filter((p) => p.id !== productToDelete.id);
+            setProducts(updatedProducts);
+            setFilteredProducts(updatedProducts);
+            toast.success("Sản phẩm đã được xóa thành công!"); // Hiển thị thông báo
+            setIsDeleteDialogOpen(false);
+            setProductToDelete(null);
+        } else {
+            const errorMessage = await response.text();
+            toast.error(`Lỗi: ${errorMessage || 'Không thể xóa sản phẩm'}`);
         }
-    };
+    } catch (error) {
+        toast.error("Lỗi khi xóa sản phẩm, vui lòng thử lại!");
+        console.error("Error deleting product:", error);
+    } finally {
+        setIsLoading(false);
+    }
+};
+
 
     const handlePageChange = (event, value) => {
         setPage(value);
@@ -174,19 +186,22 @@ const ProductsTable = () => {
                                     />
                                     {product.name}
                                 </td>
-
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    {product.brand ? product.brand.name : "Không có thương hiệu"
-                                    }
+                                    {product.brand ? product.brand.name : "Không có thương hiệu"}
                                 </td>
-
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
                                     {product.category ? product.category.name : 'Chưa có danh mục'}
                                 </td>
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    {product.variants ? product.price: 'Chưa có mặt hàng này'}</td>
+                                    {product.variants && product.variants.$values && product.variants.$values.length > 0 
+                                        ? `${product.variants.$values[0].price.toLocaleString()} VND` 
+                                        : 'Chưa có giá'}
+                                </td>
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
-                                    {product.variants ? product.variants.color: "Chưa có màu"}</td>
+                                    {product.variants && product.variants.$values && product.variants.$values.length > 0 
+                                        ? `${product.variants.$values[0].discountPrice.toLocaleString()} VND` 
+                                        : 'Không có giá giảm'}
+                                </td>
                                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
                                     <button className='text-indigo-400 hover:text-indigo-300 mr-2' onClick={() => handleEditProduct(product)}>
                                         <Edit size={18} />
