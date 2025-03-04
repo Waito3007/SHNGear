@@ -1,9 +1,10 @@
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
-import { Edit, Search, Trash2 } from "lucide-react";
+import { Edit, Search, Trash2, Settings } from "lucide-react"; // Thêm Settings icon
 import { useState, useEffect } from "react";
 import ProductDrawer from "./AddProductDrawer";
 import EditProductDrawer from "./EditProductDrawer";
+import AddSpecificationDrawer from "./AddSpecificationDrawer"; // Thêm Drawer mới
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -21,6 +22,7 @@ const ProductsTable = () => {
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
+    const [isSpecDrawerOpen, setIsSpecDrawerOpen] = useState(false); // Trạng thái cho Drawer mới
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [productToDelete, setProductToDelete] = useState(null);
@@ -29,15 +31,13 @@ const ProductsTable = () => {
     const [page, setPage] = useState(1);
     const productsPerPage = 11;
 
-    // Logic gọi API đã chỉnh sửa
     useEffect(() => {
         const fetchProducts = async () => {
             try {
                 const response = await fetch("https://localhost:7107/api/Products");
                 if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                 const data = await response.json();
-                console.log("Raw API Data:", data); // Debug dữ liệu từ API
-                // Giả sử API trả về mảng ProductDto trực tiếp (không có $values)
+                console.log("Raw API Data:", data);
                 setProducts(data);
                 setFilteredProducts(data);
             } catch (error) {
@@ -47,13 +47,11 @@ const ProductsTable = () => {
         fetchProducts();
     }, []);
 
-    // Điều chỉnh hàm tìm kiếm cho ProductDto
     const handleSearch = (e) => {
         const term = e.target.value.toLowerCase();
         setSearchTerm(term);
         const filtered = products.filter((product) =>
             (product.name?.toLowerCase() || "").includes(term)
-            // Vì không có category.name hay brand.name, chỉ lọc theo tên sản phẩm
         );
         setFilteredProducts(filtered);
     };
@@ -105,6 +103,11 @@ const ProductsTable = () => {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleAddSpecification = (product) => {
+        setSelectedProduct(product);
+        setIsSpecDrawerOpen(true);
     };
 
     const handlePageChange = (event, value) => {
@@ -182,7 +185,7 @@ const ProductsTable = () => {
                     <tbody className="divide-y divide-gray-700">
                         {currentProducts.map((product) => (
                             <motion.tr
-                                key={product.id} // Giả sử id vẫn được trả về từ API
+                                key={product.id}
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ duration: 0.3 }}
@@ -196,11 +199,9 @@ const ProductsTable = () => {
                                     {product.name || "Không có tên"}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                    {/* Vì ProductDto không có brand.name, cần lấy từ API khác hoặc hiển thị BrandId tạm thời */}
                                     {product.brandId || "Không có thương hiệu"}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                    {/* Tương tự với CategoryId */}
                                     {product.categoryId || "Chưa có danh mục"}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
@@ -221,10 +222,16 @@ const ProductsTable = () => {
                                         <Edit size={18} />
                                     </button>
                                     <button
-                                        className="text-red-400 hover:text-red-300"
+                                        className="text-red-400 hover:text-red-300 mr-2"
                                         onClick={() => handleDeleteProduct(product)}
                                     >
                                         <Trash2 size={18} />
+                                    </button>
+                                    <button
+                                        className="text-green-400 hover:text-green-300"
+                                        onClick={() => handleAddSpecification(product)}
+                                    >
+                                        <Settings size={18} />
                                     </button>
                                 </td>
                             </motion.tr>
@@ -251,6 +258,11 @@ const ProductsTable = () => {
                 onClose={() => setIsEditDrawerOpen(false)}
                 product={selectedProduct}
                 onUpdateProduct={handleUpdateProduct}
+            />
+            <AddSpecificationDrawer
+                isOpen={isSpecDrawerOpen}
+                onClose={() => setIsSpecDrawerOpen(false)}
+                product={selectedProduct}
             />
 
             <Dialog
