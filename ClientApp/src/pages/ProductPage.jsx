@@ -1,109 +1,86 @@
 import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar/Navbar";
 import ProductImage from "../components/productinformationpage/ProductImage";
 import ProductInfo from "../components/productinformationpage/ProductInfo";
+import ProductVariants from "../components/productinformationpage/ProductVariants";
+import Footer from "../components/Footer/Footer";
+import CircularProgress from "@mui/material/CircularProgress";
+import Alert from "@mui/material/Alert";
 import ProductReviews from "../components/productinformationpage/ProductReviews";
 import RelatedProducts from "../components/productinformationpage/RelatedProducts";
 import Commitment from "../components/Commitment/Commitment";
-import Footer from "../components/Footer/Footer";
-import "../pages/ProductPage.css";
 
 const ProductPage = () => {
+  const { id } = useParams();
   const [product, setProduct] = useState(null);
-  const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    setTimeout(() => {
+    const fetchProduct = async () => {
       try {
-        // Dữ liệu sản phẩm
-        const productData = {
-          id: 1,
-          name: "Laptop Dell XPS 13",
-          price: "29.990.000₫",
-          originalPrice: "33.990.000₫",
-          discount: "Giảm 12%",
-          installmentPrice: "3.000.000₫ / tháng",
-          image: [
-            "https://macstores.vn/wp-content/uploads/2024/03/dell-xps-13-9340-2024-1.jpg",
-            "https://macstores.vn/wp-content/uploads/2024/03/dell-xps-13-9340-2024-2.jpg",
-            "https://macstores.vn/wp-content/uploads/2024/03/dell-xps-13-9340-2024-3.jpg",
-          ],
-          configurations: ["Intel i7", "16GB RAM", "512GB SSD"],
-          specifications: {
-            processor: "Intel Core i7",
-            ram: "16GB",
-            storage: "512GB SSD",
-            display: "13 inch Full HD",
-          },
-          reviews: [
-            {
-              user: "Lê trọng nghĩa",
-              rating: 5,
-              comment: "Sản phẩm tuyệt vời!",
-            },
-            {
-              user: "Vũ phan hoài sang",
-              rating: 4,
-              comment: "Màn hình đẹp, nhưng pin hơi yếu.",
-            },
-          ],
-        };
-
-        // Dữ liệu sản phẩm liên quan
-        const relatedProductData = [
-          {
-            id: 1,
-            name: "Laptop HP Spectre x360",
-            price: "28.000.000₫",
-            image:
-              "https://macstores.vn/wp-content/uploads/2024/03/dell-xps-13-9340-2024-1.jpg",
-          },
-          {
-            id: 2,
-            name: "Laptop HP Spectre x360",
-            price: "28.000.000₫",
-            image:
-              "https://macstores.vn/wp-content/uploads/2024/03/dell-xps-13-9340-2024-1.jpg",
-          },
-          {
-            id: 3,
-            name: "MacBook Pro M1",
-            price: "32.000.000₫",
-            image:
-              "https://macstores.vn/wp-content/uploads/2024/03/dell-xps-13-9340-2024-1.jpg",
-          },
-        ];
-
-        setProduct(productData);
-        setRelatedProducts(relatedProductData);
-        setLoading(false);
+        setLoading(true);
+        const response = await fetch(
+          `https://localhost:7107/api/Products/${id}`
+        );
+        if (!response.ok) {
+          throw new Error("Không thể tải dữ liệu sản phẩm.");
+        }
+        const data = await response.json();
+        setProduct(data);
       } catch (err) {
-        setError("Có lỗi xảy ra khi tải dữ liệu.");
+        setError(err.message);
+      } finally {
         setLoading(false);
       }
-    }, 2000);
-  }, []);
+    };
 
-  if (loading) {
-    return <div>Đang tải...</div>;
-  }
+    fetchProduct();
+  }, [id]);
 
-  if (error) {
-    return <div>Lỗi: {error}</div>;
-  }
+  if (loading)
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <CircularProgress />
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Alert severity="error">{error}</Alert>
+      </div>
+    );
 
   return (
-    <div className="product-page">
-      <div className="product-details">
-        <Navbar />
-        <ProductImage images={product.image} name={product.name} />
-        <ProductInfo product={product} />
+    <div className="min-h-screen flex flex-col">
+      {/* Navbar */}
+      <Navbar />
+
+      {/* Nội dung chính (Thêm padding trên cùng để tránh bị Navbar che) */}
+      <div className="container mx-auto px-4 py-8 pt-16 flex flex-col gap-10">
+        {/* Ảnh và thông tin sản phẩm */}
+        <div className="grid md:grid-cols-2 gap-8">
+          <ProductImage images={product?.images} name={product?.name} />
+          <div className="flex flex-col gap-6">
+            <ProductInfo product={product} />
+            <ProductVariants variants={product?.variants} />
+          </div>
+        </div>
+
+        {/* Đánh giá sản phẩm */}
+        <div className="md:col-span-2 mt-16s">
+          <ProductReviews reviews={product?.reviews} />
+        </div>
+
+        {/* Sản phẩm liên quan */}
+        <div className="md:col-span-2 mt-16">
+          <RelatedProducts category={product?.category} currentProductId={id} />
+        </div>
       </div>
-      <ProductReviews reviews={product.reviews} />
-      <RelatedProducts relatedProducts={relatedProducts} />
       <Commitment />
+      {/* Footer */}
       <Footer />
     </div>
   );

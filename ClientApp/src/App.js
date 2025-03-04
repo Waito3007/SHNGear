@@ -4,6 +4,7 @@ import AppRoutes from "./AppRoutes";
 import AdminLayout from "./components/layouts/AdminLayout";
 import ProductPage from "./pages/ProductPage";
 import ProfilePage from "./pages/ProfilePage";
+import ProductList from "./pages/ProductList";
 
 export default class App extends Component {
   static displayName = App.name;
@@ -11,8 +12,9 @@ export default class App extends Component {
   render() {
     return (
       <Routes>
+        <Route path="/productlist" element={<ProductList />} />
         <Route path="/profile/" element={<ProfilePage />} />
-        <Route path="/product/" element={<ProductPage />} />
+        <Route path="/product/:id" element={<ProductPage />} />
         {AppRoutes.map((route, index) => {
           const { element, path } = route;
           const isAdminRoute = path && path.startsWith("/admin");
