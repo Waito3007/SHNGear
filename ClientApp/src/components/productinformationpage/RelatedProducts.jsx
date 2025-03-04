@@ -1,99 +1,63 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper/modules";
-import { useNavigate } from "react-router-dom";
-import "swiper/css";
-import "swiper/css/navigation";
+import React, { useEffect, useState } from "react";
 
-const RelatedProducts = ({ categoryId }) => {
-  const [products, setProducts] = useState([]);
+const RelatedProducts = ({ brandId, currentProductId }) => {
+  const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
-
-  const fetchRelatedProducts = useCallback(async () => {
-    if (!categoryId) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Lấy danh sách sản phẩm liên quan theo categoryId
-      const res = await fetch(
-        `http://localhost:7107/api/categories/${categoryId}`
-      );
-      if (!res.ok) throw new Error("Không thể tải sản phẩm liên quan.");
-
-      const data = await res.json();
-
-      // Kiểm tra nếu dữ liệu trả về là một danh sách sản phẩm
-      setProducts(Array.isArray(data.products) ? data.products : []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [categoryId]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetchRelatedProducts();
-  }, [fetchRelatedProducts]);
+    const fetchRelatedProducts = async () => {
+      if (!brandId) return;
 
-  if (loading)
-    return <div className="text-center py-6">Đang tải sản phẩm...</div>;
-  if (error)
-    return <div className="text-center py-6 text-red-500">Lỗi: {error}</div>;
+      try {
+        setLoading(true);
+        const response = await fetch(
+          `https://localhost:7107/api/Products/related-by-brand/${brandId}/${currentProductId}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Không thể tải danh sách sản phẩm liên quan.");
+        }
+
+        const data = await response.json();
+        setRelatedProducts(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRelatedProducts();
+  }, [brandId, currentProductId]);
+
+  if (loading) return <p>Đang tải sản phẩm liên quan...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
 
   return (
-    <div className="w-full flex justify-center py-6">
-      <div className="max-w-[1200px] w-full px-4 bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">
-          Sản phẩm liên quan
-        </h2>
-        {products.length === 0 ? (
-          <div className="text-center text-gray-500">
-            Không có sản phẩm liên quan.
+    <div>
+      <h2 className="text-xl font-semibold mb-4">Sản phẩm liên quan</h2>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {relatedProducts.map((product) => (
+          <div key={product.id} className="border p-4 rounded-lg shadow-sm hover:shadow-md transition">
+            {/* Ảnh sản phẩm */}
+            <img
+              src={product.images?.find(img => img.isPrimary)?.imageUrl || "/placeholder.jpg"}
+              alt={product.name}
+              className="w-full h-40 object-cover rounded-md"
+            />
+            {/* Tên sản phẩm */}
+            <h3 className="text-lg font-medium mt-2 line-clamp-2">{product.name}</h3>
+            {/* Giá sản phẩm */}
+            {product.variants?.length > 0 && (
+              <p className="text-red-500 font-semibold">
+                {product.variants[0].discountPrice > 0
+                  ? `${product.variants[0].discountPrice}₫`
+                  : `${product.variants[0].price}₫`}
+              </p>
+            )}
           </div>
-        ) : (
-          <Swiper
-            modules={[Navigation]}
-            navigation
-            spaceBetween={20}
-            slidesPerView={1}
-            breakpoints={{
-              640: { slidesPerView: 2 },
-              768: { slidesPerView: 3 },
-              1024: { slidesPerView: 4 },
-            }}
-            className="pb-6"
-          >
-            {products.map((product) => (
-              <SwiperSlide key={product.id} className="flex justify-center">
-                <div
-                  className="bg-white p-4 rounded-lg shadow-md border w-[250px] cursor-pointer transition-transform duration-300 hover:scale-105"
-                  onClick={() => navigate(`/product/${product.id}`)}
-                >
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-40 object-contain mb-3 rounded-md"
-                  />
-                  <div className="text-gray-700 text-sm space-y-2">
-                    <p className="text-gray-900 text-lg font-semibold">
-                      {product.name}
-                    </p>
-                    <p className="text-lg font-bold text-gray-900">
-                      {product.price?.toLocaleString()} đ
-                    </p>
-                  </div>
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        )}
+        ))}
       </div>
     </div>
   );

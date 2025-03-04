@@ -150,5 +150,17 @@ public class ProductsController : ControllerBase
 
         return NoContent();
     }
+    // 📌 Lấy danh sách sản phẩm liên quan theo thương hiệu (brand)
+    [HttpGet("related-by-brand/{brandId}/{currentProductId}")]
+    public async Task<ActionResult<IEnumerable<Product>>> GetRelatedProductsByBrand(int brandId, int currentProductId)
+    {
+        var relatedProducts = await _context.Products
+            .Where(p => p.BrandId == brandId && p.Id != currentProductId)
+            .Include(p => p.Images)
+            .ToListAsync();
+
+        return Ok(relatedProducts);
+    }
+
 
 }

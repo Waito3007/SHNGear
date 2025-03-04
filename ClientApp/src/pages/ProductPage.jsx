@@ -70,15 +70,16 @@ const ProductPage = () => {
         </div>
 
         {/* Đánh giá sản phẩm */}
-        <div className="md:col-span-2 mt-16s">
+        <div className="md:col-span-2 mt-16">
           <ProductReviews reviews={product?.reviews} />
         </div>
 
         {/* Sản phẩm liên quan */}
         <div className="md:col-span-2 mt-16">
-          <RelatedProducts category={product?.category} currentProductId={id} />
+          <RelatedProducts brandId={product?.brand?.id} currentProductId={id} />
         </div>
       </div>
+      
       <Commitment />
       {/* Footer */}
       <Footer />
