@@ -11,22 +11,30 @@ import {
 import { CheckCircle, ShoppingCart } from "@mui/icons-material";
 
 const ProductVariants = ({ variants }) => {
-  const [selectedVariant, setSelectedVariant] = useState(variants[0]);
+  const [selectedStorage, setSelectedStorage] = useState(variants[0].storage);
+  const [selectedColor, setSelectedColor] = useState(variants[0].color);
 
-  const handleSelect = (key, value) => {
-    const newVariant = variants.find((v) => v[key] === value);
-    if (newVariant) setSelectedVariant(newVariant);
+  const handleSelectStorage = (storage) => {
+    setSelectedStorage(storage);
   };
+
+  const handleSelectColor = (color) => {
+    setSelectedColor(color);
+  };
+
+  // Lấy biến thể có cùng màu và dung lượng đã chọn
+  const selectedVariant =
+    variants.find(
+      (v) => v.storage === selectedStorage && v.color === selectedColor
+    ) ||
+    variants.find((v) => v.storage === selectedStorage) || // Nếu không có biến thể với màu đã chọn, lấy theo dung lượng
+    variants.find((v) => v.color === selectedColor) || // Nếu không có biến thể với dung lượng đã chọn, lấy theo màu
+    variants[0]; // Nếu không có biến thể nào phù hợp, lấy mặc định
 
   return (
     <Box mt={4}>
       {/* Chọn Dung Lượng */}
-      <Typography
-        variant="h6"
-        fontWeight="bold"
-        gutterBottom
-        sx={{ marginTop: "-40px" }}
-      >
+      <Typography variant="h6" fontWeight="bold" gutterBottom>
         Dung lượng
       </Typography>
       <Grid container spacing={2}>
@@ -35,33 +43,30 @@ const ProductVariants = ({ variants }) => {
             <Card
               sx={{
                 border:
-                  selectedVariant.storage === storage
+                  selectedStorage === storage
                     ? "2px solid #d32f2f"
                     : "1px solid #ddd",
                 boxShadow:
-                  selectedVariant.storage === storage
+                  selectedStorage === storage
                     ? "0px 4px 12px rgba(211, 47, 47, 0.3)"
                     : "none",
                 transition: "0.3s",
               }}
             >
               <CardActionArea
-                onClick={() => handleSelect("storage", storage)}
+                onClick={() => handleSelectStorage(storage)}
                 sx={{ padding: "10px" }}
               >
                 <Typography
                   variant="body1"
                   sx={{
                     fontWeight: "bold",
-                    color:
-                      selectedVariant.storage === storage ? "#d32f2f" : "#333",
+                    color: selectedStorage === storage ? "#d32f2f" : "#333",
                   }}
                 >
                   {storage}
                 </Typography>
-                {selectedVariant.storage === storage && (
-                  <CheckCircle color="error" />
-                )}
+                {selectedStorage === storage && <CheckCircle color="error" />}
               </CardActionArea>
             </Card>
           </Grid>
@@ -72,7 +77,7 @@ const ProductVariants = ({ variants }) => {
       <Typography variant="h6" fontWeight="bold" mt={3} gutterBottom>
         Màu sắc
       </Typography>
-      <Grid container spacing={2}>
+      <Grid container spacing={1.5}>
         {[...new Set(variants.map((v) => v.color))].map((color) => {
           const variant = variants.find((v) => v.color === color);
           return (
@@ -80,27 +85,27 @@ const ProductVariants = ({ variants }) => {
               <Card
                 sx={{
                   border:
-                    selectedVariant.color === color
+                    selectedColor === color
                       ? "2px solid #d32f2f"
                       : "1px solid #ddd",
                   boxShadow:
-                    selectedVariant.color === color
+                    selectedColor === color
                       ? "0px 4px 12px rgba(211, 47, 47, 0.3)"
                       : "none",
                   transition: "0.3s",
-                  width: 120,
+                  width: 70, // Giảm chiều rộng
                   textAlign: "center",
                 }}
               >
-                <CardActionArea onClick={() => handleSelect("color", color)}>
+                <CardActionArea onClick={() => handleSelectColor(color)}>
                   {/* Hiển thị ảnh màu sắc */}
                   <Box
                     sx={{
                       width: "100%",
-                      height: 80,
+                      height: 40, // Giảm chiều cao
                       backgroundImage: `url(${
                         variant.imageUrl ||
-                        "https://cdn2.fptshop.com.vn/unsafe/750x0/filters:quality(100)/iphone_16_pro_natural_titan_412b47e840.png"
+                        "https://cdn2.fptshop.com.vn/unsafe/750x0/filters:quality(100)/iphone_16_pro_max_desert_titan_3552a28ae0.png"
                       })`,
                       backgroundSize: "contain",
                       backgroundRepeat: "no-repeat",
@@ -108,19 +113,18 @@ const ProductVariants = ({ variants }) => {
                       borderRadius: "5px 5px 0 0",
                     }}
                   />
-                  <CardContent sx={{ padding: "8px" }}>
+                  <CardContent sx={{ padding: "4px" }}>
                     <Typography
-                      variant="body2"
+                      variant="caption" // Giảm kích thước chữ nhưng vẫn rõ
                       sx={{
                         fontWeight: "bold",
-                        color:
-                          selectedVariant.color === color ? "#d32f2f" : "#333",
+                        color: selectedColor === color ? "#d32f2f" : "#333",
                       }}
                     >
                       {color}
                     </Typography>
-                    {selectedVariant.color === color && (
-                      <CheckCircle color="error" />
+                    {selectedColor === color && (
+                      <CheckCircle color="error" fontSize="small" />
                     )}
                   </CardContent>
                 </CardActionArea>

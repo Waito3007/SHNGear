@@ -59,7 +59,7 @@ const ProductPage = () => {
       <Navbar />
 
       {/* Nội dung chính (Thêm padding trên cùng để tránh bị Navbar che) */}
-      <div className="container mx-auto px-4 py-8 pt-16 flex flex-col gap-10">
+      <div className="container mx-auto px-4 py-8 pt-40 flex flex-col gap-10">
         {/* Ảnh và thông tin sản phẩm */}
         <div className="grid md:grid-cols-2 gap-8">
           <ProductImage images={product?.images} name={product?.name} />
