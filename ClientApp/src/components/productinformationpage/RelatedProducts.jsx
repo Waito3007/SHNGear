@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom"; // Import useParams
 
 const ProductList = () => {
+  const { productId } = useParams(); // Lấy ID sản phẩm đang xem
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -16,7 +19,12 @@ const ProductList = () => {
         }
 
         const data = await response.json();
-        setProducts(data);
+        // Lọc bỏ sản phẩm hiện tại
+        const filteredProducts = data.filter(
+          (product) => product.id !== parseInt(productId)
+        );
+
+        setProducts(filteredProducts);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -25,7 +33,7 @@ const ProductList = () => {
     };
 
     fetchProducts();
-  }, []);
+  }, [productId]); // Chạy lại khi productId thay đổi
 
   if (loading) return <p>Đang tải danh sách sản phẩm...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
@@ -35,7 +43,6 @@ const ProductList = () => {
       <h2 className="text-xl font-semibold mb-4">Danh sách sản phẩm</h2>
       <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
         {products.map((product) => {
-          // Lấy biến thể có giá thấp nhất (ưu tiên giá giảm)
           const lowestVariant = product.variants?.reduce((min, variant) => {
             const minPrice =
               min.discountPrice > 0 ? min.discountPrice : min.price;
@@ -47,9 +54,9 @@ const ProductList = () => {
           return (
             <div
               key={product.id}
-              className="border p-4 rounded-lg shadow-sm hover:shadow-md transition w-[160px]"
+              onClick={() => navigate(`/product/${product.id}`)}
+              className="border p-4 rounded-lg shadow-sm hover:shadow-md transition w-[160px] cursor-pointer"
             >
-              {/* Ảnh sản phẩm */}
               <img
                 src={
                   product.images?.find((img) => img.isPrimary)?.imageUrl ||
@@ -59,11 +66,9 @@ const ProductList = () => {
                 alt={product.name}
                 className="w-36 h-36 object-cover rounded-md"
               />
-              {/* Tên sản phẩm */}
               <h3 className="text-sm font-medium mt-2 line-clamp-2">
                 {product.name}
               </h3>
-              {/* Hiển thị giá thấp nhất ngay dưới tên */}
               {lowestVariant && (
                 <div className="mt-1">
                   {lowestVariant.discountPrice > 0 ? (
