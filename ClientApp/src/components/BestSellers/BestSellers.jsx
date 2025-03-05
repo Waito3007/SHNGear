@@ -137,7 +137,7 @@ const DiscountProductSlider = () => {
                 <img
                   src={product.image}
                   alt={product.name}
-                  className="w-full h-40 object-contain mb-3"
+                  className="w-full h-40 object-contain mb-3 hover:scale-110"
                 />
                 <div className="text-gray-700 text-sm space-y-2">
                   <div className="flex justify-between items-center">

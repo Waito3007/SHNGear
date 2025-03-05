@@ -22,18 +22,43 @@ const ProductVariants = ({ variants }) => {
     setSelectedColor(color);
   };
 
-  // Lấy biến thể có cùng màu và dung lượng đã chọn
   const selectedVariant =
     variants.find(
       (v) => v.storage === selectedStorage && v.color === selectedColor
     ) ||
-    variants.find((v) => v.storage === selectedStorage) || // Nếu không có biến thể với màu đã chọn, lấy theo dung lượng
-    variants.find((v) => v.color === selectedColor) || // Nếu không có biến thể với dung lượng đã chọn, lấy theo màu
-    variants[0]; // Nếu không có biến thể nào phù hợp, lấy mặc định
+    variants.find((v) => v.storage === selectedStorage) ||
+    variants.find((v) => v.color === selectedColor) ||
+    variants[0];
+
+  const handleAddToCart = async () => {
+    try {
+      const response = await fetch("https://localhost:7107/api/cart/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          productVariantId: selectedVariant.id,
+          quantity: 1,
+        }),
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Lỗi khi thêm vào giỏ hàng");
+      }
+
+      const data = await response.json();
+      console.log("Thêm vào giỏ hàng thành công:", data);
+      alert("🛒 Sản phẩm đã được thêm vào giỏ hàng!");
+    } catch (error) {
+      console.error("Lỗi:", error);
+      alert("❌ Không thể thêm vào giỏ hàng. Vui lòng thử lại!");
+    }
+  };
 
   return (
     <Box mt={4}>
-      {/* Chọn Dung Lượng */}
       <Typography variant="h6" fontWeight="bold" gutterBottom>
         Dung lượng
       </Typography>
@@ -51,17 +76,19 @@ const ProductVariants = ({ variants }) => {
                     ? "0px 4px 12px rgba(211, 47, 47, 0.3)"
                     : "none",
                 transition: "0.3s",
+                padding: "6px 12px",
               }}
             >
               <CardActionArea
                 onClick={() => handleSelectStorage(storage)}
-                sx={{ padding: "10px" }}
+                sx={{ display: "flex", alignItems: "center", gap: "8px" }}
               >
                 <Typography
                   variant="body1"
                   sx={{
                     fontWeight: "bold",
                     color: selectedStorage === storage ? "#d32f2f" : "#333",
+                    flexGrow: 1,
                   }}
                 >
                   {storage}
@@ -73,7 +100,6 @@ const ProductVariants = ({ variants }) => {
         ))}
       </Grid>
 
-      {/* Chọn Màu Sắc */}
       <Typography variant="h6" fontWeight="bold" mt={3} gutterBottom>
         Màu sắc
       </Typography>
@@ -93,16 +119,15 @@ const ProductVariants = ({ variants }) => {
                       ? "0px 4px 12px rgba(211, 47, 47, 0.3)"
                       : "none",
                   transition: "0.3s",
-                  width: 70, // Giảm chiều rộng
+                  width: 70,
                   textAlign: "center",
                 }}
               >
                 <CardActionArea onClick={() => handleSelectColor(color)}>
-                  {/* Hiển thị ảnh màu sắc */}
                   <Box
                     sx={{
                       width: "100%",
-                      height: 40, // Giảm chiều cao
+                      height: 40,
                       backgroundImage: `url(${
                         variant.imageUrl ||
                         "https://cdn2.fptshop.com.vn/unsafe/750x0/filters:quality(100)/iphone_16_pro_max_desert_titan_3552a28ae0.png"
@@ -115,7 +140,7 @@ const ProductVariants = ({ variants }) => {
                   />
                   <CardContent sx={{ padding: "4px" }}>
                     <Typography
-                      variant="caption" // Giảm kích thước chữ nhưng vẫn rõ
+                      variant="caption"
                       sx={{
                         fontWeight: "bold",
                         color: selectedColor === color ? "#d32f2f" : "#333",
@@ -134,11 +159,11 @@ const ProductVariants = ({ variants }) => {
         })}
       </Grid>
 
-      {/* Buttons: Thêm vào giỏ hàng & Mua ngay */}
       <Box mt={3} display="flex" gap={2}>
         <Button
           variant="outlined"
           startIcon={<ShoppingCart />}
+          onClick={handleAddToCart} // Thêm sự kiện click
           sx={{
             flex: 1,
             borderColor: "#d32f2f",

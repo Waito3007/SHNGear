@@ -1,40 +1,37 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  ShoppingCart,
-  User,
-  Monitor,
-  Smartphone,
-  Headphones,
-  House,
-} from "lucide-react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { ShoppingCart, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import "./Navbar.css";
 import menu from "../../assets/icon/menu.svg";
-import logo from "../../assets/img/Phone/logo.png"; // Import logo
-import AuthModal from "../Auth/AuthModal"; // Import AuthModal
+import logo from "../../assets/img/Phone/logo.png";
+import AuthModal from "../Auth/AuthModal";
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false); // State for AuthModal
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [categories, setCategories] = useState([]);
   const dropdownRef = useRef(null);
-  const navigate = useNavigate(); // Khai báo navigate
+  const navigate = useNavigate();
 
-  // Toggle dropdown
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("https://localhost:7107/api/categories");
+        if (!response.ok) throw new Error("Không thể tải danh mục");
+        const data = await response.json();
+        setCategories(data.$values || data || []);
+      } catch (error) {
+        console.error("Lỗi tải danh mục:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   const toggleDropdown = () => {
     setIsDropdownOpen((prev) => !prev);
   };
 
-  // Open AuthModal
-  const openAuthModal = () => {
-    setIsAuthModalOpen(true);
-  };
-
-  // Close AuthModal
-  const closeAuthModal = () => {
-    setIsAuthModalOpen(false);
-  };
-
-  // Đóng dropdown khi click ra ngoài
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -45,92 +42,89 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleCategoryClick = (categoryId) => {
+    navigate(`/ProductList?categoryId=${categoryId}`);
+    setIsDropdownOpen(false);
+  };
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        {/* Logo có sự kiện onClick */}
         <img
           src={logo}
           alt="SHN Gear"
           className="navbar-logo"
-          onClick={() => navigate("/")} // Điều hướng về trang chủ
-          style={{ cursor: "pointer" }} // Con trỏ chuột dạng clickable
+          onClick={() => navigate("/")}
+          style={{ cursor: "pointer" }}
         />
 
-        {/* Nút Danh mục */}
         <div className="menu-container" ref={dropdownRef}>
           <button className="menu-button" onClick={toggleDropdown}>
             <img src={menu} alt="Menu" />
             Danh mục
           </button>
 
-          {/* Dropdown menu */}
           {isDropdownOpen && (
             <div className="dropdown-menu">
-              <div className="dropdown-item">
-                <Monitor size={18} />
-                Laptop
-              </div>
-              <div className="dropdown-item">
-                <Smartphone size={18} />
-                Điện thoại
-              </div>
-              <div className="dropdown-item">
-                <Headphones size={18} />
-                Phụ kiện
-              </div>
-              <div className="dropdown-item">
-                <House size={18} />
-                Điện gia dụng
-              </div>
+              {categories.length > 0 ? (
+                categories.map((category) => (
+                  <div
+                    key={category.id}
+                    className="dropdown-item"
+                    onClick={() => handleCategoryClick(category.id)}
+                  >
+                    <span>{category.name}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="dropdown-item">Không có danh mục</div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Ô tìm kiếm */}
         <div className="search-bar">
           <input
             type="text"
             placeholder="Tìm kiếm sản phẩm..."
             className="search-input"
           />
-          <button type="submit" title="Tìm kiếm" className="search-button">
+          <button type="submit" className="search-button">
             <svg
               className="feather feather-search"
               fill="none"
               height="24"
               stroke="black"
-              strokeLinecap="round"
-              strokeLinejoin="round"
               strokeWidth="2"
               viewBox="0 0 24 24"
               width="24"
-              xmlns="http://www.w3.org/2000/svg"
             >
               <circle cx="11" cy="11" r="8" />
-              <line x1="21" x2="16.65" y1="21" y2="16.65" />
+              <line x1="21" x2="16.65" y1="16.65" />
             </svg>
           </button>
         </div>
 
         <div className="avatarandcart">
-          {/* Avatar */}
           <User
             size={35}
-            strokeWidth={2}
             className="avatar-icon"
-            onClick={openAuthModal}
+            onClick={() => setIsAuthModalOpen(true)}
           />
-          {/* Nút Giỏ hàng */}
-          <button className="cart-button">
-            <ShoppingCart size={22} strokeWidth={2} />
+          <button
+            className="cart-button"
+            onClick={() => navigate("/shoppingcart")}
+          >
+            <ShoppingCart size={22} />
             Giỏ Hàng
           </button>
         </div>
       </div>
 
-      {/* AuthModal */}
-      <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
     </nav>
   );
 };

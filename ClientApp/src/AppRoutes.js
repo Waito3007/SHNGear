@@ -9,6 +9,7 @@ import SettingsPage from "./pages/Admin/SettingsPage";
 import ProductPage from "./pages/ProductPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProductList from "./pages/ProductList";
+import Shoppingcart from "./pages/shoppingcart";
 
 const AppRoutes = [
   {
@@ -54,6 +55,10 @@ const AppRoutes = [
   {
     path: "/productlist/",
     element: <ProductList />,
+  },
+  {
+    path: "/shoppingcart/",
+    element: <Shoppingcart />,
   },
 ];
 

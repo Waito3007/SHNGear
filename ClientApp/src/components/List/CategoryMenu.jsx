@@ -1,18 +1,32 @@
-import React from "react";
-import { FaMobileAlt, FaLaptop, FaHeadphones } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
 
-const categories = [
-  { name: "Laptop", icon: <FaLaptop /> },
-  { name: "Điện thoại", icon: <FaMobileAlt /> },
-  { name: "Phụ kiện", icon: <FaHeadphones /> },
-];
+const CategoryMenu = ({ onSelectCategory }) => {
+  const [categories, setCategories] = useState([]);
 
-const CategoryMenu = () => {
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("https://localhost:7107/api/categories");
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh mục:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   return (
     <div style={styles.categoryMenu}>
-      {categories.map((category, index) => (
-        <div key={index} style={styles.categoryItem}>
-          {category.icon} <span>{category.name}</span>
+      {categories.map((category) => (
+        <div
+          key={category.id}
+          style={styles.categoryItem}
+          onClick={() => onSelectCategory(category.id)}
+        >
+          {category.icon && category.icon}
+          <span>{category.name}</span>
         </div>
       ))}
     </div>
@@ -38,6 +52,10 @@ const styles = {
     fontSize: "16px",
     fontWeight: "bold",
     cursor: "pointer",
+    padding: "8px 12px",
+    borderRadius: "12px",
+    background: "#f7f7f7",
+    transition: "all 0.3s ease",
   },
 };
 

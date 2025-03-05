@@ -162,5 +162,25 @@ public class ProductsController : ControllerBase
         return Ok(relatedProducts);
     }
     
+    // 📌 Lấy danh sách sản phẩm (có hỗ trợ lọc theo danh mục)
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<Product>>> GetProducts([FromQuery] int? categoryId)
+    {
+        var query = _context.Products
+            .Include(p => p.Images)
+            .Include(p => p.Variants)
+            .Include(p => p.Category)
+            .Include(p => p.Brand)
+            .AsQueryable();
+
+        if (categoryId.HasValue)
+        {
+            query = query.Where(p => p.CategoryId == categoryId.Value);
+        }
+
+        var products = await query.ToListAsync();
+        return Ok(products);
+    }
+
 
 }
