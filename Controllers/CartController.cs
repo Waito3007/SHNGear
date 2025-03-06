@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -11,18 +11,35 @@ using SHN_Gear.DTOs;
 public class CartController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private const string SessionKeyGuestId = "GuestId";
     
-    public CartController(AppDbContext context)
+    public CartController(AppDbContext context, IHttpContextAccessor httpContextAccessor)
     {
         _context = context;
+        _httpContextAccessor = httpContextAccessor;
+    }
+    
+    private string GetUserId()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null)
+        {
+            var session = _httpContextAccessor.HttpContext.Session;
+            userId = session.GetString(SessionKeyGuestId);
+            if (userId == null)
+            {
+                userId = Guid.NewGuid().ToString();
+                session.SetString(SessionKeyGuestId, userId);
+            }
+        }
+        return userId;
     }
     
     [HttpGet]
     public async Task<IActionResult> GetCart()
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? Request.Cookies["GuestId"];
-        if (userId == null) return NotFound("Cart not found");
-
+        var userId = GetUserId();
         var cart = await _context.Carts
             .Include(c => c.Items)
             .ThenInclude(i => i.ProductVariant)
@@ -47,20 +64,13 @@ public class CartController : ControllerBase
                 UpdatedAt = i.UpdatedAt
             }).ToList()
         };
-
         return Ok(cartDto);
     }
 
     [HttpPost("add")]
     public async Task<IActionResult> AddToCart(int productVariantId, int quantity)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? Request.Cookies["GuestId"];
-        if (userId == null)
-        {
-            userId = Guid.NewGuid().ToString();
-            Response.Cookies.Append("GuestId", userId, new CookieOptions { Expires = DateTimeOffset.UtcNow.AddDays(30) });
-        }
-
+        var userId = GetUserId();
         var cart = await _context.Carts.Include(c => c.Items).FirstOrDefaultAsync(c => c.UserId == userId);
 
         if (cart == null)
@@ -93,44 +103,5 @@ public class CartController : ControllerBase
         await _context.SaveChangesAsync();
 
         return Ok("Product added to cart successfully.");
-    }
-
-    [HttpPost("remove")]
-    public async Task<IActionResult> RemoveFromCart(int productVariantId)
-    {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? Request.Cookies["GuestId"];
-        if (userId == null) return NotFound("Cart not found");
-
-        var cart = await _context.Carts.Include(c => c.Items).FirstOrDefaultAsync(c => c.UserId == userId);
-        if (cart == null) return NotFound("Cart not found");
-
-        var cartItem = cart.Items.FirstOrDefault(i => i.ProductVariantId == productVariantId);
-        if (cartItem == null) return NotFound("Product variant not found in cart");
-
-        _context.CartItems.Remove(cartItem);
-        cart.UpdatedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-
-        return Ok("Product removed from cart.");
-    }
-
-    [HttpPost("update")]
-    public async Task<IActionResult> UpdateCartItem(int productVariantId, int quantity)
-    {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? Request.Cookies["GuestId"];
-        if (userId == null) return NotFound("Cart not found");
-
-        var cart = await _context.Carts.Include(c => c.Items).FirstOrDefaultAsync(c => c.UserId == userId);
-        if (cart == null) return NotFound("Cart not found");
-
-        var cartItem = cart.Items.FirstOrDefault(i => i.ProductVariantId == productVariantId);
-        if (cartItem == null) return NotFound("Product variant not found in cart");
-
-        cartItem.Quantity = quantity;
-        cartItem.UpdatedAt = DateTime.UtcNow;
-        cart.UpdatedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-
-        return Ok("Cart item updated successfully.");
     }
 }

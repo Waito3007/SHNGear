@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ShoppingCart, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Menu, MenuItem, Avatar, IconButton } from "@mui/material";
 import "./Navbar.css";
-import menu from "../../assets/icon/menu.svg";
+import menuIcon from "../../assets/icon/menu.svg";
 import logo from "../../assets/img/Phone/logo.png";
 import AuthModal from "../Auth/AuthModal";
 
@@ -10,6 +11,9 @@ const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
+  const [avatarUrl, setAvatarUrl] = useState(localStorage.getItem("AvatarUrl"));
+  const [anchorEl, setAnchorEl] = useState(null);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -24,13 +28,8 @@ const Navbar = () => {
         console.error("Lỗi tải danh mục:", error);
       }
     };
-
     fetchCategories();
   }, []);
-
-  const toggleDropdown = () => {
-    setIsDropdownOpen((prev) => !prev);
-  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -42,14 +41,18 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleCategoryClick = (categoryId) => {
-    navigate(`/ProductList?categoryId=${categoryId}`);
-    setIsDropdownOpen(false);
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("AvatarUrl");
+    setIsLoggedIn(false);
+    setAvatarUrl(null);
+    setAnchorEl(null);
   };
 
   return (
     <nav className="navbar">
       <div className="navbar-container">
+        {/* Logo */}
         <img
           src={logo}
           alt="SHN Gear"
@@ -58,12 +61,12 @@ const Navbar = () => {
           style={{ cursor: "pointer" }}
         />
 
+        {/* Menu danh mục */}
         <div className="menu-container" ref={dropdownRef}>
-          <button className="menu-button" onClick={toggleDropdown}>
-            <img src={menu} alt="Menu" />
+          <button className="menu-button" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+            <img src={menuIcon} alt="Menu" />
             Danh mục
           </button>
-
           {isDropdownOpen && (
             <div className="dropdown-menu">
               {categories.length > 0 ? (
@@ -71,7 +74,7 @@ const Navbar = () => {
                   <div
                     key={category.id}
                     className="dropdown-item"
-                    onClick={() => handleCategoryClick(category.id)}
+                    onClick={() => navigate(`/ProductList?categoryId=${category.id}`)}
                   >
                     <span>{category.name}</span>
                   </div>
@@ -83,48 +86,39 @@ const Navbar = () => {
           )}
         </div>
 
+        {/* Thanh tìm kiếm */}
         <div className="search-bar">
-          <input
-            type="text"
-            placeholder="Tìm kiếm sản phẩm..."
-            className="search-input"
-          />
-          <button type="submit" className="search-button">
-            <svg
-              className="feather feather-search"
-              fill="none"
-              height="24"
-              stroke="black"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              width="24"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" x2="16.65" y1="16.65" />
-            </svg>
-          </button>
+          <input type="text" placeholder="Tìm kiếm sản phẩm..." className="search-input" />
+          <button type="submit" className="search-button">🔍</button>
         </div>
 
+        {/* Avatar và Giỏ hàng */}
         <div className="avatarandcart">
-          <User
-            size={35}
-            className="avatar-icon"
-            onClick={() => setIsAuthModalOpen(true)}
-          />
-          <button
-            className="cart-button"
-            onClick={() => navigate("/shoppingcart")}
-          >
+          {isLoggedIn ? (
+            <>
+              <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
+                <Avatar src={avatarUrl || "default-avatar.png"} alt="Avatar" />
+              </IconButton>
+              <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
+                <MenuItem onClick={() => navigate("/profile")}>Thông tin cá nhân</MenuItem>
+                <MenuItem onClick={() => navigate("/orders")}>Đơn hàng của tôi</MenuItem>
+                <MenuItem onClick={() => navigate("/loyalty")}>Khách hàng thân thiết</MenuItem>
+                <MenuItem onClick={() => navigate("/address")}>Sổ địa chỉ nhận hàng</MenuItem>
+                <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
+              </Menu>
+            </>
+          ) : (
+            <User size={35} className="avatar-icon" onClick={() => setIsAuthModalOpen(true)} />
+          )}
+          <button className="cart-button" onClick={() => navigate("/shoppingcart")}>
             <ShoppingCart size={22} />
             Giỏ Hàng
           </button>
         </div>
       </div>
 
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-      />
+      {/* Modal đăng nhập */}
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </nav>
   );
 };

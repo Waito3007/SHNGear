@@ -7,6 +7,7 @@ using SHN_Gear.Data;
 using System.Text.Json.Serialization;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+using SHN_Gear.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +31,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(key)
         };
     });
+
 
 // Thêm CORS
 builder.Services.AddCors(options =>
@@ -66,7 +68,8 @@ builder.Services.AddSingleton(provider =>
 });
 
 builder.Services.AddScoped<CloudinaryService>();  // Đăng ký CloudinaryService tại đây
-
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<EmailService>();      // Đăng ký EmailService tại đây
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
