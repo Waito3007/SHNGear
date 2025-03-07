@@ -15,3 +15,4 @@ namespace SHN_Gear.Models
         public string Country { get; set; } = null!;
     }
 }
+    

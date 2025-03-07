@@ -168,4 +168,29 @@ public class ProductsController : ControllerBase
 
         return Ok(relatedProducts);
     }
+    // 📌 API lấy danh sách biến thể (màu sắc + dung lượng + số lượng tồn) của sản phẩm
+[HttpGet("{id}/variants")]
+public async Task<ActionResult<IEnumerable<object>>> GetProductVariants(int id)
+{
+    var product = await _context.Products
+        .Include(p => p.Variants)
+        .FirstOrDefaultAsync(p => p.Id == id);
+
+    if (product == null)
+    {
+        return NotFound("Sản phẩm không tồn tại.");
+    }
+
+    var variants = product.Variants
+        .Select(v => new 
+        {
+            v.Color,
+            v.Storage,
+            v.StockQuantity
+        })
+        .ToList();
+
+    return Ok(variants);
+}
+
 }
