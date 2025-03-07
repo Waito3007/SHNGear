@@ -102,56 +102,44 @@ const ProductGrid = ({ selectedCategory }) => {
             Hiện không có sản phẩm
           </p>
         ) : (
-          <Swiper
-            modules={[Navigation]}
-            navigation
-            spaceBetween={20}
-            slidesPerView={1}
-            breakpoints={{
-              640: { slidesPerView: 2 },
-              768: { slidesPerView: 3 },
-              1024: { slidesPerView: 4 },
-            }}
-            className="pb-6"
-          >
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {products.map((product) => (
-              <SwiperSlide key={product.id} className="flex justify-center">
-                <div
-                  className="bg-white p-4 rounded-lg shadow-md border w-[250px] cursor-pointer"
-                  onClick={() => navigate(`/product/${product.id}`)}
-                >
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-40 object-contain mb-3 hover:scale-110 transition-transform"
-                    onError={(e) => (e.target.src = "/images/placeholder.jpg")} // Xử lý ảnh lỗi
-                  />
-                  <div className="text-gray-700 text-sm space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-500 line-through">
-                        {product.oldPrice.toLocaleString()} đ
-                      </span>
-                      <span className="text-red-500 text-sm">
-                        {product.discount}
-                      </span>
-                    </div>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {product.newPrice.toLocaleString()} đ
-                    </p>
-                    <p className="text-green-600 text-sm">
-                      Giảm {product.discountAmount.toLocaleString()} đ
-                    </p>
-                    <p className="text-gray-800 text-sm">{product.name}</p>
-                    <ul className="text-xs text-gray-600 list-disc pl-4">
-                      {product.features.map((feature, index) => (
-                        <li key={index}>{feature}</li>
-                      ))}
-                    </ul>
+              <div
+                key={product.id}
+                className="bg-white p-4 rounded-lg shadow-md border cursor-pointer"
+                onClick={() => navigate(`/product/${product.id}`)}
+              >
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-40 object-contain mb-3 hover:scale-110 transition-transform"
+                  onError={(e) => (e.target.src = "/images/placeholder.jpg")}
+                />
+                <div className="text-gray-700 text-sm space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 line-through">
+                      {product.oldPrice.toLocaleString()} đ
+                    </span>
+                    <span className="text-red-500 text-sm">
+                      {product.discount}
+                    </span>
                   </div>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {product.newPrice.toLocaleString()} đ
+                  </p>
+                  <p className="text-green-600 text-sm">
+                    Giảm {product.discountAmount.toLocaleString()} đ
+                  </p>
+                  <p className="text-gray-800 text-sm">{product.name}</p>
+                  <ul className="text-xs text-gray-600 list-disc pl-4">
+                    {product.features.map((feature, index) => (
+                      <li key={index}>{feature}</li>
+                    ))}
+                  </ul>
                 </div>
-              </SwiperSlide>
+              </div>
             ))}
-          </Swiper>
+          </div>
         )}
       </div>
     </div>

@@ -162,10 +162,13 @@ const ProductVariants = ({ variants }) => {
       <Box mt={3} display="flex" gap={2}>
         <Button
           variant="outlined"
-          startIcon={<ShoppingCart />}
-          onClick={handleAddToCart} // Thêm sự kiện click
+          onClick={handleAddToCart}
           sx={{
-            flex: 1,
+            width: "50px", // Chiều rộng bằng chiều cao
+            height: "60px", // Đảm bảo button là hình vuông
+            display: "flex", // Căn giữa icon
+            justifyContent: "center",
+            alignItems: "center",
             borderColor: "#d32f2f",
             color: "#d32f2f",
             "&:hover": {
@@ -174,7 +177,7 @@ const ProductVariants = ({ variants }) => {
             },
           }}
         >
-          Thêm vào giỏ hàng
+          <ShoppingCart />
         </Button>
         <Button
           variant="contained"
