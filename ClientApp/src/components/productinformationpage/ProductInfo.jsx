@@ -1,48 +1,25 @@
 import React from "react";
-import { FaShoppingCart } from "react-icons/fa";
+import { Card, CardContent, Typography } from "@mui/material";
 
 const ProductInfo = ({ product }) => {
   return (
-    <div className="product-info">
-      <h2>{product.name}</h2>
-      <div className="price-details">
-        <div>
-          <div className="price">
-            <span>Mua ngay với giá</span>
-          </div>
-          <div className="price-number">{product.price}</div>
+    <Card className="shadow-lg">
+      <CardContent>
+        <Typography variant="h4" gutterBottom>
+          {product?.name}
+        </Typography>
+        <Typography variant="body1" color="textSecondary">
+          {product?.description}
+        </Typography>
+        <div className="flex items-center gap-4 mt-4">
+          <img
+            src={product?.brand?.logo}
+            alt={product?.brand?.name}
+            className="w-10"
+          />
         </div>
-        <div>
-          <div className="price">
-            <span>Trả góp</span>
-          </div>
-          <div className="price-bernum">{product.installmentPrice}</div>
-        </div>
-      </div>
-      <div className="original-price-discount">
-        <p className="original-price">{product.originalPrice}</p>
-        <p className="discount">{product.discount}</p>
-      </div>
-      <div className="product-specifications">
-        <table>
-          <tbody>
-            {Object.keys(product.specifications).map((key) => (
-              <tr key={key}>
-                <td>{key}</td>
-                <td>{product.specifications[key]}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="purchase-options">
-        <button className="add-to-cart">
-          <FaShoppingCart className="cart-icon" />
-        </button>
-        <button className="buy-now">Mua ngay</button>
-        <button className="installment">Trả góp</button>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

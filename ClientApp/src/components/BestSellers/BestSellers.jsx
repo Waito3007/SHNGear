@@ -1,61 +1,104 @@
 import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import "swiper/css";
 import "swiper/css/navigation";
 
 const DiscountProductSlider = () => {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate(); // Hook điều hướng
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch("https://localhost:7107/api/Products");
-        const data = await response.json();
+        // Lấy danh sách sản phẩm
+        const productsResponse = await fetch(
+          "https://localhost:7107/api/Products"
+        );
+        if (!productsResponse.ok) throw new Error("Không thể tải sản phẩm");
+        const productsData = await productsResponse.json();
 
-        if (data && data.$values && Array.isArray(data.$values)) {
-          // Lọc các sản phẩm thuộc danh mục "Điện thoại"
-          const phoneProducts = data.$values
-            .filter((product) => product.category?.name === "Điện Thoại")
-            .map((product) => {
-              const variant = product.variants?.$values?.[0] || {};
-              const image = product.images?.$values?.[0]?.imageUrl || "/images/placeholder.jpg";
-              const oldPrice = variant.price || 0;
-              const newPrice = variant.discountPrice || oldPrice;
-              const discountAmount = oldPrice - newPrice;
-              const discount = oldPrice > 0 ? `-${Math.round((discountAmount / oldPrice) * 100)}%` : "0%";
+        // Lấy danh sách danh mục
+        const categoriesResponse = await fetch(
+          "https://localhost:7107/api/categories"
+        );
+        if (!categoriesResponse.ok) throw new Error("Không thể tải danh mục");
+        const categoriesData = await categoriesResponse.json();
 
-              return {
-                id: product.id,
-                name: product.name,
-                oldPrice,
-                newPrice,
-                discount,
-                discountAmount,
-                image,
-                features: [
-                  variant.storage || "Không xác định",
-                  product.brand?.name || "Không có thương hiệu",
-                  "Hiệu suất cao", // Có thể thay đổi tùy theo dữ liệu thực tế
-                ],
-              };
-            });
+        // Lấy danh sách thương hiệu
+        const brandsResponse = await fetch("https://localhost:7107/api/brands");
+        if (!brandsResponse.ok) throw new Error("Không thể tải thương hiệu");
+        const brandsData = await brandsResponse.json();
 
-          setProducts(phoneProducts);
-        } else {
-          throw new Error("Dữ liệu không đúng định dạng");
-        }
+        console.log("Dữ liệu API trả về:", {
+          productsData,
+          categoriesData,
+          brandsData,
+        });
+
+        // Xử lý dữ liệu
+        const categoriesArray = categoriesData.$values || categoriesData || [];
+        const brandsArray = brandsData.$values || brandsData || [];
+        const productsArray = productsData.$values || productsData || [];
+
+        // Tìm ID của danh mục "Điện Thoại"
+        const phoneCategory = categoriesArray.find(
+          (cat) => cat.name === "Điện Thoại"
+        );
+        if (!phoneCategory)
+          throw new Error("Không tìm thấy danh mục 'Điện Thoại'");
+
+        // Lọc các sản phẩm thuộc danh mục "Điện Thoại"
+        const phoneProducts = productsArray
+          .filter((product) => product.categoryId === phoneCategory.id)
+          .map((product) => {
+            const variant = product.variants?.[0] || {};
+            const image =
+              product.images?.[0]?.imageUrl || "/images/placeholder.jpg";
+            const oldPrice = variant.price || 0;
+            const newPrice = variant.discountPrice || oldPrice;
+            const discountAmount = oldPrice - newPrice;
+            const discount =
+              oldPrice > 0
+                ? `-${Math.round((discountAmount / oldPrice) * 100)}%`
+                : "0%";
+
+            // Tìm tên thương hiệu từ brandId
+            const brand = brandsArray.find((b) => b.id === product.brandId);
+
+            return {
+              id: product.id,
+              name: product.name,
+              oldPrice,
+              newPrice,
+              discount,
+              discountAmount,
+              image,
+              features: [
+                variant.storage || "Không xác định",
+                brand?.name || "Không có thương hiệu",
+                "Hiệu suất cao", // Có thể thay đổi tùy theo dữ liệu thực tế
+              ],
+            };
+          });
+
+        setProducts(phoneProducts);
+        setCategories(categoriesArray);
+        setBrands(brandsArray);
       } catch (err) {
-        setError("Không thể tải sản phẩm: " + err.message);
+        setError("Không thể tải dữ liệu: " + err.message);
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    fetchData();
   }, []);
 
   if (loading) {
@@ -87,18 +130,23 @@ const DiscountProductSlider = () => {
         >
           {products.map((product) => (
             <SwiperSlide key={product.id} className="flex justify-center">
-              <div className="bg-white p-4 rounded-lg shadow-md border w-[250px]">
+              <div
+                className="bg-white p-4 rounded-lg shadow-md border w-[250px]"
+                onClick={() => navigate(`/product/${product.id}`)}
+              >
                 <img
                   src={product.image}
                   alt={product.name}
-                  className="w-full h-40 object-contain mb-3"
+                  className="w-full h-40 object-contain mb-3 hover:scale-110"
                 />
                 <div className="text-gray-700 text-sm space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-500 line-through">
                       {product.oldPrice.toLocaleString()} đ
                     </span>
-                    <span className="text-red-500 text-sm">{product.discount}</span>
+                    <span className="text-red-500 text-sm">
+                      {product.discount}
+                    </span>
                   </div>
                   <p className="text-lg font-semibold text-gray-900">
                     {product.newPrice.toLocaleString()} đ

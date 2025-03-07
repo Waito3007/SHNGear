@@ -17,16 +17,23 @@ public class ProductsController : ControllerBase
         _context = context;
     }
 
-    // 📌 Lấy danh sách sản phẩm
+    // 📌 Lấy danh sách sản phẩm (có hỗ trợ lọc theo danh mục)
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
+    public async Task<ActionResult<IEnumerable<Product>>> GetProducts([FromQuery] int? categoryId = null)
     {
-        return await _context.Products
+        var query = _context.Products
             .Include(p => p.Images)
             .Include(p => p.Variants)
             .Include(p => p.Category)
             .Include(p => p.Brand)
-            .ToListAsync();
+            .AsQueryable();
+
+        if (categoryId.HasValue)
+        {
+            query = query.Where(p => p.CategoryId == categoryId.Value);
+        }
+
+        return await query.ToListAsync();
     }
 
     // 📌 Lấy thông tin chi tiết sản phẩm theo ID
@@ -86,6 +93,8 @@ public class ProductsController : ControllerBase
 
         return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
     }
+
+    // 📌 Cập nhật sản phẩm
     [HttpPut("{id}")]
     public async Task<IActionResult> PutProduct(int id, [FromBody] ProductDto productDto)
     {
@@ -100,20 +109,17 @@ public class ProductsController : ControllerBase
         if (existingProduct == null)
             return NotFound("Sản phẩm không tồn tại.");
 
-        // Cập nhật thông tin sản phẩm
         existingProduct.Name = productDto.Name;
         existingProduct.Description = productDto.Description;
         existingProduct.CategoryId = productDto.CategoryId;
         existingProduct.BrandId = productDto.BrandId;
 
-        // Thay thế toàn bộ danh sách ảnh hiện tại bằng danh sách mới
         existingProduct.Images = productDto.Images?.Select(img => new ProductImage
         {
             ImageUrl = img.ImageUrl,
             IsPrimary = img.IsPrimary
         }).ToList() ?? new List<ProductImage>();
 
-        // Cập nhật danh sách biến thể
         existingProduct.Variants = productDto.Variants?.Select(v => new ProductVariant
         {
             Color = v.Color,
@@ -151,4 +157,15 @@ public class ProductsController : ControllerBase
         return NoContent();
     }
 
+    // 📌 Lấy danh sách sản phẩm liên quan theo thương hiệu (brand)
+    [HttpGet("related-by-brand/{brandId}/{currentProductId}")]
+    public async Task<ActionResult<IEnumerable<Product>>> GetRelatedProductsByBrand(int brandId, int currentProductId)
+    {
+        var relatedProducts = await _context.Products
+            .Where(p => p.BrandId == brandId && p.Id != currentProductId)
+            .Include(p => p.Images)
+            .ToListAsync();
+
+        return Ok(relatedProducts);
+    }
 }

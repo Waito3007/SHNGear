@@ -9,7 +9,7 @@ const CategoryLarge = ({ name, image }) => {
       </span>
 
       {/* Hình ảnh căn giữa */}
-      <div className="flex items-center justify-center h-full">
+      <div className="flex items-center justify-center h-full hover:scale-110">
         <img
           src={image}
           alt={name}
