@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
-const CategoryMenu = ({ onSelectCategory }) => {
+const CategoryMenu = () => {
   const [categories, setCategories] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -17,13 +19,18 @@ const CategoryMenu = ({ onSelectCategory }) => {
     fetchCategories();
   }, []);
 
+  // Khi chọn danh mục, chuyển hướng đến trang ProductList với categoryId trên URL
+  const handleCategorySelect = (categoryId) => {
+    navigate(`/ProductList?categoryId=${categoryId}`);
+  };
+
   return (
     <div style={styles.categoryMenu}>
       {categories.map((category) => (
         <div
           key={category.id}
           style={styles.categoryItem}
-          onClick={() => onSelectCategory(category.id)}
+          onClick={() => handleCategorySelect(category.id)}
         >
           {category.icon && category.icon}
           <span>{category.name}</span>
