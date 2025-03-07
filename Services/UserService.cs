@@ -13,6 +13,12 @@ namespace SHN_Gear.Services
     public class UserService
     {
         private readonly AppDbContext _context;
+        public User? GetUserById(int userId)
+        {
+            return _context.Users
+                .Include(u => u.Role) // Nếu User có Role, ta include vào để lấy thông tin
+                .FirstOrDefault(u => u.Id == userId);
+        }
 
         public UserService(AppDbContext context)
         {

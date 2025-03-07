@@ -6,6 +6,7 @@ import "./Navbar.css";
 import menuIcon from "../../assets/icon/menu.svg";
 import logo from "../../assets/img/Phone/logo.png";
 import AuthModal from "../Auth/AuthModal";
+import CartDrawer from "../shoppingcart/CartDrawer"; // Import Drawer
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -16,7 +17,7 @@ const Navbar = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
-
+  const [isCartOpen, setIsCartOpen] = useState(false);
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -110,7 +111,7 @@ const Navbar = () => {
           ) : (
             <User size={35} className="avatar-icon" onClick={() => setIsAuthModalOpen(true)} />
           )}
-          <button className="cart-button" onClick={() => navigate("/shoppingcart")}>
+          <button className="cart-button"onClick={() => setIsCartOpen(true)}>
             <ShoppingCart size={22} />
             Giỏ Hàng
           </button>
@@ -119,7 +120,9 @@ const Navbar = () => {
 
       {/* Modal đăng nhập */}
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </nav>
+    
   );
 };
 

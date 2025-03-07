@@ -10,6 +10,42 @@ const AuthModal = ({ isOpen, onClose }) => {
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
+  const fetchUserProfile = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+  
+    try {
+      const response = await axios.get("https://localhost:7107/api/Auth/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      const user = response.data;
+      localStorage.setItem("user", JSON.stringify(user));
+  
+      console.log("User info:", user);
+      const token = localStorage.getItem("token");
+      console.log("Token hiện tại:", token);
+      
+      // 🔹 Cập nhật avatar ngay khi lấy dữ liệu
+      if (user.avatarUrl) {
+        localStorage.setItem("avatar", user.avatarUrl);
+      } else {
+        localStorage.setItem("avatar", "/default-avatar.png"); // Ảnh mặc định nếu chưa có
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy thông tin user:", error);
+  
+      // 🔹 Nếu token hết hạn hoặc không hợp lệ, xóa token và yêu cầu đăng nhập lại
+      if (error.response && error.response.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("avatar");
+        window.location.reload(); // Reload để mở lại modal đăng nhập
+      }
+    }
+  };
+  
+
   const handleCheckEmail = async () => {
     if (!email) return;
 
@@ -17,12 +53,8 @@ const AuthModal = ({ isOpen, onClose }) => {
     try {
       const response = await axios.post("https://localhost:7107/api/Auth/check-email", { email });
       const { exists } = response.data;
-
-      if (exists) {
-        setStep(1); // Tồn tại -> sang bước đăng nhập
-      } else {
-        setStep(2); // Không tồn tại -> sang bước đăng ký
-      }
+      
+      setStep(exists ? 1 : 2);
     } catch (error) {
       console.error("Lỗi kiểm tra email:", error);
     }
@@ -35,18 +67,23 @@ const AuthModal = ({ isOpen, onClose }) => {
       const response = await axios.post("https://localhost:7107/api/Auth/login", { email, password });
       const { token } = response.data;
   
-      // Lưu token vào localStorage
       localStorage.setItem("token", token);
+      console.log("Đăng nhập thành công, token:", token);
   
-      // Chuyển hướng về trang chủ
-      window.location.href = "/";
+      await fetchUserProfile(); // Lấy thông tin user ngay sau khi đăng nhập
   
-      console.log("Đăng nhập thành công:", response.data);
+      console.log("Đóng AuthModal sau khi đăng nhập thành công.");
+      onClose(); // Đóng modal trước khi reload lại trang
+  
+      setTimeout(() => {
+        window.location.reload(); // Reload lại trang trước khi mở modal
+      }, 300); // Delay nhẹ để đảm bảo modal đóng trước khi reload
     } catch (error) {
       console.error("Đăng nhập thất bại:", error);
     }
     setIsLoading(false);
   };
+  
   
 
   const handleRegister = async () => {

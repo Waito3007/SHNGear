@@ -6,7 +6,6 @@ using System.Text;
 using SHN_Gear.Data;
 using System.Text.Json.Serialization;
 using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
 using SHN_Gear.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +13,15 @@ var builder = WebApplication.CreateBuilder(args);
 // 🔹 Thêm kết nối SQL Server
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// 🔹 Thêm Distributed Cache & Session
+builder.Services.AddDistributedMemoryCache(); // Bộ nhớ tạm để lưu session
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Hết hạn sau 30 phút
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 // Thêm JWT Authentication
 var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
@@ -32,17 +40,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-
 // Thêm CORS
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("https://localhost:44479") // Thay đổi URL này thành URL của frontend nếu khác
-               .AllowAnyHeader()
-               .AllowAnyMethod();
+        policy.WithOrigins("https://localhost:44479") // URL frontend
+              .AllowCredentials() // ⚠️ QUAN TRỌNG: Cho phép gửi cookie/token
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
+
 
 // Thêm Swagger ( kiểm thử API)
 builder.Services.AddEndpointsApiExplorer();
@@ -66,10 +75,11 @@ builder.Services.AddSingleton(provider =>
     );
     return new Cloudinary(account);
 });
-
-builder.Services.AddScoped<CloudinaryService>();  // Đăng ký CloudinaryService tại đây
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<CloudinaryService>();  
 builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<EmailService>();      // Đăng ký EmailService tại đây
+builder.Services.AddScoped<EmailService>();      
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -89,7 +99,13 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 // Sử dụng CORS
-app.UseCors();
+app.UseCors("AllowFrontend");
+
+// 🔹 Thêm Authentication & Authorization (QUAN TRỌNG)
+app.UseAuthentication();  // Xác thực JWT Token từ request
+app.UseAuthorization();   //Kiểm tra quyền truy cập của user
+// 🔹 Thêm Session Middleware
+app.UseSession();
 
 app.MapControllerRoute(
     name: "default",
