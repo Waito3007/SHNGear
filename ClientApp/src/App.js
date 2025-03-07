@@ -5,7 +5,7 @@ import AdminLayout from "./components/layouts/AdminLayout";
 import ProductPage from "./pages/ProductPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProductList from "./pages/ProductList";
-import Shoppingcart from "./pages/shoppingcart";
+import Shoppingcart from "./pages/shoppingcart";  
 
 export default class App extends Component {
   static displayName = App.name;
