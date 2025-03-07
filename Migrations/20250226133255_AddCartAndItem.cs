@@ -5,7 +5,7 @@
 namespace SHN_Gear.Migrations
 {
     /// <inheritdoc />
-    public partial class AddEmailToUser : Migration
+    public partial class AddCartAndItem : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

@@ -57,19 +57,29 @@ const FeaturedCategories = () => {
   return (
     <div className="featured-categories">
       <Swiper
-  modules={[Navigation]}
-  navigation
-  spaceBetween={10}
-  slidesPerView={2}
-  className="custom-swiper"
->
-
-
+        modules={[Navigation]}
+        navigation
+        spaceBetween={10}
+        slidesPerView="auto"
+        className="custom-swiper"
+        loop={false}
+        centeredSlides={false}
+        allowTouchMove={true}
+        watchOverflow={true}
+        slidesPerGroup={1}
+      >
         {categoryGroups.map((group, index) => (
           <SwiperSlide key={index} className="category-slide">
             <div className="category-container">
-              {group.large && <CategoryLarge name={group.large.name} image={group.large.image} />}
-              {group.small && <CategorySmallGroup smallCategories={group.small} />}
+              {group.large && (
+                <CategoryLarge
+                  name={group.large.name}
+                  image={group.large.image}
+                />
+              )}
+              {group.small && (
+                <CategorySmallGroup smallCategories={group.small} />
+              )}
             </div>
           </SwiperSlide>
         ))}
