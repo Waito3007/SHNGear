@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper/modules";
 import { useNavigate } from "react-router-dom";
-import "swiper/css";
-import "swiper/css/navigation";
 
-const ProductGrid = ({ selectedCategory }) => {
+const ProductGrid = ({
+  selectedCategory,
+  selectedPriceRange,
+  selectedBrand,
+}) => {
   const [products, setProducts] = useState([]);
   const [brands, setBrands] = useState({});
   const [loading, setLoading] = useState(true);
@@ -27,7 +27,6 @@ const ProductGrid = ({ selectedCategory }) => {
         const productsData = await productsRes.json();
         const brandsData = await brandsRes.json();
 
-        // Xử lý danh sách thương hiệu thành dạng object { brandId: brandName }
         const brandsMap = (brandsData.$values || brandsData || []).reduce(
           (acc, brand) => {
             acc[brand.id] = brand.name;
@@ -36,13 +35,32 @@ const ProductGrid = ({ selectedCategory }) => {
           {}
         );
 
-        // Lọc sản phẩm theo selectedCategory (nếu API không hỗ trợ query)
-        const allProducts = productsData.$values || productsData || [];
-        const filteredProducts = selectedCategory
-          ? allProducts.filter(
-              (product) => product.categoryId === selectedCategory
-            )
-          : allProducts;
+        let filteredProducts = productsData.$values || productsData || [];
+
+        if (selectedCategory) {
+          filteredProducts = filteredProducts.filter(
+            (product) => product.categoryId === selectedCategory
+          );
+        }
+
+        if (selectedPriceRange && selectedPriceRange !== "all") {
+          const [minPrice, maxPrice] = selectedPriceRange
+            .split("-")
+            .map(Number);
+          filteredProducts = filteredProducts.filter((product) => {
+            const price =
+              product.variants?.[0]?.discountPrice ||
+              product.variants?.[0]?.price ||
+              0;
+            return price >= minPrice && price <= maxPrice;
+          });
+        }
+
+        if (selectedBrand) {
+          filteredProducts = filteredProducts.filter(
+            (product) => product.brandId === parseInt(selectedBrand)
+          );
+        }
 
         const processedProducts = filteredProducts.map((product) => {
           const variant = product.variants?.[0] || {};
@@ -84,7 +102,7 @@ const ProductGrid = ({ selectedCategory }) => {
     };
 
     fetchProductsAndBrands();
-  }, [selectedCategory]); // Mỗi khi selectedCategory thay đổi, gọi API lại
+  }, [selectedCategory, selectedPriceRange, selectedBrand]);
 
   if (loading) {
     return <div className="text-center py-6">Đang tải sản phẩm...</div>;
@@ -99,7 +117,7 @@ const ProductGrid = ({ selectedCategory }) => {
       <div className="max-w-[1200px] w-full px-4 bg-white rounded-lg shadow-lg p-6">
         {products.length === 0 ? (
           <p className="text-center text-gray-500 text-lg mt-12">
-            Hiện không có sản phẩm
+            Không có sản phẩm phù hợp
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

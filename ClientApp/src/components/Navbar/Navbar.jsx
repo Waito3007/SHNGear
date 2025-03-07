@@ -52,7 +52,6 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        {/* Logo */}
         <img
           src={logo}
           alt="SHN Gear"
@@ -61,9 +60,11 @@ const Navbar = () => {
           style={{ cursor: "pointer" }}
         />
 
-        {/* Menu danh mục */}
         <div className="menu-container" ref={dropdownRef}>
-          <button className="menu-button" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+          <button
+            className="menu-button"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          >
             <img src={menuIcon} alt="Menu" />
             Danh mục
           </button>
@@ -74,7 +75,10 @@ const Navbar = () => {
                   <div
                     key={category.id}
                     className="dropdown-item"
-                    onClick={() => navigate(`/ProductList?categoryId=${category.id}`)}
+                    onClick={() => {
+                      navigate(`/ProductList?categoryId=${category.id}`);
+                      setIsDropdownOpen(false);
+                    }}
                   >
                     <span>{category.name}</span>
                   </div>
@@ -86,39 +90,62 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Thanh tìm kiếm */}
         <div className="search-bar">
-          <input type="text" placeholder="Tìm kiếm sản phẩm..." className="search-input" />
-          <button type="submit" className="search-button">🔍</button>
+          <input
+            type="text"
+            placeholder="Tìm kiếm sản phẩm..."
+            className="search-input"
+          />
+          <button type="submit" className="search-button">
+            🔍
+          </button>
         </div>
 
-        {/* Avatar và Giỏ hàng */}
         <div className="avatarandcart">
           {isLoggedIn ? (
             <>
               <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
                 <Avatar src={avatarUrl || "default-avatar.png"} alt="Avatar" />
               </IconButton>
-              <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
-                <MenuItem onClick={() => navigate("/profile")}>Thông tin cá nhân</MenuItem>
-                <MenuItem onClick={() => navigate("/orders")}>Đơn hàng của tôi</MenuItem>
-                <MenuItem onClick={() => navigate("/loyalty")}>Khách hàng thân thiết</MenuItem>
-                <MenuItem onClick={() => navigate("/address")}>Sổ địa chỉ nhận hàng</MenuItem>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={() => setAnchorEl(null)}
+              >
+                <MenuItem onClick={() => navigate("/profile")}>
+                  Thông tin cá nhân
+                </MenuItem>
+                <MenuItem onClick={() => navigate("/orders")}>
+                  Đơn hàng của tôi
+                </MenuItem>
+                <MenuItem onClick={() => navigate("/loyalty")}>
+                  Khách hàng thân thiết
+                </MenuItem>
+                <MenuItem onClick={() => navigate("/address")}>
+                  Sổ địa chỉ nhận hàng
+                </MenuItem>
                 <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
               </Menu>
             </>
           ) : (
-            <User size={35} className="avatar-icon" onClick={() => setIsAuthModalOpen(true)} />
+            <User
+              size={35}
+              className="avatar-icon"
+              onClick={() => setIsAuthModalOpen(true)}
+            />
           )}
-          <button className="cart-button" onClick={() => navigate("/shoppingcart")}>
-            <ShoppingCart size={22} />
-            Giỏ Hàng
+          <button
+            className="cart-button"
+            onClick={() => navigate("/shoppingcart")}
+          >
+            <ShoppingCart size={20} style={{ marginRight: "1px" }} /> Giỏ Hàng
           </button>
         </div>
       </div>
-
-      {/* Modal đăng nhập */}
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
     </nav>
   );
 };
