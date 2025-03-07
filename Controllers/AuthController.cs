@@ -83,22 +83,32 @@ namespace SHN_Gear.Controllers
         }
 
         // API yêu cầu đăng nhập (Ví dụ lấy thông tin user)
-        [Authorize]
+                // 🔹 API lấy thông tin người dùng đang đăng nhập
         [HttpGet("profile")]
-        public async Task<IActionResult> GetUserProfile()
+        [Authorize] // Bắt buộc đăng nhập
+        public IActionResult GetProfile()
         {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                return Unauthorized(new { message = "Token không hợp lệ" });
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (!int.TryParse(userIdClaim, out int userId))
-                return BadRequest(new { message = "UserId không hợp lệ" });
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { message = "Không tìm thấy ID trong token" });
+            }
 
-            var user = await _userService.GetUserByIdAsync(userId);
+            var user = _userService.GetUserById(int.Parse(userId));
+
             if (user == null)
-                return NotFound(new { message = "Không tìm thấy user" });
+            {
+                return NotFound(new { message = "User không tồn tại" });
+            }
 
-            return Ok(user);
+            return Ok(new
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                Role = user.Role?.Name
+            });
         }
 
 

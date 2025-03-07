@@ -217,11 +217,11 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
   return (
     <Drawer anchor="right" open={isOpen} onClose={onClose}>
       <div style={{ width: 500, padding: 20 }}>
-        <h2>Edit Product</h2>
+        <h1>Chỉnh sửa thông tin sản phẩm</h1>
         {error && <p style={{ color: "red" }}>{error}</p>}
         <form onSubmit={handleSubmit}>
           <TextField
-            label="Name"
+            label="Tên sản phẩm"
             name="name"
             value={formData.name}
             onChange={handleChange}
@@ -230,7 +230,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
             required
           />
           <TextField
-            label="Description"
+            label="Mô tả"
             name="description"
             value={formData.description}
             onChange={handleChange}
@@ -239,7 +239,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
             required
           />
           <TextField
-            label="Category"
+            label="Danh mục"
             name="categoryId"
             select
             value={formData.categoryId}
@@ -255,11 +255,11 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
                 </MenuItem>
               ))
             ) : (
-              <MenuItem disabled>No categories available</MenuItem>
+              <MenuItem disabled>Danh mục đang trống</MenuItem>
             )}
           </TextField>
           <TextField
-            label="Brand"
+            label="Thương hiệu"
             name="brandId"
             select
             value={formData.brandId}
@@ -275,7 +275,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
                 </MenuItem>
               ))
             ) : (
-              <MenuItem disabled>No brands available</MenuItem>
+              <MenuItem disabled>Thương hiệu đang trống</MenuItem>
             )}
           </TextField>
 
@@ -309,10 +309,10 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
             onClick={addImage}
             style={{ marginBottom: 20 }}
           >
-            Add Image
+            Thêm ảnh
           </Button>
 
-          <h3>Variants</h3>
+          <h3>Biến thể</h3>
           {formData.variants.map((variant, index) => (
             <div
               key={index}
@@ -323,7 +323,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
               }}
             >
               <TextField
-                label="Color"
+                label="Màu sắc"
                 name="color"
                 value={variant.color}
                 onChange={(e) => handleChange(e, index, "variant")}
@@ -332,7 +332,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
                 required
               />
               <TextField
-                label="Storage"
+                label="Dung lượng lưu trử"
                 name="storage"
                 value={variant.storage}
                 onChange={(e) => handleChange(e, index, "variant")}
@@ -341,7 +341,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
                 required
               />
               <TextField
-                label="Price"
+                label="Giá cả"
                 name="price"
                 type="number"
                 value={variant.price}
@@ -351,7 +351,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
                 required
               />
               <TextField
-                label="Discount Price"
+                label="Giá cả sau khi giảm"
                 name="discountPrice"
                 type="number"
                 value={variant.discountPrice}
@@ -360,7 +360,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
                 margin="normal"
               />
               <TextField
-                label="Stock Quantity"
+                label="Số lượng tồn kho"
                 name="stockQuantity"
                 type="number"
                 value={variant.stockQuantity}
@@ -370,7 +370,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
                 required
               />
               <TextField
-                label="Flash Sale Start"
+                label="Thời gian bắt đầu flash sale"
                 name="flashSaleStart"
                 type="datetime-local"
                 value={variant.flashSaleStart}
@@ -380,7 +380,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
                 InputLabelProps={{ shrink: true }}
               />
               <TextField
-                label="Flash Sale End"
+                label="Thời gian kết thúc flash sale"
                 name="flashSaleEnd"
                 type="datetime-local"
                 value={variant.flashSaleEnd}
