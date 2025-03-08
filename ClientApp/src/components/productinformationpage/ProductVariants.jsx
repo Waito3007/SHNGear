@@ -35,6 +35,11 @@ const ProductVariants = ({ variants }) => {
     (v) => v.storage === selectedStorage && v.color === selectedColor
   );
 
+
+  const formatCurrency = (price) => {
+    return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
+  };
+
   const handleAddToCart = async () => {
     try {
       if (!selectedVariant) {
@@ -119,7 +124,7 @@ const ProductVariants = ({ variants }) => {
   };
 
   return (
-    <Box mt={2}>
+    <Box mt={4}>
       {/* Chọn màu sắc trước */}
       <Typography variant="h6" fontWeight="bold" gutterBottom>
         Màu sắc
@@ -132,7 +137,7 @@ const ProductVariants = ({ variants }) => {
                 border: selectedColor === color ? "2px solid #d32f2f" : "1px solid #ddd",
                 boxShadow: selectedColor === color ? "0px 4px 12px rgba(211, 47, 47, 0.3)" : "none",
                 transition: "0.3s",
-                width: 70,
+                width: "auto",
                 textAlign: "center",
               }}
             >
@@ -193,16 +198,27 @@ const ProductVariants = ({ variants }) => {
         ))}
       </Grid>
 
+      {/* Giá tiền */}
+      {selectedVariant && (
+        <Box mt={3} textAlign="center">
+          <Typography variant="body1" color="textSecondary" sx={{ textDecoration: "line-through" }}>
+            {formatCurrency(selectedVariant.price)}
+          </Typography>
+          <Typography variant="h5" fontWeight="bold" color="error">
+            {formatCurrency(selectedVariant.discountPrice)}
+          </Typography>
+        </Box>
+      )}
+
       {/* Nút thao tác */}
-      <Box mt={3} display="flex" gap={2}>
+      <Box mt={2} display="flex" gap={2}>
         <Button
-          variant="outlined"
-          startIcon={<ShoppingCart />}
           onClick={handleAddToCart}
+          variant="outlined"
           sx={{
-            width: "50px", // Chiều rộng bằng chiều cao
-            height: "60px", // Đảm bảo button là hình vuông
-            display: "flex", // Căn giữa icon
+            width: "50px",
+            height: "60px",
+            display: "flex",
             justifyContent: "center",
             alignItems: "center",
             borderColor: "#d32f2f",
@@ -221,12 +237,14 @@ const ProductVariants = ({ variants }) => {
             flex: 1,
             backgroundColor: "#d32f2f",
             color: "#fff",
+            fontSize: "16px",
+            fontWeight: "bold",
             "&:hover": {
               backgroundColor: "#b71c1c",
             },
           }}
         >
-          Mua ngay
+          {selectedVariant ? `Mua ngay - ${formatCurrency(selectedVariant.discountPrice)}` : "Mua ngay"}
         </Button>
       </Box>
     </Box>
