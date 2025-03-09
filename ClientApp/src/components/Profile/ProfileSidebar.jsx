@@ -4,7 +4,7 @@ import "./ProfileSidebar.css"; // Nếu có file CSS riêng
 const ProfileSidebar = ({ setActiveTab }) => {
 
   return (
-    <div className="profile-sidebar">
+    <div className="profile-sidebar m-24">
       <ul>
         <li onClick={() => setActiveTab("profile")}>Thông tin cá nhân</li>
         <li onClick={() => setActiveTab("orders")}>Đơn hàng của tôi</li>

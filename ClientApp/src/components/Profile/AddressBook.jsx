@@ -175,42 +175,42 @@ const AddressComponent = () => {
 
       {/* Modal thêm/sửa địa chỉ */}
       <Modal open={openModal} onClose={handleCloseModal}>
-      <Box
-        sx={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: 400,
-          bgcolor: "white",
-          boxShadow: 24,
-          p: 4,
-          borderRadius: "12px",
-          maxHeight: "80vh", // Giới hạn chiều cao tối đa
-          overflowY: "auto", // Cho phép cuộn khi nội dung quá dài
-        }}
-      >
-        <Typography variant="h6" textAlign="center" mb={2}>
-          {editMode ? "Chỉnh sửa địa chỉ" : "Thêm địa chỉ phụ"}
-        </Typography>
-        
-        {Object.keys(newAddress).map((key) => (
-          <TextField 
-            key={key} 
-            fullWidth 
-            label={key} 
-            name={key} 
-            value={newAddress[key]} 
-            onChange={handleInputChange} 
-            margin="normal" 
-          />
-        ))}
-        
-        <Button variant="contained" color="primary" onClick={handleSaveAddress}>
-          {editMode ? "Lưu thay đổi" : "Thêm"}
-        </Button>
-      </Box>
-    </Modal>
+    <Box
+      sx={{
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        width: 400,
+        bgcolor: "white",
+        boxShadow: 24,
+        p: 4,
+        borderRadius: "12px",
+        maxHeight: "80vh", // Giới hạn chiều cao tối đa
+        overflowY: "auto", // Cho phép cuộn khi nội dung quá dài
+      }}
+    >
+      <Typography variant="h6" textAlign="center" mb={2}>
+        {editMode ? "Chỉnh sửa địa chỉ" : "Thêm địa chỉ phụ"}
+      </Typography>
+      
+      {Object.keys(newAddress).map((key) => (
+        <TextField 
+          key={key} 
+          fullWidth 
+          label={key} 
+          name={key} 
+          value={newAddress[key]} 
+          onChange={handleInputChange} 
+          margin="normal" 
+        />
+      ))}
+      
+      <Button variant="contained" color="primary" onClick={handleSaveAddress}>
+        {editMode ? "Lưu thay đổi" : "Thêm"}
+      </Button>
+    </Box>
+  </Modal>
 
 
       {/* Dialog xác nhận xóa */}
