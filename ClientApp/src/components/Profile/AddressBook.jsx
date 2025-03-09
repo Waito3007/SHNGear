@@ -1,147 +1,228 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import "./AddressBook.css";
+import { jwtDecode } from "jwt-decode";
+import { Card, CardContent, CardHeader, Button, Typography, Modal, Box, TextField, IconButton, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
+import { Delete, Edit } from "@mui/icons-material";
 
-const AddressBook = ({ userId }) => {
-  const [isEditing, setIsEditing] = useState(false);
+const AddressComponent = () => {
   const [addresses, setAddresses] = useState([]);
-  const [formData, setFormData] = useState({
-    id: null,
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [addressToDelete, setAddressToDelete] = useState(null);
+  const [newAddress, setNewAddress] = useState({
     fullName: "",
-    phoneNumber: "",
     addressLine1: "",
     addressLine2: "",
     city: "",
     state: "",
     zipCode: "",
     country: "",
+    phoneNumber: "",
   });
 
-  // 🔄 Load danh sách địa chỉ từ API
   useEffect(() => {
-    fetchAddresses();
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decodedToken = jwtDecode(token);
+        if (decodedToken.sub) {
+          setUserId(decodedToken.sub);
+        } else {
+          console.error("Không tìm thấy userId trong token!");
+        }
+      } catch (error) {
+        console.error("Lỗi khi decode token:", error);
+      }
+    }
   }, []);
 
-  const fetchAddresses = async () => {
-    try {
-      const response = await axios.get(`http://localhost:5000/api/address/${userId}`);
-      setAddresses(response.data);
-    } catch (error) {
-      console.error("Lỗi khi lấy danh sách địa chỉ:", error);
-    }
+  useEffect(() => {
+    if (!userId) return;
+    const fetchAddresses = async () => {
+      try {
+        const response = await axios.get(`https://localhost:7107/api/Address/user/${userId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        setAddresses(response.data);
+      } catch (error) {
+        console.error("Lỗi khi lấy địa chỉ:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAddresses();
+  }, [userId]);
+
+  const handleOpenModal = (address = null) => {
+    setEditMode(!!address);
+    setSelectedAddress(address);
+    setNewAddress(address || {
+      fullName: "",
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      country: "",
+      phoneNumber: "",
+    });
+    setOpenModal(true);
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setEditMode(false);
+    setSelectedAddress(null);
   };
 
-  const handleSave = async () => {
-    if (!formData.fullName || !formData.phoneNumber || !formData.addressLine1) {
-      alert("Vui lòng nhập đầy đủ thông tin!");
+  const handleInputChange = (e) => {
+    setNewAddress({ ...newAddress, [e.target.name]: e.target.value });
+  };
+
+  const handleSaveAddress = async () => {
+    if (!userId) {
+      console.error("Không tìm thấy userId, không thể thêm địa chỉ.");
       return;
     }
 
     try {
-      if (formData.id) {
-        await axios.put(`http://localhost:5000/api/address/update/${formData.id}`, formData);
+      if (editMode && selectedAddress) {
+        const response = await axios.put(
+          `https://localhost:7107/api/Address/update/${selectedAddress.id}`,
+          { ...newAddress, userId },
+          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}`, "Content-Type": "application/json" } }
+        );
+        setAddresses(addresses.map((addr) => (addr.id === selectedAddress.id ? response.data : addr)));
       } else {
-        await axios.post("http://localhost:5000/api/address/add", { ...formData, userId });
+        const response = await axios.post(
+          "https://localhost:7107/api/Address/add",
+          { ...newAddress, userId },
+          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}`, "Content-Type": "application/json" } }
+        );
+        setAddresses([...addresses, response.data]);
       }
-      setIsEditing(false);
-      fetchAddresses(); // Reload danh sách địa chỉ
-      setFormData({
-        id: null,
-        fullName: "",
-        phoneNumber: "",
-        addressLine1: "",
-        addressLine2: "",
-        city: "",
-        state: "",
-        zipCode: "",
-        country: "",
-      });
+      handleCloseModal();
     } catch (error) {
       console.error("Lỗi khi lưu địa chỉ:", error);
     }
   };
 
-  const handleEdit = (address) => {
-    setIsEditing(true);
-    setFormData(address);
+  const handleOpenDeleteDialog = (address) => {
+    setAddressToDelete(address);
+    setDeleteDialogOpen(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleCloseDeleteDialog = () => {
+    setAddressToDelete(null);
+    setDeleteDialogOpen(false);
+  };
+
+  const handleDeleteAddress = async () => {
+    if (!addressToDelete) return;
     try {
-      await axios.delete(`http://localhost:5000/api/address/remove/${id}`);
-      fetchAddresses();
+      await axios.delete(`https://localhost:7107/api/Address/delete/${addressToDelete.id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setAddresses(addresses.filter((addr) => addr.id !== addressToDelete.id));
     } catch (error) {
       console.error("Lỗi khi xóa địa chỉ:", error);
     }
+    handleCloseDeleteDialog();
   };
 
   return (
-    <div className="address-book-container">
-      <h2 className="address-title">📍 Sổ địa chỉ nhận hàng</h2>
-
-      {isEditing ? (
-        <div className="edit-form">
-          <label>Họ và tên</label>
-          <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} />
-
-          <label>Số điện thoại</label>
-          <input type="text" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} />
-
-          <label>Địa chỉ</label>
-          <input type="text" name="addressLine1" value={formData.addressLine1} onChange={handleChange} />
-
-          <label>Địa chỉ bổ sung</label>
-          <input type="text" name="addressLine2" value={formData.addressLine2} onChange={handleChange} />
-
-          <label>Thành phố</label>
-          <input type="text" name="city" value={formData.city} onChange={handleChange} />
-
-          <label>Tỉnh/Bang</label>
-          <input type="text" name="state" value={formData.state} onChange={handleChange} />
-
-          <label>Mã Zip</label>
-          <input type="text" name="zipCode" value={formData.zipCode} onChange={handleChange} />
-
-          <label>Quốc gia</label>
-          <input type="text" name="country" value={formData.country} onChange={handleChange} />
-
-          <button className="save-btn" onClick={handleSave}>
-            {formData.id ? "Cập nhật địa chỉ" : "Thêm địa chỉ"}
-          </button>
-        </div>
-      ) : (
-        <>
-          {addresses.length === 0 ? (
-            <p className="no-address">Chưa có địa chỉ, vui lòng thêm địa chỉ.</p>
+    <div style={{ maxWidth: "600px", margin: "6rem 2rem" }}>
+      <Card style={{ border: "2px solid black", borderRadius: "16px", padding: "16px", backgroundColor: "white", color: "black" }}>
+        <CardHeader title={<Typography variant="h6">Địa chỉ của bạn</Typography>} />
+        <CardContent>
+          {loading ? (
+            <Typography>Đang tải...</Typography>
+          ) : addresses.length === 0 ? (
+            <div style={{ textAlign: "center" }}>
+              <Typography>Bạn chưa có địa chỉ nào.</Typography>
+              <Button variant="outlined" style={{ marginTop: "16px", borderColor: "black", color: "black" }} onClick={() => handleOpenModal()}>
+                Thêm địa chỉ của bạn
+              </Button>
+            </div>
           ) : (
-            addresses.map((addr) => (
-              <div key={addr.id} className="address-card">
-                <div className="address-info">
-                  <p>
-                    <strong>{addr.fullName}</strong> ({addr.phoneNumber})
-                  </p>
-                  <p>{addr.addressLine1}, {addr.addressLine2}</p>
-                  <p>{addr.city}, {addr.state}, {addr.zipCode}, {addr.country}</p>
+            <div>
+              {addresses.map((address) => (
+                <div key={address.id} style={{ padding: "12px", border: "1px solid black", borderRadius: "12px", marginBottom: "12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div>
+                    <Typography variant="subtitle1" fontWeight="bold">{address.fullName}</Typography>
+                    <Typography>{address.addressLine1}</Typography>
+                    {address.addressLine2 && <Typography>{address.addressLine2}</Typography>}
+                    <Typography>{address.city}, {address.state}, {address.zipCode}, {address.country}</Typography>
+                    <Typography>Số điện thoại: {address.phoneNumber}</Typography>
+                  </div>
+                  <div>
+                    <IconButton onClick={() => handleOpenModal(address)}><Edit /></IconButton>
+                    <IconButton onClick={() => handleOpenDeleteDialog(address)}><Delete color="error" /></IconButton>
+                  </div>
                 </div>
-                <div className="address-actions">
-                  <button onClick={() => handleEdit(addr)}>✏️ Sửa</button>
-                  <button onClick={() => handleDelete(addr.id)}>🗑️ Xóa</button>
-                </div>
-              </div>
-            ))
+              ))}
+              <Button variant="outlined" style={{ marginTop: "16px", borderColor: "black", color: "black" }} onClick={() => handleOpenModal()}>
+                Thêm địa chỉ phụ
+              </Button>
+            </div>
           )}
+        </CardContent>
+      </Card>
 
-          <button className="add-address-btn" onClick={() => setIsEditing(true)}>
-            ➕ Thêm địa chỉ mới
-          </button>
-        </>
-      )}
+      {/* Modal thêm/sửa địa chỉ */}
+      <Modal open={openModal} onClose={handleCloseModal}>
+    <Box
+      sx={{
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        width: 400,
+        bgcolor: "white",
+        boxShadow: 24,
+        p: 4,
+        borderRadius: "12px",
+        maxHeight: "80vh", // Giới hạn chiều cao tối đa
+        overflowY: "auto", // Cho phép cuộn khi nội dung quá dài
+      }}
+    >
+      <Typography variant="h6" textAlign="center" mb={2}>
+        {editMode ? "Chỉnh sửa địa chỉ" : "Thêm địa chỉ phụ"}
+      </Typography>
+      
+      {Object.keys(newAddress).map((key) => (
+        <TextField 
+          key={key} 
+          fullWidth 
+          label={key} 
+          name={key} 
+          value={newAddress[key]} 
+          onChange={handleInputChange} 
+          margin="normal" 
+        />
+      ))}
+      
+      <Button variant="contained" color="primary" onClick={handleSaveAddress}>
+        {editMode ? "Lưu thay đổi" : "Thêm"}
+      </Button>
+    </Box>
+  </Modal>
+
+
+      {/* Dialog xác nhận xóa */}
+      <Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog}>
+        <DialogTitle>Xác nhận xóa?</DialogTitle>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteDialog}>Hủy</Button>
+          <Button onClick={handleDeleteAddress} color="error">Xóa</Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
 
-export default AddressBook;
+export default AddressComponent;

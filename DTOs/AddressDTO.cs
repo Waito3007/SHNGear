@@ -15,7 +15,7 @@ namespace SHN_Gear.DTOs
 
     public class CreateAddressDTO
     {
-        public string UserId { get; set; } = null!;
+        public int UserId { get; set; } // ✅ Đã sửa thành kiểu int
         public string FullName { get; set; } = null!;
         public string PhoneNumber { get; set; } = null!;
         public string AddressLine1 { get; set; } = null!;

@@ -21,4 +21,12 @@ namespace SHN_Gear.DTOs
     {
         public string Email { get; set; } = string.Empty;
     }
+    
+    public class EditProfileDto
+    {
+        public string FullName { get; set; }
+        public string Email { get; set; }
+    }
+
+
 }

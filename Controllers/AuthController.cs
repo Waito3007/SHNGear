@@ -110,6 +110,34 @@ namespace SHN_Gear.Controllers
                 Role = user.Role?.Name
             });
         }
+        // 🔹 API chỉnh sửa thông tin cá nhân
+        [HttpPut("profile")]
+        [Authorize]
+        public async Task<IActionResult> EditProfile([FromBody] EditProfileDto editDto)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { message = "Không tìm thấy ID trong token" });
+            }
+
+            var updatedUser = await _userService.UpdateUserProfileAsync(int.Parse(userId), editDto);
+            if (updatedUser == null)
+            {
+                return BadRequest(new { message = "Cập nhật thất bại" });
+            }
+
+            return Ok(new
+            {
+                message = "Cập nhật thông tin thành công",
+                user = new
+                {
+                    Id = updatedUser.Id,
+                    FullName = updatedUser.FullName,
+                    Email = updatedUser.Email
+                }
+            });
+        }
 
 
         // Tạo JWT Token
@@ -138,6 +166,3 @@ namespace SHN_Gear.Controllers
         }
     }
 }
-
-// Gộp tất cả DTOs vào một namespace
-
