@@ -3,6 +3,7 @@ import { Drawer, IconButton, List, ListItemText, Avatar, Typography, Button, Box
 import { X, Delete } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import {jwtDecode} from "jwt-decode"; // Import thư viện
 
 const CartDrawer = ({ isOpen, onClose }) => {
   const [cartItems, setCartItems] = useState([]);
@@ -14,10 +15,9 @@ const CartDrawer = ({ isOpen, onClose }) => {
       const token = localStorage.getItem("token");
       if (token) {
         try {
-          const profileResponse = await axios.get("https://localhost:7107/api/Auth/profile", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const id = profileResponse.data.id;
+          // 🟢 Decode token để lấy userId
+          const decoded = jwtDecode(token);
+          const id = decoded.sub; // Nếu backend dùng `sub` thay vì `id`, đổi thành `decoded.sub`
           setUserId(id);
           if (!id) return;
 

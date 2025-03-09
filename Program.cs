@@ -66,6 +66,10 @@ builder.Services.AddControllersWithViews()
 
 // Đăng ký Cloudinary trước khi build app
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<JwtService>();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
