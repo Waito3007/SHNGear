@@ -65,20 +65,11 @@ builder.Services.AddControllersWithViews()
     });
 
 // Đăng ký Cloudinary trước khi build app
-builder.Services.AddSingleton(provider =>
-{
-    var config = builder.Configuration;
-    var account = new Account(
-        config["Cloudinary:CloudName"],
-        config["Cloudinary:ApiKey"],
-        config["Cloudinary:ApiSecret"]
-    );
-    return new Cloudinary(account);
-});
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<CloudinaryService>();  
+builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<EmailService>();      
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<JwtService>();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 

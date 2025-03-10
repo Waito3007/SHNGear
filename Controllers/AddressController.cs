@@ -1,14 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SHN_Gear.Data;
-using SHN_Gear.DTOs;
 using SHN_Gear.Models;
-using System.Linq;
-using System.Threading.Tasks;
+using SHN_Gear.DTOs;
 
 namespace SHN_Gear.Controllers
 {
-    [Route("api/address")]
+    [Route("api/[controller]")]
     [ApiController]
     public class AddressController : ControllerBase
     {
@@ -19,36 +17,31 @@ namespace SHN_Gear.Controllers
             _context = context;
         }
 
-        // ✅ 1. Lấy danh sách địa chỉ của người dùng
-        [HttpGet("{userId}")]
-        public async Task<IActionResult> GetAddresses(string userId)
+        // Lấy danh sách địa chỉ của một User
+        [HttpGet("user/{userId}")]
+        public async Task<IActionResult> GetUserAddresses(int userId)
         {
             var addresses = await _context.Addresses
                 .Where(a => a.UserId == userId)
-                .Select(a => new AddressDTO
-                {
-                    Id = a.Id,
-                    FullName = a.FullName,
-                    PhoneNumber = a.PhoneNumber,
-                    AddressLine1 = a.AddressLine1,
-                    AddressLine2 = a.AddressLine2,
-                    City = a.City,
-                    State = a.State,
-                    ZipCode = a.ZipCode,
-                    Country = a.Country
-                })
                 .ToListAsync();
+
+            if (!addresses.Any())
+            {
+                return NotFound("Không tìm thấy địa chỉ nào cho user này.");
+            }
 
             return Ok(addresses);
         }
 
-        // ✅ 2. Thêm địa chỉ mới
+        // Thêm địa chỉ mới
         [HttpPost("add")]
         public async Task<IActionResult> AddAddress([FromBody] CreateAddressDTO addressDTO)
         {
-            if (addressDTO == null)
+            // Kiểm tra User có tồn tại không
+            var user = await _context.Users.FindAsync(addressDTO.UserId);
+            if (user == null)
             {
-                return BadRequest("Invalid data.");
+                return BadRequest("User không tồn tại.");
             }
 
             var address = new Address
@@ -67,17 +60,17 @@ namespace SHN_Gear.Controllers
             _context.Addresses.Add(address);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Địa chỉ đã được thêm!", addressId = address.Id });
+            return Ok(address);
         }
 
-        // ✅ 3. Cập nhật địa chỉ
+        // Cập nhật địa chỉ
         [HttpPut("update/{id}")]
-        public async Task<IActionResult> UpdateAddress(int id, [FromBody] AddressDTO addressDTO)
+        public async Task<IActionResult> UpdateAddress(int id, [FromBody] CreateAddressDTO addressDTO)
         {
             var address = await _context.Addresses.FindAsync(id);
             if (address == null)
             {
-                return NotFound("Không tìm thấy địa chỉ.");
+                return NotFound("Địa chỉ không tồn tại.");
             }
 
             address.FullName = addressDTO.FullName;
@@ -89,23 +82,26 @@ namespace SHN_Gear.Controllers
             address.ZipCode = addressDTO.ZipCode;
             address.Country = addressDTO.Country;
 
+            _context.Addresses.Update(address);
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Cập nhật địa chỉ thành công!" });
+
+            return Ok(address);
         }
 
-        // ✅ 4. Xóa địa chỉ
-        [HttpDelete("remove/{id}")]
-        public async Task<IActionResult> RemoveAddress(int id)
+        // Xóa địa chỉ
+        [HttpDelete("delete/{id}")]
+        public async Task<IActionResult> DeleteAddress(int id)
         {
             var address = await _context.Addresses.FindAsync(id);
             if (address == null)
             {
-                return NotFound("Không tìm thấy địa chỉ.");
+                return NotFound("Địa chỉ không tồn tại.");
             }
 
             _context.Addresses.Remove(address);
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Xóa địa chỉ thành công!" });
+
+            return Ok("Địa chỉ đã được xóa.");
         }
     }
 }

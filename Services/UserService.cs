@@ -86,9 +86,22 @@ namespace SHN_Gear.Services
         }
 
         public async Task<User?> GetUserByIdAsync(int userId)
-    {
+        {
         return await _context.Users.FindAsync(userId);
-    }
+         }
+        public async Task<User> UpdateUserProfileAsync(int userId, EditProfileDto editDto)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return null;
+
+            user.FullName = editDto.FullName;
+            user.Email = editDto.Email;
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+            
+            return user;
+        }
 
     }
 }
