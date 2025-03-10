@@ -38,15 +38,17 @@ const ProductVariants = ({ variants }) => {
   const handleAddToCart = async () => {
     try {
       if (!selectedVariant) {
-        alert("⚠️ Vui lòng chọn biến thể sản phẩm trước khi thêm vào giỏ hàng!");
+        alert(
+          "⚠️ Vui lòng chọn biến thể sản phẩm trước khi thêm vào giỏ hàng!"
+        );
         return;
       }
-  
+
       if (selectedVariant.stockQuantity <= 0) {
         alert("❌ Sản phẩm này đã hết hàng!");
         return;
       }
-  
+
       const token = localStorage.getItem("token");
       const cartItem = {
         productId: selectedVariant.productId,
@@ -58,7 +60,7 @@ const ProductVariants = ({ variants }) => {
           discountPrice: selectedVariant.discountPrice || 0,
         },
       };
-  
+
       if (token) {
         console.log("🔍 Đang lấy profile...");
         const profileResponse = await fetch(
@@ -68,17 +70,20 @@ const ProductVariants = ({ variants }) => {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-  
+
         if (!profileResponse.ok) {
           const errorData = await profileResponse.text();
           throw new Error(`Lỗi profile: ${errorData}`);
         }
-  
+
         const profileData = await profileResponse.json();
         cartItem.userId = String(profileData.id);
-  
-        console.log("📦 Gửi lên API giỏ hàng:", JSON.stringify(cartItem, null, 2));
-  
+
+        console.log(
+          "📦 Gửi lên API giỏ hàng:",
+          JSON.stringify(cartItem, null, 2)
+        );
+
         const response = await fetch("https://localhost:7107/api/Cart", {
           method: "POST",
           headers: {
@@ -88,29 +93,29 @@ const ProductVariants = ({ variants }) => {
           body: JSON.stringify(cartItem),
           credentials: "include",
         });
-  
+
         if (!response.ok) {
           const errorData = await response.text();
           throw new Error(`Lỗi API giỏ hàng: ${errorData}`);
         }
-  
+
         console.log("✅ Đã thêm vào giỏ hàng!");
       } else {
         const cart = JSON.parse(sessionStorage.getItem("cart")) || [];
         const existingItem = cart.find(
           (item) => item.productVariantId === cartItem.productVariantId
         );
-  
+
         if (existingItem) {
           existingItem.quantity += 1;
         } else {
           cart.push(cartItem);
         }
-  
+
         sessionStorage.setItem("cart", JSON.stringify(cart));
         console.log("📦 Đã lưu vào sessionStorage!", cart);
       }
-  
+
       alert("🛒 Sản phẩm đã được thêm vào giỏ hàng!");
     } catch (error) {
       console.error("❌ Lỗi khi thêm vào giỏ hàng:", error);
@@ -129,8 +134,14 @@ const ProductVariants = ({ variants }) => {
           <Grid item key={color}>
             <Card
               sx={{
-                border: selectedColor === color ? "2px solid #d32f2f" : "1px solid #ddd",
-                boxShadow: selectedColor === color ? "0px 4px 12px rgba(211, 47, 47, 0.3)" : "none",
+                border:
+                  selectedColor === color
+                    ? "2px solid #d32f2f"
+                    : "1px solid #ddd",
+                boxShadow:
+                  selectedColor === color
+                    ? "0px 4px 12px rgba(211, 47, 47, 0.3)"
+                    : "none",
                 transition: "0.3s",
                 width: 70,
                 textAlign: "center",
@@ -147,7 +158,9 @@ const ProductVariants = ({ variants }) => {
                   >
                     {color}
                   </Typography>
-                  {selectedColor === color && <CheckCircle color="error" fontSize="small" />}
+                  {selectedColor === color && (
+                    <CheckCircle color="error" fontSize="small" />
+                  )}
                 </CardContent>
               </CardActionArea>
             </Card>
@@ -164,8 +177,14 @@ const ProductVariants = ({ variants }) => {
           <Grid item key={storage}>
             <Card
               sx={{
-                border: selectedStorage === storage ? "2px solid #d32f2f" : "1px solid #ddd",
-                boxShadow: selectedStorage === storage ? "0px 4px 12px rgba(211, 47, 47, 0.3)" : "none",
+                border:
+                  selectedStorage === storage
+                    ? "2px solid #d32f2f"
+                    : "1px solid #ddd",
+                boxShadow:
+                  selectedStorage === storage
+                    ? "0px 4px 12px rgba(211, 47, 47, 0.3)"
+                    : "none",
                 transition: "0.3s",
                 padding: "6px 12px",
                 opacity: availableStorages.includes(storage) ? 1 : 0.5,
@@ -197,10 +216,7 @@ const ProductVariants = ({ variants }) => {
       <Box mt={3} display="flex" gap={2}>
         <Button
           variant="outlined"
-<<<<<<< HEAD
-=======
           startIcon={<ShoppingCart />}
->>>>>>> 2698347d88d3a7033949f442ba9d0325778d97b4
           onClick={handleAddToCart}
           sx={{
             width: "50px", // Chiều rộng bằng chiều cao
