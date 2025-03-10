@@ -17,7 +17,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
         try {
           // 🟢 Decode token để lấy userId
           const decoded = jwtDecode(token);
-          const id = decoded.sub; // Nếu backend dùng `sub` thay vì `id`, đổi thành `decoded.sub`
+          const id = decoded.sub;
           setUserId(id);
           if (!id) return;
 
