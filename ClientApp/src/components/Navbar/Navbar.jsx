@@ -8,7 +8,7 @@ import logo from "../../assets/img/Phone/logo.png";
 import AuthModal from "../Auth/AuthModal";
 import CartDrawer from "../shoppingcart/CartDrawer"; // Import Drawer
 
-const Navbar = () => {
+function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -168,6 +168,6 @@ const Navbar = () => {
     </nav>
     
   );
-};
+}
 
 export default Navbar;
