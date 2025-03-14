@@ -10,6 +10,7 @@ namespace SHN_Gear.Models
         public string OrderStatus { get; set; } = "Pending"; // Ví dụ: Pending, Processing, Shipped, Delivered, Cancelled
         public int? AddressId { get; set; } // Khóa ngoại tới Address
         public Address? Address { get; set; }
+        public string? GuestAddress { get; set; }
         public int PaymentMethodId { get; set; } // Khóa ngoại tới PaymentMethod
         public PaymentMethod PaymentMethod { get; set; } = null!;
         public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>(); // Danh sách các mặt hàng trong đơn hàng
