@@ -246,7 +246,6 @@ const ProductsTable = () => {
         color="primary"
         className="mt-4 flex justify-center"
       />
-
             <ProductDrawer
                 isOpen={isDrawerOpen}
                 onClose={() => setIsDrawerOpen(false)}

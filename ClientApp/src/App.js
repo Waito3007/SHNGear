@@ -6,13 +6,14 @@ import ProductPage from "./pages/ProductPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProductList from "./pages/ProductList";
 import Shoppingcart from "./pages/shoppingcart";  
-
+import Checkout from "./components/Checkout/Checkout"; // Import component Checkout
 export default class App extends Component {
   static displayName = App.name;
 
   render() {
     return (
       <Routes>
+        <Route path="/checkout" element={<Checkout />} />
         <Route path="/shoppingcart" element={<Shoppingcart />} />
         <Route path="/productlist" element={<ProductList />} />
         <Route path="/profile/" element={<ProfilePage />} />

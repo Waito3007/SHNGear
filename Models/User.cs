@@ -20,5 +20,8 @@ namespace SHN_Gear.Models
         // Quan hệ với Role 
         public int RoleId { get; set; }  
         public Role Role { get; set; } = null!;
+
+        // Quan hệ với UserVoucher
+        public ICollection<UserVoucher> UserVouchers { get; set; } = new List<UserVoucher>();
     }
 }

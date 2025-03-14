@@ -9,96 +9,73 @@ const AuthModal = ({ isOpen, onClose }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const fetchUserProfile = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-  
-    try {
-      const response = await axios.get("https://localhost:7107/api/Auth/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-  
-      const user = response.data;
-      localStorage.setItem("user", JSON.stringify(user));
-  
-      console.log("User info:", user);
-      const token = localStorage.getItem("token");
-      console.log("Token hiện tại:", token);
-      
-      // 🔹 Cập nhật avatar ngay khi lấy dữ liệu
-      if (user.avatarUrl) {
-        localStorage.setItem("avatar", user.avatarUrl);
-      } else {
-        localStorage.setItem("avatar", "/default-avatar.png"); // Ảnh mặc định nếu chưa có
-      }
-    } catch (error) {
-      console.error("Lỗi khi lấy thông tin user:", error);
-  
-      // 🔹 Nếu token hết hạn hoặc không hợp lệ, xóa token và yêu cầu đăng nhập lại
-      if (error.response && error.response.status === 401) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        localStorage.removeItem("avatar");
-        window.location.reload(); // Reload để mở lại modal đăng nhập
-      }
-    }
+  const isValidEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
-  
+
+  const isValidPassword = (password) => {
+    return /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password);
+  };
 
   const handleCheckEmail = async () => {
-    if (!email) return;
+    if (!email) {
+      setError("Email không được để trống!");
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setError("Email không hợp lệ!");
+      return;
+    }
 
+    setError("");
     setIsLoading(true);
     try {
       const response = await axios.post("https://localhost:7107/api/Auth/check-email", { email });
-      const { exists } = response.data;
-      
-      setStep(exists ? 1 : 2);
+      setStep(response.data.exists ? 1 : 2);
     } catch (error) {
-      console.error("Lỗi kiểm tra email:", error);
+      setError("Lỗi khi kiểm tra email! Vui lòng thử lại.");
     }
     setIsLoading(false);
   };
 
   const handleLogin = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axios.post("https://localhost:7107/api/Auth/login", { email, password });
-      const { token } = response.data;
-  
-      localStorage.setItem("token", token);
-      console.log("Đăng nhập thành công, token:", token);
-  
-      await fetchUserProfile(); // Lấy thông tin user ngay sau khi đăng nhập
-  
-      console.log("Đóng AuthModal sau khi đăng nhập thành công.");
-      onClose(); // Đóng modal trước khi reload lại trang
-  
-      setTimeout(() => {
-        window.location.reload(); // Reload lại trang trước khi mở modal
-      }, 300); // Delay nhẹ để đảm bảo modal đóng trước khi reload
-    } catch (error) {
-      console.error("Đăng nhập thất bại:", error);
-    }
-    setIsLoading(false);
-  };
-  
-  
-
-  const handleRegister = async () => {
-    if (password !== confirmPassword) {
-      alert("Mật khẩu xác nhận không khớp!");
+    if (!password) {
+      setError("Mật khẩu không được để trống!");
       return;
     }
 
+    setError("");
     setIsLoading(true);
     try {
-      const response = await axios.post("https://localhost:7107/api/Auth/register", { email, password });
-      console.log("Đăng ký thành công:", response.data);
+      const response = await axios.post("https://localhost:7107/api/Auth/login", { email, password });
+      localStorage.setItem("token", response.data.token);
       onClose();
+      setTimeout(() => window.location.reload(), 300);
     } catch (error) {
-      console.error("Đăng ký thất bại:", error);
+      setError("Sai tài khoản hoặc mật khẩu!");
+    }
+    setIsLoading(false);
+  };
+
+  const handleRegister = async () => {
+    if (!isValidPassword(password)) {
+      setError("Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt!");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Mật khẩu xác nhận không khớp!");
+      return;
+    }
+
+    setError("");
+    setIsLoading(true);
+    try {
+      await axios.post("https://localhost:7107/api/Auth/register", { email, password });
+      setStep(1); // Chuyển về bước đăng nhập sau khi đăng ký thành công
+    } catch (error) {
+      setError("Đăng ký thất bại! Hãy thử lại.");
     }
     setIsLoading(false);
   };
@@ -107,11 +84,11 @@ const AuthModal = ({ isOpen, onClose }) => {
     <Modal show={isOpen} onClose={onClose}>
       <div className="modal-overlay">
         <div className="relative bg-white rounded-xl shadow-lg text-black w-full max-w-md max-h-full">
-          <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t border-gray-200">
+          <div className="flex items-center justify-between p-4 md:p-5 border-b border-gray-200">
             {step !== 0 && (
               <button
                 type="button"
-                className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center"
+                className="text-gray-400 hover:bg-gray-200 rounded-lg text-sm w-8 h-8 flex items-center justify-center"
                 onClick={() => setStep(0)}
               >
                 ◀
@@ -119,18 +96,20 @@ const AuthModal = ({ isOpen, onClose }) => {
             )}
             <button
               type="button"
-              className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center"
+              className="text-gray-400 hover:bg-gray-200 rounded-lg text-sm w-8 h-8 flex items-center justify-center"
               onClick={onClose}
             >
               ✖
             </button>
           </div>
 
-          <h3 className="text-2xl font-bold text-black text-center w-full">
-            {step === 0 ? "Nhập email" : step === 1 ? "Đăng nhập" : "Đăng ký"}
+          <h3 className="text-2xl font-bold text-black text-center">
+            {step === 0 ? "Đăng nhập/Đăng ký" : step === 1 ? "Đăng nhập" : "Đăng ký"}
           </h3>
 
-          <div className="p-4 md:p-5 space-y-4 flex flex-col items-center">
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
+          <div className="p-4 space-y-4 flex flex-col items-center">
             {step === 0 && (
               <>
                 <input
@@ -138,11 +117,13 @@ const AuthModal = ({ isOpen, onClose }) => {
                   placeholder="Nhập email của bạn"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white border-gray-300 focus:ring-black focus:border-black h-16"
+                  className="w-full border-gray-300 focus:ring-black focus:border-black h-12 px-3"
                 />
                 <Button
                   onClick={handleCheckEmail}
-                  className={`mt-4 text-white font-medium rounded-lg text-sm px-5 py-2.5 text-center ${email ? 'bg-red-700 hover:bg-red-800' : 'bg-gray-400 cursor-not-allowed'}`}
+                  className={`mt-4 text-white font-medium rounded-lg text-sm px-5 py-2.5 ${
+                    email ? "bg-red-700 hover:bg-red-800" : "bg-gray-400 cursor-not-allowed"
+                  }`}
                   disabled={!email || isLoading}
                 >
                   {isLoading ? "Đang kiểm tra..." : "Tiếp tục"}
@@ -157,11 +138,11 @@ const AuthModal = ({ isOpen, onClose }) => {
                   placeholder="Nhập mật khẩu"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white border-gray-300 focus:ring-black focus:border-black h-16"
+                  className="w-full border-gray-300 focus:ring-black focus:border-black h-12 px-3"
                 />
                 <Button
                   onClick={handleLogin}
-                  className="mt-4 text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+                  className="mt-4 bg-red-700 hover:bg-red-800 text-white font-medium rounded-lg px-5 py-2.5"
                   disabled={isLoading}
                 >
                   {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
@@ -176,18 +157,18 @@ const AuthModal = ({ isOpen, onClose }) => {
                   placeholder="Nhập mật khẩu"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white border-gray-300 focus:ring-black focus:border-black h-16"
+                  className="w-full border-gray-300 focus:ring-black focus:border-black h-12 px-3"
                 />
                 <input
                   type="password"
                   placeholder="Xác nhận mật khẩu"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full bg-white border-gray-300 focus:ring-black focus:border-black h-16"
+                  className="w-full border-gray-300 focus:ring-black focus:border-black h-12 px-3"
                 />
                 <Button
                   onClick={handleRegister}
-                  className="mt-4 text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+                  className="mt-4 bg-red-700 hover:bg-red-800 text-white font-medium rounded-lg px-5 py-2.5"
                   disabled={isLoading}
                 >
                   {isLoading ? "Đang đăng ký..." : "Đăng ký"}
