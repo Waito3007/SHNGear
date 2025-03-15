@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Drawer, IconButton, TextField, Select, MenuItem, Button, Typography, Box, CircularProgress } from "@mui/material";
+import { Drawer, IconButton, Select, MenuItem, Button, Box, CircularProgress, InputBase } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import { useForm, useFieldArray } from "react-hook-form";
 import axios from "axios";
@@ -16,15 +16,7 @@ const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
     },
   });
 
-  const { fields: imageFields, append: appendImage, remove: removeImage } = useFieldArray({
-    control,
-    name: "images",
-  });
-
-  const { fields: variantFields, append: appendVariant, remove: removeVariant } = useFieldArray({
-    control,
-    name: "variants",
-  });
+  const { fields: imageFields, append: appendImage } = useFieldArray({ control, name: "images" });
 
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
@@ -63,7 +55,7 @@ const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
         });
         return { imageUrl: response.data, isPrimary: imageFields.length === 0 };
       });
-      
+
       const uploadedImages = await Promise.all(uploadPromises);
       uploadedImages.forEach((img) => appendImage(img));
     } catch (error) {
@@ -101,38 +93,63 @@ const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
   return (
     <Drawer anchor="right" open={isOpen} onClose={onClose} BackdropProps={{ invisible: false }}>
       <Box sx={{ width: 400, p: 3, bgcolor: "background.default", height: "100%" }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h6">Thêm sản phẩm</Typography>
+        {/* Header */}
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} 
+          sx={{  }}>
+          <Box fontWeight="bold">Thêm sản phẩm</Box>
           <IconButton onClick={onClose}>
             <Close />
           </IconButton>
         </Box>
 
         <form onSubmit={handleSubmit(onSubmit)}>
-          <TextField {...register("name", { required: true })} label="Tên sản phẩm" fullWidth margin="dense" required />
-          <TextField {...register("description", { required: true })} label="Mô tả" fullWidth margin="dense" required multiline rows={3} />
-          
-          <Select {...register("categoryId", { required: true })} fullWidth margin="dense" displayEmpty>
-            <MenuItem value="">Chọn danh mục</MenuItem>
-            {categories.map((cat) => (
-              <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
-            ))}
-          </Select>
-          
-          <Select {...register("brandId", { required: true })} fullWidth margin="dense" displayEmpty>
-            <MenuItem value="">Chọn thương hiệu</MenuItem>
-            {brands.map((brand) => (
-              <MenuItem key={brand.id} value={brand.id}>{brand.name}</MenuItem>
-            ))}
-          </Select>
-          
-          <Typography variant="body2" mt={2}>Hình ảnh</Typography>
-          <input type="file" accept="image/*" multiple onChange={handleImageUpload} />
-          {uploadingImage && <CircularProgress size={20} />}
-          {imageError && <Typography color="error">{imageError}</Typography>}
+          {/* Tên sản phẩm */}
+          <Box mt={2} p={2} border="1px solid black" borderRadius={2}>
+            <Box mb={1} fontWeight="bold">Tên sản phẩm</Box>
+            <InputBase {...register("name", { required: true })} fullWidth required placeholder="Nhập tên sản phẩm" />
+          </Box>
 
+          {/* Mô tả */}
+          <Box mt={2} p={2} border="1px solid black" borderRadius={2}>
+            <Box mb={1} fontWeight="bold">Mô tả</Box>
+            <InputBase {...register("description", { required: true })} fullWidth required multiline rows={3} placeholder="Nhập mô tả sản phẩm" />
+          </Box>
+
+          {/* Category Selection */}
+          <Box mt={2} p={2} border="1px solid black" borderRadius={2}>
+            <Box mb={1} fontWeight="bold">Danh mục</Box>
+            <Select {...register("categoryId", { required: true })} fullWidth displayEmpty>
+              <MenuItem value="">Chọn danh mục</MenuItem>
+              {categories.map((cat) => (
+                <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
+              ))}
+            </Select>
+          </Box>
+
+          {/* Brand Selection */}
+          <Box mt={2} p={2} border="1px solid black" borderRadius={2}>
+            <Box mb={1} fontWeight="bold">Thương hiệu</Box>
+            <Select {...register("brandId", { required: true })} fullWidth displayEmpty>
+              <MenuItem value="">Chọn thương hiệu</MenuItem>
+              {brands.map((brand) => (
+                <MenuItem key={brand.id} value={brand.id}>{brand.name}</MenuItem>
+              ))}
+            </Select>
+          </Box>
+
+          {/* Image Upload */}
+          <Box mt={2} p={2} border="1px solid black" borderRadius={2}>
+            <Box fontWeight="bold" mb={1}>Hình ảnh</Box>
+            <input type="file" accept="image/*" multiple onChange={handleImageUpload} />
+            {uploadingImage && <CircularProgress size={20} />}
+            {imageError && <Box color="error.main">{imageError}</Box>}
+          </Box>
+
+          {/* Submit Button */}
           <Box mt={3} display="flex" justifyContent="flex-end">
-            <Button type="submit" variant="contained">Thêm sản phẩm</Button>
+            <Button type="submit" variant="contained" sx={{ mt: 2, bgcolor: "black", color: "white", borderRadius: 2 }}>
+            Thêm Sản phẩm
+            </Button>
           </Box>
         </form>
       </Box>

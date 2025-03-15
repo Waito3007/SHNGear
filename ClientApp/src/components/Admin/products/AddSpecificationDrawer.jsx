@@ -1,6 +1,5 @@
-// AddSpecificationDrawer.jsx
 import React from "react";
-import { Drawer, TextField, Button } from "@mui/material";
+import { Drawer, TextField, Button, Grid, FormControlLabel, Checkbox } from "@mui/material";
 import { X } from "lucide-react";
 import { useForm } from "react-hook-form";
 
@@ -10,20 +9,13 @@ const AddSpecificationDrawer = ({ isOpen, onClose, product }) => {
     const onSubmit = async (data) => {
         try {
             const specData = { productId: product.id, ...data };
-            let endpoint;
-            switch (product.categoryId) {
-                case 1:
-                    endpoint = "PhoneSpecifications";
-                    break;
-                case 2:
-                    endpoint = "LaptopSpecifications";
-                    break;
-                case 3:
-                    endpoint = "HeadphoneSpecifications";
-                    break;
-                default:
-                    throw new Error("Danh mục không được hỗ trợ");
-            }
+            const endpoints = {
+                1: "PhoneSpecifications",
+                2: "LaptopSpecifications",
+                3: "HeadphoneSpecifications",
+            };
+            const endpoint = endpoints[product.categoryId];
+            if (!endpoint) throw new Error("Danh mục không được hỗ trợ");
 
             const response = await fetch(`https://localhost:7107/api/Specifications/${endpoint}`, {
                 method: "POST",
@@ -36,12 +28,76 @@ const AddSpecificationDrawer = ({ isOpen, onClose, product }) => {
                 reset();
                 onClose();
             } else {
-                const errorText = await response.text();
-                console.error("Lỗi:", errorText);
+                console.error("Lỗi:", await response.text());
             }
         } catch (error) {
             console.error("Lỗi khi thêm thông số:", error);
         }
+    };
+
+    const renderFields = () => {
+        const commonFields = [
+            { name: "weight", label: "Trọng lượng" },
+            { name: "material", label: "Chất liệu" },
+        ];
+
+        const fieldsByCategory = {
+            1: [
+                { name: "screenSize", label: "Kích thước màn hình" },
+                { name: "resolution", label: "Độ phân giải" },
+                { name: "screenType", label: "Loại màn hình" },
+                { name: "cpuModel", label: "Model CPU" },
+                { name: "cpuCores", label: "Số nhân CPU", type: "number" },
+                { name: "ram", label: "RAM" },
+                { name: "internalStorage", label: "Dung lượng lưu trữ" },
+                { name: "frontCamera", label: "Camera trước" },
+                { name: "rearCamera", label: "Camera sau" },
+                { name: "batteryCapacity", label: "Dung lượng pin" },
+                { name: "supportsNFC", label: "Hỗ trợ NFC", type: "checkbox" },
+            ],
+            2: [
+                { name: "cpuType", label: "Loại CPU" },
+                { name: "cpuNumberOfCores", label: "Số nhân CPU", type: "number" },
+                { name: "ram", label: "RAM" },
+                { name: "maxRAMSupport", label: "Hỗ trợ RAM tối đa" },
+                { name: "ssdStorage", label: "Dung lượng SSD" },
+                { name: "screenSize", label: "Kích thước màn hình" },
+                { name: "resolution", label: "Độ phân giải" },
+                { name: "refreshRate", label: "Tần số quét" },
+                { name: "supportsTouch", label: "Hỗ trợ cảm ứng", type: "checkbox" },
+            ],
+            3: [
+                { name: "type", label: "Loại tai nghe" },
+                { name: "connectionType", label: "Loại kết nối" },
+                { name: "port", label: "Cổng" },
+            ],
+        };
+
+        const fields = [...commonFields, ...(fieldsByCategory[product?.categoryId] || [])];
+
+        return (
+            <Grid container spacing={2}>
+                {fields.map(({ name, label, type }) => (
+                    <Grid item xs={12} key={name}>
+                        {type === "checkbox" ? (
+                            <FormControlLabel
+                                control={<Checkbox {...register(name)} />}
+                                label={label}
+                            />
+                        ) : (
+                            <TextField
+                                label={label}
+                                type={type || "text"}
+                                {...register(name)}
+                                fullWidth
+                                variant="outlined"
+                                sx={{ input: { color: "white" }, label: { color: "gray" } }}
+                            />
+                        )}
+                    </Grid>
+                ))}
+            </Grid>
+        );
     };
 
     return (
@@ -49,255 +105,17 @@ const AddSpecificationDrawer = ({ isOpen, onClose, product }) => {
             <div className="w-96 p-6 bg-gray-900 h-full text-white">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold">Thêm thông số kỹ thuật</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white">
+                    <button
+                        onClick={onClose}
+                        className="text-gray-400 hover:text-white transition-transform hover:scale-110"
+                    >
                         <X size={20} />
                     </button>
                 </div>
-                <form onSubmit={handleSubmit(onSubmit)}>
-                    {product?.categoryId === 1 && (
-                        <>
-                            <TextField
-                                label="Kích thước màn hình"
-                                {...register("screenSize")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Độ phân giải"
-                                {...register("resolution")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Loại màn hình"
-                                {...register("screenType")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Trọng lượng"
-                                {...register("weight")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Chất liệu"
-                                {...register("material")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Model CPU"
-                                {...register("cpuModel")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Số nhân CPU"
-                                type="number"
-                                {...register("cpuCores")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="RAM"
-                                {...register("ram")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Dung lượng lưu trữ"
-                                {...register("internalStorage")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Camera trước"
-                                {...register("frontCamera")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Camera sau"
-                                {...register("rearCamera")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Dung lượng pin"
-                                {...register("batteryCapacity")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Hỗ trợ NFC"
-                                type="checkbox"
-                                {...register("supportsNFC")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                        </>
-                    )}
-                    {product?.categoryId === 2 && (
-                        <>
-                            <TextField
-                                label="Trọng lượng"
-                                {...register("weight")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Chất liệu"
-                                {...register("material")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Loại CPU"
-                                {...register("cpuType")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Số nhân CPU"
-                                type="number"
-                                {...register("cpuNumberOfCores")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="RAM"
-                                {...register("ram")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Hỗ trợ RAM tối đa"
-                                {...register("maxRAMSupport")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Dung lượng SSD"
-                                {...register("ssdStorage")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Kích thước màn hình"
-                                {...register("screenSize")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Độ phân giải"
-                                {...register("resolution")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Tần số quét"
-                                {...register("refreshRate")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Hỗ trợ cảm ứng"
-                                type="checkbox"
-                                {...register("supportsTouch")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                        </>
-                    )}
-                    {product?.categoryId === 3 && (
-                        <>
-                            <TextField
-                                label="Trọng lượng"
-                                {...register("weight")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Loại tai nghe"
-                                {...register("type")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Loại kết nối"
-                                {...register("connectionType")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                            <TextField
-                                label="Cổng"
-                                {...register("port")}
-                                fullWidth
-                                margin="normal"
-                                className="bg-gray-800 text-white"
-                                InputLabelProps={{ style: { color: "#fff" } }}
-                            />
-                        </>
-                    )}
-                    <Button type="submit" variant="contained" color="primary" fullWidth className="mt-4">
-                        Thêm thông số
-                    </Button>
-                </form>
+                <form onSubmit={handleSubmit(onSubmit)}>{renderFields()}</form>
+                <Button type="submit" variant="contained" color="primary" fullWidth className="mt-4">
+                    Thêm thông số
+                </Button>
             </div>
         </Drawer>
     );

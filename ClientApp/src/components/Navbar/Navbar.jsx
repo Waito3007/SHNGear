@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ShoppingCart, User } from "lucide-react";
+import { ShoppingCart, User, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Menu, MenuItem, Avatar, IconButton } from "@mui/material";
 import "./Navbar.css";
@@ -90,7 +90,7 @@ const Navbar = () => {
         {/* Thanh tìm kiếm */}
         <div className="search-bar">
           <input type="text" placeholder="Tìm kiếm sản phẩm..." className="search-input" />
-          <button type="submit" className="search-button">🔍</button>
+          <button type="submit" className="search-button"><Search /></button>
         </div>
 
         {/* Avatar và Giỏ hàng */}

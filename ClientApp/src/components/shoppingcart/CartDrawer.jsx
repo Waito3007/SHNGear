@@ -17,7 +17,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
         try {
           // 🟢 Decode token để lấy userId
           const decoded = jwtDecode(token);
-          const id = decoded.sub; // Nếu backend dùng `sub` thay vì `id`, đổi thành `decoded.sub`
+          const id = decoded.sub;
           setUserId(id);
           if (!id) return;
 
@@ -57,7 +57,16 @@ const CartDrawer = ({ isOpen, onClose }) => {
       sessionStorage.setItem("cart", JSON.stringify(updatedCart));
     }
   };
-
+  const handlePlaceOrder = () => {
+    if (cartItems.length === 0) {
+      alert("Giỏ hàng trống!");
+      return;
+    }
+    
+    navigate("/checkout", { state: { cartItems } }); // Chuyển sang trang Checkout và truyền giỏ hàng
+  };
+  
+  
   return (
     <Drawer anchor="right" open={isOpen} onClose={onClose} PaperProps={{ sx: { width: 350, p: 2 } }}>
       <Box className="flex items-center justify-between p-4 border-b">
@@ -83,7 +92,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                 backgroundColor: "#f9f9f9",
               }}
             >
-              <Avatar src={item.productImage || "default-image.png"} alt={item.productName} sx={{ width: 56, height: 56 }} />
+              <Avatar src={item.productImage || "https://www.apple.com/v/iphone/home/cb/images/meta/iphone__kqge21l9n26q_og.png"} alt={item.productName} sx={{ width: 56, height: 56, border: "1px solid black" }} />
               <ListItemText
                 primary={`${item.productVariant?.color} - ${item.productVariant?.storage}`}
                 secondary={`Số lượng: ${item.quantity} - ${item.productVariant?.discountPrice * item.quantity} VND`}
@@ -100,9 +109,11 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
       {cartItems.length > 0 && (
         <Box className="p-4 border-t flex flex-col gap-2">
-          <Button variant="contained" color="error" fullWidth onClick={() => navigate("/checkout")}>
-            Thanh toán ngay
+          <Button variant="contained" color="error" fullWidth onClick={handlePlaceOrder}>
+            Đặt hàng ngay
           </Button>
+
+
         </Box>
       )}
     </Drawer>

@@ -24,8 +24,10 @@ namespace SHN_Gear.Data
         public DbSet<OrderItem> OrderItems { get; set; } // Thêm DbSet cho OrderItem
         public DbSet<Address> Addresses { get; set; } // Thêm DbSet cho Address
         public DbSet<PaymentMethod> PaymentMethods { get; set; } // Thêm DbSet cho PaymentMethod
-        public DbSet<Review> Reviews { get; set; } //Thêm DbSet cho Review (nếu bạn đã tạo model Review)
-        public DbSet<Delivery> Deliveries { get; set; } // Thêm DbSet cho Delivery (nếu bạn đã tạo model Delivery)
+        public DbSet<Review> Reviews { get; set; } // Thêm DbSet cho Review
+        public DbSet<Delivery> Deliveries { get; set; } // Thêm DbSet cho Delivery
+        public DbSet<Voucher> Vouchers { get; set; }
+        public DbSet<UserVoucher> UserVouchers { get; set; } // Thêm DbSet cho UserVoucher
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -36,7 +38,8 @@ namespace SHN_Gear.Data
                 new Role { Id = 3, Name = "VIP 2" },
                 new Role { Id = 4, Name = "VIP 3" }
             );
-// Thiết lập duy nhất cho số điện thoại (Không cho phép số trùng)
+
+            // Thiết lập duy nhất cho số điện thoại (Không cho phép số trùng)
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.PhoneNumber)
                 .IsUnique();
@@ -56,7 +59,23 @@ namespace SHN_Gear.Data
                 .WithMany(o => o.OrderItems)
                 .OnDelete(DeleteBehavior.Cascade); // Xóa đơn hàng thì xóa cả các mặt hàng trong đơn hàng.
 
-            //Thêm các quan hệ khác tương tự ở đây.
+            // Thiết lập khóa chính cho bảng UserVoucher
+            modelBuilder.Entity<UserVoucher>()
+                .HasKey(uv => new { uv.UserId, uv.VoucherId });
+
+            // Thiết lập quan hệ giữa User và UserVoucher
+            modelBuilder.Entity<UserVoucher>()
+                .HasOne(uv => uv.User)
+                .WithMany(u => u.UserVouchers)
+                .HasForeignKey(uv => uv.UserId);
+
+            // Thiết lập quan hệ giữa Voucher và UserVoucher
+            modelBuilder.Entity<UserVoucher>()
+                .HasOne(uv => uv.Voucher)
+                .WithMany(v => v.UserVouchers)
+                .HasForeignKey(uv => uv.VoucherId);
+
+            // Thêm các quan hệ khác tương tự ở đây.
         }
     }
 }

@@ -59,6 +59,8 @@ const ProfileInfo = () => {
       );
       setUser(updatedUser);
       handleCloseModal();
+      //reload trang
+      window.location.reload();
     } catch (error) {
       console.error("Lỗi khi cập nhật thông tin user:", error);
     }
