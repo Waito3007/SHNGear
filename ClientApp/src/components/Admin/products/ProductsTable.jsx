@@ -14,6 +14,7 @@ import Button from "@mui/material/Button";
 import CategoryBrandDrawer from "./CategoryBrandDrawer";
 import BrandDrawer from "./BrandDrawer";
 import Pagination from "@mui/material/Pagination";
+import VoucherDrawer from "./VoucherDrawer"; // Thêm VoucherDrawer
 
 const ProductsTable = () => {
     const [searchTerm, setSearchTerm] = useState("");
@@ -27,6 +28,7 @@ const ProductsTable = () => {
     const [productToDelete, setProductToDelete] = useState(null);
     const [isCategoryBrandDrawerOpen, setIsCategoryBrandDrawerOpen] = useState(false);
     const [isBrandDrawerOpen, setIsBrandDrawerOpen] = useState(false);
+    const [isVoucherDrawerOpen, setIsVoucherDrawerOpen] = useState(false); // Thêm state cho VoucherDrawer
     const [page, setPage] = useState(1);
     const productsPerPage = 11;
 
@@ -59,28 +61,28 @@ const ProductsTable = () => {
         setFilteredProducts(filtered);
     };
 
-  const handleAddProduct = (newProduct) => {
-    setProducts([...products, newProduct]);
-    setFilteredProducts([...products, newProduct]);
-  };
+    const handleAddProduct = (newProduct) => {
+        setProducts([...products, newProduct]);
+        setFilteredProducts([...products, newProduct]);
+    };
 
-  const handleEditProduct = (product) => {
-    setSelectedProduct(product);
-    setIsEditDrawerOpen(true);
-  };
+    const handleEditProduct = (product) => {
+        setSelectedProduct(product);
+        setIsEditDrawerOpen(true);
+    };
 
-  const handleUpdateProduct = (updatedProduct) => {
-    const updatedProducts = products.map((product) =>
-      product.id === updatedProduct.id ? updatedProduct : product
-    );
-    setProducts(updatedProducts);
-    setFilteredProducts(updatedProducts);
-  };
+    const handleUpdateProduct = (updatedProduct) => {
+        const updatedProducts = products.map((product) =>
+            product.id === updatedProduct.id ? updatedProduct : product
+        );
+        setProducts(updatedProducts);
+        setFilteredProducts(updatedProducts);
+    };
 
-  const handleDeleteProduct = (product) => {
-    setProductToDelete(product);
-    setIsDeleteDialogOpen(true);
-  };
+    const handleDeleteProduct = (product) => {
+        setProductToDelete(product);
+        setIsDeleteDialogOpen(true);
+    };
 
     const confirmDeleteProduct = async () => {
         if (!productToDelete) return;
@@ -108,82 +110,88 @@ const ProductsTable = () => {
         }
     };
 
-  const handlePageChange = (event, value) => {
-    setPage(value);
-  };
+    const handlePageChange = (event, value) => {
+        setPage(value);
+    };
 
-  const indexOfLastProduct = page * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = filteredProducts.slice(
-    indexOfFirstProduct,
-    indexOfLastProduct
-  );
+    const indexOfLastProduct = page * productsPerPage;
+    const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+    const currentProducts = filteredProducts.slice(
+        indexOfFirstProduct,
+        indexOfLastProduct
+    );
 
-  return (
-    <motion.div
-      className="bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700 mb-8"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
-    >
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold text-gray-100">
-          Danh sách sản phẩm
-        </h2>
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Tìm kiếm sản phẩm..."
-            className="bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onChange={handleSearch}
-            value={searchTerm}
-          />
-          <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-        </div>
-        <button
-          className="text-indigo-400 hover:text-indigo-300 mr-2 text-sm rounded-lg px-3 py-1 border border-indigo-400"
-          onClick={() => setIsDrawerOpen(true)}
+    return (
+        <motion.div
+            className="bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700 mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
         >
-          Thêm Sản Phẩm
-        </button>
-        <button
-          className="text-indigo-400 hover:text-indigo-300 mr-2 text-sm rounded-lg px-3 py-1 border border-indigo-400"
-          onClick={() => setIsCategoryBrandDrawerOpen(true)}
-        >
-          Thêm Danh Mục
-        </button>
-        <button
-          className="text-indigo-400 hover:text-indigo-300 mr-2 text-sm rounded-lg px-3 py-1 border border-indigo-400"
-          onClick={() => setIsBrandDrawerOpen(true)}
-        >
-          Thêm Thương hiệu
-        </button>
-      </div>
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-gray-100">
+                    Danh sách sản phẩm
+                </h2>
+                <div className="relative">
+                    <input
+                        type="text"
+                        placeholder="Tìm kiếm sản phẩm..."
+                        className="bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        onChange={handleSearch}
+                        value={searchTerm}
+                    />
+                    <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                </div>
+                <button
+                    className="text-indigo-400 hover:text-indigo-300 mr-2 text-sm rounded-lg px-3 py-1 border border-indigo-400"
+                    onClick={() => setIsDrawerOpen(true)}
+                >
+                    Thêm Sản Phẩm
+                </button>
+                <button
+                    className="text-indigo-400 hover:text-indigo-300 mr-2 text-sm rounded-lg px-3 py-1 border border-indigo-400"
+                    onClick={() => setIsCategoryBrandDrawerOpen(true)}
+                >
+                    Danh Mục
+                </button>
+                <button
+                    className="text-indigo-400 hover:text-indigo-300 mr-2 text-sm rounded-lg px-3 py-1 border border-indigo-400"
+                    onClick={() => setIsBrandDrawerOpen(true)}
+                >
+                    Thương hiệu
+                </button>
+                <button
+                    className="text-indigo-400 hover:text-indigo-300 mr-2 text-sm rounded-lg px-3 py-1 border border-indigo-400"
+                    onClick={() => setIsVoucherDrawerOpen(true)} // Thêm nút mở VoucherDrawer
+                >
+                    Voucher
+                </button>
+            </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-700">
-          <thead>
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                Tên
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                Brand
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                Danh mục
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                Giá
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                Bán
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                Hành động
-              </th>
-            </tr>
-          </thead>
+            <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-700">
+                    <thead>
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Tên
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Brand
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Danh mục
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Giá
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Bán
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Hành động
+                            </th>
+                        </tr>
+                    </thead>
 
                     <tbody className="divide-y divide-gray-700">
                         {currentProducts.map((product) => (
@@ -239,13 +247,13 @@ const ProductsTable = () => {
                 </table>
             </div>
 
-      <Pagination
-        count={Math.ceil(filteredProducts.length / productsPerPage)}
-        page={page}
-        onChange={handlePageChange}
-        color="primary"
-        className="mt-4 flex justify-center"
-      />
+            <Pagination
+                count={Math.ceil(filteredProducts.length / productsPerPage)}
+                page={page}
+                onChange={handlePageChange}
+                color="primary"
+                className="mt-4 flex justify-center"
+            />
             <ProductDrawer
                 isOpen={isDrawerOpen}
                 onClose={() => setIsDrawerOpen(false)}
@@ -258,41 +266,45 @@ const ProductsTable = () => {
                 onUpdateProduct={handleUpdateProduct}
             />
 
-      <Dialog
-        open={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">
-          {"Xác nhận xóa sản phẩm"}
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            Bạn có chắc chắn muốn xóa sản phẩm này không? Hành động này không
-            thể hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsDeleteDialogOpen(false)} color="primary">
-            Hủy
-          </Button>
-          <Button onClick={confirmDeleteProduct} color="primary" autoFocus>
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+            <Dialog
+                open={isDeleteDialogOpen}
+                onClose={() => setIsDeleteDialogOpen(false)}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">
+                    {"Xác nhận xóa sản phẩm"}
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        Bạn có chắc chắn muốn xóa sản phẩm này không? Hành động này không
+                        thể hoàn tác.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setIsDeleteDialogOpen(false)} color="primary">
+                        Hủy
+                    </Button>
+                    <Button onClick={confirmDeleteProduct} color="primary" autoFocus>
+                        Xóa
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
-      <CategoryBrandDrawer
-        open={isCategoryBrandDrawerOpen}
-        onClose={() => setIsCategoryBrandDrawerOpen(false)}
-      />
-      <BrandDrawer
-        open={isBrandDrawerOpen}
-        onClose={() => setIsBrandDrawerOpen(false)}
-      />
-    </motion.div>
-  );
+            <CategoryBrandDrawer
+                open={isCategoryBrandDrawerOpen}
+                onClose={() => setIsCategoryBrandDrawerOpen(false)}
+            />
+            <BrandDrawer
+                open={isBrandDrawerOpen}
+                onClose={() => setIsBrandDrawerOpen(false)}
+            />
+            <VoucherDrawer
+                open={isVoucherDrawerOpen}
+                onClose={() => setIsVoucherDrawerOpen(false)}
+            />
+        </motion.div>
+    );
 };
 
 export default ProductsTable;
