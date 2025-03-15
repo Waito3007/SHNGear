@@ -14,4 +14,9 @@ namespace SHN_Gear.DTOs
         public int VoucherId { get; set; }
         public DateTime UsedAt { get; set; } // Thời gian sử dụng voucher
     }
+    public class ApplyVoucherDto
+    {
+        public string Code { get; set; } = null!;
+        public int UserId { get; set; }
+    }
 }

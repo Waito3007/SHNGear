@@ -12,7 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Authorization;
 
 namespace SHN_Gear.Controllers
-{   
+{
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
@@ -83,7 +83,7 @@ namespace SHN_Gear.Controllers
         }
 
         // API yêu cầu đăng nhập (Ví dụ lấy thông tin user)
-                // 🔹 API lấy thông tin người dùng đang đăng nhập
+        // 🔹 API lấy thông tin người dùng đang đăng nhập
         [HttpGet("profile")]
         [Authorize] // Bắt buộc đăng nhập
         public IActionResult GetProfile()

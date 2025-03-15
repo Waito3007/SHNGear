@@ -5,11 +5,13 @@ using SHN_Gear.Data;
 using SHN_Gear.DTOs;
 using SHN_Gear.Models;
 using System.Security.Claims;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SHN_Gear.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/orders")]
     public class OrderController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -19,51 +21,104 @@ namespace SHN_Gear.Controllers
             _context = context;
         }
 
-        [HttpPost("place-order")]
-        public async Task<IActionResult> PlaceOrder([FromBody] OrderDto orderDto)
+        // Tạo đơn hàng mới
+        [HttpPost]
+        public async Task<IActionResult> CreateOrder([FromBody] OrderDto orderDto)
         {
-            try
+            // Tìm người dùng
+            var user = await _context.Users.FindAsync(orderDto.UserId);
+            if (user == null)
             {
-                var userId = User?.FindFirstValue(ClaimTypes.NameIdentifier);
+                return NotFound("Người dùng không tồn tại.");
+            }
 
-                if (string.IsNullOrEmpty(userId) && string.IsNullOrEmpty(orderDto.GuestAddress))
+            // Tìm voucher (nếu có)
+            Voucher? voucher = null;
+            if (orderDto.VoucherId.HasValue)
+            {
+                voucher = await _context.Vouchers.FindAsync(orderDto.VoucherId.Value);
+                if (voucher == null || !voucher.IsActive || voucher.ExpiryDate < DateTime.UtcNow)
                 {
-                    return BadRequest(new { message = "Bạn phải nhập địa chỉ nếu chưa đăng nhập." });
+                    return BadRequest("Voucher không hợp lệ.");
                 }
+            }
 
-                var order = new Order
+            // Tạo đơn hàng mới
+            var order = new Order
+            {
+                UserId = orderDto.UserId,
+                OrderDate = orderDto.OrderDate,
+                TotalAmount = orderDto.TotalAmount,
+                OrderStatus = orderDto.OrderStatus,
+                AddressId = orderDto.AddressId,
+                GuestAddress = orderDto.GuestAddress,
+                PaymentMethodId = orderDto.PaymentMethodId,
+                OrderItems = orderDto.OrderItems.Select(oi => new OrderItem
                 {
-                    UserId = userId, // Nếu là khách thì UserId = null
-                    OrderDate = DateTime.UtcNow,
-                    OrderStatus = "Pending",
-                    AddressId = userId != null ? orderDto.AddressId : null, // Chỉ lưu AddressId nếu có user
-                    GuestAddress = userId == null ? orderDto.GuestAddress : null, // Chỉ lưu GuestAddress nếu là khách
-                    PaymentMethodId = orderDto.PaymentMethodId,
-                    TotalAmount = orderDto.Items.Sum(i => i.Price * i.Quantity)
+                    ProductVariantId = oi.ProductVariantId,
+                    Quantity = oi.Quantity,
+                    Price = oi.Price
+                }).ToList()
+            };
+
+            // Áp dụng giảm giá từ voucher
+            if (voucher != null)
+            {
+                order.TotalAmount -= voucher.DiscountAmount;
+                if (order.TotalAmount < 0) order.TotalAmount = 0;
+            }
+
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
+
+            // Đánh dấu voucher đã sử dụng
+            if (voucher != null)
+            {
+                var userVoucher = new UserVoucher
+                {
+                    UserId = orderDto.UserId,
+                    VoucherId = voucher.Id,
+                    UsedAt = DateTime.UtcNow
                 };
-
-                _context.Orders.Add(order);
+                _context.UserVouchers.Add(userVoucher);
                 await _context.SaveChangesAsync();
-
-                foreach (var item in orderDto.Items)
-                {
-                    var orderItem = new OrderItem
-                    {
-                        OrderId = order.Id,
-                        ProductVariantId = item.ProductVariantId,
-                        Quantity = item.Quantity,
-                        Price = item.Price
-                    };
-                    _context.OrderItems.Add(orderItem);
-                }
-
-                await _context.SaveChangesAsync();
-                return Ok(new { message = "Đơn hàng đã được đặt thành công!", orderId = order.Id });
             }
-            catch (Exception ex)
+
+            return Ok(new { Message = "Đơn hàng đã được tạo.", OrderId = order.Id });
+        }
+
+        // Lấy thông tin đơn hàng theo Id
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetOrderById(int id)
+        {
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.Id == id);
+
+            if (order == null)
             {
-                return BadRequest(new { error = ex.Message });
+                return NotFound("Đơn hàng không tồn tại.");
             }
+
+            var orderDto = new OrderDto
+            {
+                Id = order.Id,
+                UserId = order.UserId,
+                OrderDate = order.OrderDate,
+                TotalAmount = order.TotalAmount,
+                OrderStatus = order.OrderStatus,
+                AddressId = order.AddressId,
+                GuestAddress = order.GuestAddress,
+                PaymentMethodId = order.PaymentMethodId,
+                OrderItems = order.OrderItems.Select(oi => new OrderItemDto
+                {
+                    ProductVariantId = oi.ProductVariantId,
+                    Quantity = oi.Quantity,
+                    Price = oi.Price
+                }).ToList()
+            };
+
+            return Ok(orderDto);
         }
     }
 }

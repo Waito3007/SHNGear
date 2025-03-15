@@ -1,8 +1,8 @@
 namespace SHN_Gear.DTOs
 {
-     public class CartDto
+    public class CartDto
     {
-        public string? UserId { get; set; }
+        public int UserId { get; set; }
         public int ProductVariantId { get; set; }
         public int Quantity { get; set; }
     }
@@ -11,7 +11,7 @@ namespace SHN_Gear.DTOs
     {
         public int ProductVariantId { get; set; }
         public int Quantity { get; set; }
-        
+
     }
-    
+
 }

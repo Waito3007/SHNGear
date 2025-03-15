@@ -143,5 +143,25 @@ namespace SHN_Gear.Controllers
 
             return Ok(new { Message = "Voucher đã được gán cho người dùng." });
         }
+
+        // Áp dụng voucher
+        [HttpPost("apply")]
+        public async Task<IActionResult> ApplyVoucher([FromBody] ApplyVoucherDto dto)
+        {
+            var voucher = await _context.Vouchers.FirstOrDefaultAsync(v => v.Code == dto.Code && v.IsActive && v.ExpiryDate >= DateTime.UtcNow);
+            if (voucher == null)
+            {
+                return BadRequest("Voucher không hợp lệ hoặc đã hết hạn.");
+            }
+
+            // Kiểm tra xem người dùng đã sử dụng voucher này chưa
+            var userVoucher = await _context.UserVouchers.FirstOrDefaultAsync(uv => uv.UserId == dto.UserId && uv.VoucherId == voucher.Id);
+            if (userVoucher != null)
+            {
+                return BadRequest("Bạn đã sử dụng voucher này.");
+            }
+
+            return Ok(new { discountAmount = voucher.DiscountAmount });
+        }
     }
 }
