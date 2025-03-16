@@ -23,6 +23,11 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+// Thêm các dịch vụ vào DI container
+builder.Services.AddControllers();
+builder.Services.AddScoped<UserService>(); // Đăng ký UserService
+builder.Services.AddScoped<EmailService>(); // Đăng ký EmailService
+
 // Thêm JWT Authentication
 var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
