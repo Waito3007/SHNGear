@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 [ApiController]
 public class UploadController : ControllerBase
 {
-    private readonly string _uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wroot");
+    private readonly string _uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
 
 
     [HttpPost]
@@ -27,8 +27,7 @@ public class UploadController : ControllerBase
             await file.CopyToAsync(stream);
         }
 
-        string imageUrl = $"/wroot/{uniqueFileName}"; // Đường dẫn để hiển thị ảnh
-
+        string imageUrl = $"/{uniqueFileName}";
         return Ok(new { imageUrl });
     }
     /// <summary>
@@ -44,7 +43,7 @@ public class UploadController : ControllerBase
 
         var files = Directory.GetFiles(_uploadFolder)
             .Select(Path.GetFileName)
-            .Select(fileName => new { imageUrl = $"/wroot/{fileName}" })
+.Select(fileName => new { imageUrl = $"/{fileName}" })
             .ToList();
 
         return Ok(files);
@@ -63,5 +62,15 @@ public class UploadController : ControllerBase
 
         System.IO.File.Delete(filePath);
         return Ok(new { message = "Ảnh đã được xóa!" });
+    }
+    [HttpGet("get-image/{fileName}")]
+    public IActionResult GetImage(string fileName)
+    {
+        var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", fileName);
+        if (!System.IO.File.Exists(imagePath))
+        {
+            return NotFound();
+        }
+        return PhysicalFile(imagePath, "image/png");
     }
 }

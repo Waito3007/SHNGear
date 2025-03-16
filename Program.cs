@@ -5,12 +5,10 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using SHN_Gear.Data;
 using System.Text.Json.Serialization;
+using CloudinaryDotNet;
 using SHN_Gear.Services;
-using DotNetEnv;
-
 
 var builder = WebApplication.CreateBuilder(args);
-string imageDirectory = Path.Combine(Directory.GetCurrentDirectory(), "wroot");
 
 // 🔹 Thêm kết nối SQL Server
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -76,23 +74,11 @@ builder.Services.AddHttpContextAccessor();
 var app = builder.Build();
 
 
-// Nạp biến từ .env
-Env.Load();
+app.UseStaticFiles();
 
-// Lấy giá trị từ .env
-var domain = Env.GetString("DOMAIN", "http://localhost:5000");
-var uploadPath = Env.GetString("UPLOAD_PATH", Path.Combine(Directory.GetCurrentDirectory(), "wroot"));
-
-// Cấu hình thư mục static
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(uploadPath),
-    RequestPath = "/wroot"
-});
-
-// Gán vào cấu hình để sử dụng trong controller
-builder.Configuration["Domain"] = domain;
-builder.Configuration["UploadPath"] = uploadPath;
+app.UseRouting();
+app.UseAuthorization();
+app.MapControllers();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

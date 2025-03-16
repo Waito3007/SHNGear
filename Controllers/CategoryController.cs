@@ -48,16 +48,23 @@ namespace SHN_Gear.Controllers
             return CreatedAtAction(nameof(GetCategory), new { id = category.Id }, category);
         }
 
-        // Cập nhật danh mục
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCategory(int id, Category category)
         {
             if (id != category.Id)
             {
-                return BadRequest();
+                return BadRequest("ID không khớp với danh mục.");
             }
 
-            _context.Entry(category).State = EntityState.Modified;
+            var existingCategory = await _context.Categories.FindAsync(id);
+            if (existingCategory == null)
+            {
+                return NotFound("Không tìm thấy danh mục.");
+            }
+
+            existingCategory.Name = category.Name;
+            existingCategory.Description = category.Description;
+            existingCategory.Image = category.Image;
 
             try
             {
@@ -65,18 +72,12 @@ namespace SHN_Gear.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Categories.Any(e => e.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return StatusCode(500, "Lỗi cập nhật danh mục.");
             }
 
-            return NoContent();
+            return Ok(existingCategory);
         }
+
 
         // Xóa danh mục
         [HttpDelete("{id}")]

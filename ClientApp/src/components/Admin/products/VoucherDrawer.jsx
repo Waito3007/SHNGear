@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Drawer, Button, Box, Typography, IconButton, List, ListItem, ListItemText, ListItemSecondaryAction } from "@mui/material";
-import { X, Edit, Trash2 } from "lucide-react";
+import { Drawer,Chip, Button, Box, Typography, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Modal, TextField, Switch } from "@mui/material";
+import { X, Edit, Trash2, Plus } from "lucide-react";
 import axios from "axios";
 
 const VoucherDrawer = ({ open, onClose }) => {
-    const [voucher, setVoucher] = useState({ code: "", discountAmount: "", expiryDate: "", isActive: true });
     const [vouchers, setVouchers] = useState([]);
+    const [modalOpen, setModalOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [selectedVoucherId, setSelectedVoucherId] = useState(null);
+    const [voucher, setVoucher] = useState({ code: "", discountAmount: "", expiryDate: "", isActive: true });
 
     useEffect(() => {
         fetchVouchers();
@@ -27,6 +28,10 @@ const VoucherDrawer = ({ open, onClose }) => {
         setVoucher({ ...voucher, [name]: value });
     };
 
+    const handleToggleActive = (e) => {
+        setVoucher({ ...voucher, isActive: e.target.checked });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -38,8 +43,7 @@ const VoucherDrawer = ({ open, onClose }) => {
                 await axios.post("https://localhost:7107/api/vouchers", voucher);
             }
             fetchVouchers();
-            setVoucher({ code: "", discountAmount: "", expiryDate: "", isActive: true });
-            onClose();
+            handleCloseModal();
         } catch (error) {
             console.error("Failed to save voucher:", error);
         }
@@ -49,6 +53,7 @@ const VoucherDrawer = ({ open, onClose }) => {
         setVoucher(voucher);
         setIsEditing(true);
         setSelectedVoucherId(voucher.id);
+        setModalOpen(true);
     };
 
     const handleDelete = async (id) => {
@@ -60,114 +65,97 @@ const VoucherDrawer = ({ open, onClose }) => {
         }
     };
 
+    const handleOpenModal = () => {
+        setIsEditing(false);
+        setVoucher({ code: "", discountAmount: "", expiryDate: "", isActive: true });
+        setModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setModalOpen(false);
+    };
+
     return (
         <Drawer anchor="right" open={open} onClose={onClose}>
-            <Box
-                sx={{
-                    width: 400,
-                    p: 3,
+            <Box sx={{ width: 600, p: 3, bgcolor: "white", height: "100%" }}>
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Typography variant="h6" fontWeight="bold">Xem Voucher</Typography>
+                    <IconButton onClick={onClose}><X size={24} /></IconButton>
+                </Box>
+                <Button onClick={handleOpenModal} variant="contained" sx={{ bgcolor: "black", color: "white", mb: 2 }}>
+                    <Plus size={18} /> Thêm Voucher
+                </Button>
+                <TableContainer component={Paper}>
+                    <Table>
+                        <TableHead sx={{ bgcolor: "black" }}>
+                            <TableRow>
+                                <TableCell sx={{ color: "white" }}>Mã Voucher</TableCell>
+                                <TableCell sx={{ color: "white" }}>Giảm Giá</TableCell>
+                                <TableCell sx={{ color: "white" }}>Hạn Sử Dụng</TableCell>
+                                <TableCell sx={{ color: "white" }}>Trạng Thái</TableCell>
+                                <TableCell sx={{ color: "white" }}>Hành Động</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {vouchers.map((voucher) => (
+                                <TableRow key={voucher.id}>
+                                    <TableCell>{voucher.code}</TableCell>
+                                    <TableCell>{voucher.discountAmount}</TableCell>
+                                    <TableCell>{voucher.expiryDate}</TableCell>
+<TableCell>
+    <Chip
+        label={voucher.isActive ? "Đang hoạt động" : "Tắt"}
+        color={voucher.isActive ? "success" : "error"}
+        sx={{ fontWeight: "bold", color: "white" }}
+    />
+</TableCell>
+                                    <TableCell>
+                                        <IconButton onClick={() => handleEdit(voucher)}><Edit size={18} /></IconButton>
+                                        <IconButton onClick={() => handleDelete(voucher.id)}><Trash2 size={18} /></IconButton>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </Box>
+
+            {/* Modal thêm & sửa Voucher */}
+            <Modal open={modalOpen} onClose={handleCloseModal}>
+                <Box sx={{
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
                     bgcolor: "white",
                     border: "2px solid black",
-                    borderRadius: 3,
-                    boxShadow: 3,
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                }}
-            >
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                    <Typography variant="h6" fontWeight="bold">
-                        {isEditing ? "Chỉnh sửa Voucher" : "Thêm Voucher"}
-                    </Typography>
-                    <IconButton onClick={onClose}>
-                        <X size={24} />
-                    </IconButton>
-                </Box>
-                <form onSubmit={handleSubmit} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                    <Box
-                        component="input"
-                        placeholder="Mã Voucher"
-                        name="code"
-                        value={voucher.code}
-                        onChange={handleChange}
-                        sx={{
-                            width: "100%",
-                            p: 1.5,
-                            mb: 2,
-                            border: "2px solid black",
-                            borderRadius: 2,
-                            outline: "none",
-                        }}
-                    />
-                    <Box
-                        component="input"
-                        placeholder="Số tiền giảm giá"
-                        name="discountAmount"
-                        type="number"
-                        value={voucher.discountAmount}
-                        onChange={handleChange}
-                        sx={{
-                            width: "100%",
-                            p: 1.5,
-                            mb: 2,
-                            border: "2px solid black",
-                            borderRadius: 2,
-                            outline: "none",
-                        }}
-                    />
-                    <Box
-                        component="input"
-                        placeholder="Ngày hết hạn"
-                        name="expiryDate"
-                        type="date"
-                        value={voucher.expiryDate}
-                        onChange={handleChange}
-                        sx={{
-                            width: "100%",
-                            p: 1.5,
-                            mb: 2,
-                            border: "2px solid black",
-                            borderRadius: 2,
-                            outline: "none",
-                        }}
-                    />
-                    <Box
-                        component="input"
-                        type="checkbox"
-                        name="isActive"
-                        checked={voucher.isActive}
-                        onChange={(e) => setVoucher({ ...voucher, isActive: e.target.checked })}
-                        sx={{
-                            mb: 2,
-                        }}
-                    />
-                    <Typography variant="body2">Kích hoạt</Typography>
-                    <Button type="submit" variant="contained" sx={{ mt: 2, bgcolor: "black", color: "white", borderRadius: 2 }}>
+                    borderRadius: 2,
+                    boxShadow: 24,
+                    p: 4,
+                    width: 400
+                }}>
+                    <Typography variant="h6" fontWeight="bold" mb={2}>{isEditing ? "Chỉnh sửa Voucher" : "Thêm Voucher"}</Typography>
+                    <TextField fullWidth label="Mã Voucher" name="code" value={voucher.code} onChange={handleChange} sx={{ mb: 2 }} />
+                    <TextField fullWidth label="Số tiền giảm giá" name="discountAmount" type="number" value={voucher.discountAmount} onChange={handleChange} sx={{ mb: 2 }} />
+<TextField
+    fullWidth
+    label="Ngày hết hạn"
+    name="expiryDate"
+    type="date"
+    value={voucher.expiryDate}
+    onChange={handleChange}
+    sx={{ mb: 2 }}
+    InputLabelProps={{ shrink: true }} // Fix lỗi chữ bị đè
+/>
+                    <Box display="flex" alignItems="center" mb={2}>
+                        <Typography variant="body2">Kích hoạt</Typography>
+                        <Switch checked={voucher.isActive} onChange={handleToggleActive} />
+                    </Box>
+                    <Button fullWidth onClick={handleSubmit} variant="contained" sx={{ bgcolor: "black", color: "white" }}>
                         {isEditing ? "Cập nhật Voucher" : "Thêm Voucher"}
                     </Button>
-                </form>
-                <Typography variant="h6" fontWeight="bold" mt={4}>
-                    Danh sách Voucher
-                </Typography>
-                <List>
-                    {vouchers.map((voucher) => (
-                        <ListItem key={voucher.id}>
-                            <ListItemText
-                                primary={voucher.code}
-                                secondary={`Giảm giá: ${voucher.discountAmount} - Hết hạn: ${voucher.expiryDate}`}
-                            />
-                            <ListItemSecondaryAction>
-                                <IconButton edge="end" onClick={() => handleEdit(voucher)}>
-                                    <Edit size={20} />
-                                </IconButton>
-                                <IconButton edge="end" onClick={() => handleDelete(voucher.id)}>
-                                    <Trash2 size={20} />
-                                </IconButton>
-                            </ListItemSecondaryAction>
-                        </ListItem>
-                    ))}
-                </List>
-            </Box>
+                </Box>
+            </Modal>
         </Drawer>
     );
 };

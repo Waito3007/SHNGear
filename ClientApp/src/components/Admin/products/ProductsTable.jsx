@@ -50,16 +50,29 @@ const ProductsTable = () => {
         fetchProducts();
     }, []);
 
-    // Điều chỉnh hàm tìm kiếm cho ProductDto
-    const handleSearch = (e) => {
-        const term = e.target.value.toLowerCase();
-        setSearchTerm(term);
-        const filtered = products.filter((product) =>
-            (product.name?.toLowerCase() || "").includes(term)
-            // Vì không có category.name hay brand.name, chỉ lọc theo tên sản phẩm
-        );
-        setFilteredProducts(filtered);
-    };
+   const handleSearch = async (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+
+    if (term.trim() === "") {
+        setFilteredProducts([]); // Xóa kết quả nếu không có từ khóa
+        return;
+    }
+
+    try {
+        const response = await fetch(`https://localhost:7107/api/Products/search?keyword=${encodeURIComponent(term)}`);
+        if (!response.ok) {
+            throw new Error("Không tìm thấy sản phẩm nào.");
+        }
+        const data = await response.json();
+        setFilteredProducts(data);
+    } catch (error) {
+        console.error("Lỗi khi tìm kiếm sản phẩm:", error);
+        setFilteredProducts([]); // Nếu lỗi, hiển thị danh sách trống
+    }
+};
+
+
 
     const handleAddProduct = (newProduct) => {
         setProducts([...products, newProduct]);
