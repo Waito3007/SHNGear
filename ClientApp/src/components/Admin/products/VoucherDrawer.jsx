@@ -3,57 +3,60 @@ import { Drawer, Button, Box, Typography, IconButton, List, ListItem, ListItemTe
 import { X, Edit, Trash2 } from "lucide-react";
 import axios from "axios";
 
-const BrandDrawer = ({ open, onClose }) => {
-    const [brand, setBrand] = useState({ name: "", description: "", logo: "" });
-    const [brands, setBrands] = useState([]);
+const VoucherDrawer = ({ open, onClose }) => {
+    const [voucher, setVoucher] = useState({ code: "", discountAmount: "", expiryDate: "", isActive: true });
+    const [vouchers, setVouchers] = useState([]);
     const [isEditing, setIsEditing] = useState(false);
-    const [selectedBrandId, setSelectedBrandId] = useState(null);
+    const [selectedVoucherId, setSelectedVoucherId] = useState(null);
 
     useEffect(() => {
-        const fetchBrands = async () => {
-            try {
-                const response = await axios.get("https://localhost:7107/api/brands");
-                setBrands(response.data);
-            } catch (error) {
-                console.error("Failed to fetch brands:", error);
-            }
-        };
-        fetchBrands();
+        fetchVouchers();
     }, []);
+
+    const fetchVouchers = async () => {
+        try {
+            const response = await axios.get("https://localhost:7107/api/vouchers");
+            setVouchers(response.data);
+        } catch (error) {
+            console.error("Failed to fetch vouchers:", error);
+        }
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setBrand({ ...brand, [name]: value });
+        setVoucher({ ...voucher, [name]: value });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             if (isEditing) {
-                await axios.put(`https://localhost:7107/api/brands/${selectedBrandId}`, brand);
-                setBrands(brands.map(b => b.id === selectedBrandId ? { ...b, ...brand } : b));
+                await axios.put(`https://localhost:7107/api/vouchers/${selectedVoucherId}`, voucher);
+                setIsEditing(false);
+                setSelectedVoucherId(null);
             } else {
-                const response = await axios.post("https://localhost:7107/api/brands", brand);
-                setBrands([...brands, response.data]);
+                await axios.post("https://localhost:7107/api/vouchers", voucher);
             }
+            fetchVouchers();
+            setVoucher({ code: "", discountAmount: "", expiryDate: "", isActive: true });
             onClose();
         } catch (error) {
-            console.error("Failed to save brand:", error);
+            console.error("Failed to save voucher:", error);
         }
     };
 
-    const handleEdit = (brand) => {
-        setBrand(brand);
-        setSelectedBrandId(brand.id);
+    const handleEdit = (voucher) => {
+        setVoucher(voucher);
         setIsEditing(true);
+        setSelectedVoucherId(voucher.id);
     };
 
     const handleDelete = async (id) => {
         try {
-            await axios.delete(`https://localhost:7107/api/brands/${id}`);
-            setBrands(brands.filter(b => b.id !== id));
+            await axios.delete(`https://localhost:7107/api/vouchers/${id}`);
+            fetchVouchers();
         } catch (error) {
-            console.error("Failed to delete brand:", error);
+            console.error("Failed to delete voucher:", error);
         }
     };
 
@@ -74,7 +77,7 @@ const BrandDrawer = ({ open, onClose }) => {
             >
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                     <Typography variant="h6" fontWeight="bold">
-                        {isEditing ? "Chỉnh sửa thương hiệu" : "Thêm thương hiệu"}
+                        {isEditing ? "Chỉnh sửa Voucher" : "Thêm Voucher"}
                     </Typography>
                     <IconButton onClick={onClose}>
                         <X size={24} />
@@ -83,9 +86,9 @@ const BrandDrawer = ({ open, onClose }) => {
                 <form onSubmit={handleSubmit} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
                     <Box
                         component="input"
-                        placeholder="Tên thương hiệu"
-                        name="name"
-                        value={brand.name}
+                        placeholder="Mã Voucher"
+                        name="code"
+                        value={voucher.code}
                         onChange={handleChange}
                         sx={{
                             width: "100%",
@@ -98,9 +101,10 @@ const BrandDrawer = ({ open, onClose }) => {
                     />
                     <Box
                         component="input"
-                        placeholder="Mô tả"
-                        name="description"
-                        value={brand.description}
+                        placeholder="Số tiền giảm giá"
+                        name="discountAmount"
+                        type="number"
+                        value={voucher.discountAmount}
                         onChange={handleChange}
                         sx={{
                             width: "100%",
@@ -113,9 +117,10 @@ const BrandDrawer = ({ open, onClose }) => {
                     />
                     <Box
                         component="input"
-                        placeholder="Logo URL"
-                        name="logo"
-                        value={brand.logo}
+                        placeholder="Ngày hết hạn"
+                        name="expiryDate"
+                        type="date"
+                        value={voucher.expiryDate}
                         onChange={handleChange}
                         sx={{
                             width: "100%",
@@ -126,25 +131,36 @@ const BrandDrawer = ({ open, onClose }) => {
                             outline: "none",
                         }}
                     />
+                    <Box
+                        component="input"
+                        type="checkbox"
+                        name="isActive"
+                        checked={voucher.isActive}
+                        onChange={(e) => setVoucher({ ...voucher, isActive: e.target.checked })}
+                        sx={{
+                            mb: 2,
+                        }}
+                    />
+                    <Typography variant="body2">Kích hoạt</Typography>
                     <Button type="submit" variant="contained" sx={{ mt: 2, bgcolor: "black", color: "white", borderRadius: 2 }}>
-                        {isEditing ? "Cập nhật thương hiệu" : "Thêm thương hiệu"}
+                        {isEditing ? "Cập nhật Voucher" : "Thêm Voucher"}
                     </Button>
                 </form>
                 <Typography variant="h6" fontWeight="bold" mt={4}>
-                    Danh sách thương hiệu
+                    Danh sách Voucher
                 </Typography>
                 <List>
-                    {brands.map((brand) => (
-                        <ListItem key={brand.id}>
+                    {vouchers.map((voucher) => (
+                        <ListItem key={voucher.id}>
                             <ListItemText
-                                primary={brand.name}
-                                secondary={brand.description}
+                                primary={voucher.code}
+                                secondary={`Giảm giá: ${voucher.discountAmount} - Hết hạn: ${voucher.expiryDate}`}
                             />
                             <ListItemSecondaryAction>
-                                <IconButton edge="end" onClick={() => handleEdit(brand)}>
+                                <IconButton edge="end" onClick={() => handleEdit(voucher)}>
                                     <Edit size={20} />
                                 </IconButton>
-                                <IconButton edge="end" onClick={() => handleDelete(brand.id)}>
+                                <IconButton edge="end" onClick={() => handleDelete(voucher.id)}>
                                     <Trash2 size={20} />
                                 </IconButton>
                             </ListItemSecondaryAction>
@@ -156,4 +172,4 @@ const BrandDrawer = ({ open, onClose }) => {
     );
 };
 
-export default BrandDrawer;
+export default VoucherDrawer;

@@ -34,7 +34,7 @@ namespace SHN_Gear.Controllers
                 return BadRequest("Thông tin sản phẩm không hợp lệ.");
             }
 
-            if (!string.IsNullOrEmpty(request.UserId))
+            if (request.UserId > 0)
             {
                 // Người dùng đã đăng nhập
                 var cart = await _context.Carts
@@ -59,7 +59,7 @@ namespace SHN_Gear.Controllers
                     {
                         ProductVariantId = request.ProductVariantId,
                         Quantity = request.Quantity,
-                        AddedAt  = DateTime.UtcNow
+                        AddedAt = DateTime.UtcNow
                     });
                 }
 
@@ -96,9 +96,9 @@ namespace SHN_Gear.Controllers
 
         // Lấy giỏ hàng
         [HttpGet]
-        public async Task<IActionResult> GetCart([FromQuery] string? userId)
+        public async Task<IActionResult> GetCart([FromQuery] int? userId)
         {
-            if (!string.IsNullOrEmpty(userId))
+            if (userId > 0)
             {
                 var cart = await _context.Carts
                     .Include(c => c.Items)
@@ -110,10 +110,11 @@ namespace SHN_Gear.Controllers
             else
             {
                 var session = _httpContextAccessor.HttpContext!.Session;
-                var sessionCart = session.GetString("Cart");
-                var cartItems = string.IsNullOrEmpty(sessionCart) 
-                    ? new List<CartItemSession>() 
+                var sessionCart = session.Get("Cart");
+                var cartItems = sessionCart == null
+                    ? new List<CartItemSession>()
                     : JsonSerializer.Deserialize<List<CartItemSession>>(sessionCart) ?? new List<CartItemSession>();
+
 
                 return Ok(cartItems);
             }
@@ -123,11 +124,11 @@ namespace SHN_Gear.Controllers
         [HttpPut("update")]
         public async Task<IActionResult> UpdateCartItem([FromBody] CartDto request)
         {
-            if (!string.IsNullOrEmpty(request.UserId))
+            if (request.UserId > 0)
             {
                 var cartItem = await _context.CartItems
                     .FirstOrDefaultAsync(i => i.Cart.UserId == request.UserId && i.ProductVariantId == request.ProductVariantId);
-                
+
                 if (cartItem == null)
                 {
                     return NotFound("Sản phẩm không có trong giỏ hàng.");
@@ -141,8 +142,8 @@ namespace SHN_Gear.Controllers
             {
                 var session = _httpContextAccessor.HttpContext!.Session;
                 var sessionCart = session.GetString("Cart");
-                var cartItems = string.IsNullOrEmpty(sessionCart) 
-                    ? new List<CartItemSession>() 
+                var cartItems = string.IsNullOrEmpty(sessionCart)
+                    ? new List<CartItemSession>()
                     : JsonSerializer.Deserialize<List<CartItemSession>>(sessionCart) ?? new List<CartItemSession>();
 
                 var cartItem = cartItems.FirstOrDefault(i => i.ProductVariantId == request.ProductVariantId);
@@ -152,7 +153,8 @@ namespace SHN_Gear.Controllers
                 }
 
                 cartItem.Quantity = request.Quantity;
-                session.SetString("Cart", JsonSerializer.Serialize(cartItems));
+                session.Set("Cart", JsonSerializer.SerializeToUtf8Bytes(cartItems));
+
             }
 
             return Ok("Cập nhật số lượng thành công.");
@@ -160,13 +162,13 @@ namespace SHN_Gear.Controllers
 
         // Xóa sản phẩm khỏi giỏ hàng
         [HttpDelete("remove/{productVariantId}")]
-        public async Task<IActionResult> RemoveFromCart(int productVariantId, [FromQuery] string? userId)
+        public async Task<IActionResult> RemoveFromCart(int productVariantId, [FromQuery] int? userId)
         {
-            if (!string.IsNullOrEmpty(userId))
+            if (userId > 0)
             {
                 var cartItem = await _context.CartItems
                     .FirstOrDefaultAsync(i => i.Cart.UserId == userId && i.ProductVariantId == productVariantId);
-                
+
                 if (cartItem == null)
                 {
                     return NotFound("Sản phẩm không có trong giỏ hàng.");
@@ -179,8 +181,8 @@ namespace SHN_Gear.Controllers
             {
                 var session = _httpContextAccessor.HttpContext!.Session;
                 var sessionCart = session.GetString("Cart");
-                var cartItems = string.IsNullOrEmpty(sessionCart) 
-                    ? new List<CartItemSession>() 
+                var cartItems = string.IsNullOrEmpty(sessionCart)
+                    ? new List<CartItemSession>()
                     : JsonSerializer.Deserialize<List<CartItemSession>>(sessionCart) ?? new List<CartItemSession>();
 
                 var cartItem = cartItems.FirstOrDefault(i => i.ProductVariantId == productVariantId);
@@ -198,9 +200,9 @@ namespace SHN_Gear.Controllers
 
         // Xóa toàn bộ giỏ hàng
         [HttpDelete("clear")]
-        public async Task<IActionResult> ClearCart([FromQuery] string? userId)
+        public async Task<IActionResult> ClearCart([FromQuery] int? userId)
         {
-            if (!string.IsNullOrEmpty(userId))
+            if (userId > 0)
             {
                 var cart = await _context.Carts.Include(c => c.Items).FirstOrDefaultAsync(c => c.UserId == userId);
                 if (cart != null)
@@ -218,6 +220,4 @@ namespace SHN_Gear.Controllers
             return Ok("Giỏ hàng đã được làm trống.");
         }
     }
-
-    
 }
