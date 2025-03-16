@@ -151,5 +151,21 @@ namespace SHN_Gear.Controllers
 
             return Ok(orderDto);
         }
+
+        // Xóa đơn hàng
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteOrder(int id)
+        {
+            var order = await _context.Orders.FindAsync(id);
+            if (order == null)
+            {
+                return NotFound("Đơn hàng không tồn tại.");
+            }
+
+            _context.Orders.Remove(order);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = "Đơn hàng đã được xóa." });
+        }
     }
 }

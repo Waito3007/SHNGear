@@ -48,6 +48,20 @@ namespace SHN_Gear.Controllers
             return Ok(addresses);
         }
 
+        // Lấy địa chỉ theo AddressId
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetAddressById(int id)
+        {
+            var address = await _context.Addresses.FindAsync(id);
+
+            if (address == null)
+            {
+                return NotFound("Địa chỉ không tồn tại.");
+            }
+
+            return Ok(address);
+        }
+
         // Cập nhật địa chỉ
         [HttpPut("update/{id}")]
         public async Task<IActionResult> UpdateAddress(int id, [FromBody] CreateAddressDTO addressDTO)

@@ -102,13 +102,13 @@ const VoucherDrawer = ({ open, onClose }) => {
                                     <TableCell>{voucher.code}</TableCell>
                                     <TableCell>{voucher.discountAmount}</TableCell>
                                     <TableCell>{voucher.expiryDate}</TableCell>
-<TableCell>
-    <Chip
-        label={voucher.isActive ? "Đang hoạt động" : "Tắt"}
-        color={voucher.isActive ? "success" : "error"}
-        sx={{ fontWeight: "bold", color: "white" }}
-    />
-</TableCell>
+                        <TableCell>
+                            <Chip
+                                label={voucher.isActive ? "Đang hoạt động" : "Tắt"}
+                                color={voucher.isActive ? "success" : "error"}
+                                sx={{ fontWeight: "bold", color: "white" }}
+                            />
+                        </TableCell>
                                     <TableCell>
                                         <IconButton onClick={() => handleEdit(voucher)}><Edit size={18} /></IconButton>
                                         <IconButton onClick={() => handleDelete(voucher.id)}><Trash2 size={18} /></IconButton>
@@ -137,16 +137,16 @@ const VoucherDrawer = ({ open, onClose }) => {
                     <Typography variant="h6" fontWeight="bold" mb={2}>{isEditing ? "Chỉnh sửa Voucher" : "Thêm Voucher"}</Typography>
                     <TextField fullWidth label="Mã Voucher" name="code" value={voucher.code} onChange={handleChange} sx={{ mb: 2 }} />
                     <TextField fullWidth label="Số tiền giảm giá" name="discountAmount" type="number" value={voucher.discountAmount} onChange={handleChange} sx={{ mb: 2 }} />
-<TextField
-    fullWidth
-    label="Ngày hết hạn"
-    name="expiryDate"
-    type="date"
-    value={voucher.expiryDate}
-    onChange={handleChange}
-    sx={{ mb: 2 }}
-    InputLabelProps={{ shrink: true }} // Fix lỗi chữ bị đè
-/>
+                    <TextField
+                        fullWidth
+                        label="Ngày hết hạn"
+                        name="expiryDate"
+                        type="date"
+                        value={voucher.expiryDate}
+                        onChange={handleChange}
+                        sx={{ mb: 2 }}
+                        InputLabelProps={{ shrink: true }} // Fix lỗi chữ bị đè
+                    />
                     <Box display="flex" alignItems="center" mb={2}>
                         <Typography variant="body2">Kích hoạt</Typography>
                         <Switch checked={voucher.isActive} onChange={handleToggleActive} />
