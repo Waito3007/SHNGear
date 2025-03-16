@@ -1,9 +1,4 @@
 import React, { useState, useEffect } from "react";
-<<<<<<< HEAD
-=======
-// import { Swiper, SwiperSlide } from "swiper/react";
-// import { Navigation } from "swiper/modules";
->>>>>>> 4cdf3b8828d16375f7fd51f2bc1f57fc7472d093
 import { useNavigate } from "react-router-dom";
 
 const ProductGrid = ({

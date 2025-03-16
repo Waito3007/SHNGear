@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, TextField, Button, List, ListItem, ListItemText, Avatar } from "@mui/material";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  List,
+  ListItem,
+  ListItemText,
+  Avatar,
+} from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
@@ -7,7 +16,10 @@ import { jwtDecode } from "jwt-decode";
 const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { selectedItems, totalAmount, voucherCode } = location.state;
+  const selectedItems = location.state?.selectedItems || []; // Kiểm tra nếu undefined
+  const totalAmount = location.state?.totalAmount || 0;
+  const voucherCode = location.state?.voucherCode || null;
+
   const [userId, setUserId] = useState(null);
   const [address, setAddress] = useState("");
   const [guestAddress, setGuestAddress] = useState("");
@@ -31,14 +43,21 @@ const Checkout = () => {
 
   const fetchUserAddress = async (userId) => {
     try {
-      const response = await axios.get(`https://localhost:7107/api/Users/${userId}/address`);
-      setAddress(response.data.address);
+      const response = await axios.get(
+        `https://localhost:7107/api/Users/${userId}/address`
+      );
+      setAddress(response.data.address || "Chưa có địa chỉ");
     } catch (error) {
       console.error("Lỗi khi lấy địa chỉ người dùng:", error);
     }
   };
 
   const handlePlaceOrder = async () => {
+    if (selectedItems.length === 0) {
+      alert("Không có sản phẩm nào để đặt hàng.");
+      return;
+    }
+
     const orderDto = {
       UserId: userId,
       OrderDate: new Date(),
@@ -50,13 +69,16 @@ const Checkout = () => {
       OrderItems: selectedItems.map((item) => ({
         ProductVariantId: item.productVariantId,
         Quantity: item.quantity,
-        Price: item.productVariant.discountPrice,
+        Price: item.productVariant?.discountPrice || 0,
       })),
       VoucherId: voucherCode ? voucherCode.id : null,
     };
 
     try {
-      const response = await axios.post("https://localhost:7107/api/orders", orderDto);
+      const response = await axios.post(
+        "https://localhost:7107/api/orders",
+        orderDto
+      );
       alert("Đơn hàng đã được tạo thành công!");
       navigate("/order-success", { state: { orderId: response.data.OrderId } });
     } catch (error) {
@@ -70,28 +92,48 @@ const Checkout = () => {
       <Typography variant="h4" mb={4}>
         Đặt hàng
       </Typography>
-      <List>
-        {selectedItems.map((item) => (
-          <ListItem key={item.productVariantId}>
-            <Avatar
-              src={item.productImage || "https://www.apple.com/v/iphone/home/cb/images/meta/iphone__kqge21l9n26q_og.png"}
-              alt={item.productName}
-              sx={{ width: 56, height: 80, border: "1px solid black", borderRadius: 2 }}
-            />
-            <ListItemText
-              primary={`${item.productVariant?.color} - ${item.productVariant?.storage}`}
-              secondary={`Số lượng: ${item.quantity} - ${item.productVariant?.discountPrice * item.quantity} VND`}
-            />
-          </ListItem>
-        ))}
-      </List>
+      {selectedItems.length > 0 ? (
+        <List>
+          {selectedItems.map((item) => (
+            <ListItem key={item.productVariantId}>
+              <Avatar
+                src={
+                  item.productImage ||
+                  "https://www.apple.com/v/iphone/home/cb/images/meta/iphone__kqge21l9n26q_og.png"
+                }
+                alt={item.productName}
+                sx={{
+                  width: 56,
+                  height: 80,
+                  border: "1px solid black",
+                  borderRadius: 2,
+                }}
+              />
+              <ListItemText
+                primary={`${item.productVariant?.color || "Không rõ"} - ${
+                  item.productVariant?.storage || "Không rõ"
+                }`}
+                secondary={`Số lượng: ${item.quantity} - ${
+                  (item.productVariant?.discountPrice || 0) * item.quantity
+                } VND`}
+              />
+            </ListItem>
+          ))}
+        </List>
+      ) : (
+        <Typography variant="h6" color="error">
+          ⚠️ Không có sản phẩm nào trong giỏ hàng!
+        </Typography>
+      )}
+
       <Typography variant="h6" mt={4}>
         Tổng tiền: {totalAmount.toLocaleString()} VND
       </Typography>
+
       {isLoggedIn ? (
         <Box mt={4}>
           <Typography variant="h6">Địa chỉ giao hàng</Typography>
-          <Typography>{address}</Typography>
+          <Typography>{address || "Chưa có địa chỉ"}</Typography>
         </Box>
       ) : (
         <Box mt={4}>
@@ -105,7 +147,15 @@ const Checkout = () => {
           />
         </Box>
       )}
-      <Button variant="contained" color="primary" fullWidth sx={{ mt: 4 }} onClick={handlePlaceOrder}>
+
+      <Button
+        variant="contained"
+        color="primary"
+        fullWidth
+        sx={{ mt: 4 }}
+        onClick={handlePlaceOrder}
+        disabled={selectedItems.length === 0}
+      >
         Đặt hàng ngay
       </Button>
     </Box>

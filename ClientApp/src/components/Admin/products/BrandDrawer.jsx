@@ -1,16 +1,39 @@
 import React, { useState } from "react";
-import { Drawer, Button, Box, Typography, IconButton } from "@mui/material";
+import {
+  Drawer,
+  Button,
+  Box,
+  Typography,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+} from "@mui/material";
 import { X } from "lucide-react";
 import axios from "axios";
 
 const BrandDrawer = ({ open, onClose }) => {
   const [brand, setBrand] = useState({ name: "", description: "", logo: "" });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setBrandData({ ...brandData, [name]: value });
+  // Modal state cho chỉnh sửa thương hiệu
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingBrand, setEditingBrand] = useState(null);
+
+  // Xử lý đóng modal
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setEditingBrand(null);
   };
 
+  // Xử lý thay đổi input
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setBrand({ ...brand, [name]: value });
+  };
+
+  // Xử lý submit thêm thương hiệu
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -19,7 +42,7 @@ const BrandDrawer = ({ open, onClose }) => {
         brand
       );
       console.log("Brand added:", response.data);
-      onClose();
+      onClose(); // Đóng Drawer sau khi thêm
     } catch (error) {
       console.error("Failed to add brand:", error);
     }
@@ -40,6 +63,7 @@ const BrandDrawer = ({ open, onClose }) => {
           flexDirection: "column",
         }}
       >
+        {/* Header */}
         <Box
           display="flex"
           justifyContent="space-between"
@@ -53,54 +77,35 @@ const BrandDrawer = ({ open, onClose }) => {
             <X size={24} />
           </IconButton>
         </Box>
+
+        {/* Form thêm thương hiệu */}
         <form
           onSubmit={handleSubmit}
           style={{ flex: 1, display: "flex", flexDirection: "column" }}
         >
-          <Box
-            component="input"
-            placeholder="Tên thương hiệu"
+          <TextField
+            label="Tên thương hiệu"
+            fullWidth
             name="name"
             value={brand.name}
             onChange={handleChange}
-            sx={{
-              width: "100%",
-              p: 1.5,
-              mb: 2,
-              border: "2px solid black",
-              borderRadius: 2,
-              outline: "none",
-            }}
+            margin="normal"
           />
-          <Box
-            component="input"
-            placeholder="Mô tả"
+          <TextField
+            label="Mô tả"
+            fullWidth
             name="description"
             value={brand.description}
             onChange={handleChange}
-            sx={{
-              width: "100%",
-              p: 1.5,
-              mb: 2,
-              border: "2px solid black",
-              borderRadius: 2,
-              outline: "none",
-            }}
+            margin="normal"
           />
-          <Box
-            component="input"
-            placeholder="Logo URL"
+          <TextField
+            label="Logo URL"
+            fullWidth
             name="logo"
             value={brand.logo}
             onChange={handleChange}
-            sx={{
-              width: "100%",
-              p: 1.5,
-              mb: 2,
-              border: "2px solid black",
-              borderRadius: 2,
-              outline: "none",
-            }}
+            margin="normal"
           />
           <Button
             type="submit"
@@ -112,7 +117,7 @@ const BrandDrawer = ({ open, onClose }) => {
         </form>
       </Box>
 
-      {/* Modal thêm/sửa thương hiệu */}
+      {/* Modal chỉnh sửa thương hiệu */}
       <Dialog open={modalOpen} onClose={handleCloseModal}>
         <DialogTitle>
           {editingBrand ? "Chỉnh sửa thương hiệu" : "Thêm thương hiệu"}
@@ -122,7 +127,7 @@ const BrandDrawer = ({ open, onClose }) => {
             label="Tên thương hiệu"
             fullWidth
             name="name"
-            value={brandData.name}
+            value={brand.name}
             onChange={handleChange}
             margin="normal"
           />
@@ -130,7 +135,7 @@ const BrandDrawer = ({ open, onClose }) => {
             label="Mô tả"
             fullWidth
             name="description"
-            value={brandData.description}
+            value={brand.description}
             onChange={handleChange}
             margin="normal"
           />
@@ -138,7 +143,7 @@ const BrandDrawer = ({ open, onClose }) => {
             label="Logo URL"
             fullWidth
             name="logo"
-            value={brandData.logo}
+            value={brand.logo}
             onChange={handleChange}
             margin="normal"
           />
