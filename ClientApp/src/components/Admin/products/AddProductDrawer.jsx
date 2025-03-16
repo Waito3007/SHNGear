@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Drawer, IconButton, Select, MenuItem, Button, Box, CircularProgress, InputBase } from "@mui/material";
+import { Drawer, IconButton, Select, MenuItem, Button, Box, CircularProgress, InputBase, Typography } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import { useForm, useFieldArray } from "react-hook-form";
 import axios from "axios";
@@ -16,12 +16,16 @@ const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
     },
   });
 
-  const { fields: imageFields, append: appendImage } = useFieldArray({ control, name: "images" });
+  const { fields: imageFields, append: appendImage, remove  } = useFieldArray({ control, name: "images" });
 
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [imageError, setImageError] = useState("");
+const [localImages, setLocalImages] = useState([]);
+
+const [categories, setCategories] = useState([]);
+const [brands, setBrands] = useState([]);
+const [localImageFields, setLocalImageFields] = useState([]); // Đổi tên để tránh trùng
+const [uploadingImage, setUploadingImage] = useState(false);
+const [imageError, setImageError] = useState("");
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,52 +43,87 @@ const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
     fetchData();
   }, []);
 
-  const handleImageUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
+   const handleImageUpload = (e) => {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
 
-    setUploadingImage(true);
-    setImageError("");
+  const newImages = files.map((file) => {
+    return {
+      file,
+      preview: URL.createObjectURL(file), // Tạo URL xem trước ảnh
+      isPrimary: localImages.length === 0,
+    };
+  });
 
-    try {
-      const uploadPromises = files.map(async (file) => {
-        const formData = new FormData();
-        formData.append("file", file);
-        const response = await axios.post("https://localhost:7107/api/upload", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        return { imageUrl: response.data, isPrimary: imageFields.length === 0 };
-      });
+  setLocalImages((prevImages) => [...prevImages, ...newImages]);
+};
 
-      const uploadedImages = await Promise.all(uploadPromises);
-      uploadedImages.forEach((img) => appendImage(img));
-    } catch (error) {
-      console.error("Image upload failed:", error);
-      setImageError("Tải ảnh thất bại, vui lòng thử lại.");
-    } finally {
-      setUploadingImage(false);
-    }
-  };
+
+
 
   const onSubmit = async (data) => {
     try {
-      const productData = {
-        ...data,
-        categoryId: parseInt(data.categoryId),
-        brandId: parseInt(data.brandId),
-        images: data.images.map(({ imageUrl, isPrimary }) => ({ imageUrl, isPrimary })),
-        variants: data.variants.map((variant) => ({
-          ...variant,
-          price: parseFloat(variant.price),
-          discountPrice: variant.discountPrice ? parseFloat(variant.discountPrice) : null,
-          stockQuantity: parseInt(variant.stockQuantity) || 0,
-        })),
-      };
+      // 1. Tải ảnh lên server trước
+    if (localImages.length === 0) {
+      console.error("Không có ảnh nào được chọn.");
+      return;
+    }
 
-      const response = await axios.post("https://localhost:7107/api/Products", productData);
-      onAddProduct(response.data);
-      reset();
-      onClose();
+    // Kiểm tra API trước khi gửi
+    console.log("Uploading images...", localImages);
+
+    const uploadedImages = await Promise.all(
+      localImages.map(async (img, index) => {
+        if (!img.file) {
+          console.error(`Ảnh ${index} không có file hợp lệ.`);
+          return null;
+        }
+
+        const formData = new FormData();
+        formData.append("file", img.file);
+
+        try {
+          const response = await axios.post("https://localhost:7107/api/upload", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+
+          if (!response.data || !response.data.imageUrl) {
+            throw new Error(`API không trả về đường dẫn ảnh cho ảnh ${index}`);
+          }
+
+          return { imageUrl: response.data.imageUrl, isPrimary: img.isPrimary };
+        } catch (error) {
+          console.error(`Lỗi khi tải ảnh ${index}:`, error);
+          return null;
+        }
+      })
+    );
+
+    // Loại bỏ ảnh lỗi (null)
+    const validImages = uploadedImages.filter(img => img !== null);
+    if (validImages.length === 0) {
+      console.error("Không có ảnh nào được tải lên thành công.");
+      return;
+    }
+     // 2. Tạo sản phẩm sau khi ảnh được tải lên
+    const productData = {
+      ...data,
+      categoryId: parseInt(data.categoryId),
+      brandId: parseInt(data.brandId),
+      images: uploadedImages, // Chỉ gửi ảnh sau khi đã upload
+      variants: data.variants.map((variant) => ({
+        ...variant,
+        price: parseFloat(variant.price),
+        discountPrice: variant.discountPrice ? parseFloat(variant.discountPrice) : null,
+        stockQuantity: parseInt(variant.stockQuantity) || 0,
+      })),
+    };
+
+    const response = await axios.post("https://localhost:7107/api/Products", productData);
+    onAddProduct(response.data);
+    reset();
+    setLocalImages([]); // Xoá ảnh tạm sau khi thêm sản phẩm thành công
+    onClose();
     } catch (error) {
       console.error("Error adding product:", error);
     }
@@ -137,13 +176,24 @@ const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
             </Select>
           </Box>
 
-          {/* Image Upload */}
-          <Box mt={2} p={2} border="1px solid black" borderRadius={2}>
-            <Box fontWeight="bold" mb={1}>Hình ảnh</Box>
-            <input type="file" accept="image/*" multiple onChange={handleImageUpload} />
-            {uploadingImage && <CircularProgress size={20} />}
-            {imageError && <Box color="error.main">{imageError}</Box>}
-          </Box>
+          {/* Chọn ảnh */}
+<Box mt={2} p={2} border="1px solid black" borderRadius={2}>
+  <Box mb={1} fontWeight="bold">Tải ảnh lên</Box>
+  <input type="file" multiple accept="image/*" onChange={handleImageUpload} />
+</Box>
+
+{/* Hiển thị ảnh đã chọn */}
+<Box mt={2} display="flex" flexWrap="wrap" gap={2}>
+  {localImages.map((img, index) => (
+    <Box key={index} p={1} border="1px solid #ddd" borderRadius={1} position="relative">
+      <img src={img.preview} alt="Preview" width={100} />
+      <Button color="error" size="small" onClick={() => setLocalImages(localImages.filter((_, i) => i !== index))}>
+        Xoá
+      </Button>
+    </Box>
+  ))}
+</Box>
+
 
           {/* Submit Button */}
           <Box mt={3} display="flex" justifyContent="flex-end">

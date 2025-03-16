@@ -169,28 +169,64 @@ public class ProductsController : ControllerBase
         return Ok(relatedProducts);
     }
     // 📌 API lấy danh sách biến thể (màu sắc + dung lượng + số lượng tồn) của sản phẩm
-[HttpGet("{id}/variants")]
-public async Task<ActionResult<IEnumerable<object>>> GetProductVariants(int id)
-{
-    var product = await _context.Products
-        .Include(p => p.Variants)
-        .FirstOrDefaultAsync(p => p.Id == id);
-
-    if (product == null)
+    [HttpGet("{id}/variants")]
+    public async Task<ActionResult<IEnumerable<object>>> GetProductVariants(int id)
     {
-        return NotFound("Sản phẩm không tồn tại.");
+        var product = await _context.Products
+            .Include(p => p.Variants)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+        if (product == null)
+        {
+            return NotFound("Sản phẩm không tồn tại.");
+        }
+
+        var variants = product.Variants
+            .Select(v => new
+            {
+                v.Color,
+                v.Storage,
+                v.StockQuantity
+            })
+            .ToList();
+
+        return Ok(variants);
+    }
+    // 📌 Lấy tổng số sản phẩm
+    [HttpGet("count")]
+    public async Task<ActionResult<int>> GetProductCount()
+    {
+        int totalProducts = await _context.Products.CountAsync();
+        return Ok(totalProducts);
     }
 
-    var variants = product.Variants
-        .Select(v => new 
+    [HttpGet("search")]
+    public async Task<ActionResult<IEnumerable<Product>>> SearchProducts([FromQuery] string keyword)
+    {
+        if (string.IsNullOrWhiteSpace(keyword))
         {
-            v.Color,
-            v.Storage,
-            v.StockQuantity
-        })
-        .ToList();
+            return BadRequest("Vui lòng nhập từ khóa tìm kiếm.");
+        }
 
-    return Ok(variants);
-}
+        var products = await _context.Products
+            .Include(p => p.Images)
+            .Include(p => p.Category)
+            .Include(p => p.Brand)
+            .Where(p =>
+                p.Name.Contains(keyword) ||
+                p.Description.Contains(keyword) ||
+                (p.Category != null && p.Category.Name.Contains(keyword)) ||
+                (p.Brand != null && p.Brand.Name.Contains(keyword))
+            )
+            .ToListAsync();
+
+        if (products.Count == 0)
+        {
+            return NotFound("Không tìm thấy sản phẩm nào phù hợp.");
+        }
+
+        return Ok(products);
+    }
+
 
 }

@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar/Navbar";
 import ProfileInfo from "../components/Profile/ProfileInfo";
 import ProfileSidebar from "../components/Profile/ProfileSidebar";
 import AddressBook from "../components/Profile/AddressBook"; // Import AddressBook
+import AddPaymentMethod from "../components/Profile/AddPaymentMethod";
 import Footer from "../components/Footer/Footer";
 import "../pages/ProfilePage.css";
 
@@ -17,6 +18,7 @@ const ProfilePage = () => {
         <div className="profile-content">
           {activeTab === "profile" && <ProfileInfo />}
           {activeTab === "address" && <AddressBook />}
+          {activeTab === "paymentmethod" && <AddPaymentMethod />}
         </div>
         <ProfileSidebar setActiveTab={setActiveTab} />
       </div>
