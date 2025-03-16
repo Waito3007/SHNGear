@@ -1,157 +1,160 @@
-import { useState, useEffect } from 'react';
-import { Drawer } from '@mui/material';
-import { useForm, useFieldArray } from 'react-hook-form';
-import axios from 'axios';
-import { X } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { Drawer, IconButton, Select, MenuItem, Button, Box, CircularProgress, InputBase } from "@mui/material";
+import { Close } from "@mui/icons-material";
+import { useForm, useFieldArray } from "react-hook-form";
+import axios from "axios";
 
 const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
-    const { register, handleSubmit, reset, control } = useForm({
-        defaultValues: {
-            name: '',
-            description: '',
-            categoryId: '',
-            brandId: '',
-            images: [],
-            variants: [],
-        }
-    });
+  const { register, handleSubmit, reset, control } = useForm({
+    defaultValues: {
+      name: "",
+      description: "",
+      categoryId: "",
+      brandId: "",
+      images: [],
+      variants: [],
+    },
+  });
 
-    const { fields: imageFields, append: appendImage, remove: removeImage } = useFieldArray({
-        control,
-        name: "images",
-    });
+  const { fields: imageFields, append: appendImage } = useFieldArray({ control, name: "images" });
 
-    const { fields: variantFields, append: appendVariant, remove: removeVariant } = useFieldArray({
-        control,
-        name: "variants",
-    });
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageError, setImageError] = useState("");
 
-    const [categories, setCategories] = useState([]);
-    const [brands, setBrands] = useState([]);
-    const [uploadingImage, setUploadingImage] = useState(false);
-    const [imageError, setImageError] = useState('');
-
-    useEffect(() => {
-        axios.get('https://localhost:7107/api/categories')
-            .then(response => setCategories(response.data.$values || []))
-            .catch(error => console.error('Error fetching categories:', error));
-
-        axios.get('https://localhost:7107/api/brands')
-            .then(response => setBrands(response.data.$values || []))
-            .catch(error => console.error('Error fetching brands:', error));
-    }, []);
-
-    // 📌 Upload ảnh lên Cloudinary thông qua backend
-    const handleImageUpload = async (e) => {
-        const files = Array.from(e.target.files); // Lấy danh sách file
-        if (!files.length) return;
-    
-        setUploadingImage(true);
-        setImageError('');
-    
-        try {
-            const uploadPromises = files.map(async (file) => {
-                const formData = new FormData();
-                formData.append('file', file);
-    
-                const response = await axios.post('https://localhost:7107/api/upload', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' },
-                });
-    
-                return { imageUrl: response.data, isPrimary: imageFields.length === 0 };
-            });
-    
-            const uploadedImages = await Promise.all(uploadPromises);
-            uploadedImages.forEach(img => appendImage(img)); // Thêm tất cả ảnh đã tải lên vào danh sách
-        } catch (error) {
-            console.error('Image upload failed:', error);
-            setImageError('Tải ảnh thất bại, vui lòng thử lại.');
-        } finally {
-            setUploadingImage(false);
-        }
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [categoriesRes, brandsRes] = await Promise.all([
+          axios.get("https://localhost:7107/api/categories"),
+          axios.get("https://localhost:7107/api/brands"),
+        ]);
+        setCategories(categoriesRes.data.$values || categoriesRes.data || []);
+        setBrands(brandsRes.data.$values || brandsRes.data || []);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     };
-    
+    fetchData();
+  }, []);
 
-    const onSubmit = async (data) => {
-        try {
-            const response = await axios.post('https://localhost:7107/api/Products', data);
-            onAddProduct(response.data);
-            reset();
-            onClose();
-        } catch (error) {
-            console.error('Error adding product:', error.response?.data || error.message);
-        }
-    };
+  const handleImageUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
 
-    return (
-        <Drawer anchor='right' open={isOpen} onClose={onClose}>
-            <div className='w-96 p-6 bg-gray-900 h-full text-white'>
-                <div className='flex justify-between items-center mb-4'>
-                    <h2 className='text-xl font-semibold'>Thêm sản phẩm</h2>
-                    <button onClick={onClose} className='text-gray-400 hover:text-white'><X size={20} /></button>
-                </div>
-                <form onSubmit={handleSubmit(onSubmit)}>
-                    <label className='block text-sm'>Tên sản phẩm</label>
-                    <input {...register('name')} className='w-full p-2 mb-3 bg-gray-800 border border-gray-700 rounded-md' required />
+    setUploadingImage(true);
+    setImageError("");
 
-                    <label className='block text-sm'>Mô tả</label>
-                    <textarea {...register('description')} className='w-full p-2 mb-3 bg-gray-800 border border-gray-700 rounded-md' required />
+    try {
+      const uploadPromises = files.map(async (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        const response = await axios.post("https://localhost:7107/api/upload", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        return { imageUrl: response.data, isPrimary: imageFields.length === 0 };
+      });
 
-                    <label className='block text-sm'>Danh mục</label>
-                    <select {...register('categoryId')} className='w-full p-2 mb-3 bg-gray-800 border border-gray-700 rounded-md'>
-                        {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-                    </select>
+      const uploadedImages = await Promise.all(uploadPromises);
+      uploadedImages.forEach((img) => appendImage(img));
+    } catch (error) {
+      console.error("Image upload failed:", error);
+      setImageError("Tải ảnh thất bại, vui lòng thử lại.");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
-                    <label className='block text-sm'>Thương hiệu</label>
-                    <select {...register('brandId')} className='w-full p-2 mb-3 bg-gray-800 border border-gray-700 rounded-md'>
-                        {brands.map(brand => <option key={brand.id} value={brand.id}>{brand.name}</option>)}
-                    </select>
+  const onSubmit = async (data) => {
+    try {
+      const productData = {
+        ...data,
+        categoryId: parseInt(data.categoryId),
+        brandId: parseInt(data.brandId),
+        images: data.images.map(({ imageUrl, isPrimary }) => ({ imageUrl, isPrimary })),
+        variants: data.variants.map((variant) => ({
+          ...variant,
+          price: parseFloat(variant.price),
+          discountPrice: variant.discountPrice ? parseFloat(variant.discountPrice) : null,
+          stockQuantity: parseInt(variant.stockQuantity) || 0,
+        })),
+      };
 
-                    {/* Hình ảnh */}
-                    <label className='block text-sm'>Hình ảnh</label>
-                    <input 
-                        type='file' 
-                        accept='image/*' 
-                        multiple
-                        onChange={handleImageUpload} 
-                        className='w-full p-2 mb-3 bg-gray-800 border border-gray-700 rounded-md' 
-                    />
+      const response = await axios.post("https://localhost:7107/api/Products", productData);
+      onAddProduct(response.data);
+      reset();
+      onClose();
+    } catch (error) {
+      console.error("Error adding product:", error);
+    }
+  };
 
-                    <div className="mt-2">
-                        {imageFields.map((img, index) => (
-                            <div key={index} className="flex items-center space-x-2">
-                                <img src={img.imageUrl} alt="Uploaded" className="w-20 h-20 object-cover rounded-md" />
-                                <button type="button" onClick={() => removeImage(index)} className="text-red-500">Xóa</button>
-                            </div>
-                        ))}
-                    </div>
+  return (
+    <Drawer anchor="right" open={isOpen} onClose={onClose} BackdropProps={{ invisible: false }}>
+      <Box sx={{ width: 400, p: 3, bgcolor: "background.default", height: "100%" }}>
+        {/* Header */}
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} 
+          sx={{  }}>
+          <Box fontWeight="bold">Thêm sản phẩm</Box>
+          <IconButton onClick={onClose}>
+            <Close />
+          </IconButton>
+        </Box>
 
-                    {/* Biến thể sản phẩm */}
-                    <label className='block text-sm mt-3'>Biến thể sản phẩm</label>
-                    {variantFields.map((variant, index) => (
-                        <div key={index} className="p-3 mb-3 border border-gray-700 rounded-md">
-                            <label className='block text-xs'>Màu sắc</label>
-                            <input {...register(`variants.${index}.color`)} className='w-full p-1 mb-2 bg-gray-800 border border-gray-700 rounded-md' required />
+        <form onSubmit={handleSubmit(onSubmit)}>
+          {/* Tên sản phẩm */}
+          <Box mt={2} p={2} border="1px solid black" borderRadius={2}>
+            <Box mb={1} fontWeight="bold">Tên sản phẩm</Box>
+            <InputBase {...register("name", { required: true })} fullWidth required placeholder="Nhập tên sản phẩm" />
+          </Box>
 
-                            <label className='block text-xs'>Dung lượng</label>
-                            <input {...register(`variants.${index}.storage`)} className='w-full p-1 mb-2 bg-gray-800 border border-gray-700 rounded-md' required />
+          {/* Mô tả */}
+          <Box mt={2} p={2} border="1px solid black" borderRadius={2}>
+            <Box mb={1} fontWeight="bold">Mô tả</Box>
+            <InputBase {...register("description", { required: true })} fullWidth required multiline rows={3} placeholder="Nhập mô tả sản phẩm" />
+          </Box>
 
-                            <label className='block text-xs'>Giá</label>
-                            <input type='number' {...register(`variants.${index}.price`)} className='w-full p-1 mb-2 bg-gray-800 border border-gray-700 rounded-md' required />
+          {/* Category Selection */}
+          <Box mt={2} p={2} border="1px solid black" borderRadius={2}>
+            <Box mb={1} fontWeight="bold">Danh mục</Box>
+            <Select {...register("categoryId", { required: true })} fullWidth displayEmpty>
+              <MenuItem value="">Chọn danh mục</MenuItem>
+              {categories.map((cat) => (
+                <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
+              ))}
+            </Select>
+          </Box>
 
-                            <label className='block text-xs'>Giá giảm</label>
-                            <input type='number' {...register(`variants.${index}.discountPrice`)} className='w-full p-1 mb-2 bg-gray-800 border border-gray-700 rounded-md' />
+          {/* Brand Selection */}
+          <Box mt={2} p={2} border="1px solid black" borderRadius={2}>
+            <Box mb={1} fontWeight="bold">Thương hiệu</Box>
+            <Select {...register("brandId", { required: true })} fullWidth displayEmpty>
+              <MenuItem value="">Chọn thương hiệu</MenuItem>
+              {brands.map((brand) => (
+                <MenuItem key={brand.id} value={brand.id}>{brand.name}</MenuItem>
+              ))}
+            </Select>
+          </Box>
 
-                            <button type="button" onClick={() => removeVariant(index)} className="text-red-500 mt-2">Xóa biến thể</button>
-                        </div>
-                    ))}
-                    <button type="button" onClick={() => appendVariant({})} className="text-blue-500">Thêm biến thể</button>
+          {/* Image Upload */}
+          <Box mt={2} p={2} border="1px solid black" borderRadius={2}>
+            <Box fontWeight="bold" mb={1}>Hình ảnh</Box>
+            <input type="file" accept="image/*" multiple onChange={handleImageUpload} />
+            {uploadingImage && <CircularProgress size={20} />}
+            {imageError && <Box color="error.main">{imageError}</Box>}
+          </Box>
 
-                    <button type='submit' className='w-full bg-indigo-600 hover:bg-indigo-500 p-2 rounded-md text-white mt-4'>Thêm sản phẩm</button>
-                </form>
-            </div>
-        </Drawer>
-    );
+          {/* Submit Button */}
+          <Box mt={3} display="flex" justifyContent="flex-end">
+            <Button type="submit" variant="contained" sx={{ mt: 2, bgcolor: "black", color: "white", borderRadius: 2 }}>
+            Thêm Sản phẩm
+            </Button>
+          </Box>
+        </form>
+      </Box>
+    </Drawer>
+  );
 };
 
 export default ProductDrawer;

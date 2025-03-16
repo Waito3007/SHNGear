@@ -88,9 +88,16 @@ namespace SHN_Gear.Controllers
                 return NotFound();
             }
 
+            // Kiểm tra xem có sản phẩm nào thuộc thương hiệu này không
+            var hasProducts = await _context.Products.AnyAsync(p => p.BrandId == id);
+            if (hasProducts)
+            {
+                return BadRequest("Không thể xóa thương hiệu này vì có sản phẩm thuộc thương hiệu này.");
+            }
+
             _context.Brands.Remove(brand);
             await _context.SaveChangesAsync();
             return NoContent();
         }
     }
-} 
+}

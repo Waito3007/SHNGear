@@ -6,13 +6,22 @@ using System.Text;
 using SHN_Gear.Data;
 using System.Text.Json.Serialization;
 using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
+using SHN_Gear.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // 🔹 Thêm kết nối SQL Server
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// 🔹 Thêm Distributed Cache & Session
+builder.Services.AddDistributedMemoryCache(); // Bộ nhớ tạm để lưu session
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Hết hạn sau 30 phút
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 // Thêm JWT Authentication
 var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
@@ -34,13 +43,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Thêm CORS
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("https://localhost:44479") // Thay đổi URL này thành URL của frontend nếu khác
-               .AllowAnyHeader()
-               .AllowAnyMethod();
+        policy.WithOrigins("https://localhost:44479") // URL frontend
+              .AllowCredentials() // ⚠️ QUAN TRỌNG: Cho phép gửi cookie/token
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
+
 
 // Thêm Swagger ( kiểm thử API)
 builder.Services.AddEndpointsApiExplorer();
@@ -50,22 +61,15 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
 // Đăng ký Cloudinary trước khi build app
-builder.Services.AddSingleton(provider =>
-{
-    var config = builder.Configuration;
-    var account = new Account(
-        config["Cloudinary:CloudName"],
-        config["Cloudinary:ApiKey"],
-        config["Cloudinary:ApiSecret"]
-    );
-    return new Cloudinary(account);
-});
-
-builder.Services.AddScoped<CloudinaryService>();  // Đăng ký CloudinaryService tại đây
+builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<JwtService>();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
@@ -86,7 +90,13 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 // Sử dụng CORS
-app.UseCors();
+app.UseCors("AllowFrontend");
+
+// 🔹 Thêm Authentication & Authorization (QUAN TRỌNG)
+app.UseAuthentication();  // Xác thực JWT Token từ request
+app.UseAuthorization();   //Kiểm tra quyền truy cập của user
+// 🔹 Thêm Session Middleware
+app.UseSession();
 
 app.MapControllerRoute(
     name: "default",

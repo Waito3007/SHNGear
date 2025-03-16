@@ -1,68 +1,55 @@
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
-using System;
-using System.IO;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
-public class CloudinaryService
+public class CloudinaryService : ICloudinaryService
 {
     private readonly Cloudinary _cloudinary;
 
-    public CloudinaryService(Cloudinary cloudinary)
+    public CloudinaryService(IConfiguration configuration)
     {
-        _cloudinary = cloudinary;
+        var cloudName = configuration["Cloudinary:CloudName"];
+        var apiKey = configuration["Cloudinary:ApiKey"];
+        var apiSecret = configuration["Cloudinary:ApiSecret"];
+
+        var account = new Account(
+            cloudName,
+            apiKey,
+            apiSecret);
+
+        _cloudinary = new Cloudinary(account);
+        _cloudinary.Api.Secure = true;
     }
 
-    // 📌 Upload ảnh lên Cloudinary
-    public async Task<string> UploadImageAsync(Stream stream, string fileName)
+    public async Task<string> UploadImageAsync(IFormFile file)
     {
-        var uploadParams = new ImageUploadParams()
+        if (file == null || file.Length == 0)
+            throw new ArgumentException("No file uploaded");
+
+        using var stream = file.OpenReadStream();
+        var uploadParams = new ImageUploadParams
         {
-            File = new FileDescription(fileName, stream),
-            PublicId = $"products/{Guid.NewGuid()}",  // Tạo ID duy nhất
-            Overwrite = false
+            File = new FileDescription(file.FileName, stream),
+            Transformation = new Transformation()
+                .Width(800)
+                .Height(800)
+                .Crop("limit")
         };
 
         var uploadResult = await _cloudinary.UploadAsync(uploadParams);
-        return uploadResult.SecureUrl.AbsoluteUri;
+
+        if (uploadResult.Error != null)
+            throw new Exception(uploadResult.Error.Message);
+
+        return uploadResult.SecureUrl.ToString();
     }
 
-    // 📌 Xóa ảnh khỏi Cloudinary
-    public async Task DeleteImageAsync(string imageUrl)
+    public async Task DeleteImageAsync(string publicId)
     {
-        // Trích xuất `public_id` từ URL
-        string publicId = ExtractPublicId(imageUrl);
-        if (string.IsNullOrEmpty(publicId))
-        {
-            throw new ArgumentException("Không thể lấy public ID từ URL ảnh.");
-        }
-
         var deletionParams = new DeletionParams(publicId);
-        await _cloudinary.DestroyAsync(deletionParams);
-    }
+        var result = await _cloudinary.DestroyAsync(deletionParams);
 
-    // 🔥 Hàm hỗ trợ trích xuất `public_id` từ URL ảnh Cloudinary
-    private string ExtractPublicId(string imageUrl)
-    {
-        try
-        {
-            Uri uri = new Uri(imageUrl);
-            string path = uri.AbsolutePath;
-
-            // Định dạng URL của Cloudinary: `/v<version>/cloud_name/image/upload/<public_id>.<format>`
-            var parts = path.Split('/');
-            if (parts.Length > 4)
-            {
-                string fileName = parts[^1];  // Lấy phần cuối (vd: abcxyz.jpg)
-                int lastDotIndex = fileName.LastIndexOf('.');
-                if (lastDotIndex > 0)
-                {
-                    return string.Join("/", parts[3..^1]) + "/" + fileName[..lastDotIndex];
-                }
-            }
-        }
-        catch { }
-
-        return null; // Trả về null nếu không tìm thấy public_id
+        if (result.Result != "ok")
+            throw new Exception($"Failed to delete image with publicId: {publicId}");
     }
 }

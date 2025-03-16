@@ -1,147 +1,129 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
+import { Modal, Box, TextField, Button, Typography, CircularProgress } from "@mui/material";
+import axios from "axios";
+import React from "react";
 
 const ProfileInfo = () => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    fullName: "Quy Khach",
-    phone: "0903029424",
-    gender: "Nam",
-    email: "",
-    day: "",
-    month: "",
-    year: "",
-  });
+  const [user, setUser] = useState({ fullName: "", email: "", role: "" });
+  const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const [updatedUser, setUpdatedUser] = useState({ fullName: "", email: "" });
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  // 📌 Lấy thông tin user từ API
+  const fetchUserProfile = async () => {
+    try {
+      const token = localStorage.getItem("token"); // Lấy token từ localStorage
+      const response = await axios.get("https://localhost:7107/api/Auth/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log("Dữ liệu api trả về:", response.data);
+      setUser(response.data);
+      setUpdatedUser({ fullName: response.data.fullName, email: response.data.email });
+    } catch (error) {
+      console.error("Lỗi khi lấy thông tin user:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSave = () => {
-    setIsEditing(false);
+  // 📌 Hiển thị Modal chỉnh sửa thông tin
+  const handleOpenModal = () => {
+    setEditMode(true);
+    setOpenModal(true);
   };
+
+  // 📌 Đóng Modal
+  const handleCloseModal = () => {
+    setOpenModal(false);
+  };
+
+  // 📌 Cập nhật dữ liệu khi nhập vào TextField
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setUpdatedUser((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // 📌 Gửi API cập nhật thông tin người dùng
+  const handleSaveProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(
+        "https://localhost:7107/api/Auth/profile",
+        { fullName: updatedUser.fullName, email: updatedUser.email },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setUser(updatedUser);
+      handleCloseModal();
+      //reload trang
+      window.location.reload();
+    } catch (error) {
+      console.error("Lỗi khi cập nhật thông tin user:", error);
+    }
+  };
+
+  if (loading) return <CircularProgress sx={{ display: "block", margin: "auto", mt: 3 }} />;
 
   return (
-    <div className="profile-info-container">
-      <h2 className="profile-title">Thông tin cá nhân</h2>
-      <div className="profile-card">
-        <div className="avatar-container">
-          <img
-            src="https://thuthuatnhanh.com/wp-content/uploads/2018/07/anh-dai-dien-dep.jpg"
-            alt="Avatar"
-            className="profile-avatar"
-          />
-        </div>
+    <Box
+      sx={{
+        maxWidth: 400,
+        margin: "6rem 2rem",
+        padding: 3,
+        boxShadow: 3,
+        border: "2px solid black",
+        borderRadius: "16px",
+        bgcolor: "white",
+        textAlign: "center",
+      }}
+    >
+      <Typography variant="h5" fontWeight="bold" mb={2}>Thông tin cá nhân</Typography>
+      <Box sx={{ textAlign: "left",border: "2px solid black", padding: "8px 16px", borderRadius: "8px", backgroundColor: "#f5f5f5", mb: 1 }}>
+        <Typography variant="subtitle2" color="gray">Họ và tên</Typography>
+        <Typography variant="body1">{user.fullName||"Khách Hàng"}</Typography>
+      </Box>
+      <Box sx={{ textAlign: "left",border: "2px solid black", padding: "8px 16px", borderRadius: "8px", backgroundColor: "#f5f5f5", mb: 1 }}>
+        <Typography variant="subtitle2" color="gray">Email</Typography>
+        <Typography variant="body1">{user.email}</Typography>
+      </Box>
+      <Box sx={{ textAlign: "left",border: "2px solid black", padding: "8px 16px", borderRadius: "8px", backgroundColor: "#f5f5f5", mb: 2 }}>
+        <Typography variant="subtitle2" color="gray">Hạng Thành Viên</Typography>
+        <Typography variant="body1">{user.role}</Typography>
+      </Box>
+      <Button variant="contained" color="error" fullWidth onClick={handleOpenModal} sx={{ borderRadius: "8px",height:"50px" }}>
+        Chỉnh sửa
+      </Button>
 
-        {isEditing ? (
-          <div className="edit-form">
-            <label>Họ và tên</label>
-            <input
-              type="text"
-              name="fullName"
-              value={formData.fullName}
-              onChange={handleChange}
-            />
-
-            <label>Số điện thoại</label>
-            <input
-              type="text"
-              value={formData.phone}
-              disabled
-              className="disabled-input"
-            />
-
-            <label>Giới tính</label>
-            <div className="gender-options">
-              <label>
-                <input
-                  type="radio"
-                  name="gender"
-                  value="Nam"
-                  checked={formData.gender === "Nam"}
-                  onChange={handleChange}
-                />
-                Nam
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="gender"
-                  value="Nữ"
-                  checked={formData.gender === "Nữ"}
-                  onChange={handleChange}
-                />
-                Nữ
-              </label>
-            </div>
-
-            <label>Ngày sinh</label>
-            <div className="birth-date">
-              <select name="day" value={formData.day} onChange={handleChange}>
-                <option value="">Ngày</option>
-                {[...Array(31)].map((_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {i + 1}
-                  </option>
-                ))}
-              </select>
-              <select
-                name="month"
-                value={formData.month}
-                onChange={handleChange}
-              >
-                <option value="">Tháng</option>
-                {[...Array(12)].map((_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {i + 1}
-                  </option>
-                ))}
-              </select>
-              <select name="year" value={formData.year} onChange={handleChange}>
-                <option value="">Năm</option>
-                {[...Array(100)].map((_, i) => (
-                  <option key={2024 - i} value={2024 - i}>
-                    {2024 - i}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <label>Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-            />
-
-            <button className="save-btn" onClick={handleSave}>
-              Cập nhật thông tin
-            </button>
-          </div>
-        ) : (
-          <div className="profile-details">
-            <div className="profile-row">
-              <span className="profile-label">Họ và tên</span>
-              <span className="profile-value">{formData.fullName}</span>
-            </div>
-            <div className="profile-row">
-              <span className="profile-label">Số điện thoại</span>
-              <span className="profile-value">{formData.phone}</span>
-            </div>
-            <div className="profile-row">
-              <span className="profile-label">Giới tính</span>
-              <span className="profile-value">{formData.gender}</span>
-            </div>
-            <button
-              className="edit-profile-btn"
-              onClick={() => setIsEditing(true)}
-            >
-              Chỉnh sửa thông tin
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
+      {/* Modal Chỉnh Sửa Thông Tin */}
+      <Modal open={openModal} onClose={handleCloseModal}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "white",
+            boxShadow: 24,
+            p: 4,
+            borderRadius: "16px",
+            maxHeight: "80vh",
+            overflowY: "auto",
+          }}
+        >
+          <Typography variant="h6" textAlign="center" mb={2} fontWeight="bold">Chỉnh sửa thông tin</Typography>
+          <TextField fullWidth label="Họ và tên" name="fullName" value={updatedUser.fullName} onChange={handleInputChange} margin="normal" sx={{ borderRadius: "8px" }} />
+          <TextField fullWidth label="Email" name="email" value={updatedUser.email} onChange={handleInputChange} margin="normal" sx={{ borderRadius: "8px" }} />
+          <Button variant="contained" color="error" fullWidth onClick={handleSaveProfile} sx={{ mt: 2, borderRadius: "8px" }}>
+            Lưu thay đổi
+          </Button>
+        </Box>
+      </Modal>
+    </Box>
   );
 };
 

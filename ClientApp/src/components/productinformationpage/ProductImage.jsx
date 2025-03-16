@@ -1,27 +1,35 @@
-import React, { useState } from "react";
+import React from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
 
 const ProductImage = ({ images, name }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  const nextImage = () => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex === images.length - 1 ? 0 : prevIndex + 1
-    );
-  };
-
-  const prevImage = () => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex === 0 ? images.length - 1 : prevIndex - 1
-    );
-  };
-
   return (
-    <div className="product-image-slider">
-      <img src={images[currentIndex]} alt={name} />
-      <div className="slider-controls">
-        <button onClick={prevImage}>{"<"}</button>
-        <button onClick={nextImage}>{">"}</button>
-      </div>
+    <div className="flex justify-center">
+      {images?.length > 0 ? (
+        <div className="relative w-96">
+          <Swiper
+            modules={[Pagination]}
+            pagination={{ clickable: true }}
+            spaceBetween={20}
+            slidesPerView={1}
+            className="w-full h-auto"
+          >
+            {images.map((image, index) => (
+              <SwiperSlide key={index}>
+                <img
+                  className="w-full h-auto rounded-lg shadow-lg"
+                  src={image.imageUrl}
+                  alt={`${name} - ${index + 1}`}
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
+      ) : (
+        <p className="text-gray-500">Không có ảnh</p>
+      )}
     </div>
   );
 };

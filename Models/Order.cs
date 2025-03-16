@@ -3,8 +3,8 @@ namespace SHN_Gear.Models
     public class Order
     {
         public int Id { get; set; }
-        public string UserId { get; set; } = null!; // Khóa ngoại tới User
-        public User User { get; set; } = null!;
+        public int? UserId { get; set; } // Khóa ngoại tới User, cho phép null
+        public User? User { get; set; }
         public DateTime OrderDate { get; set; } = DateTime.UtcNow;
         public decimal TotalAmount { get; set; }
         public string OrderStatus { get; set; } = "Pending"; // Ví dụ: Pending, Processing, Shipped, Delivered, Cancelled
