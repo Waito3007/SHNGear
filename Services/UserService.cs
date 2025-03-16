@@ -27,20 +27,17 @@ namespace SHN_Gear.Services
 
         public async Task<bool> RegisterUserAsync(RegisterDto registerDto)
         {
-            // Kiểm tra email đã tồn tại chưa
             if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email))
             {
                 return false; // Email đã tồn tại
             }
 
-            // Tìm role có Id = 2
             var role = await _context.Roles.FindAsync(2);
             if (role == null)
             {
-                return false; // Nếu không tìm thấy role, đăng ký thất bại
+                return false;
             }
 
-            // Mã hóa mật khẩu
             string hashedPassword = HashPassword(registerDto.Password);
 
             var user = new User
@@ -48,8 +45,12 @@ namespace SHN_Gear.Services
                 Email = registerDto.Email,
                 Password = hashedPassword,
                 CreatedAt = DateTime.UtcNow,
-                RoleId = role.Id, // Gán RoleId từ database
-                Role = role
+                RoleId = role.Id,
+                Role = role,
+
+                // Gán giá trị từ DTO
+                FullName = !string.IsNullOrWhiteSpace(registerDto.FullName) ? registerDto.FullName : "",
+                PhoneNumber = !string.IsNullOrWhiteSpace(registerDto.PhoneNumber) ? registerDto.PhoneNumber : ""
             };
 
             _context.Users.Add(user);
@@ -87,21 +88,23 @@ namespace SHN_Gear.Services
 
         public async Task<User?> GetUserByIdAsync(int userId)
         {
-        return await _context.Users.FindAsync(userId);
-         }
-        public async Task<User> UpdateUserProfileAsync(int userId, EditProfileDto editDto)
+            return await _context.Users.FindAsync(userId);
+        }
+        public async Task<User?> UpdateUserProfileAsync(int userId, EditProfileDto editDto)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return null;
 
-            user.FullName = editDto.FullName;
-            user.Email = editDto.Email;
+            // Kiểm tra nếu có dữ liệu thì mới update
+            if (!string.IsNullOrWhiteSpace(editDto.FullName))
+                user.FullName = editDto.FullName;
+            if (!string.IsNullOrWhiteSpace(editDto.Email))
+                user.Email = editDto.Email;
 
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
-            
+
             return user;
         }
-
     }
 }
