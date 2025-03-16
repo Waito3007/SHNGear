@@ -93,18 +93,24 @@ function Navbar() {
 
         <div className="search-bar">
 <<<<<<< HEAD
+<<<<<<< HEAD
           <input type="text" placeholder="Tìm kiếm sản phẩm..." className="search-input" />
           <button type="submit" className="search-button"><Search /></button>
 =======
+=======
+>>>>>>> 5bbe7da (cập nhật một tý)
           <input
             type="text"
             placeholder="Tìm kiếm sản phẩm..."
             className="search-input"
           />
           <button type="submit" className="search-button">
-            🔍
+            <Search />
           </button>
+<<<<<<< HEAD
 >>>>>>> fc37651 (update lọc sản phẩm)
+=======
+>>>>>>> 5bbe7da (cập nhật một tý)
         </div>
 
         <div className="avatarandcart">
