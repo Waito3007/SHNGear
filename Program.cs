@@ -23,6 +23,11 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+// Thêm các dịch vụ vào DI container
+builder.Services.AddControllers();
+builder.Services.AddScoped<UserService>(); // Đăng ký UserService
+builder.Services.AddScoped<EmailService>(); // Đăng ký EmailService
+
 // Thêm JWT Authentication
 var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -50,6 +55,10 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
+    options.AddPolicy("AllowAll",
+        policy => policy.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
 });
 
 
@@ -64,14 +73,17 @@ builder.Services.AddControllersWithViews()
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
-// Đăng ký Cloudinary trước khi build app
-builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
-builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<EmailService>();
-builder.Services.AddScoped<JwtService>();
+
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
+
+
+app.UseStaticFiles();
+
+app.UseRouting();
+app.UseAuthorization();
+app.MapControllers();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -87,11 +99,15 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
 
 // Sử dụng CORS
 app.UseCors("AllowFrontend");
 
+app.UseCors("AllowAll"); // Thêm dòng này
+
+app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()); // Bật CORS để React gọi API
+
+app.UseRouting();
 // 🔹 Thêm Authentication & Authorization (QUAN TRỌNG)
 app.UseAuthentication();  // Xác thực JWT Token từ request
 app.UseAuthorization();   //Kiểm tra quyền truy cập của user
