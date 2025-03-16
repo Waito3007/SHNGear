@@ -21,15 +21,48 @@ namespace SHN_Gear.Controllers
             _context = context;
         }
 
+        // Lấy danh sách đơn hàng
+        [HttpGet]
+        public async Task<IActionResult> GetOrders()
+        {
+            var orders = await _context.Orders
+                .Include(o => o.OrderItems)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+
+            var orderDtos = orders.Select(order => new OrderDto
+            {
+                Id = order.Id,
+                UserId = order.UserId,
+                OrderDate = order.OrderDate,
+                TotalAmount = order.TotalAmount,
+                OrderStatus = order.OrderStatus,
+                AddressId = order.AddressId,
+                PaymentMethodId = order.PaymentMethodId,
+                OrderItems = order.OrderItems.Select(oi => new OrderItemDto
+                {
+                    ProductVariantId = oi.ProductVariantId,
+                    Quantity = oi.Quantity,
+                    Price = oi.Price
+                }).ToList()
+            }).ToList();
+
+            return Ok(orderDtos);
+        }
+
         // Tạo đơn hàng mới
         [HttpPost]
         public async Task<IActionResult> CreateOrder([FromBody] OrderDto orderDto)
         {
-            // Tìm người dùng
-            var user = await _context.Users.FindAsync(orderDto.UserId);
-            if (user == null)
+            User? user = null;
+            if (orderDto.UserId.HasValue && orderDto.UserId.Value != 0)
             {
-                return NotFound("Người dùng không tồn tại.");
+                // Tìm người dùng
+                user = await _context.Users.FindAsync(orderDto.UserId.Value);
+                if (user == null)
+                {
+                    return NotFound("Người dùng không tồn tại.");
+                }
             }
 
             // Tìm voucher (nếu có)
@@ -46,12 +79,11 @@ namespace SHN_Gear.Controllers
             // Tạo đơn hàng mới
             var order = new Order
             {
-                UserId = orderDto.UserId,
+                UserId = orderDto.UserId.HasValue && orderDto.UserId.Value != 0 ? orderDto.UserId.Value : (int?)null, // Đảm bảo UserId là null nếu không có
                 OrderDate = orderDto.OrderDate,
                 TotalAmount = orderDto.TotalAmount,
                 OrderStatus = orderDto.OrderStatus,
                 AddressId = orderDto.AddressId,
-                GuestAddress = orderDto.GuestAddress,
                 PaymentMethodId = orderDto.PaymentMethodId,
                 OrderItems = orderDto.OrderItems.Select(oi => new OrderItem
                 {
@@ -72,11 +104,11 @@ namespace SHN_Gear.Controllers
             await _context.SaveChangesAsync();
 
             // Đánh dấu voucher đã sử dụng
-            if (voucher != null)
+            if (voucher != null && user != null)
             {
                 var userVoucher = new UserVoucher
                 {
-                    UserId = orderDto.UserId,
+                    UserId = orderDto.UserId.Value,
                     VoucherId = voucher.Id,
                     UsedAt = DateTime.UtcNow
                 };
@@ -103,12 +135,11 @@ namespace SHN_Gear.Controllers
             var orderDto = new OrderDto
             {
                 Id = order.Id,
-                UserId = order.UserId,
+                UserId = order.UserId.HasValue ? order.UserId.Value : (int?)null, // Chuyển đổi rõ ràng từ int? sang int
                 OrderDate = order.OrderDate,
                 TotalAmount = order.TotalAmount,
                 OrderStatus = order.OrderStatus,
                 AddressId = order.AddressId,
-                GuestAddress = order.GuestAddress,
                 PaymentMethodId = order.PaymentMethodId,
                 OrderItems = order.OrderItems.Select(oi => new OrderItemDto
                 {

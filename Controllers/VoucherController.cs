@@ -61,6 +61,18 @@ namespace SHN_Gear.Controllers
             return Ok(voucher);
         }
 
+        [HttpGet("code/{code}")]
+        public async Task<IActionResult> GetVoucherByCode(string code)
+        {
+            var voucher = await _context.Vouchers.FirstOrDefaultAsync(v => v.Code == code);
+            if (voucher == null)
+            {
+                return NotFound("Voucher không tồn tại.");
+            }
+
+            return Ok(new { id = voucher.Id });
+        }
+
         // Thêm mới một voucher
         [HttpPost]
         public async Task<IActionResult> AddVoucher([FromBody] VoucherDto dto)

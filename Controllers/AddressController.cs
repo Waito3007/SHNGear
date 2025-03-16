@@ -3,11 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using SHN_Gear.Data;
 using SHN_Gear.Models;
 using SHN_Gear.DTOs;
+using System.Threading.Tasks;
 
 namespace SHN_Gear.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/address")]
     public class AddressController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -17,50 +18,34 @@ namespace SHN_Gear.Controllers
             _context = context;
         }
 
-        // Lấy danh sách địa chỉ của một User
+        // Thêm địa chỉ mới
+        [HttpPost("add")]
+        public async Task<IActionResult> AddAddress([FromBody] Address address)
+        {
+            if (address.UserId.HasValue)
+            {
+                var user = await _context.Users.FindAsync(address.UserId.Value);
+                if (user == null)
+                {
+                    return NotFound("Người dùng không tồn tại.");
+                }
+            }
+
+            _context.Addresses.Add(address);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = "Địa chỉ đã được thêm.", AddressId = address.Id });
+        }
+
+        // Lấy địa chỉ theo UserId
         [HttpGet("user/{userId}")]
-        public async Task<IActionResult> GetUserAddresses(int userId)
+        public async Task<IActionResult> GetAddressesByUserId(int userId)
         {
             var addresses = await _context.Addresses
                 .Where(a => a.UserId == userId)
                 .ToListAsync();
 
-            if (!addresses.Any())
-            {
-                return NotFound("Không tìm thấy địa chỉ nào cho user này.");
-            }
-
             return Ok(addresses);
-        }
-
-        // Thêm địa chỉ mới
-        [HttpPost("add")]
-        public async Task<IActionResult> AddAddress([FromBody] CreateAddressDTO addressDTO)
-        {
-            // Kiểm tra User có tồn tại không
-            var user = await _context.Users.FindAsync(addressDTO.UserId);
-            if (user == null)
-            {
-                return BadRequest("User không tồn tại.");
-            }
-
-            var address = new Address
-            {
-                UserId = addressDTO.UserId,
-                FullName = addressDTO.FullName,
-                PhoneNumber = addressDTO.PhoneNumber,
-                AddressLine1 = addressDTO.AddressLine1,
-                AddressLine2 = addressDTO.AddressLine2,
-                City = addressDTO.City,
-                State = addressDTO.State,
-                ZipCode = addressDTO.ZipCode,
-                Country = addressDTO.Country
-            };
-
-            _context.Addresses.Add(address);
-            await _context.SaveChangesAsync();
-
-            return Ok(address);
         }
 
         // Cập nhật địa chỉ

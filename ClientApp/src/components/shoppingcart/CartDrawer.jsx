@@ -14,7 +14,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
   const [totalAmount, setTotalAmount] = useState(0);
   const [selectedItem, setSelectedItem] = useState(null);
   const [quantityModalOpen, setQuantityModalOpen] = useState(false);
-  const [voucherApplied, setVoucherApplied] = useState(false); // Thêm state để kiểm tra voucher đã áp dụng hay chưa
+  const [voucherApplied, setVoucherApplied] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,6 +34,14 @@ const CartDrawer = ({ isOpen, onClose }) => {
           calculateTotalAmount(cartResponse.data);
         } catch (error) {
           console.error("Lỗi khi lấy giỏ hàng:", error);
+        }
+      } else {
+        const sessionCart = sessionStorage.getItem("cart");
+        if (sessionCart) {
+          const parsedCart = JSON.parse(sessionCart);
+          setCartItems(parsedCart);
+          setSelectedItems(parsedCart); // Chọn tất cả sản phẩm mặc định
+          calculateTotalAmount(parsedCart);
         }
       }
     };
@@ -73,6 +81,11 @@ const CartDrawer = ({ isOpen, onClose }) => {
   };
 
   const handleApplyVoucher = async () => {
+    if (!userId) {
+      alert("Vui lòng đăng nhập để tận hưởng ưu đãi.");
+      return;
+    }
+
     if (voucherApplied) {
       alert("Voucher đã được áp dụng.");
       return;
@@ -117,6 +130,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
     setCartItems(updatedItems);
     setSelectedItems(updatedItems);
     calculateTotalAmount(updatedItems);
+    sessionStorage.setItem("cart", JSON.stringify(updatedItems));
   };
 
   const handleDecreaseQuantity = () => {
@@ -128,6 +142,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
     setCartItems(updatedItems);
     setSelectedItems(updatedItems);
     calculateTotalAmount(updatedItems);
+    sessionStorage.setItem("cart", JSON.stringify(updatedItems));
     if (selectedItem.quantity === 1) {
       setQuantityModalOpen(false);
     }
@@ -207,7 +222,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
               value={voucherCode}
               onChange={(e) => setVoucherCode(e.target.value)}
               fullWidth
-              disabled={voucherApplied} // Vô hiệu hóa khung nhập mã voucher sau khi áp dụng
+              disabled={voucherApplied || !userId} // Vô hiệu hóa khung nhập mã voucher sau khi áp dụng hoặc khi chưa đăng nhập
             />
             <Box sx={{ display: "flex", justifyContent: "flex-start" }}> 
               {voucherApplied ? (
