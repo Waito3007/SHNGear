@@ -19,4 +19,8 @@ namespace SHN_Gear.DTOs
         public int Quantity { get; set; }
         public decimal Price { get; set; }
     }
+    public class UpdateStatusDto
+    {
+        public string NewStatus { get; set; }
+    }
 }
