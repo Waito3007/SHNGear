@@ -19,7 +19,7 @@ const CategoryMenu = () => {
     fetchCategories();
   }, []);
 
-  // Khi chọn danh mục, chuyển hướng đến trang ProductList với categoryId trên URL
+  // Chuyển hướng đến danh sách sản phẩm khi chọn danh mục
   const handleCategorySelect = (categoryId) => {
     navigate(`/ProductList?categoryId=${categoryId}`);
   };
@@ -32,7 +32,12 @@ const CategoryMenu = () => {
           style={styles.categoryItem}
           onClick={() => handleCategorySelect(category.id)}
         >
-          {category.icon && category.icon}
+          {/* Hiển thị hình ảnh danh mục */}
+          <img
+            src={category.image} // Lấy ảnh từ API
+            alt={category.name}
+            style={styles.categoryImage}
+          />
           <span>{category.name}</span>
         </div>
       ))}
@@ -55,7 +60,7 @@ const styles = {
   categoryItem: {
     display: "flex",
     alignItems: "center",
-    gap: "8px",
+    gap: "10px",
     fontSize: "16px",
     fontWeight: "bold",
     cursor: "pointer",
@@ -63,6 +68,11 @@ const styles = {
     borderRadius: "12px",
     background: "#f7f7f7",
     transition: "all 0.3s ease",
+  },
+  categoryImage: {
+    width: "32px",
+    height: "32px",
+    objectFit: "cover",
   },
 };
 

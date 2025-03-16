@@ -59,28 +59,31 @@ const FilterSection = ({ onPriceChange, onBrandChange }) => {
   };
 
   return (
-    <aside className="max-w-[320px] w-full bg-white p-4 rounded-lg shadow-md border border-gray-200">
-      <h2 className="text-xl font-semibold text-gray-800 mb-2">Bộ lọc</h2>
+    <aside className="max-w-[320px] w-full bg-white p-4 shadow-md border border-gray-200">
+      <h2 className="text-xl font-semibold text-gray-800 mb-2">
+        Bộ lọc tìm kiếm
+      </h2>
 
       {/* Lọc theo giá */}
       <div
-        className="flex justify-between items-center cursor-pointer py-2 border-b border-gray-300 hover:bg-gray-100 px-2 rounded"
+        className="flex justify-between items-center cursor-pointer py-2 border-b border-gray-300 hover:bg-gray-100"
         onClick={() => setExpandedPrice(!expandedPrice)}
       >
-        <h3 className="text-lg font-medium text-gray-700">Mức giá</h3>
+        <h3 className="text-lg font-semibold text-gray-700">Mức giá</h3>
         {expandedPrice ? (
           <ExpandLess fontSize="large" />
         ) : (
           <ExpandMore fontSize="large" />
         )}
       </div>
+
       {expandedPrice && (
-        <FormGroup className="mt-2 space-y-1 px-2">
+        <FormGroup className="mt-2 space-y-1">
           {priceRanges.map((range) => (
             <FormControlLabel
               key={range.value}
               label={
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm text-gray-700 pl-2">
                   {range.label}
                 </span>
               }
@@ -91,11 +94,15 @@ const FilterSection = ({ onPriceChange, onBrandChange }) => {
                   value={range.value}
                   sx={{
                     "& .MuiSvgIcon-root": { fontSize: 20 },
-                    "&.Mui-checked": { color: "#d32f2f" },
+                    "&.Mui-checked": { color: "#d70018" },
                   }}
                 />
               }
-              className="flex items-center w-full px-2 py-1 bg-gray-50 hover:bg-gray-200 rounded-md"
+              className={`flex items-center w-full py-1 border-b border-gray-200 ${
+                selectedPrice === range.value
+                  ? "bg-red-50 text-red-500"
+                  : "hover:bg-gray-100"
+              }`}
             />
           ))}
         </FormGroup>
@@ -103,18 +110,19 @@ const FilterSection = ({ onPriceChange, onBrandChange }) => {
 
       {/* Lọc theo thương hiệu */}
       <div
-        className="flex justify-between items-center cursor-pointer py-2 border-b border-gray-300 hover:bg-gray-100 px-2 rounded mt-3"
+        className="flex justify-between items-center cursor-pointer py-2 border-b border-gray-300 hover:bg-gray-100 mt-3"
         onClick={() => setExpandedBrand(!expandedBrand)}
       >
-        <h3 className="text-lg font-medium text-gray-700">Thương hiệu</h3>
+        <h3 className="text-lg font-semibold text-gray-700">Thương hiệu</h3>
         {expandedBrand ? (
           <ExpandLess fontSize="large" />
         ) : (
           <ExpandMore fontSize="large" />
         )}
       </div>
+
       {expandedBrand && (
-        <FormGroup className="mt-2 space-y-1 px-2">
+        <FormGroup className="mt-2 space-y-1">
           {loading ? (
             <div className="flex justify-center py-4">
               <CircularProgress size={24} />
@@ -124,9 +132,16 @@ const FilterSection = ({ onPriceChange, onBrandChange }) => {
               <FormControlLabel
                 key={brand.id}
                 label={
-                  <span className="text-sm font-medium text-gray-700">
-                    {brand.name}
-                  </span>
+                  <div className="flex items-center w-full">
+                    {/* Logo thương hiệu */}
+                    <img
+                      src={brand.logo}
+                      alt={brand.name}
+                      className="w-8 h-8 object-contain mr-2"
+                      onError={(e) => (e.target.style.display = "none")}
+                    />
+                    <span className="text-sm text-gray-700">{brand.name}</span>
+                  </div>
                 }
                 control={
                   <Checkbox
@@ -135,15 +150,19 @@ const FilterSection = ({ onPriceChange, onBrandChange }) => {
                     value={brand.id}
                     sx={{
                       "& .MuiSvgIcon-root": { fontSize: 20 },
-                      "&.Mui-checked": { color: "#d32f2f" },
+                      "&.Mui-checked": { color: "#d70018" },
                     }}
                   />
                 }
-                className="flex items-center w-full px-2 py-1 bg-gray-50 hover:bg-gray-200 rounded-md"
+                className={`flex items-center w-full px-3 py-2 border-b border-gray-200 ${
+                  selectedBrands.includes(brand.id)
+                    ? "bg-red-50 text-red-500"
+                    : "hover:bg-gray-100"
+                }`}
               />
             ))
           ) : (
-            <p className="text-sm text-gray-500 px-2 py-2">
+            <p className="text-sm text-gray-500 px-3 py-2">
               Không có thương hiệu nào.
             </p>
           )}

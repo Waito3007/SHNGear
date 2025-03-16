@@ -92,19 +92,14 @@ function Navbar() {
         </div>
 
         <div className="search-bar">
-<<<<<<< HEAD
           <input
             type="text"
             placeholder="Tìm kiếm sản phẩm..."
             className="search-input"
           />
           <button type="submit" className="search-button">
-            🔍
+            <Search />
           </button>
-=======
-          <input type="text" placeholder="Tìm kiếm sản phẩm..." className="search-input" />
-          <button type="submit" className="search-button"><Search /></button>
->>>>>>> f03685ece92367cedae1300985cbb6d394ceb8a2
         </div>
 
         <div className="avatarandcart">
