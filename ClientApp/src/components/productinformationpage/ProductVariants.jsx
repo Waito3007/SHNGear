@@ -9,8 +9,14 @@ import {
   Button,
 } from "@mui/material";
 import { CheckCircle, ShoppingCart } from "@mui/icons-material";
+<<<<<<< HEAD
 import { jwtDecode } from "jwt-decode";
+=======
+import { useNavigate } from "react-router-dom";
+
+>>>>>>> 3c1091f (cập nhật 1 tý)
 const ProductVariants = ({ variants }) => {
+  const navigate = useNavigate();
   const [selectedColor, setSelectedColor] = useState(variants[0].color);
   const availableStorages = variants
     .filter((v) => v.color === selectedColor)
@@ -290,6 +296,13 @@ const ProductVariants = ({ variants }) => {
             "&:hover": {
               backgroundColor: "#b71c1c",
             },
+          }}
+          onClick={() => {
+            if (!selectedVariant) {
+              alert("⚠️ Vui lòng chọn biến thể sản phẩm trước khi mua!");
+              return;
+            }
+            navigate("/checkout", { state: { product: [selectedVariant] } });
           }}
         >
           {selectedVariant ? `Mua ngay - ${formatCurrency(selectedVariant.discountPrice)}` : "Mua ngay"}

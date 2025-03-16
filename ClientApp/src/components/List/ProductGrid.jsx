@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 <<<<<<< HEAD
+<<<<<<< HEAD
 // import { Swiper, SwiperSlide } from "swiper/react";
 // import { Navigation } from "swiper/modules";
 =======
 >>>>>>> fc37651 (update lọc sản phẩm)
+=======
+>>>>>>> 3c1091f (cập nhật 1 tý)
 import { useNavigate } from "react-router-dom";
 
 const ProductGrid = ({

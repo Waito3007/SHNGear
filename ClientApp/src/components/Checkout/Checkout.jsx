@@ -1,5 +1,19 @@
+<<<<<<< HEAD
 import React, { useEffect, useState } from "react";
 import { Box, Typography, TextField, Button, List, ListItem, ListItemText } from "@mui/material";
+=======
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  List,
+  ListItem,
+  ListItemText,
+  Avatar,
+} from "@mui/material";
+>>>>>>> 3c1091f (cập nhật 1 tý)
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
@@ -7,7 +21,14 @@ import { jwtDecode } from "jwt-decode";
 const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
+<<<<<<< HEAD
   const { selectedItems, totalAmount, voucherCode } = location.state || {};
+=======
+  const selectedItems = location.state?.selectedItems || []; // Kiểm tra nếu undefined
+  const totalAmount = location.state?.totalAmount || 0;
+  const voucherCode = location.state?.voucherCode || null;
+
+>>>>>>> 3c1091f (cập nhật 1 tý)
   const [userId, setUserId] = useState(null);
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -44,10 +65,17 @@ const Checkout = () => {
 
   const fetchAddresses = async (userId) => {
     try {
+<<<<<<< HEAD
       console.log(`Fetching addresses for userId: ${userId}`);
       const response = await axios.get(`https://localhost:7107/api/address/user/${userId}`);
       console.log("Addresses fetched:", response.data);
       setAddresses(response.data);
+=======
+      const response = await axios.get(
+        `https://localhost:7107/api/Users/${userId}/address`
+      );
+      setAddress(response.data.address || "Chưa có địa chỉ");
+>>>>>>> 3c1091f (cập nhật 1 tý)
     } catch (error) {
       console.error("Lỗi khi lấy địa chỉ:", error);
     }
@@ -65,6 +93,7 @@ const Checkout = () => {
   };
 
   const handlePlaceOrder = async () => {
+<<<<<<< HEAD
     if (userId && !selectedAddress) {
       alert("Vui lòng chọn địa chỉ giao hàng.");
       return;
@@ -103,6 +132,25 @@ const Checkout = () => {
         productVariantId: item.productVariantId,
         quantity: item.quantity,
         price: item.productVariant.discountPrice,
+=======
+    if (selectedItems.length === 0) {
+      alert("Không có sản phẩm nào để đặt hàng.");
+      return;
+    }
+
+    const orderDto = {
+      UserId: userId,
+      OrderDate: new Date(),
+      TotalAmount: totalAmount,
+      OrderStatus: "Pending",
+      AddressId: isLoggedIn ? address.id : null,
+      GuestAddress: isLoggedIn ? null : guestAddress,
+      PaymentMethodId: 1, // Giả sử phương thức thanh toán là 1
+      OrderItems: selectedItems.map((item) => ({
+        ProductVariantId: item.productVariantId,
+        Quantity: item.quantity,
+        Price: item.productVariant?.discountPrice || 0,
+>>>>>>> 3c1091f (cập nhật 1 tý)
       })),
       voucherId: voucherId ? voucherId : null,
     };
@@ -110,8 +158,15 @@ const Checkout = () => {
     console.log("Đơn hàng:", orderDto);
 
     try {
+<<<<<<< HEAD
       const response = await axios.post("https://localhost:7107/api/orders", orderDto);
       console.log("Order created:", response.data);
+=======
+      const response = await axios.post(
+        "https://localhost:7107/api/orders",
+        orderDto
+      );
+>>>>>>> 3c1091f (cập nhật 1 tý)
       alert("Đơn hàng đã được tạo thành công!");
       navigate("/order-success", { state: { orderId: response.data.orderId } });
     } catch (error) {
@@ -126,6 +181,7 @@ const Checkout = () => {
 
   return (
     <Box sx={{ p: 4 }}>
+<<<<<<< HEAD
       <Typography variant="h4" mb={4}>Đặt hàng</Typography>
 
       {userId ? (
@@ -231,12 +287,77 @@ const Checkout = () => {
 
       <Typography variant="h6" mt={2}>Tổng tiền: {totalAmount.toLocaleString()} VND</Typography>
 
+=======
+      <Typography variant="h4" mb={4}>
+        Đặt hàng
+      </Typography>
+      {selectedItems.length > 0 ? (
+        <List>
+          {selectedItems.map((item) => (
+            <ListItem key={item.productVariantId}>
+              <Avatar
+                src={
+                  item.productImage ||
+                  "https://www.apple.com/v/iphone/home/cb/images/meta/iphone__kqge21l9n26q_og.png"
+                }
+                alt={item.productName}
+                sx={{
+                  width: 56,
+                  height: 80,
+                  border: "1px solid black",
+                  borderRadius: 2,
+                }}
+              />
+              <ListItemText
+                primary={`${item.productVariant?.color || "Không rõ"} - ${
+                  item.productVariant?.storage || "Không rõ"
+                }`}
+                secondary={`Số lượng: ${item.quantity} - ${
+                  (item.productVariant?.discountPrice || 0) * item.quantity
+                } VND`}
+              />
+            </ListItem>
+          ))}
+        </List>
+      ) : (
+        <Typography variant="h6" color="error">
+          ⚠️ Không có sản phẩm nào trong giỏ hàng!
+        </Typography>
+      )}
+
+      <Typography variant="h6" mt={4}>
+        Tổng tiền: {totalAmount.toLocaleString()} VND
+      </Typography>
+
+      {isLoggedIn ? (
+        <Box mt={4}>
+          <Typography variant="h6">Địa chỉ giao hàng</Typography>
+          <Typography>{address || "Chưa có địa chỉ"}</Typography>
+        </Box>
+      ) : (
+        <Box mt={4}>
+          <Typography variant="h6">Địa chỉ giao hàng (Khách)</Typography>
+          <TextField
+            label="Địa chỉ"
+            variant="outlined"
+            value={guestAddress}
+            onChange={(e) => setGuestAddress(e.target.value)}
+            fullWidth
+          />
+        </Box>
+      )}
+
+>>>>>>> 3c1091f (cập nhật 1 tý)
       <Button
         variant="contained"
         color="primary"
         fullWidth
         sx={{ mt: 4 }}
         onClick={handlePlaceOrder}
+<<<<<<< HEAD
+=======
+        disabled={selectedItems.length === 0}
+>>>>>>> 3c1091f (cập nhật 1 tý)
       >
         Đặt hàng ngay
       </Button>
