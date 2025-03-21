@@ -6,7 +6,6 @@ import "./Navbar.css";
 import menuIcon from "../../assets/icon/menu.svg";
 import logo from "../../assets/img/Phone/logo.png";
 import AuthModal from "../Auth/AuthModal";
-import CartDrawer from "../shoppingcart/CartDrawer"; // Import Drawer
 
 function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -15,9 +14,10 @@ function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
   const [avatarUrl, setAvatarUrl] = useState(localStorage.getItem("AvatarUrl"));
   const [anchorEl, setAnchorEl] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
-  const [isCartOpen, setIsCartOpen] = useState(false);
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -48,6 +48,31 @@ function Navbar() {
     setIsLoggedIn(false);
     setAvatarUrl(null);
     setAnchorEl(null);
+  };
+
+  // Cập nhật: Xử lý tìm kiếm sản phẩm và danh mục
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      // Tìm danh mục có tên khớp với từ khóa tìm kiếm
+      const matchedCategory = categories.find((category) =>
+        category.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      if (matchedCategory) {
+        // Nếu tìm thấy danh mục, điều hướng đến danh mục đó
+        navigate(`/ProductList?categoryId=${matchedCategory.id}`);
+      } else {
+        // Nếu không tìm thấy danh mục, thực hiện tìm kiếm sản phẩm
+        navigate(`/ProductList?search=${encodeURIComponent(searchQuery)}`);
+      }
+    }
+  };
+
+  // Xử lý tìm kiếm khi nhấn Enter
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
   };
 
   return (
@@ -91,6 +116,7 @@ function Navbar() {
           )}
         </div>
 
+        {/* Ô tìm kiếm */}
         <div className="search-bar">
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -101,10 +127,17 @@ function Navbar() {
 >>>>>>> 5bbe7da (cập nhật một tý)
           <input
             type="text"
-            placeholder="Tìm kiếm sản phẩm..."
+            placeholder="Tìm kiếm sản phẩm hoặc danh mục..."
             className="search-input"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={handleKeyPress} // Nhấn Enter để tìm kiếm
           />
-          <button type="submit" className="search-button">
+          <button
+            type="submit"
+            className="search-button"
+            onClick={handleSearch}
+          >
             <Search />
           </button>
 <<<<<<< HEAD
