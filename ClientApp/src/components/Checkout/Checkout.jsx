@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -10,10 +9,6 @@ import {
   ListItemText,
   Avatar,
 } from "@mui/material";
-=======
-import React, { useEffect, useState } from "react";
-import { Box, Typography, TextField, Button, List, ListItem, ListItemText } from "@mui/material";
->>>>>>> ba8ad6591bbd27cfa65de378340580f0ea2dea09
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
@@ -21,14 +16,10 @@ import { jwtDecode } from "jwt-decode";
 const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
-<<<<<<< HEAD
   const selectedItems = location.state?.selectedItems || []; // Kiểm tra nếu undefined
   const totalAmount = location.state?.totalAmount || 0;
   const voucherCode = location.state?.voucherCode || null;
 
-=======
-  const { selectedItems, totalAmount, voucherCode } = location.state || {};
->>>>>>> ba8ad6591bbd27cfa65de378340580f0ea2dea09
   const [userId, setUserId] = useState(null);
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -40,7 +31,7 @@ const Checkout = () => {
     city: "",
     state: "",
     zipCode: "",
-    country: ""
+    country: "",
   });
   const [voucherId, setVoucherId] = useState(null);
 
@@ -65,17 +56,10 @@ const Checkout = () => {
 
   const fetchAddresses = async (userId) => {
     try {
-<<<<<<< HEAD
       const response = await axios.get(
         `https://localhost:7107/api/Users/${userId}/address`
       );
       setAddress(response.data.address || "Chưa có địa chỉ");
-=======
-      console.log(`Fetching addresses for userId: ${userId}`);
-      const response = await axios.get(`https://localhost:7107/api/address/user/${userId}`);
-      console.log("Addresses fetched:", response.data);
-      setAddresses(response.data);
->>>>>>> ba8ad6591bbd27cfa65de378340580f0ea2dea09
     } catch (error) {
       console.error("Lỗi khi lấy địa chỉ:", error);
     }
@@ -84,7 +68,9 @@ const Checkout = () => {
   const fetchVoucherId = async (code) => {
     try {
       console.log(`Fetching voucherId for code: ${code}`);
-      const response = await axios.get(`https://localhost:7107/api/vouchers/code/${code}`);
+      const response = await axios.get(
+        `https://localhost:7107/api/vouchers/code/${code}`
+      );
       console.log("Voucher fetched:", response.data);
       setVoucherId(response.data.id);
     } catch (error) {
@@ -93,7 +79,6 @@ const Checkout = () => {
   };
 
   const handlePlaceOrder = async () => {
-<<<<<<< HEAD
     if (selectedItems.length === 0) {
       alert("Không có sản phẩm nào để đặt hàng.");
       return;
@@ -111,46 +96,6 @@ const Checkout = () => {
         ProductVariantId: item.productVariantId,
         Quantity: item.quantity,
         Price: item.productVariant?.discountPrice || 0,
-=======
-    if (userId && !selectedAddress) {
-      alert("Vui lòng chọn địa chỉ giao hàng.");
-      return;
-    }
-
-    let addressId = selectedAddress ? selectedAddress.id : null;
-
-    if (!userId && !addressId) {
-      try {
-        console.log("Adding guest address:", guestAddress);
-        const response = await axios.post("https://localhost:7107/api/address/add", {
-          userId: null, // Để null cho khách chưa đăng nhập
-          ...guestAddress
-        });
-        console.log("Guest address added:", response.data);
-        addressId = response.data.addressId;
-      } catch (error) {
-        console.error("Lỗi khi thêm địa chỉ:", error);
-        console.error("Phản hồi lỗi từ API:", error.response?.data);
-        if (error.response && error.response.data && error.response.data.errors) {
-          console.error("Chi tiết lỗi xác thực:", error.response.data.errors);
-        }
-        alert("Lỗi khi thêm địa chỉ, vui lòng thử lại.");
-        return;
-      }
-    }
-
-    const orderDto = {
-      userId: userId || null, // Đảm bảo userId là null nếu không có
-      orderDate: new Date().toISOString(),
-      totalAmount: totalAmount,
-      orderStatus: "Pending",
-      addressId: addressId,
-      paymentMethodId: 1, // Giả sử PaymentMethodId là 1
-      orderItems: selectedItems.map((item) => ({
-        productVariantId: item.productVariantId,
-        quantity: item.quantity,
-        price: item.productVariant.discountPrice,
->>>>>>> ba8ad6591bbd27cfa65de378340580f0ea2dea09
       })),
       voucherId: voucherId ? voucherId : null,
     };
@@ -158,15 +103,10 @@ const Checkout = () => {
     console.log("Đơn hàng:", orderDto);
 
     try {
-<<<<<<< HEAD
       const response = await axios.post(
         "https://localhost:7107/api/orders",
         orderDto
       );
-=======
-      const response = await axios.post("https://localhost:7107/api/orders", orderDto);
-      console.log("Order created:", response.data);
->>>>>>> ba8ad6591bbd27cfa65de378340580f0ea2dea09
       alert("Đơn hàng đã được tạo thành công!");
       navigate("/order-success", { state: { orderId: response.data.orderId } });
     } catch (error) {
@@ -181,7 +121,6 @@ const Checkout = () => {
 
   return (
     <Box sx={{ p: 4 }}>
-<<<<<<< HEAD
       <Typography variant="h4" mb={4}>
         Đặt hàng
       </Typography>
@@ -241,123 +180,13 @@ const Checkout = () => {
         </Box>
       )}
 
-=======
-      <Typography variant="h4" mb={4}>Đặt hàng</Typography>
-
-      {userId ? (
-        <>
-          <Typography variant="h6">Chọn địa chỉ giao hàng</Typography>
-          <List>
-            {addresses.map((address) => (
-              <ListItem
-                key={address.id}
-                button
-                selected={selectedAddress?.id === address.id}
-                onClick={() => setSelectedAddress(address)}
-              >
-                <ListItemText
-                  primary={`${address.fullName} - ${address.phoneNumber}`}
-                  secondary={`${address.addressLine1}, ${address.city}, ${address.state}, ${address.country}`}
-                />
-              </ListItem>
-            ))}
-          </List>
-        </>
-      ) : (
-        <>
-          <Typography variant="h6">Nhập địa chỉ giao hàng</Typography>
-          <TextField
-            label="Họ và tên"
-            variant="outlined"
-            fullWidth
-            value={guestAddress.fullName}
-            onChange={(e) => setGuestAddress({ ...guestAddress, fullName: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            label="Số điện thoại"
-            variant="outlined"
-            fullWidth
-            value={guestAddress.phoneNumber}
-            onChange={(e) => setGuestAddress({ ...guestAddress, phoneNumber: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            label="Địa chỉ"
-            variant="outlined"
-            fullWidth
-            value={guestAddress.addressLine1}
-            onChange={(e) => setGuestAddress({ ...guestAddress, addressLine1: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            label="Địa chỉ bổ sung"
-            variant="outlined"
-            fullWidth
-            value={guestAddress.addressLine2}
-            onChange={(e) => setGuestAddress({ ...guestAddress, addressLine2: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            label="Thành phố"
-            variant="outlined"
-            fullWidth
-            value={guestAddress.city}
-            onChange={(e) => setGuestAddress({ ...guestAddress, city: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            label="Tỉnh/Thành"
-            variant="outlined"
-            fullWidth
-            value={guestAddress.state}
-            onChange={(e) => setGuestAddress({ ...guestAddress, state: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            label="Mã bưu điện"
-            variant="outlined"
-            fullWidth
-            value={guestAddress.zipCode}
-            onChange={(e) => setGuestAddress({ ...guestAddress, zipCode: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            label="Quốc gia"
-            variant="outlined"
-            fullWidth
-            value={guestAddress.country}
-            onChange={(e) => setGuestAddress({ ...guestAddress, country: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-        </>
-      )}
-
-      <Typography variant="h6" mt={4}>Thông tin đơn hàng</Typography>
-      <List>
-        {selectedItems.map((item) => (
-          <ListItem key={item.productVariantId}>
-            <ListItemText
-              primary={`${item.productVariant?.color} - ${item.productVariant?.storage}`}
-              secondary={`Số lượng: ${item.quantity} - ${item.productVariant?.discountPrice * item.quantity} VND`}
-            />
-          </ListItem>
-        ))}
-      </List>
-
-      <Typography variant="h6" mt={2}>Tổng tiền: {totalAmount.toLocaleString()} VND</Typography>
-
->>>>>>> ba8ad6591bbd27cfa65de378340580f0ea2dea09
       <Button
         variant="contained"
         color="primary"
         fullWidth
         sx={{ mt: 4 }}
         onClick={handlePlaceOrder}
-<<<<<<< HEAD
         disabled={selectedItems.length === 0}
-=======
->>>>>>> ba8ad6591bbd27cfa65de378340580f0ea2dea09
       >
         Đặt hàng ngay
       </Button>
