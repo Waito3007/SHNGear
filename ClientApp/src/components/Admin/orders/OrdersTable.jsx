@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, Eye, Edit, Trash2 } from "lucide-react";
 import axios from "axios";
+import { Modal, Box, Typography, Button, Select, MenuItem } from "@mui/material";
 
 const OrdersTable = () => {
     const [searchTerm, setSearchTerm] = useState("");
@@ -9,6 +10,9 @@ const OrdersTable = () => {
     const [filteredOrders, setFilteredOrders] = useState([]);
     const [statusFilter, setStatusFilter] = useState("All");
     const [currentPage, setCurrentPage] = useState(1);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [newStatus, setNewStatus] = useState("");
+    const [openModal, setOpenModal] = useState(false);
     const ordersPerPage = 5;
 
     const getOrderStatusLabel = (status) => {
@@ -89,6 +93,35 @@ const OrdersTable = () => {
             } catch (error) {
                 console.error("Lỗi khi xóa đơn hàng:", error);
                 alert("Lỗi khi xóa đơn hàng, vui lòng thử lại.");
+            }
+        }
+    };
+
+    const handleOpenModal = (order) => {
+        setSelectedOrder(order);
+        setNewStatus(order.orderStatus);
+        setOpenModal(true);
+    };
+
+    const handleCloseModal = () => {
+        setOpenModal(false);
+        setSelectedOrder(null);
+    };
+
+    const handleUpdateStatus = async () => {
+        if (selectedOrder) {
+            try {
+                console.log(`Updating status for order ID: ${selectedOrder.id} to ${newStatus}`);
+                const response = await axios.put(`https://localhost:7107/api/orders/${selectedOrder.id}/status`, { newStatus });
+                console.log("Update response:", response.data);
+                setOrders(orders.map(order => order.id === selectedOrder.id ? { ...order, orderStatus: newStatus } : order));
+                setFilteredOrders(filteredOrders.map(order => order.id === selectedOrder.id ? { ...order, orderStatus: newStatus } : order));
+                alert("Trạng thái đơn hàng đã được cập nhật thành công!");
+                handleCloseModal();
+            } catch (error) {
+                console.error("Lỗi khi cập nhật trạng thái đơn hàng:", error);
+                console.error("Chi tiết lỗi:", error.response?.data);
+                alert("Lỗi khi cập nhật trạng thái đơn hàng, vui lòng thử lại.");
             }
         }
     };
@@ -186,6 +219,7 @@ const OrdersTable = () => {
                                                 ? "bg-blue-100 text-blue-800"
                                                 : "bg-red-100 text-red-800"
                                         }`}
+                                        onClick={() => handleOpenModal(order)}
                                     >
                                         {getOrderStatusLabel(order.orderStatus)}
                                     </span>
@@ -229,6 +263,46 @@ const OrdersTable = () => {
                     Next
                 </button>
             </div>
+
+            <Modal open={openModal} onClose={handleCloseModal}>
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: 400,
+                        bgcolor: 'background.paper',
+                        border: '2px solid #000',
+                        boxShadow: 24,
+                        p: 4,
+                    }}
+                >
+                    <Typography variant="h6" component="h2">
+                        Cập nhật trạng thái đơn hàng
+                    </Typography>
+                    <Select
+                        value={newStatus}
+                        onChange={(e) => setNewStatus(e.target.value)}
+                        fullWidth
+                        sx={{ mt: 2 }}
+                    >
+                        <MenuItem value="Pending">Chờ xác nhận</MenuItem>
+                        <MenuItem value="Processing">Đã xác nhận</MenuItem>
+                        <MenuItem value="Shipped">Đang vận chuyển</MenuItem>
+                        <MenuItem value="Delivered">Đã xong</MenuItem>
+                        <MenuItem value="Cancelled">Đã hủy</MenuItem>
+                    </Select>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleUpdateStatus}
+                        sx={{ mt: 2 }}
+                    >
+                        Cập nhật
+                    </Button>
+                </Box>
+            </Modal>
         </motion.div>
     );
 };

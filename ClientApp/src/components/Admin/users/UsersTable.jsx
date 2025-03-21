@@ -1,41 +1,80 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, PlusCircle, Pencil, Trash2 } from "lucide-react";
+import axios from "axios";
+import { Modal, Box, Typography, Button, Select, MenuItem } from "@mui/material";
 
 const UsersTable = () => {
   const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [newRole, setNewRole] = useState("");
+  const [openModal, setOpenModal] = useState(false);
 
   useEffect(() => {
     const fetchUsers = async () => {
       setLoading(true);
       try {
-        const response = await fetch("https://localhost:7107/api/User");
-        if (!response.ok) {
-          throw new Error("Error fetching users");
-        }
-        const data = await response.json();
-        setUsers(data);
-        setFilteredUsers(data);
+        const response = await axios.get("https://localhost:7107/api/users");
+        setUsers(response.data);
+        setFilteredUsers(response.data);
       } catch (error) {
         setError(error.message);
       } finally {
         setLoading(false);
       }
     };
+
+    const fetchRoles = async () => {
+      try {
+        const response = await axios.get("https://localhost:7107/api/roles");
+        setRoles(response.data);
+      } catch (error) {
+        setError(error.message);
+      }
+    };
+
     fetchUsers();
+    fetchRoles();
   }, []);
 
   const handleSearch = (e) => {
     const term = e.target.value.toLowerCase();
     setSearchTerm(term);
     const filtered = users.filter(
-      (user) => user.name.toLowerCase().includes(term) || user.email.toLowerCase().includes(term)
+      (user) => user.fullName.toLowerCase().includes(term) || user.email.toLowerCase().includes(term)
     );
     setFilteredUsers(filtered);
+  };
+
+  const handleOpenModal = (user) => {
+    setSelectedUser(user);
+    setNewRole(user.roleId);
+    setOpenModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setSelectedUser(null);
+  };
+
+  const handleUpdateRole = async () => {
+    if (selectedUser) {
+      try {
+        await axios.put(`https://localhost:7107/api/users/${selectedUser.id}/role`, { roleId: newRole });
+        setUsers(users.map(user => user.id === selectedUser.id ? { ...user, roleId: newRole } : user));
+        setFilteredUsers(filteredUsers.map(user => user.id === selectedUser.id ? { ...user, roleId: newRole } : user));
+        alert("Vai trò người dùng đã được cập nhật thành công!");
+        handleCloseModal();
+      } catch (error) {
+        console.error("Lỗi khi cập nhật vai trò người dùng:", error);
+        alert("Lỗi khi cập nhật vai trò người dùng, vui lòng thử lại.");
+      }
+    }
   };
 
   return (
@@ -99,11 +138,11 @@ const UsersTable = () => {
                   <div className='flex items-center'>
                     <div className='flex-shrink-0 h-10 w-10'>
                       <div className='h-10 w-10 rounded-full bg-gradient-to-r from-purple-400 to-blue-500 flex items-center justify-center text-white font-semibold'>
-                        {user.name ? user.name.charAt(0) : "?"}
+                        {user.fullName ? user.fullName.charAt(0) : "?"}
                       </div>
                     </div>
                     <div className='ml-4'>
-                      <div className='text-sm font-medium text-gray-100'>{user.name}</div>
+                      <div className='text-sm font-medium text-gray-100'>{user.fullName}</div>
                     </div>
                   </div>
                 </td>
@@ -133,7 +172,7 @@ const UsersTable = () => {
                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
                   <button
                     className='text-indigo-400 hover:text-indigo-300 mr-4'
-                    onClick={() => console.log("Edit", user.id)}
+                    onClick={() => handleOpenModal(user)}
                   >
                     <Pencil size={18} />
                   </button>
@@ -149,6 +188,46 @@ const UsersTable = () => {
           </tbody>
         </table>
       </div>
+
+      <Modal open={openModal} onClose={handleCloseModal}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 400,
+            bgcolor: 'background.paper',
+            border: '2px solid #000',
+            boxShadow: 24,
+            p: 4,
+          }}
+        >
+          <Typography variant="h6" component="h2">
+            Cập nhật vai trò người dùng
+          </Typography>
+          <Select
+            value={newRole}
+            onChange={(e) => setNewRole(e.target.value)}
+            fullWidth
+            sx={{ mt: 2 }}
+          >
+            {roles.map((role) => (
+              <MenuItem key={role.id} value={role.id}>
+                {role.name}
+              </MenuItem>
+            ))}
+          </Select>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleUpdateRole}
+            sx={{ mt: 2 }}
+          >
+            Cập nhật
+          </Button>
+        </Box>
+      </Modal>
     </motion.div>
   );
 };
