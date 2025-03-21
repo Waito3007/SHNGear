@@ -93,5 +93,18 @@ namespace SHN_Gear.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+        [HttpGet("product-count")]
+        public async Task<IActionResult> GetProductCountByCategory()
+        {
+            var result = await _context.Categories
+                .Select(c => new
+                {
+                    Name = c.Name,
+                    Value = c.Products.Count()
+                })
+                .ToListAsync();
+
+            return Ok(result);
+        }
     }
 }

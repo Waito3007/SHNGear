@@ -18,6 +18,7 @@ import VoucherDrawer from "./VoucherDrawer"; // Thêm VoucherDrawer
 
 const ProductsTable = () => {
     const [searchTerm, setSearchTerm] = useState("");
+    const [brands, setBrands] = useState([]); // Thêm state cho brands
     const [isLoading, setIsLoading] = useState(false);
     const [products, setProducts] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState([]);
@@ -50,20 +51,33 @@ const ProductsTable = () => {
         fetchProducts();
     }, []);
 
+    useEffect(() => {
+    const fetchBrands = async () => {
+        try {
+            const response = await fetch("https://localhost:7107/api/brands");
+            const data = await response.json();
+            setBrands(data);
+        } catch (error) {
+            console.error("Lỗi khi lấy danh sách thương hiệu:", error);
+        }
+    };
+    fetchBrands();
+}, []);
+
    const handleSearch = async (e) => {
     const term = e.target.value;
     setSearchTerm(term);
+    setPage(1); // Reset về trang đầu tiên khi tìm kiếm
 
     if (term.trim() === "") {
-        setFilteredProducts([]); // Xóa kết quả nếu không có từ khóa
+        setFilteredProducts(products); // Hiển thị lại danh sách gốc thay vì xóa hết
         return;
     }
 
     try {
         const response = await fetch(`https://localhost:7107/api/Products/search?keyword=${encodeURIComponent(term)}`);
-        if (!response.ok) {
-            throw new Error("Không tìm thấy sản phẩm nào.");
-        }
+        if (!response.ok) throw new Error("Không tìm thấy sản phẩm nào.");
+        
         const data = await response.json();
         setFilteredProducts(data);
     } catch (error) {
@@ -73,6 +87,10 @@ const ProductsTable = () => {
 };
 
 
+    const getBrandName = (brandId) => {
+    const brand = brands.find((b) => b.id === brandId);
+    return brand ? brand.name : "Không xác định";
+};
 
     const handleAddProduct = (newProduct) => {
         setProducts([...products, newProduct]);
@@ -98,30 +116,32 @@ const ProductsTable = () => {
     };
 
     const confirmDeleteProduct = async () => {
-        if (!productToDelete) return;
-        setIsLoading(true);
-        try {
-            const response = await fetch(`https://localhost:7107/api/Products/${productToDelete.id}`, {
-                method: "DELETE",
-            });
-            if (response.ok) {
-                const updatedProducts = products.filter((p) => p.id !== productToDelete.id);
-                setProducts(updatedProducts);
-                setFilteredProducts(updatedProducts);
-                toast.success("Sản phẩm đã được xóa thành công!");
-                setIsDeleteDialogOpen(false);
-                setProductToDelete(null);
-            } else {
-                const errorMessage = await response.text();
-                toast.error(`Lỗi: ${errorMessage || "Không thể xóa sản phẩm"}`);
-            }
-        } catch (error) {
-            toast.error("Lỗi khi xóa sản phẩm, vui lòng thử lại!");
-            console.error("Error deleting product:", error);
-        } finally {
-            setIsLoading(false);
+    if (!productToDelete) return;
+    setIsLoading(true);
+    try {
+        const response = await fetch(`https://localhost:7107/api/Products/${productToDelete.id}`, {
+            method: "DELETE",
+        });
+
+        if (response.ok) {
+            const updatedProducts = products.filter((p) => p.id !== productToDelete.id);
+            setProducts(updatedProducts);
+            setFilteredProducts(updatedProducts); // Cập nhật luôn danh sách tìm kiếm
+            toast.success("Sản phẩm đã được xóa thành công!");
+            setIsDeleteDialogOpen(false);
+            setProductToDelete(null);
+        } else {
+            const errorMessage = await response.text();
+            toast.error(`Lỗi: ${errorMessage || "Không thể xóa sản phẩm"}`);
         }
-    };
+    } catch (error) {
+        toast.error("Lỗi khi xóa sản phẩm, vui lòng thử lại!");
+        console.error("Error deleting product:", error);
+    } finally {
+        setIsLoading(false);
+    }
+};
+
 
     const handlePageChange = (event, value) => {
         setPage(value);
@@ -223,9 +243,8 @@ const ProductsTable = () => {
                                     {product.name || "Không có tên"}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                    {/* Vì ProductDto không có brand.name, cần lấy từ API khác hoặc hiển thị BrandId tạm thời */}
-                                    {product.brandId || "Không có thương hiệu"}
-                                </td>
+    {getBrandName(product.brandId)}
+</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                                     {/* Tương tự với CategoryId */}
                                     {product.categoryId || "Chưa có danh mục"}

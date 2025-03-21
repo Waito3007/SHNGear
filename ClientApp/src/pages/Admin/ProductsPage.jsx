@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
 
 import Header from "../../components/Admin/common/Header";
 import StatCard from "../../components/Admin/common/StatCard";
+import CardProduct from "../../components/Admin/common/CardProduct";
 
 import { AlertTriangle, DollarSign, Package, TrendingUp } from "lucide-react";
 import CategoryDistributionChart from "../../components/Admin/overview/CategoryDistributionChart";
@@ -12,19 +13,27 @@ import ProductsTable from "../../components/Admin/products/ProductsTable";
 
 const ProductsPage = () => {
 	const [totalProducts, setTotalProducts] = useState(0);
+	const [lowStockProducts, setLowStockProducts] = useState(0);
+	const [topSelling, setTopSelling] = useState(0);
 
-	useEffect(() => {
-		const fetchTotalProducts = async () => {
-			try {
-				const response = await axios.get("https://localhost:7107/api/Products/count"); // Gọi API lấy tổng số sản phẩm
-				setTotalProducts(response.data);
-			} catch (error) {
-				console.error("Lỗi khi lấy tổng số sản phẩm:", error);
-			}
-		};
 
-		fetchTotalProducts();
+	// Hàm fetch thống kê sản phẩm
+	const fetchStats = useCallback(async () => {
+		try {
+			const [lowStockRes, totalProductsRes] = await Promise.all([
+				axios.get("https://localhost:7107/api/Products/low-stock"),
+				axios.get("https://localhost:7107/api/Products/count")			]);
+
+			setLowStockProducts(lowStockRes.data);
+			setTotalProducts(totalProductsRes.data);
+		} catch (error) {
+			console.error("Lỗi khi lấy dữ liệu sản phẩm:", error);
+		}
 	}, []);
+	// Gọi API khi component mount và khi filterType thay đổi
+	useEffect(() => {
+		fetchStats();
+	}, [fetchStats]);
 
 	return (
 		<div className='flex-1 overflow-auto relative z-10'>
@@ -39,8 +48,13 @@ const ProductsPage = () => {
 					transition={{ duration: 1 }}
 				>
 					<StatCard name='Total Products' icon={Package} value={totalProducts} color='#6366F1' />
-					<StatCard name='Top Selling' icon={TrendingUp} value={89} color='#10B981' />
-					<StatCard name='Low Stock' icon={AlertTriangle} value={23} color='#F59E0B' />
+					<StatCard
+						name="Top Selling"
+						icon={TrendingUp}
+						value={topSelling}
+						color="#10B981"
+					/>
+					<StatCard name='Low Stock' icon={AlertTriangle} value={lowStockProducts} color='#F59E0B' />
 					<StatCard name='Total Revenue' icon={DollarSign} value={"$543,210"} color='#EF4444' />
 				</motion.div>
 

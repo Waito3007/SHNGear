@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Drawer, Button, Box, Typography, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import { X, Edit, Trash } from "lucide-react";
 import axios from "axios";
 import CategoryModal from "./CategoryModal";
@@ -8,6 +9,8 @@ const CategoryBrandDrawer = ({ open, onClose }) => {
     const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [categoryToDelete, setCategoryToDelete] = useState(null);
 
     useEffect(() => {
         fetchCategories();
@@ -22,19 +25,29 @@ const CategoryBrandDrawer = ({ open, onClose }) => {
         }
     };
 
-    const handleDelete = async (id) => {
-        try {
-            await axios.delete(`https://localhost:7107/api/categories/${id}`);
-            setCategories(categories.filter(category => category.id !== id));
-        } catch (error) {
-            console.error("Failed to delete category:", error);
-        }
-    };
+    const handleConfirmDelete = async () => {
+    if (!categoryToDelete) return;
+
+    try {
+        await axios.delete(`https://localhost:7107/api/categories/${categoryToDelete.id}`);
+        await fetchCategories();
+        setDeleteDialogOpen(false);
+        setCategoryToDelete(null);
+    } catch (error) {
+        console.error("Failed to delete category:", error);
+    }
+};
+
 
     const handleOpenModal = (category = null) => {
         setSelectedCategory(category);
         setModalOpen(true);
     };
+
+    const handleOpenDeleteDialog = (category) => {
+    setCategoryToDelete(category);
+    setDeleteDialogOpen(true);
+};
 
     return (
         <Drawer anchor="right" open={open} onClose={onClose}>
@@ -82,9 +95,10 @@ const CategoryBrandDrawer = ({ open, onClose }) => {
                                         <IconButton onClick={() => handleOpenModal(category)}>
                                             <Edit size={20} />
                                         </IconButton>
-                                        <IconButton onClick={() => handleDelete(category.id)}>
+                                       <IconButton onClick={() => handleOpenDeleteDialog(category)}>
                                             <Trash size={20} color="red" />
                                         </IconButton>
+
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -93,6 +107,23 @@ const CategoryBrandDrawer = ({ open, onClose }) => {
                 </TableContainer>
             </Box>
             <CategoryModal open={modalOpen} onClose={() => setModalOpen(false)} category={selectedCategory} refreshCategories={fetchCategories} />
+
+                <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+    <DialogTitle>Xác nhận xóa</DialogTitle>
+    <DialogContent>
+        <DialogContentText>
+            Bạn có chắc chắn muốn xóa danh mục <b>{categoryToDelete?.name}</b> không? Hành động này không thể hoàn tác.
+        </DialogContentText>
+    </DialogContent>
+    <DialogActions>
+        <Button onClick={() => setDeleteDialogOpen(false)} color="primary">
+            Hủy
+        </Button>
+        <Button onClick={handleConfirmDelete} color="error" variant="contained">
+            Xóa
+        </Button>
+    </DialogActions>
+</Dialog>
         </Drawer>
     );
 };

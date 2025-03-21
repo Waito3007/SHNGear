@@ -31,6 +31,8 @@ namespace SHN_Gear.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
+
             // Seed dữ liệu mặc định cho Role
             modelBuilder.Entity<Role>().HasData(
                 new Role { Id = 1, Name = "Admin" },
@@ -38,6 +40,12 @@ namespace SHN_Gear.Data
                 new Role { Id = 3, Name = "VIP 2" },
                 new Role { Id = 4, Name = "VIP 3" }
             );
+
+            // ✅ Thiết lập quan hệ Category - Product (1-N)
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.Category)
+                .WithMany(c => c.Products)
+                .HasForeignKey(p => p.CategoryId);
 
             // Thiết lập duy nhất cho số điện thoại (Không cho phép số trùng)
             modelBuilder.Entity<User>()

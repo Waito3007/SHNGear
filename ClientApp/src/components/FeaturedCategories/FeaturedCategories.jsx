@@ -75,7 +75,6 @@ const FeaturedCategories = () => {
             <SwiperSlide
               key={category.id} // Sử dụng id thay vì index để key duy nhất
               className="flex justify-center transform hover:scale-105 transition-all duration-300"
-              data-aos="zoom-in"
             >
               <CategoryLarge name={category.name} image={category.image} />
             </SwiperSlide>
