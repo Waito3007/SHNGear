@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const ProductGrid = ({
   selectedCategory,
@@ -11,6 +11,8 @@ const ProductGrid = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get("search") || "";
 
   useEffect(() => {
     const fetchProductsAndBrands = async () => {
@@ -36,6 +38,12 @@ const ProductGrid = ({
         );
 
         let filteredProducts = productsData.$values || productsData || [];
+
+        if (searchQuery) {
+          filteredProducts = filteredProducts.filter((product) =>
+            product.name.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+        }
 
         if (selectedCategory) {
           filteredProducts = filteredProducts.filter(
@@ -102,7 +110,7 @@ const ProductGrid = ({
     };
 
     fetchProductsAndBrands();
-  }, [selectedCategory, selectedPriceRange, selectedBrand]);
+  }, [selectedCategory, selectedPriceRange, selectedBrand, searchQuery]);
 
   if (loading) {
     return <div className="text-center py-6">Đang tải sản phẩm...</div>;
