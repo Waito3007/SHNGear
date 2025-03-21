@@ -1,7 +1,10 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 import React, { useEffect, useState } from "react";
 import { Box, Typography, TextField, Button, List, ListItem, ListItemText } from "@mui/material";
 =======
+=======
+>>>>>>> c45db04 (rác)
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -13,7 +16,10 @@ import {
   ListItemText,
   Avatar,
 } from "@mui/material";
+<<<<<<< HEAD
 >>>>>>> 3c1091f (cập nhật 1 tý)
+=======
+>>>>>>> c45db04 (rác)
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
@@ -22,13 +28,19 @@ const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
 <<<<<<< HEAD
+<<<<<<< HEAD
   const { selectedItems, totalAmount, voucherCode } = location.state || {};
 =======
+=======
+>>>>>>> c45db04 (rác)
   const selectedItems = location.state?.selectedItems || []; // Kiểm tra nếu undefined
   const totalAmount = location.state?.totalAmount || 0;
   const voucherCode = location.state?.voucherCode || null;
 
+<<<<<<< HEAD
 >>>>>>> 3c1091f (cập nhật 1 tý)
+=======
+>>>>>>> c45db04 (rác)
   const [userId, setUserId] = useState(null);
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -40,7 +52,7 @@ const Checkout = () => {
     city: "",
     state: "",
     zipCode: "",
-    country: ""
+    country: "",
   });
   const [voucherId, setVoucherId] = useState(null);
 
@@ -66,16 +78,22 @@ const Checkout = () => {
   const fetchAddresses = async (userId) => {
     try {
 <<<<<<< HEAD
+<<<<<<< HEAD
       console.log(`Fetching addresses for userId: ${userId}`);
       const response = await axios.get(`https://localhost:7107/api/address/user/${userId}`);
       console.log("Addresses fetched:", response.data);
       setAddresses(response.data);
 =======
+=======
+>>>>>>> c45db04 (rác)
       const response = await axios.get(
         `https://localhost:7107/api/Users/${userId}/address`
       );
       setAddress(response.data.address || "Chưa có địa chỉ");
+<<<<<<< HEAD
 >>>>>>> 3c1091f (cập nhật 1 tý)
+=======
+>>>>>>> c45db04 (rác)
     } catch (error) {
       console.error("Lỗi khi lấy địa chỉ:", error);
     }
@@ -84,7 +102,9 @@ const Checkout = () => {
   const fetchVoucherId = async (code) => {
     try {
       console.log(`Fetching voucherId for code: ${code}`);
-      const response = await axios.get(`https://localhost:7107/api/vouchers/code/${code}`);
+      const response = await axios.get(
+        `https://localhost:7107/api/vouchers/code/${code}`
+      );
       console.log("Voucher fetched:", response.data);
       setVoucherId(response.data.id);
     } catch (error) {
@@ -93,6 +113,7 @@ const Checkout = () => {
   };
 
   const handlePlaceOrder = async () => {
+<<<<<<< HEAD
 <<<<<<< HEAD
     if (userId && !selectedAddress) {
       alert("Vui lòng chọn địa chỉ giao hàng.");
@@ -133,6 +154,8 @@ const Checkout = () => {
         quantity: item.quantity,
         price: item.productVariant.discountPrice,
 =======
+=======
+>>>>>>> c45db04 (rác)
     if (selectedItems.length === 0) {
       alert("Không có sản phẩm nào để đặt hàng.");
       return;
@@ -150,7 +173,10 @@ const Checkout = () => {
         ProductVariantId: item.productVariantId,
         Quantity: item.quantity,
         Price: item.productVariant?.discountPrice || 0,
+<<<<<<< HEAD
 >>>>>>> 3c1091f (cập nhật 1 tý)
+=======
+>>>>>>> c45db04 (rác)
       })),
       voucherId: voucherId ? voucherId : null,
     };
@@ -159,14 +185,20 @@ const Checkout = () => {
 
     try {
 <<<<<<< HEAD
+<<<<<<< HEAD
       const response = await axios.post("https://localhost:7107/api/orders", orderDto);
       console.log("Order created:", response.data);
 =======
+=======
+>>>>>>> c45db04 (rác)
       const response = await axios.post(
         "https://localhost:7107/api/orders",
         orderDto
       );
+<<<<<<< HEAD
 >>>>>>> 3c1091f (cập nhật 1 tý)
+=======
+>>>>>>> c45db04 (rác)
       alert("Đơn hàng đã được tạo thành công!");
       navigate("/order-success", { state: { orderId: response.data.orderId } });
     } catch (error) {
@@ -181,6 +213,7 @@ const Checkout = () => {
 
   return (
     <Box sx={{ p: 4 }}>
+<<<<<<< HEAD
 <<<<<<< HEAD
       <Typography variant="h4" mb={4}>Đặt hàng</Typography>
 
@@ -288,6 +321,8 @@ const Checkout = () => {
       <Typography variant="h6" mt={2}>Tổng tiền: {totalAmount.toLocaleString()} VND</Typography>
 
 =======
+=======
+>>>>>>> c45db04 (rác)
       <Typography variant="h4" mb={4}>
         Đặt hàng
       </Typography>
@@ -347,7 +382,10 @@ const Checkout = () => {
         </Box>
       )}
 
+<<<<<<< HEAD
 >>>>>>> 3c1091f (cập nhật 1 tý)
+=======
+>>>>>>> c45db04 (rác)
       <Button
         variant="contained"
         color="primary"
@@ -355,9 +393,13 @@ const Checkout = () => {
         sx={{ mt: 4 }}
         onClick={handlePlaceOrder}
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
         disabled={selectedItems.length === 0}
 >>>>>>> 3c1091f (cập nhật 1 tý)
+=======
+        disabled={selectedItems.length === 0}
+>>>>>>> c45db04 (rác)
       >
         Đặt hàng ngay
       </Button>
