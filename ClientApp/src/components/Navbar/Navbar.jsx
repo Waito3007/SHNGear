@@ -6,6 +6,7 @@ import "./Navbar.css";
 import menuIcon from "../../assets/icon/menu.svg";
 import logo from "../../assets/img/Phone/logo.png";
 import AuthModal from "../Auth/AuthModal";
+import CartDrawer from "../shoppingcart/CartDrawer"; // Import CartDrawer
 
 function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -15,6 +16,7 @@ function Navbar() {
   const [avatarUrl, setAvatarUrl] = useState(localStorage.getItem("AvatarUrl"));
   const [anchorEl, setAnchorEl] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isCartOpen, setIsCartOpen] = useState(false); // Thêm trạng thái cho CartDrawer
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -50,25 +52,20 @@ function Navbar() {
     setAnchorEl(null);
   };
 
-  // Cập nhật: Xử lý tìm kiếm sản phẩm và danh mục
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      // Tìm danh mục có tên khớp với từ khóa tìm kiếm
       const matchedCategory = categories.find((category) =>
         category.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
       if (matchedCategory) {
-        // Nếu tìm thấy danh mục, điều hướng đến danh mục đó
         navigate(`/ProductList?categoryId=${matchedCategory.id}`);
       } else {
-        // Nếu không tìm thấy danh mục, thực hiện tìm kiếm sản phẩm
         navigate(`/ProductList?search=${encodeURIComponent(searchQuery)}`);
       }
     }
   };
 
-  // Xử lý tìm kiếm khi nhấn Enter
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       handleSearch();
@@ -116,7 +113,6 @@ function Navbar() {
           )}
         </div>
 
-        {/* Ô tìm kiếm */}
         <div className="search-bar">
           <input
             type="text"
@@ -124,7 +120,7 @@ function Navbar() {
             className="search-input"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={handleKeyPress} // Nhấn Enter để tìm kiếm
+            onKeyPress={handleKeyPress}
           />
           <button
             type="submit"
@@ -170,7 +166,7 @@ function Navbar() {
           )}
           <button
             className="cart-button"
-            onClick={() => navigate("/shoppingcart")}
+            onClick={() => setIsCartOpen(true)} // Mở CartDrawer khi nhấn vào nút "Giỏ Hàng"
           >
             <ShoppingCart size={22} />
             Giỏ Hàng
@@ -183,6 +179,9 @@ function Navbar() {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
       />
+
+      {/* CartDrawer */}
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </nav>
   );
 }
