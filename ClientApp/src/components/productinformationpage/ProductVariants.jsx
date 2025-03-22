@@ -9,14 +9,8 @@ import {
   Button,
 } from "@mui/material";
 import { CheckCircle, ShoppingCart } from "@mui/icons-material";
-<<<<<<< HEAD
 import { jwtDecode } from "jwt-decode";
-=======
-import { useNavigate } from "react-router-dom";
-
->>>>>>> 3c1091f (cập nhật 1 tý)
 const ProductVariants = ({ variants }) => {
-  const navigate = useNavigate();
   const [selectedColor, setSelectedColor] = useState(variants[0].color);
   const availableStorages = variants
     .filter((v) => v.color === selectedColor)
@@ -41,9 +35,11 @@ const ProductVariants = ({ variants }) => {
     (v) => v.storage === selectedStorage && v.color === selectedColor
   );
 
-
   const formatCurrency = (price) => {
-    return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
   };
 
   const handleAddToCart = async () => {
@@ -76,12 +72,16 @@ const ProductVariants = ({ variants }) => {
         try {
           const decoded = jwtDecode(token);
           const userId = parseInt(decoded.sub, 10);
-          if (!Number.isInteger(userId)) throw new Error("User ID không hợp lệ.");
-          
+          if (!Number.isInteger(userId))
+            throw new Error("User ID không hợp lệ.");
+
           cartItem.userId = String(userId);
-  
-          console.log("📦 Gửi lên API giỏ hàng:", JSON.stringify(cartItem, null, 2));
-  
+
+          console.log(
+            "📦 Gửi lên API giỏ hàng:",
+            JSON.stringify(cartItem, null, 2)
+          );
+
           const response = await fetch("https://localhost:7107/api/Cart", {
             method: "POST",
             headers: {
@@ -91,51 +91,17 @@ const ProductVariants = ({ variants }) => {
             body: JSON.stringify(cartItem),
             credentials: "include",
           });
-  
+
           if (!response.ok) {
             const errorData = await response.text();
             throw new Error(`Lỗi API giỏ hàng: ${errorData}`);
           }
-<<<<<<< HEAD
-  
+
           console.log("✅ Đã thêm vào giỏ hàng!");
         } catch (error) {
           console.error("❌ Lỗi khi giải mã token:", error);
           alert("❌ Phiên đăng nhập không hợp lệ, vui lòng đăng nhập lại!");
         }
-=======
-        );
-
-        if (!profileResponse.ok) {
-          const errorData = await profileResponse.text();
-          throw new Error(`Lỗi profile: ${errorData}`);
-        }
-
-        const profileData = await profileResponse.json();
-        cartItem.userId = String(profileData.id);
-
-        console.log(
-          "📦 Gửi lên API giỏ hàng:",
-          JSON.stringify(cartItem, null, 2)
-        );
-
-        const response = await fetch("https://localhost:7107/api/Cart", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(cartItem),
-          credentials: "include",
-        });
-
-        if (!response.ok) {
-          const errorData = await response.text();
-          throw new Error(`Lỗi API giỏ hàng: ${errorData}`);
-        }
-
-        console.log("✅ Đã thêm vào giỏ hàng!");
->>>>>>> 56099db (.)
       } else {
         const cart = JSON.parse(sessionStorage.getItem("cart")) || [];
         const existingItem = cart.find(
@@ -250,7 +216,11 @@ const ProductVariants = ({ variants }) => {
       {/* Giá tiền */}
       {selectedVariant && (
         <Box mt={3} textAlign="center">
-          <Typography variant="body1" color="textSecondary" sx={{ textDecoration: "line-through" }}>
+          <Typography
+            variant="body1"
+            color="textSecondary"
+            sx={{ textDecoration: "line-through" }}
+          >
             {formatCurrency(selectedVariant.price)}
           </Typography>
           <Typography variant="h5" fontWeight="bold" color="error">
@@ -262,11 +232,6 @@ const ProductVariants = ({ variants }) => {
       {/* Nút thao tác */}
       <Box mt={2} display="flex" gap={2}>
         <Button
-<<<<<<< HEAD
-=======
-          variant="outlined"
-          startIcon={<ShoppingCart />}
->>>>>>> 56099db (.)
           onClick={handleAddToCart}
           variant="outlined"
           sx={{
@@ -297,15 +262,10 @@ const ProductVariants = ({ variants }) => {
               backgroundColor: "#b71c1c",
             },
           }}
-          onClick={() => {
-            if (!selectedVariant) {
-              alert("⚠️ Vui lòng chọn biến thể sản phẩm trước khi mua!");
-              return;
-            }
-            navigate("/checkout", { state: { product: [selectedVariant] } });
-          }}
         >
-          {selectedVariant ? `Mua ngay - ${formatCurrency(selectedVariant.discountPrice)}` : "Mua ngay"}
+          {selectedVariant
+            ? `Mua ngay - ${formatCurrency(selectedVariant.discountPrice)}`
+            : "Mua ngay"}
         </Button>
       </Box>
     </Box>

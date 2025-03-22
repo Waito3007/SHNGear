@@ -1,30 +1,16 @@
 import React, { useState, useEffect } from "react";
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 // import { Swiper, SwiperSlide } from "swiper/react";
 // import { Navigation } from "swiper/modules";
-=======
->>>>>>> fc37651 (update lọc sản phẩm)
-=======
->>>>>>> 3c1091f (cập nhật 1 tý)
 import { useNavigate } from "react-router-dom";
-=======
-import { useNavigate, useSearchParams } from "react-router-dom";
->>>>>>> ef47b0b (Thanh tìm kiếm)
+import "swiper/css";
+import "swiper/css/navigation";
 
-const ProductGrid = ({
-  selectedCategory,
-  selectedPriceRange,
-  selectedBrand,
-}) => {
+const ProductGrid = ({ selectedCategory }) => {
   const [products, setProducts] = useState([]);
   const [brands, setBrands] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const searchQuery = searchParams.get("search") || "";
 
   useEffect(() => {
     const fetchProductsAndBrands = async () => {
@@ -41,6 +27,7 @@ const ProductGrid = ({
         const productsData = await productsRes.json();
         const brandsData = await brandsRes.json();
 
+        // Xử lý danh sách thương hiệu thành dạng object { brandId: brandName }
         const brandsMap = (brandsData.$values || brandsData || []).reduce(
           (acc, brand) => {
             acc[brand.id] = brand.name;
@@ -49,38 +36,13 @@ const ProductGrid = ({
           {}
         );
 
-        let filteredProducts = productsData.$values || productsData || [];
-
-        if (searchQuery) {
-          filteredProducts = filteredProducts.filter((product) =>
-            product.name.toLowerCase().includes(searchQuery.toLowerCase())
-          );
-        }
-
-        if (selectedCategory) {
-          filteredProducts = filteredProducts.filter(
-            (product) => product.categoryId === selectedCategory
-          );
-        }
-
-        if (selectedPriceRange && selectedPriceRange !== "all") {
-          const [minPrice, maxPrice] = selectedPriceRange
-            .split("-")
-            .map(Number);
-          filteredProducts = filteredProducts.filter((product) => {
-            const price =
-              product.variants?.[0]?.discountPrice ||
-              product.variants?.[0]?.price ||
-              0;
-            return price >= minPrice && price <= maxPrice;
-          });
-        }
-
-        if (selectedBrand) {
-          filteredProducts = filteredProducts.filter(
-            (product) => product.brandId === parseInt(selectedBrand)
-          );
-        }
+        // Lọc sản phẩm theo selectedCategory (nếu API không hỗ trợ query)
+        const allProducts = productsData.$values || productsData || [];
+        const filteredProducts = selectedCategory
+          ? allProducts.filter(
+              (product) => product.categoryId === selectedCategory
+            )
+          : allProducts;
 
         const processedProducts = filteredProducts.map((product) => {
           const variant = product.variants?.[0] || {};
@@ -122,7 +84,7 @@ const ProductGrid = ({
     };
 
     fetchProductsAndBrands();
-  }, [selectedCategory, selectedPriceRange, selectedBrand, searchQuery]);
+  }, [selectedCategory]); // Mỗi khi selectedCategory thay đổi, gọi API lại
 
   if (loading) {
     return <div className="text-center py-6">Đang tải sản phẩm...</div>;
@@ -137,7 +99,7 @@ const ProductGrid = ({
       <div className="max-w-[1200px] w-full px-4 bg-white rounded-lg shadow-lg p-6">
         {products.length === 0 ? (
           <p className="text-center text-gray-500 text-lg mt-12">
-            Không có sản phẩm phù hợp
+            Hiện không có sản phẩm
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

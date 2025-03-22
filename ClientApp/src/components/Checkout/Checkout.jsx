@@ -1,11 +1,4 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
 import React, { useEffect, useState } from "react";
-import { Box, Typography, TextField, Button, List, ListItem, ListItemText } from "@mui/material";
-=======
-=======
->>>>>>> c45db04 (rác)
-import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -14,12 +7,7 @@ import {
   List,
   ListItem,
   ListItemText,
-  Avatar,
 } from "@mui/material";
-<<<<<<< HEAD
->>>>>>> 3c1091f (cập nhật 1 tý)
-=======
->>>>>>> c45db04 (rác)
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
@@ -27,20 +15,7 @@ import { jwtDecode } from "jwt-decode";
 const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
-<<<<<<< HEAD
-<<<<<<< HEAD
   const { selectedItems, totalAmount, voucherCode } = location.state || {};
-=======
-=======
->>>>>>> c45db04 (rác)
-  const selectedItems = location.state?.selectedItems || []; // Kiểm tra nếu undefined
-  const totalAmount = location.state?.totalAmount || 0;
-  const voucherCode = location.state?.voucherCode || null;
-
-<<<<<<< HEAD
->>>>>>> 3c1091f (cập nhật 1 tý)
-=======
->>>>>>> c45db04 (rác)
   const [userId, setUserId] = useState(null);
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -77,23 +52,12 @@ const Checkout = () => {
 
   const fetchAddresses = async (userId) => {
     try {
-<<<<<<< HEAD
-<<<<<<< HEAD
       console.log(`Fetching addresses for userId: ${userId}`);
-      const response = await axios.get(`https://localhost:7107/api/address/user/${userId}`);
+      const response = await axios.get(
+        `https://localhost:7107/api/address/user/${userId}`
+      );
       console.log("Addresses fetched:", response.data);
       setAddresses(response.data);
-=======
-=======
->>>>>>> c45db04 (rác)
-      const response = await axios.get(
-        `https://localhost:7107/api/Users/${userId}/address`
-      );
-      setAddress(response.data.address || "Chưa có địa chỉ");
-<<<<<<< HEAD
->>>>>>> 3c1091f (cập nhật 1 tý)
-=======
->>>>>>> c45db04 (rác)
     } catch (error) {
       console.error("Lỗi khi lấy địa chỉ:", error);
     }
@@ -113,8 +77,6 @@ const Checkout = () => {
   };
 
   const handlePlaceOrder = async () => {
-<<<<<<< HEAD
-<<<<<<< HEAD
     if (userId && !selectedAddress) {
       alert("Vui lòng chọn địa chỉ giao hàng.");
       return;
@@ -125,16 +87,23 @@ const Checkout = () => {
     if (!userId && !addressId) {
       try {
         console.log("Adding guest address:", guestAddress);
-        const response = await axios.post("https://localhost:7107/api/address/add", {
-          userId: null, // Để null cho khách chưa đăng nhập
-          ...guestAddress
-        });
+        const response = await axios.post(
+          "https://localhost:7107/api/address/add",
+          {
+            userId: null, // Để null cho khách chưa đăng nhập
+            ...guestAddress,
+          }
+        );
         console.log("Guest address added:", response.data);
         addressId = response.data.addressId;
       } catch (error) {
         console.error("Lỗi khi thêm địa chỉ:", error);
         console.error("Phản hồi lỗi từ API:", error.response?.data);
-        if (error.response && error.response.data && error.response.data.errors) {
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.errors
+        ) {
           console.error("Chi tiết lỗi xác thực:", error.response.data.errors);
         }
         alert("Lỗi khi thêm địa chỉ, vui lòng thử lại.");
@@ -153,30 +122,6 @@ const Checkout = () => {
         productVariantId: item.productVariantId,
         quantity: item.quantity,
         price: item.productVariant.discountPrice,
-=======
-=======
->>>>>>> c45db04 (rác)
-    if (selectedItems.length === 0) {
-      alert("Không có sản phẩm nào để đặt hàng.");
-      return;
-    }
-
-    const orderDto = {
-      UserId: userId,
-      OrderDate: new Date(),
-      TotalAmount: totalAmount,
-      OrderStatus: "Pending",
-      AddressId: isLoggedIn ? address.id : null,
-      GuestAddress: isLoggedIn ? null : guestAddress,
-      PaymentMethodId: 1, // Giả sử phương thức thanh toán là 1
-      OrderItems: selectedItems.map((item) => ({
-        ProductVariantId: item.productVariantId,
-        Quantity: item.quantity,
-        Price: item.productVariant?.discountPrice || 0,
-<<<<<<< HEAD
->>>>>>> 3c1091f (cập nhật 1 tý)
-=======
->>>>>>> c45db04 (rác)
       })),
       voucherId: voucherId ? voucherId : null,
     };
@@ -184,21 +129,11 @@ const Checkout = () => {
     console.log("Đơn hàng:", orderDto);
 
     try {
-<<<<<<< HEAD
-<<<<<<< HEAD
-      const response = await axios.post("https://localhost:7107/api/orders", orderDto);
-      console.log("Order created:", response.data);
-=======
-=======
->>>>>>> c45db04 (rác)
       const response = await axios.post(
         "https://localhost:7107/api/orders",
         orderDto
       );
-<<<<<<< HEAD
->>>>>>> 3c1091f (cập nhật 1 tý)
-=======
->>>>>>> c45db04 (rác)
+      console.log("Order created:", response.data);
       alert("Đơn hàng đã được tạo thành công!");
       navigate("/order-success", { state: { orderId: response.data.orderId } });
     } catch (error) {
@@ -213,9 +148,9 @@ const Checkout = () => {
 
   return (
     <Box sx={{ p: 4 }}>
-<<<<<<< HEAD
-<<<<<<< HEAD
-      <Typography variant="h4" mb={4}>Đặt hàng</Typography>
+      <Typography variant="h4" mb={4}>
+        Đặt hàng
+      </Typography>
 
       {userId ? (
         <>
@@ -244,7 +179,9 @@ const Checkout = () => {
             variant="outlined"
             fullWidth
             value={guestAddress.fullName}
-            onChange={(e) => setGuestAddress({ ...guestAddress, fullName: e.target.value })}
+            onChange={(e) =>
+              setGuestAddress({ ...guestAddress, fullName: e.target.value })
+            }
             sx={{ mb: 2 }}
           />
           <TextField
@@ -252,7 +189,9 @@ const Checkout = () => {
             variant="outlined"
             fullWidth
             value={guestAddress.phoneNumber}
-            onChange={(e) => setGuestAddress({ ...guestAddress, phoneNumber: e.target.value })}
+            onChange={(e) =>
+              setGuestAddress({ ...guestAddress, phoneNumber: e.target.value })
+            }
             sx={{ mb: 2 }}
           />
           <TextField
@@ -260,7 +199,9 @@ const Checkout = () => {
             variant="outlined"
             fullWidth
             value={guestAddress.addressLine1}
-            onChange={(e) => setGuestAddress({ ...guestAddress, addressLine1: e.target.value })}
+            onChange={(e) =>
+              setGuestAddress({ ...guestAddress, addressLine1: e.target.value })
+            }
             sx={{ mb: 2 }}
           />
           <TextField
@@ -268,7 +209,9 @@ const Checkout = () => {
             variant="outlined"
             fullWidth
             value={guestAddress.addressLine2}
-            onChange={(e) => setGuestAddress({ ...guestAddress, addressLine2: e.target.value })}
+            onChange={(e) =>
+              setGuestAddress({ ...guestAddress, addressLine2: e.target.value })
+            }
             sx={{ mb: 2 }}
           />
           <TextField
@@ -276,7 +219,9 @@ const Checkout = () => {
             variant="outlined"
             fullWidth
             value={guestAddress.city}
-            onChange={(e) => setGuestAddress({ ...guestAddress, city: e.target.value })}
+            onChange={(e) =>
+              setGuestAddress({ ...guestAddress, city: e.target.value })
+            }
             sx={{ mb: 2 }}
           />
           <TextField
@@ -284,7 +229,9 @@ const Checkout = () => {
             variant="outlined"
             fullWidth
             value={guestAddress.state}
-            onChange={(e) => setGuestAddress({ ...guestAddress, state: e.target.value })}
+            onChange={(e) =>
+              setGuestAddress({ ...guestAddress, state: e.target.value })
+            }
             sx={{ mb: 2 }}
           />
           <TextField
@@ -292,7 +239,9 @@ const Checkout = () => {
             variant="outlined"
             fullWidth
             value={guestAddress.zipCode}
-            onChange={(e) => setGuestAddress({ ...guestAddress, zipCode: e.target.value })}
+            onChange={(e) =>
+              setGuestAddress({ ...guestAddress, zipCode: e.target.value })
+            }
             sx={{ mb: 2 }}
           />
           <TextField
@@ -300,106 +249,40 @@ const Checkout = () => {
             variant="outlined"
             fullWidth
             value={guestAddress.country}
-            onChange={(e) => setGuestAddress({ ...guestAddress, country: e.target.value })}
+            onChange={(e) =>
+              setGuestAddress({ ...guestAddress, country: e.target.value })
+            }
             sx={{ mb: 2 }}
           />
         </>
       )}
 
-      <Typography variant="h6" mt={4}>Thông tin đơn hàng</Typography>
+      <Typography variant="h6" mt={4}>
+        Thông tin đơn hàng
+      </Typography>
       <List>
         {selectedItems.map((item) => (
           <ListItem key={item.productVariantId}>
             <ListItemText
               primary={`${item.productVariant?.color} - ${item.productVariant?.storage}`}
-              secondary={`Số lượng: ${item.quantity} - ${item.productVariant?.discountPrice * item.quantity} VND`}
+              secondary={`Số lượng: ${item.quantity} - ${
+                item.productVariant?.discountPrice * item.quantity
+              } VND`}
             />
           </ListItem>
         ))}
       </List>
 
-      <Typography variant="h6" mt={2}>Tổng tiền: {totalAmount.toLocaleString()} VND</Typography>
-
-=======
-=======
->>>>>>> c45db04 (rác)
-      <Typography variant="h4" mb={4}>
-        Đặt hàng
-      </Typography>
-      {selectedItems.length > 0 ? (
-        <List>
-          {selectedItems.map((item) => (
-            <ListItem key={item.productVariantId}>
-              <Avatar
-                src={
-                  item.productImage ||
-                  "https://www.apple.com/v/iphone/home/cb/images/meta/iphone__kqge21l9n26q_og.png"
-                }
-                alt={item.productName}
-                sx={{
-                  width: 56,
-                  height: 80,
-                  border: "1px solid black",
-                  borderRadius: 2,
-                }}
-              />
-              <ListItemText
-                primary={`${item.productVariant?.color || "Không rõ"} - ${
-                  item.productVariant?.storage || "Không rõ"
-                }`}
-                secondary={`Số lượng: ${item.quantity} - ${
-                  (item.productVariant?.discountPrice || 0) * item.quantity
-                } VND`}
-              />
-            </ListItem>
-          ))}
-        </List>
-      ) : (
-        <Typography variant="h6" color="error">
-          ⚠️ Không có sản phẩm nào trong giỏ hàng!
-        </Typography>
-      )}
-
-      <Typography variant="h6" mt={4}>
+      <Typography variant="h6" mt={2}>
         Tổng tiền: {totalAmount.toLocaleString()} VND
       </Typography>
 
-      {isLoggedIn ? (
-        <Box mt={4}>
-          <Typography variant="h6">Địa chỉ giao hàng</Typography>
-          <Typography>{address || "Chưa có địa chỉ"}</Typography>
-        </Box>
-      ) : (
-        <Box mt={4}>
-          <Typography variant="h6">Địa chỉ giao hàng (Khách)</Typography>
-          <TextField
-            label="Địa chỉ"
-            variant="outlined"
-            value={guestAddress}
-            onChange={(e) => setGuestAddress(e.target.value)}
-            fullWidth
-          />
-        </Box>
-      )}
-
-<<<<<<< HEAD
->>>>>>> 3c1091f (cập nhật 1 tý)
-=======
->>>>>>> c45db04 (rác)
       <Button
         variant="contained"
         color="primary"
         fullWidth
         sx={{ mt: 4 }}
         onClick={handlePlaceOrder}
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-        disabled={selectedItems.length === 0}
->>>>>>> 3c1091f (cập nhật 1 tý)
-=======
-        disabled={selectedItems.length === 0}
->>>>>>> c45db04 (rác)
       >
         Đặt hàng ngay
       </Button>
