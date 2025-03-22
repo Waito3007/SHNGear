@@ -15,9 +15,11 @@ const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
   const [avatarUrl, setAvatarUrl] = useState(localStorage.getItem("AvatarUrl"));
   const [anchorEl, setAnchorEl] = useState(null);
+  const [searchQuery, setSearchQuery] = useState(""); // State cho ô tìm kiếm
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const [isCartOpen, setIsCartOpen] = useState(false);
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -48,6 +50,28 @@ const Navbar = () => {
     setIsLoggedIn(false);
     setAvatarUrl(null);
     setAnchorEl(null);
+  };
+
+  // Xử lý tìm kiếm sản phẩm hoặc danh mục
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      const matchedCategory = categories.find((category) =>
+        category.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      if (matchedCategory) {
+        navigate(`/ProductList?categoryId=${matchedCategory.id}`);
+      } else {
+        navigate(`/ProductList?search=${encodeURIComponent(searchQuery)}`);
+      }
+    }
+  };
+
+  // Xử lý khi nhấn Enter trong ô tìm kiếm
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
   };
 
   return (
@@ -96,10 +120,17 @@ const Navbar = () => {
         <div className="search-bar">
           <input
             type="text"
-            placeholder="Tìm kiếm sản phẩm..."
+            placeholder="Tìm kiếm sản phẩm hoặc danh mục..."
             className="search-input"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleKeyPress} // Nhấn Enter để tìm kiếm
           />
-          <button type="submit" className="search-button">
+          <button
+            type="submit"
+            className="search-button"
+            onClick={handleSearch}
+          >
             <Search />
           </button>
         </div>
