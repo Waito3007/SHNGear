@@ -100,14 +100,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Sử dụng CORS
-app.UseCors("AllowFrontend");
 
-app.UseCors("AllowAll"); // Thêm dòng này
 
-app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()); // Bật CORS để React gọi API
 
 app.UseRouting();
+
+// Sử dụng CORS
+app.UseCors("AllowFrontend");
 // 🔹 Thêm Authentication & Authorization (QUAN TRỌNG)
 app.UseAuthentication();  // Xác thực JWT Token từ request
 app.UseAuthorization();   //Kiểm tra quyền truy cập của user

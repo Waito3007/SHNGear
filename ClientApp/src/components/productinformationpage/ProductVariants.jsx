@@ -9,7 +9,7 @@ import {
   Button,
 } from "@mui/material";
 import { CheckCircle, ShoppingCart } from "@mui/icons-material";
-
+import { jwtDecode } from "jwt-decode";
 const ProductVariants = ({ variants }) => {
   const [selectedColor, setSelectedColor] = useState(variants[0].color);
   const availableStorages = variants
@@ -65,41 +65,35 @@ const ProductVariants = ({ variants }) => {
       };
   
       if (token) {
-        console.log("🔍 Đang lấy profile...");
-        const profileResponse = await fetch(
-          "https://localhost:7107/api/Auth/profile",
-          {
-            method: "GET",
-            headers: { Authorization: `Bearer ${token}` },
+        try {
+          const decoded = jwtDecode(token);
+          const userId = parseInt(decoded.sub, 10);
+          if (!Number.isInteger(userId)) throw new Error("User ID không hợp lệ.");
+          
+          cartItem.userId = String(userId);
+  
+          console.log("📦 Gửi lên API giỏ hàng:", JSON.stringify(cartItem, null, 2));
+  
+          const response = await fetch("https://localhost:7107/api/Cart", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(cartItem),
+            credentials: "include",
+          });
+  
+          if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(`Lỗi API giỏ hàng: ${errorData}`);
           }
-        );
   
-        if (!profileResponse.ok) {
-          const errorData = await profileResponse.text();
-          throw new Error(`Lỗi profile: ${errorData}`);
+          console.log("✅ Đã thêm vào giỏ hàng!");
+        } catch (error) {
+          console.error("❌ Lỗi khi giải mã token:", error);
+          alert("❌ Phiên đăng nhập không hợp lệ, vui lòng đăng nhập lại!");
         }
-  
-        const profileData = await profileResponse.json();
-        cartItem.userId = String(profileData.id);
-  
-        console.log("📦 Gửi lên API giỏ hàng:", JSON.stringify(cartItem, null, 2));
-  
-        const response = await fetch("https://localhost:7107/api/Cart", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(cartItem),
-          credentials: "include",
-        });
-  
-        if (!response.ok) {
-          const errorData = await response.text();
-          throw new Error(`Lỗi API giỏ hàng: ${errorData}`);
-        }
-  
-        console.log("✅ Đã thêm vào giỏ hàng!");
       } else {
         const cart = JSON.parse(sessionStorage.getItem("cart")) || [];
         const existingItem = cart.find(
@@ -122,7 +116,6 @@ const ProductVariants = ({ variants }) => {
       alert(`❌ Không thể thêm vào giỏ hàng: ${error.message}`);
     }
   };
-
   return (
     <Box mt={4}>
       {/* Chọn màu sắc trước */}
