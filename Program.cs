@@ -79,11 +79,11 @@ builder.Services.AddHttpContextAccessor();
 var app = builder.Build();
 
 
-app.UseStaticFiles();
 
 app.UseRouting();
 app.UseAuthorization();
 app.MapControllers();
+app.UseStaticFiles(); // Cho phép truy cập file tĩnh từ wwwroot
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

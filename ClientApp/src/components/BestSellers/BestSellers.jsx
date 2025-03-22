@@ -48,7 +48,7 @@ const DiscountProductSlider = () => {
 
         // Tìm ID của danh mục "Điện Thoại"
         const phoneCategory = categoriesArray.find(
-          (cat) => cat.name === "Điện thoại"
+          (cat) => cat.name === "Điện Thoại"
         );
         if (!phoneCategory)
           throw new Error("Không tìm thấy danh mục 'Điện Thoại'");
@@ -115,7 +115,6 @@ const DiscountProductSlider = () => {
         <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
           Mua đúng quà - Điện thoại "Hiền Hòa"
         </h2>
-
         <Swiper
           modules={[Navigation]}
           navigation
@@ -135,14 +134,20 @@ const DiscountProductSlider = () => {
                 onClick={() => navigate(`/product/${product.id}`)}
               >
                 <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-40 object-contain mb-3 hover:scale-110"
+                    src={
+                        product.image?.startsWith("http")
+                            ? product.image // Ảnh từ API (URL đầy đủ)
+                            : `https://localhost:7107/${product.image}` // Ảnh local từ wwwroot
+                    }
+                    alt={product.name}
+                    className="w-full h-40 object-contain mb-3 hover:scale-110"
+                    onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/150"; }}
                 />
+
                 <div className="text-gray-700 text-sm space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-500 line-through">
-                      {product.oldPrice.toLocaleString()} đ
+                      {product.oldPrice.toLocaleString()} 
                     </span>
                     <span className="text-red-500 text-sm">
                       {product.discount}
