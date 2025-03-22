@@ -48,7 +48,7 @@ const DiscountProductSlider = () => {
 
         // Tìm ID của danh mục "Điện Thoại"
         const phoneCategory = categoriesArray.find(
-          (cat) => cat.name === "Điện Thoại"
+          (cat) => cat.name === "Điện thoại"
         );
         if (!phoneCategory)
           throw new Error("Không tìm thấy danh mục 'Điện Thoại'");

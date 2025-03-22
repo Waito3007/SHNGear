@@ -4,8 +4,8 @@ import Notification from "../../components/NotificationBar/notification";
 import HeroBanner from "../../components/HeroBanner/HeroBanner";
 import FeaturedCategories from "../../components/FeaturedCategories/FeaturedCategories";
 import BestSellers from "../../components/BestSellers/BestSellers";
-import SpecialOffers from "../../components/SpecialOffers/SpecialOffers";
-import ServiceSlider from "../../components/TechNews/ServiceSlider";
+import DiscountProductSlider  from "../../components/SpecialOffers/SpecialOffers";
+import ServiceSlider from "../../components/ServiceSlider/ServiceSlider";
 import Commitment from "../../components/Commitment/Commitment";
 import HeroSlider from "../../components/HeroSlider/HeroSlider";
 import Footer from "../../components/Footer/Footer";
@@ -20,8 +20,11 @@ const Home = () => {
       <HeroSlider />
       <FeaturedCategories />
       <BestSellers />
+      {/* <DiscountProductSlider categoryName="Laptop" />
+      <DiscountProductSlider categoryName="Điện thoại" />
+      <DiscountProductSlider categoryName="Tai nghe" />  */}
       <ServiceSlider />
-      <SpecialOffers />
+           
       <Commitment /> {/* Thêm component Commitment vào đây */}
       <Footer />
     </div>

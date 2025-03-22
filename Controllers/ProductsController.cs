@@ -228,5 +228,39 @@ public class ProductsController : ControllerBase
         return Ok(products);
     }
 
+    [HttpGet("low-stock")]
+    public async Task<ActionResult<int>> GetLowStockProducts()
+    {
+        int lowStockThreshold = 20;
+
+        var lowStockProducts = await _context.Products
+            .Where(p => p.Variants.Sum(v => v.StockQuantity) <= lowStockThreshold) // Sửa logic ở đây
+            .CountAsync();
+
+        return Ok(lowStockProducts);
+    }
+
+    [HttpGet("by-category")]
+    public async Task<ActionResult> GetProductCountByCategory()
+    {
+        var categoryCounts = await _context.Products
+            .GroupBy(p => p.Category.Name)
+            .Select(g => new { Category = g.Key, Count = g.Count() })
+            .ToListAsync();
+
+        return Ok(categoryCounts);
+    }
+
+    [HttpGet("by-brand")]
+    public async Task<ActionResult> GetProductCountByBrand()
+    {
+        var topBrand = await _context.Products
+        .GroupBy(p => p.Brand.Name)
+        .Select(g => new { Brand = g.Key, Count = g.Count() })
+        .OrderByDescending(g => g.Count) // Sắp xếp giảm dần theo số lượng
+        .FirstOrDefaultAsync(); // Lấy thương hiệu có số lượng cao nhất
+
+        return Ok(topBrand);
+    }
 
 }
