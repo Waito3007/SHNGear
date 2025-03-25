@@ -75,7 +75,7 @@ builder.Services.AddControllersWithViews()
 
 
 builder.Services.AddHttpContextAccessor();
-
+builder.Services.AddScoped<MoMoPaymentService>();
 var app = builder.Build();
 
 

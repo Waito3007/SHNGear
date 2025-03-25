@@ -81,8 +81,6 @@ namespace SHN_Gear.Controllers
 
             return Ok(new { message = "OTP đã được gửi" });
         }
-
-        // API yêu cầu đăng nhập (Ví dụ lấy thông tin user)
         // 🔹 API lấy thông tin người dùng đang đăng nhập
         [HttpGet("profile")]
         [Authorize] // Bắt buộc đăng nhập

@@ -313,6 +313,21 @@ namespace SHN_Gear.Migrations
                     b.Property<int?>("AddressId")
                         .HasColumnType("int");
 
+                    b.Property<string>("MoMoOrderId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MoMoPayUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MoMoRequestId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MoMoResponse")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MoMoTransId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
 
@@ -329,6 +344,9 @@ namespace SHN_Gear.Migrations
                     b.Property<int?>("UserId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("VoucherId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AddressId");
@@ -336,6 +354,8 @@ namespace SHN_Gear.Migrations
                     b.HasIndex("PaymentMethodId");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("VoucherId");
 
                     b.ToTable("Orders");
                 });
@@ -814,11 +834,17 @@ namespace SHN_Gear.Migrations
                         .WithMany()
                         .HasForeignKey("UserId");
 
+                    b.HasOne("SHN_Gear.Models.Voucher", "Voucher")
+                        .WithMany()
+                        .HasForeignKey("VoucherId");
+
                     b.Navigation("Address");
 
                     b.Navigation("PaymentMethod");
 
                     b.Navigation("User");
+
+                    b.Navigation("Voucher");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.OrderItem", b =>
@@ -860,7 +886,7 @@ namespace SHN_Gear.Migrations
                         .IsRequired();
 
                     b.HasOne("SHN_Gear.Models.Category", "Category")
-                        .WithMany()
+                        .WithMany("Products")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -949,6 +975,11 @@ namespace SHN_Gear.Migrations
             modelBuilder.Entity("SHN_Gear.Models.Cart", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.Category", b =>
+                {
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Order", b =>
