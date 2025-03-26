@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
-import { useNavigate } from "react-router-dom"; // Hook điều hướng
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -13,7 +12,6 @@ const FeaturedCategories = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate(); // Hook điều hướng
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -71,8 +69,7 @@ const FeaturedCategories = () => {
           {categories.map((category) => (
             <SwiperSlide
               key={category.id}
-              className="flex justify-center transform hover:scale-105 transition-all duration-300 cursor-pointer"
-              onClick={() => navigate(`/productslist`)} // Điều hướng khi click
+              className="flex justify-center transform hover:scale-105 transition-all duration-300"
             >
               <CategoryLarge
                 id={category.id}
