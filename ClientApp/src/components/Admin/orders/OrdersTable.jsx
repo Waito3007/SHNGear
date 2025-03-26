@@ -13,6 +13,8 @@ const OrdersTable = () => {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [newStatus, setNewStatus] = useState("");
     const [openModal, setOpenModal] = useState(false);
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
     const ordersPerPage = 5;
 
     const getOrderStatusLabel = (status) => {
@@ -126,6 +128,31 @@ const OrdersTable = () => {
         }
     };
 
+    const handleDateFilter = () => {
+        const filtered = orders.filter(order => {
+            const orderDate = new Date(order.orderDate);
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            return orderDate >= start && orderDate <= end;
+        });
+        setFilteredOrders(filtered);
+    };
+
+    const handleTodayOrders = () => {
+        const today = new Date().toISOString().split("T")[0]; // Lấy ngày hôm nay
+        const filtered = orders.filter((order) => {
+            const orderDate = new Date(order.orderDate).toISOString().split("T")[0];
+            return orderDate === today;
+        });
+        setFilteredOrders(filtered);
+    };
+
+    const handleResetFilters = () => {
+        setStartDate("");
+        setEndDate("");
+        setFilteredOrders(orders);
+    };
+
     const indexOfLastOrder = currentPage * ordersPerPage;
     const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
     const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
@@ -163,6 +190,47 @@ const OrdersTable = () => {
                         <option value="Shipped">Đang vận chuyển</option>
                         <option value="Delivered">Đã xong</option>
                     </select>
+                </div>
+            </div>
+
+            <div className="flex flex-col space-y-4 mb-4">
+                <div>
+                    <label className="text-gray-400 ml-2">Từ ngày:   </label>
+                    <input
+                        type="date"
+                        className="bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                    />
+                </div>
+                <div>
+                    <label className="text-gray-400">Đến ngày:</label>
+                    <input
+                        type="date"
+                        className="bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                    />
+                </div>
+                <div className="flex space-x-4">
+                    <button
+                        className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+                        onClick={handleDateFilter}
+                    >
+                        Lọc
+                    </button>
+                    <button
+                        className="bg-green-500 text-white px-4 py-2 rounded-lg"
+                        onClick={handleTodayOrders}
+                    >
+                        Đơn hàng hôm nay
+                    </button>
+                    <button
+                        className="bg-gray-500 text-white px-4 py-2 rounded-lg"
+                        onClick={handleResetFilters}
+                    >
+                        Reset
+                    </button>
                 </div>
             </div>
 
@@ -244,23 +312,23 @@ const OrdersTable = () => {
                 </table>
             </div>
 
-            <div className="flex justify-between items-center mt-4">
+            <div className="flex justify-between items-start mt-4">
                 <button
                     className="bg-gray-700 text-white px-4 py-2 rounded-lg"
                     disabled={currentPage === 1}
                     onClick={() => handlePageChange(currentPage - 1)}
                 >
-                    Previous
+                    Trang trước
                 </button>
                 <span className="text-gray-400">
-                    Page {currentPage} of {totalPages}
+                    Trang {currentPage} trên {totalPages}
                 </span>
                 <button
                     className="bg-gray-700 text-white px-4 py-2 rounded-lg"
                     disabled={currentPage === totalPages}
                     onClick={() => handlePageChange(currentPage + 1)}
                 >
-                    Next
+                    Trang sau
                 </button>
             </div>
 
