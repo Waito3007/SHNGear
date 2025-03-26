@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useSearchParams } from "react-router-dom"; // Import useSearchParams
+import React, { useState } from "react";
+import { useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar/Navbar";
 import CategoryMenu from "../components/List/CategoryMenu";
 import FilterSection from "../components/List/FilterSection";
@@ -10,59 +9,27 @@ import Footer from "../components/Footer/Footer";
 
 const ProductList = () => {
   const location = useLocation();
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-  const navigate = useNavigate();
+  const queryParams = new URLSearchParams(location.search);
+  const categoryId = queryParams.get("categoryId");
 
-  // Lấy categoryId từ URL
-  const params = new URLSearchParams(location.search);
-  const categoryId = params.get("categoryId");
-
-  // Thêm state để quản lý danh mục được chọn
-  const [selectedCategory, setSelectedCategory] = useState(
-    location.state?.selectedCategory || null
-  );
-
-  useEffect(() => {
-    if (!categoryId) return;
-
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`https://localhost:7107/api/products?categoryId=${categoryId}`);
-        if (!response.ok) throw new Error("Không thể tải sản phẩm");
-        const data = await response.json();
-        setProducts(data.$values || data || []);
-      } catch (error) {
-        setError("Không thể tải sản phẩm: " + error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, [categoryId]);
-
-  useEffect(() => {
-    // Khi thay đổi danh mục, điều hướng để cập nhật state trên URL
-    if (selectedCategory) {
-      navigate("/ProductList", { state: { selectedCategory } });
-    }
-  }, [selectedCategory, navigate]);
-
-  // Khi chọn danh mục từ menu
-  const handleCategorySelect = (categoryId) => {
-    setSelectedCategory(categoryId);
-  };
+  // Quản lý bộ lọc
+  const [selectedPriceRange, setSelectedPriceRange] = useState("all");
+  const [selectedBrand, setSelectedBrand] = useState(null);
 
   return (
     <div style={styles.productListPage}>
       <Navbar />
-      <CategoryMenu onSelectCategory={handleCategorySelect} />
+      <CategoryMenu />
       <div style={styles.mainContainer}>
-        <FilterSection />
-        <ProductGrid selectedCategory={selectedCategory} />
+        <FilterSection
+          onPriceChange={setSelectedPriceRange}
+          onBrandChange={setSelectedBrand}
+        />
+        <ProductGrid
+          selectedCategory={categoryId ? parseInt(categoryId) : null}
+          selectedPriceRange={selectedPriceRange}
+          selectedBrand={selectedBrand}
+        />
       </div>
       <Commitment />
       <Footer />
