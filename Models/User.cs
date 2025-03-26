@@ -13,6 +13,7 @@ namespace SHN_Gear.Models
         public int Points { get; set; } = 0;
         public string Password { get; set; } = string.Empty;
 
+
         // OTP Login
         public string? OtpCode { get; set; }  // Có thể null
         public DateTime? OtpExpiry { get; set; }  // Có thể null

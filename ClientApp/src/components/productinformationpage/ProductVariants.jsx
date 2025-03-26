@@ -260,11 +260,6 @@ const ProductVariants = ({ variants }) => {
             color="textSecondary"
             sx={{ textDecoration: "line-through" }}
           >
-          <Typography
-            variant="body1"
-            color="textSecondary"
-            sx={{ textDecoration: "line-through" }}
-          >
             {formatCurrency(selectedVariant.price)}
           </Typography>
           <Typography variant="h5" fontWeight="bold" color="error">

@@ -17,6 +17,7 @@ function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -87,10 +88,7 @@ function Navbar() {
         />
 
         <div className="menu-container" ref={dropdownRef}>
-          <button
-            className="menu-button"
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          >
+          {/* Dropdown danh mục */}
           <button
             className="menu-button"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -162,23 +160,6 @@ function Navbar() {
                 <MenuItem onClick={() => navigate("/address")}>
                   Sổ địa chỉ nhận hàng
                 </MenuItem>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={() => setAnchorEl(null)}
-              >
-                <MenuItem onClick={() => navigate("/profile")}>
-                  Thông tin cá nhân
-                </MenuItem>
-                <MenuItem onClick={() => navigate("/orders")}>
-                  Đơn hàng của tôi
-                </MenuItem>
-                <MenuItem onClick={() => navigate("/loyalty")}>
-                  Khách hàng thân thiết
-                </MenuItem>
-                <MenuItem onClick={() => navigate("/address")}>
-                  Sổ địa chỉ nhận hàng
-                </MenuItem>
                 <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
               </Menu>
             </>
@@ -188,16 +169,8 @@ function Navbar() {
               className="avatar-icon"
               onClick={() => setIsAuthModalOpen(true)}
             />
-            <User
-              size={35}
-              className="avatar-icon"
-              onClick={() => setIsAuthModalOpen(true)}
-            />
           )}
-          <button
-            className="cart-button"
-            onClick={() => navigate("/shoppingcart")}
-          >
+          <button className="cart-button"onClick={() => setIsCartOpen(true)}>
             <ShoppingCart size={22} />
             Giỏ Hàng
           </button>
@@ -205,10 +178,7 @@ function Navbar() {
       </div>
 
       {/* Modal đăng nhập */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-      />
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </nav>
   );
 }

@@ -78,6 +78,33 @@ namespace SHN_Gear.Controllers
             return Ok(user);
         }
 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> AdminUpdateUser(int id, [FromBody] AdminUserUpdateDto userUpdateDto)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound("Người dùng không tồn tại.");
+            }
+
+            var role = await _context.Roles.FindAsync(userUpdateDto.RoleId);
+            if (role == null)
+            {
+                return BadRequest("Vai trò không hợp lệ.");
+            }
+
+            // Chỉ cập nhật các trường được phép thay đổi
+            user.FullName = userUpdateDto.FullName;
+            user.Gender = userUpdateDto.Gender;
+            user.DateOfBirth = userUpdateDto.DateOfBirth;
+            user.RoleId = userUpdateDto.RoleId; // Admin có thể cập nhật RoleId
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = "Cập nhật thông tin người dùng thành công." });
+        }
+
+
         // Cập nhật vai trò của người dùng
         [HttpPut("{id}/role")]
         public async Task<IActionResult> UpdateUserRole(int id, [FromBody] RoleUpdateDto roleUpdateDto)

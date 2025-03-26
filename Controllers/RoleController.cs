@@ -39,6 +39,27 @@ namespace SHN_Gear.Controllers
             return Ok(role);
         }
 
+        // Chỉnh sửa vai trò
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateRole(int id, [FromBody] Role updatedRole)
+        {
+            if (string.IsNullOrWhiteSpace(updatedRole.Name))
+            {
+                return BadRequest("Tên vai trò không được để trống.");
+            }
+
+            var existingRole = await _context.Roles.FirstOrDefaultAsync(r => r.Id == id);
+            if (existingRole == null)
+            {
+                return NotFound("Vai trò không tồn tại.");
+            }
+
+            existingRole.Name = updatedRole.Name;
+            await _context.SaveChangesAsync();
+
+            return Ok(existingRole);
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRole(int id)
         {

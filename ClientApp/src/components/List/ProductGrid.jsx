@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useNavigate, useSearchParams } from "react-router-dom";
 
-const ProductGrid = ({
-  selectedCategory,
-  selectedPriceRange,
-  selectedBrand,
-}) => {
 const ProductGrid = ({
   selectedCategory,
   selectedPriceRange,
@@ -17,8 +11,6 @@ const ProductGrid = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const searchQuery = searchParams.get("search") || "";
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
 
@@ -72,9 +64,10 @@ const ProductGrid = ({
           });
         }
 
-        if (selectedBrand) {
-          filteredProducts = filteredProducts.filter(
-            (product) => product.brandId === parseInt(selectedBrand)
+        if (selectedBrand && selectedBrand.length > 0) {
+          const selectedBrandsArray = selectedBrand.map(Number); // Chuyển ID thương hiệu thành số
+          filteredProducts = filteredProducts.filter((product) =>
+            selectedBrandsArray.includes(product.brandId)
           );
         }
 
@@ -119,7 +112,6 @@ const ProductGrid = ({
 
     fetchProductsAndBrands();
   }, [selectedCategory, selectedPriceRange, selectedBrand, searchQuery]);
-  }, [selectedCategory, selectedPriceRange, selectedBrand, searchQuery]);
 
   if (loading) {
     return <div className="text-center py-6">Đang tải sản phẩm...</div>;
@@ -134,7 +126,6 @@ const ProductGrid = ({
       <div className="max-w-[1200px] w-full px-4 bg-white rounded-lg shadow-lg p-6">
         {products.length === 0 ? (
           <p className="text-center text-gray-500 text-lg mt-12">
-            Không có sản phẩm phù hợp
             Không có sản phẩm phù hợp
           </p>
         ) : (
@@ -155,7 +146,6 @@ const ProductGrid = ({
     className="w-full h-40 object-contain mb-3 hover:scale-110 transition-transform rounded-full size-10"
     onError={(e) => { e.target.onerror = null; e.target.src = "/images/placeholder.jpg"; }}
 />
-
                 <div className="text-gray-700 text-sm space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-500 line-through">
