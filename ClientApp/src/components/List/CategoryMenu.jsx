@@ -26,6 +26,7 @@ const CategoryMenu = ({ onSelectCategory }) => {
           onClick={() => onSelectCategory(category.id)}
         >
           {category.icon && category.icon}
+          <image src={category.image} alt={category.name} />
           <span>{category.name}</span>
         </div>
       ))}
