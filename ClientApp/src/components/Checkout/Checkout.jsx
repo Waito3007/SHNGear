@@ -19,10 +19,7 @@ import { jwtDecode } from "jwt-decode";
 const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const selectedItems = location.state?.selectedItems || []; // Kiểm tra nếu undefined
-  const totalAmount = location.state?.totalAmount || 0;
-  const voucherCode = location.state?.voucherCode || null;
-
+  const { selectedItems, totalAmount, voucherCode } = location.state || {};
   const [userId, setUserId] = useState(null);
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -34,7 +31,7 @@ const Checkout = () => {
     city: "",
     state: "",
     zipCode: "",
-    country: "",
+    country: ""
   });
   const [voucherId, setVoucherId] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("1"); // 1: Tiền mặt, 2: MoMo
@@ -91,8 +88,8 @@ const Checkout = () => {
   };
 
   const handlePlaceOrder = async () => {
-    if (selectedItems.length === 0) {
-      alert("Không có sản phẩm nào để đặt hàng.");
+    if (userId && !selectedAddress) {
+      alert("Vui lòng chọn địa chỉ giao hàng.");
       return;
     }
 
@@ -151,60 +148,49 @@ const Checkout = () => {
 
   return (
     <Box sx={{ p: 4 }}>
-      <Typography variant="h4" mb={4}>
-        Đặt hàng
-      </Typography>
-      {selectedItems.length > 0 ? (
-        <List>
-          {selectedItems.map((item) => (
-            <ListItem key={item.productVariantId}>
-              <Avatar
-                src={
-                  item.productImage ||
-                  "https://www.apple.com/v/iphone/home/cb/images/meta/iphone__kqge21l9n26q_og.png"
-                }
-                alt={item.productName}
-                sx={{
-                  width: 56,
-                  height: 80,
-                  border: "1px solid black",
-                  borderRadius: 2,
-                }}
-              />
-              <ListItemText
-                primary={`${item.productVariant?.color || "Không rõ"} - ${
-                  item.productVariant?.storage || "Không rõ"
-                }`}
-                secondary={`Số lượng: ${item.quantity} - ${
-                  (item.productVariant?.discountPrice || 0) * item.quantity
-                } VND`}
-              />
-            </ListItem>
-          ))}
-        </List>
-      ) : (
-        <Typography variant="h6" color="error">
-          ⚠️ Không có sản phẩm nào trong giỏ hàng!
-        </Typography>
-      )}
+      <Typography variant="h4" mb={4}>Đặt hàng</Typography>
 
-      <Typography variant="h6" mt={4}>
-        Tổng tiền: {totalAmount.toLocaleString()} VND
-      </Typography>
-
-      {isLoggedIn ? (
-        <Box mt={4}>
-          <Typography variant="h6">Địa chỉ giao hàng</Typography>
-          <Typography>{address || "Chưa có địa chỉ"}</Typography>
-        </Box>
+      {userId ? (
+        <>
+          <Typography variant="h6">Chọn địa chỉ giao hàng</Typography>
+          <List>
+            {addresses.map((address) => (
+              <ListItem
+                key={address.id}
+                button
+                selected={selectedAddress?.id === address.id}
+                onClick={() => setSelectedAddress(address)}
+              >
+                <ListItemText
+                  primary={`${address.fullName} - ${address.phoneNumber}`}
+                  secondary={`${address.addressLine1}, ${address.city}, ${address.state}, ${address.country}`}
+                />
+              </ListItem>
+            ))}
+          </List>
+        </>
       ) : (
-        <Box mt={4}>
-          <Typography variant="h6">Địa chỉ giao hàng (Khách)</Typography>
+        <>
+          <Typography variant="h6">Nhập địa chỉ giao hàng</Typography>
+          <TextField
+            label="Họ và tên"
+            variant="outlined"
+            fullWidth
+            value={guestAddress.fullName}
+            onChange={(e) => setGuestAddress({ ...guestAddress, fullName: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            label="Số điện thoại"
+            variant="outlined"
+            fullWidth
+            value={guestAddress.phoneNumber}
+            onChange={(e) => setGuestAddress({ ...guestAddress, phoneNumber: e.target.value })}
+            sx={{ mb: 2 }}
+          />
           <TextField
             label="Địa chỉ"
             variant="outlined"
-            value={guestAddress}
-            onChange={(e) => setGuestAddress(e.target.value)}
             fullWidth
             value={guestAddress.addressLine1}
             onChange={(e) => setGuestAddress({ ...guestAddress, addressLine1: e.target.value })}
