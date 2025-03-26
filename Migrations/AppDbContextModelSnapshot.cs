@@ -683,6 +683,9 @@ namespace SHN_Gear.Migrations
                     b.Property<string>("Gender")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<string>("OtpCode")
                         .HasColumnType("nvarchar(max)");
 

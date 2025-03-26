@@ -68,7 +68,9 @@ namespace SHN_Gear.Controllers
                 PhoneNumber = userDto.PhoneNumber,
                 Password = hashedPassword, // Lưu mật khẩu đã mã hóa
                 RoleId = userDto.RoleId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true
+
             };
 
             // Thêm người dùng mới vào cơ sở dữ liệu
@@ -93,11 +95,11 @@ namespace SHN_Gear.Controllers
                 return BadRequest("Vai trò không hợp lệ.");
             }
 
-            // Chỉ cập nhật các trường được phép thay đổi
             user.FullName = userUpdateDto.FullName;
             user.Gender = userUpdateDto.Gender;
             user.DateOfBirth = userUpdateDto.DateOfBirth;
-            user.RoleId = userUpdateDto.RoleId; // Admin có thể cập nhật RoleId
+            user.RoleId = userUpdateDto.RoleId;
+            user.IsActive = userUpdateDto.IsActive;
 
             await _context.SaveChangesAsync();
 
@@ -131,5 +133,56 @@ namespace SHN_Gear.Controllers
 
             return Ok(new { Message = "Vai trò người dùng đã được cập nhật thành công." });
         }
+
+        [HttpGet("statistics")]
+        public async Task<IActionResult> GetUserStatistics()
+        {
+            var totalUsers = await _context.Users.CountAsync(); // Tổng số người dùng
+
+            var today = DateTime.UtcNow.Date;
+            var newUsersToday = await _context.Users.CountAsync(u => u.CreatedAt.Date == today); // Người dùng mới hôm nay
+
+            var activeUsers = await _context.Users.CountAsync(u => u.IsActive); // Người dùng đang hoạt động
+
+            var oneMonthAgo = DateTime.UtcNow.AddMonths(-1);
+            var usersLastMonth = await _context.Users.CountAsync(u => u.CreatedAt <= oneMonthAgo); // Người dùng từ tháng trước
+                                                                                                   // Tính tỷ lệ duy trì
+            double retentionRate = usersLastMonth > 0 ? (double)activeUsers / usersLastMonth * 100 : 0;
+
+
+            return Ok(new
+            {
+                TotalUsers = totalUsers,
+                NewUsersToday = newUsersToday,
+                ActiveUsers = activeUsers,
+                RetentionRate = retentionRate.ToString("0.00") + "%"
+            });
+        }
+        [HttpGet("growth")]
+        public async Task<IActionResult> GetUserGrowth()
+        {
+            var userGrowth = await _context.Users
+                .GroupBy(u => new { u.CreatedAt.Year, u.CreatedAt.Month })
+                .Select(g => new
+                {
+                    Month = g.Key.Month,
+                    Year = g.Key.Year,
+                    Users = g.Count()
+                })
+                .OrderBy(g => g.Year)
+                .ThenBy(g => g.Month)
+                .ToListAsync();
+
+            // Chuyển đổi dữ liệu thành format cần thiết
+            var formattedData = userGrowth.Select(g => new
+            {
+                Month = new DateTime(g.Year, g.Month, 1).ToString("MMM"), // "Jan", "Feb", ...
+                Users = g.Users
+            });
+
+            return Ok(formattedData);
+        }
+
+
     }
 }

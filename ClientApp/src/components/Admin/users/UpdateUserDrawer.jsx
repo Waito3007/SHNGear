@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {message } from "antd";
-import { Drawer, TextField, Button, Select, MenuItem } from "@mui/material";
+import { message } from "antd";
+import { Drawer, TextField, Button, Select, MenuItem, FormControlLabel, Switch } from "@mui/material";
 import axios from "axios";
 
 const UpdateUserDrawer = ({ open, onClose, user, roles, onUpdate }) => {
@@ -9,6 +9,7 @@ const UpdateUserDrawer = ({ open, onClose, user, roles, onUpdate }) => {
     email: "",
     phoneNumber: "",
     roleId: "",
+    isActive: false,
   });
 
   useEffect(() => {
@@ -18,12 +19,17 @@ const UpdateUserDrawer = ({ open, onClose, user, roles, onUpdate }) => {
         email: user.email || "",
         phoneNumber: user.phoneNumber || "",
         roleId: user.roleId || "",
+        isActive: user.isActive || false,
       });
     }
   }, [user]);
 
   const handleChange = (e) => {
     setUserData({ ...userData, [e.target.name]: e.target.value });
+  };
+
+  const handleSwitchChange = (e) => {
+    setUserData({ ...userData, isActive: e.target.checked });
   };
 
   const handleSave = async () => {
@@ -85,6 +91,12 @@ const UpdateUserDrawer = ({ open, onClose, user, roles, onUpdate }) => {
             <MenuItem key={role.id} value={role.id}>{role.name}</MenuItem>
           ))}
         </Select>
+
+        <FormControlLabel
+          control={<Switch checked={userData.isActive} onChange={handleSwitchChange} />}
+          label="Kích hoạt tài khoản"
+          className="mt-4"
+        />
 
         <div className="flex justify-end space-x-2 mt-4">
           <Button onClick={onClose} color="secondary">Hủy</Button>
