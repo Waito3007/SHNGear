@@ -40,7 +40,11 @@ namespace SHN_Gear.Data
                 new Role { Id = 3, Name = "VIP 2" },
                 new Role { Id = 4, Name = "VIP 3" }
             );
-
+            // ✅ Seed dữ liệu mặc định cho PaymentMethod
+            modelBuilder.Entity<PaymentMethod>().HasData(
+                new PaymentMethod { Id = 1, Name = "Tiền Mặt", Description = "Thanh toán khi nhận hàng (COD)" },
+                new PaymentMethod { Id = 2, Name = "MoMo", Description = "Thanh toán qua ví điện tử MoMo" }
+            );
             // ✅ Thiết lập quan hệ Category - Product (1-N)
             modelBuilder.Entity<Product>()
                 .HasOne(p => p.Category)

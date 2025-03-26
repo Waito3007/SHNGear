@@ -104,5 +104,20 @@ namespace SHN_Gear.Controllers
 
             return Ok(new { Message = "Vai trò người dùng đã được cập nhật thành công." });
         }
+
+        [HttpGet("stats")]
+        public async Task<IActionResult> GetUserStats()
+        {
+            var totalUsers = await _context.Users.CountAsync();
+
+            var today = DateTime.UtcNow.Date;
+            var newUsersToday = await _context.Users.CountAsync(u => u.CreatedAt.Date == today);
+
+            return Ok(new
+            {
+                TotalUsers = totalUsers,
+                NewUsersToday = newUsersToday
+            });
+        }
     }
 }
