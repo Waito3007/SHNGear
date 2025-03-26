@@ -110,8 +110,8 @@ const VoucherDrawer = ({ open, onClose }) => {
                             />
                         </TableCell>
                                     <TableCell>
-                                        <IconButton onClick={() => handleEdit(voucher)}><Edit size={18} /></IconButton>
-                                        <IconButton onClick={() => handleDelete(voucher.id)}><Trash2 size={18} /></IconButton>
+                                        <IconButton onClick={() => handleEdit(voucher)}><Edit size={18} color="blue" /></IconButton>
+                                        <IconButton onClick={() => handleDelete(voucher.id)}><Trash2 size={18} color="red" /></IconButton>
                                     </TableCell>
                                 </TableRow>
                             ))}

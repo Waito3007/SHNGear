@@ -1,76 +1,94 @@
 import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
+import { useNavigate } from "react-router-dom";
 import "swiper/css";
 import "swiper/css/navigation";
 
-const DiscountProductSlider = () => {
+const DiscountProductSlider = ({
+  categoryName = "Điện Thoại",
+  apiUrls = {
+    products: "https://localhost:7107/api/Products",
+    categories: "https://localhost:7107/api/categories",
+    brands: "https://localhost:7107/api/brands",
+  },
+}) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch("https://localhost:7107/api/Products");
-        const data = await response.json();
+        const [productsRes, categoriesRes, brandsRes] = await Promise.all([
+          fetch(apiUrls.products),
+          fetch(apiUrls.categories),
+          fetch(apiUrls.brands),
+        ]);
 
-        if (data && data.$values && Array.isArray(data.$values)) {
-          // Lọc các sản phẩm thuộc danh mục "Laptop"
-          const laptopProducts = data.$values
-            .filter((product) => product.category?.name === "Laptop")
-            .map((product) => {
-              const variant = product.variants?.$values?.[0] || {};
-              const image = product.images?.$values?.[0]?.imageUrl || "/images/placeholder.jpg";
-              const oldPrice = variant.price || 0;
-              const newPrice = variant.discountPrice || oldPrice;
-              const discountAmount = oldPrice - newPrice;
-              const discount = oldPrice > 0 ? `-${Math.round((discountAmount / oldPrice) * 100)}%` : "0%";
-
-              return {
-                id: product.id,
-                name: product.name,
-                oldPrice,
-                newPrice,
-                discount,
-                discountAmount,
-                image,
-                features: [
-                  variant.storage || "Không xác định",
-                  product.brand?.name || "Không có thương hiệu",
-                  "Hiệu suất cao", // Có thể thay đổi tùy theo dữ liệu thực tế
-                ],
-              };
-            });
-
-          setProducts(laptopProducts);
-        } else {
-          throw new Error("Dữ liệu không đúng định dạng");
+        if (!productsRes.ok || !categoriesRes.ok || !brandsRes.ok) {
+          throw new Error("Lỗi khi tải dữ liệu");
         }
+
+        const productsData = await productsRes.json();
+        const categoriesData = await categoriesRes.json();
+        const brandsData = await brandsRes.json();
+
+        const categoriesArray = categoriesData.$values || categoriesData || [];
+        const brandsArray = brandsData.$values || brandsData || [];
+        const productsArray = productsData.$values || productsData || [];
+
+        const selectedCategory = categoriesArray.find(
+          (cat) => cat.name === categoryName
+        );
+
+        if (!selectedCategory) {
+          throw new Error(`Không tìm thấy danh mục "${categoryName}"`);
+        }
+
+        const filteredProducts = productsArray
+          .filter((p) => p.categoryId === selectedCategory.id)
+          .map((p) => {
+            const variant = p.variants?.[0] || {};
+            const image = p.images?.[0]?.imageUrl || "/images/placeholder.jpg";
+            const oldPrice = variant.price || 0;
+            const newPrice = variant.discountPrice || oldPrice;
+            const discount = oldPrice
+              ? `-${Math.round(((oldPrice - newPrice) / oldPrice) * 100)}%`
+              : "0%";
+            const brand = brandsArray.find((b) => b.id === p.brandId)?.name || "Không có thương hiệu";
+
+            return {
+              id: p.id,
+              name: p.name,
+              oldPrice,
+              newPrice,
+              discount,
+              image,
+              features: [variant.storage || "Không rõ", brand],
+            };
+          });
+
+        setProducts(filteredProducts);
       } catch (err) {
-        setError("Không thể tải sản phẩm: " + err.message);
-        console.error(err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
-  }, []);
+    fetchData();
+  }, [categoryName, apiUrls]);
 
-  if (loading) {
-    return <div className="text-center py-6">Đang tải sản phẩm...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center py-6 text-red-500">{error}</div>;
-  }
+  if (loading) return <div className="text-center py-6">Đang tải...</div>;
+  if (error) return <div className="text-center text-red-500">{error}</div>;
 
   return (
     <div className="w-full flex justify-center py-6">
       <div className="max-w-[1200px] w-full px-4 bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-          Mua đúng quà - Laptop "Hiền Hòa"
+          Ưu đãi {categoryName}
         </h2>
 
         <Swiper
@@ -87,24 +105,26 @@ const DiscountProductSlider = () => {
         >
           {products.map((product) => (
             <SwiperSlide key={product.id} className="flex justify-center">
-              <div className="bg-white p-4 rounded-lg shadow-md border w-[250px]">
+              <div
+                className="bg-white p-4 rounded-lg shadow-md border w-[250px] cursor-pointer"
+                onClick={() => navigate(`/product/${product.id}`)}
+              >
                 <img
                   src={product.image}
                   alt={product.name}
-                  className="w-full h-40 object-contain mb-3"
+                  className="w-full h-40 object-contain mb-3 hover:scale-110"
                 />
                 <div className="text-gray-700 text-sm space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-500 line-through">
                       {product.oldPrice.toLocaleString()} đ
                     </span>
-                    <span className="text-red-500 text-sm">{product.discount}</span>
+                    <span className="text-red-500 text-sm">
+                      {product.discount}
+                    </span>
                   </div>
                   <p className="text-lg font-semibold text-gray-900">
                     {product.newPrice.toLocaleString()} đ
-                  </p>
-                  <p className="text-green-600 text-sm">
-                    Giảm {product.discountAmount.toLocaleString()} đ
                   </p>
                   <p className="text-gray-800 text-sm">{product.name}</p>
                   <ul className="text-xs text-gray-600 list-disc pl-4">

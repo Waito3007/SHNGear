@@ -860,7 +860,7 @@ namespace SHN_Gear.Migrations
                         .IsRequired();
 
                     b.HasOne("SHN_Gear.Models.Category", "Category")
-                        .WithMany()
+                        .WithMany("Products")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -949,6 +949,11 @@ namespace SHN_Gear.Migrations
             modelBuilder.Entity("SHN_Gear.Models.Cart", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.Category", b =>
+                {
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Order", b =>
