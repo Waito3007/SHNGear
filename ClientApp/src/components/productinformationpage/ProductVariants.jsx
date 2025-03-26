@@ -42,6 +42,10 @@ const ProductVariants = ({ variants }) => {
       style: "currency",
       currency: "VND",
     }).format(price);
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
   };
 
   const handleAddToCart = async () => {
@@ -50,13 +54,18 @@ const ProductVariants = ({ variants }) => {
         alert(
           "⚠️ Vui lòng chọn biến thể sản phẩm trước khi thêm vào giỏ hàng!"
         );
+        alert(
+          "⚠️ Vui lòng chọn biến thể sản phẩm trước khi thêm vào giỏ hàng!"
+        );
         return;
       }
+
 
       if (selectedVariant.stockQuantity <= 0) {
         alert("❌ Sản phẩm này đã hết hàng!");
         return;
       }
+
 
       const token = localStorage.getItem("token");
       const cartItem = {
@@ -69,6 +78,7 @@ const ProductVariants = ({ variants }) => {
           discountPrice: selectedVariant.discountPrice || 0,
         },
       };
+
 
       if (token) {
         console.log("🔍 Đang lấy profile...");
@@ -115,15 +125,18 @@ const ProductVariants = ({ variants }) => {
           (item) => item.productVariantId === cartItem.productVariantId
         );
 
+
         if (existingItem) {
           existingItem.quantity += 1;
         } else {
           cart.push(cartItem);
         }
 
+
         sessionStorage.setItem("cart", JSON.stringify(cart));
         console.log("📦 Đã lưu vào sessionStorage!", cart);
       }
+
 
       alert("🛒 Sản phẩm đã được thêm vào giỏ hàng!");
     } catch (error) {
@@ -142,6 +155,14 @@ const ProductVariants = ({ variants }) => {
           <Grid item key={color}>
             <Card
               sx={{
+                border:
+                  selectedColor === color
+                    ? "2px solid #d32f2f"
+                    : "1px solid #ddd",
+                boxShadow:
+                  selectedColor === color
+                    ? "0px 4px 12px rgba(211, 47, 47, 0.3)"
+                    : "none",
                 border:
                   selectedColor === color
                     ? "2px solid #d32f2f"
@@ -169,6 +190,9 @@ const ProductVariants = ({ variants }) => {
                   {selectedColor === color && (
                     <CheckCircle color="error" fontSize="small" />
                   )}
+                  {selectedColor === color && (
+                    <CheckCircle color="error" fontSize="small" />
+                  )}
                 </CardContent>
               </CardActionArea>
             </Card>
@@ -185,6 +209,14 @@ const ProductVariants = ({ variants }) => {
           <Grid item key={storage}>
             <Card
               sx={{
+                border:
+                  selectedStorage === storage
+                    ? "2px solid #d32f2f"
+                    : "1px solid #ddd",
+                boxShadow:
+                  selectedStorage === storage
+                    ? "0px 4px 12px rgba(211, 47, 47, 0.3)"
+                    : "none",
                 border:
                   selectedStorage === storage
                     ? "2px solid #d32f2f"
@@ -223,6 +255,11 @@ const ProductVariants = ({ variants }) => {
       {/* Giá tiền */}
       {selectedVariant && (
         <Box mt={3} textAlign="center">
+          <Typography
+            variant="body1"
+            color="textSecondary"
+            sx={{ textDecoration: "line-through" }}
+          >
           <Typography
             variant="body1"
             color="textSecondary"

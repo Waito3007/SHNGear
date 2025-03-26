@@ -15,7 +15,6 @@ import { X } from "lucide-react";
 import axios from "axios";
 import BrandModal from "./BrandModal";
 
-
 const BrandDrawer = ({ open, onClose }) => {
   const [brand, setBrand] = useState({ name: "", description: "", logo: "" });
 

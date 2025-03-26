@@ -91,6 +91,10 @@ function Navbar() {
             className="menu-button"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
+          <button
+            className="menu-button"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          >
             <img src={menuIcon} alt="Menu" />
             Danh mục
           </button>
@@ -158,10 +162,32 @@ function Navbar() {
                 <MenuItem onClick={() => navigate("/address")}>
                   Sổ địa chỉ nhận hàng
                 </MenuItem>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={() => setAnchorEl(null)}
+              >
+                <MenuItem onClick={() => navigate("/profile")}>
+                  Thông tin cá nhân
+                </MenuItem>
+                <MenuItem onClick={() => navigate("/orders")}>
+                  Đơn hàng của tôi
+                </MenuItem>
+                <MenuItem onClick={() => navigate("/loyalty")}>
+                  Khách hàng thân thiết
+                </MenuItem>
+                <MenuItem onClick={() => navigate("/address")}>
+                  Sổ địa chỉ nhận hàng
+                </MenuItem>
                 <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
               </Menu>
             </>
           ) : (
+            <User
+              size={35}
+              className="avatar-icon"
+              onClick={() => setIsAuthModalOpen(true)}
+            />
             <User
               size={35}
               className="avatar-icon"

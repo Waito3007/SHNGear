@@ -31,7 +31,7 @@ const Checkout = () => {
     city: "",
     state: "",
     zipCode: "",
-    country: ""
+    country: "",
   });
   const [voucherId, setVoucherId] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("1"); // 1: Tiền mặt, 2: MoMo
@@ -148,7 +148,9 @@ const Checkout = () => {
 
   return (
     <Box sx={{ p: 4 }}>
-      <Typography variant="h4" mb={4}>Đặt hàng</Typography>
+      <Typography variant="h4" mb={4}>
+        Đặt hàng
+      </Typography>
 
       {userId ? (
         <>
@@ -177,7 +179,9 @@ const Checkout = () => {
             variant="outlined"
             fullWidth
             value={guestAddress.fullName}
-            onChange={(e) => setGuestAddress({ ...guestAddress, fullName: e.target.value })}
+            onChange={(e) =>
+              setGuestAddress({ ...guestAddress, fullName: e.target.value })
+            }
             sx={{ mb: 2 }}
           />
           <TextField
@@ -185,7 +189,9 @@ const Checkout = () => {
             variant="outlined"
             fullWidth
             value={guestAddress.phoneNumber}
-            onChange={(e) => setGuestAddress({ ...guestAddress, phoneNumber: e.target.value })}
+            onChange={(e) =>
+              setGuestAddress({ ...guestAddress, phoneNumber: e.target.value })
+            }
             sx={{ mb: 2 }}
           />
           <TextField
@@ -193,7 +199,9 @@ const Checkout = () => {
             variant="outlined"
             fullWidth
             value={guestAddress.addressLine1}
-            onChange={(e) => setGuestAddress({ ...guestAddress, addressLine1: e.target.value })}
+            onChange={(e) =>
+              setGuestAddress({ ...guestAddress, addressLine1: e.target.value })
+            }
             sx={{ mb: 2 }}
           />
           <TextField
@@ -201,7 +209,9 @@ const Checkout = () => {
             variant="outlined"
             fullWidth
             value={guestAddress.addressLine2}
-            onChange={(e) => setGuestAddress({ ...guestAddress, addressLine2: e.target.value })}
+            onChange={(e) =>
+              setGuestAddress({ ...guestAddress, addressLine2: e.target.value })
+            }
             sx={{ mb: 2 }}
           />
           <TextField
@@ -209,7 +219,9 @@ const Checkout = () => {
             variant="outlined"
             fullWidth
             value={guestAddress.city}
-            onChange={(e) => setGuestAddress({ ...guestAddress, city: e.target.value })}
+            onChange={(e) =>
+              setGuestAddress({ ...guestAddress, city: e.target.value })
+            }
             sx={{ mb: 2 }}
           />
           <TextField
@@ -217,7 +229,9 @@ const Checkout = () => {
             variant="outlined"
             fullWidth
             value={guestAddress.state}
-            onChange={(e) => setGuestAddress({ ...guestAddress, state: e.target.value })}
+            onChange={(e) =>
+              setGuestAddress({ ...guestAddress, state: e.target.value })
+            }
             sx={{ mb: 2 }}
           />
           <TextField
@@ -225,7 +239,9 @@ const Checkout = () => {
             variant="outlined"
             fullWidth
             value={guestAddress.zipCode}
-            onChange={(e) => setGuestAddress({ ...guestAddress, zipCode: e.target.value })}
+            onChange={(e) =>
+              setGuestAddress({ ...guestAddress, zipCode: e.target.value })
+            }
             sx={{ mb: 2 }}
           />
           <TextField
@@ -233,7 +249,9 @@ const Checkout = () => {
             variant="outlined"
             fullWidth
             value={guestAddress.country}
-            onChange={(e) => setGuestAddress({ ...guestAddress, country: e.target.value })}
+            onChange={(e) =>
+              setGuestAddress({ ...guestAddress, country: e.target.value })
+            }
             sx={{ mb: 2 }}
           />
         </>
@@ -272,6 +290,9 @@ const Checkout = () => {
         ))}
       </List>
 
+      <Typography variant="h6" mt={2}>
+        Tổng tiền: {totalAmount.toLocaleString()} VND
+      </Typography>
       <Typography variant="h6" mt={2}>
         Tổng tiền: {totalAmount.toLocaleString()} VND
       </Typography>

@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
+const ProductGrid = ({
+  selectedCategory,
+  selectedPriceRange,
+  selectedBrand,
+}) => {
 const ProductGrid = ({
   selectedCategory,
   selectedPriceRange,
@@ -11,6 +17,8 @@ const ProductGrid = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get("search") || "";
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
 
@@ -111,6 +119,7 @@ const ProductGrid = ({
 
     fetchProductsAndBrands();
   }, [selectedCategory, selectedPriceRange, selectedBrand, searchQuery]);
+  }, [selectedCategory, selectedPriceRange, selectedBrand, searchQuery]);
 
   if (loading) {
     return <div className="text-center py-6">Đang tải sản phẩm...</div>;
@@ -125,6 +134,7 @@ const ProductGrid = ({
       <div className="max-w-[1200px] w-full px-4 bg-white rounded-lg shadow-lg p-6">
         {products.length === 0 ? (
           <p className="text-center text-gray-500 text-lg mt-12">
+            Không có sản phẩm phù hợp
             Không có sản phẩm phù hợp
           </p>
         ) : (
