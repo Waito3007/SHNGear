@@ -64,9 +64,10 @@ const ProductGrid = ({
           });
         }
 
-        if (selectedBrand) {
-          filteredProducts = filteredProducts.filter(
-            (product) => product.brandId === parseInt(selectedBrand)
+        if (selectedBrand && selectedBrand.length > 0) {
+          const selectedBrandsArray = selectedBrand.map(Number); // Chuyển ID thương hiệu thành số
+          filteredProducts = filteredProducts.filter((product) =>
+            selectedBrandsArray.includes(product.brandId)
           );
         }
 
@@ -136,21 +137,11 @@ const ProductGrid = ({
                 onClick={() => navigate(`/product/${product.id}`)}
               >
                 <img
-                  src={
-                    product.images?.[0]?.imageUrl?.startsWith("http")
-                      ? product.images[0].imageUrl
-                      : `https://localhost:7107/${
-                          product.images?.[0]?.imageUrl || product.image
-                        }`
-                  }
-                  alt={product.name || "Product Image"}
-                  className="w-full h-40 object-contain mb-3 hover:scale-110 transition-transform rounded-full size-10"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "/images/placeholder.jpg";
-                  }}
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-40 object-contain mb-3 hover:scale-110 transition-transform"
+                  onError={(e) => (e.target.src = "/images/placeholder.jpg")}
                 />
-
                 <div className="text-gray-700 text-sm space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-500 line-through">
