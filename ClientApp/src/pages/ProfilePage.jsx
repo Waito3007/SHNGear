@@ -4,6 +4,7 @@ import ProfileInfo from "../components/Profile/ProfileInfo";
 import ProfileSidebar from "../components/Profile/ProfileSidebar";
 import AddressBook from "../components/Profile/AddressBook"; // Import AddressBook
 import AddPaymentMethod from "../components/Profile/AddPaymentMethod";
+import UserOrders from "../components/Profile/UserOrders"; // Import UserOrders
 import Footer from "../components/Footer/Footer";
 import "../pages/ProfilePage.css";
 
@@ -14,11 +15,11 @@ const ProfilePage = () => {
     <div className="profile-container">
       <Navbar />
       <div className="profile-layout">
-        
         <div className="profile-content">
           {activeTab === "profile" && <ProfileInfo />}
           {activeTab === "address" && <AddressBook />}
           {activeTab === "paymentmethod" && <AddPaymentMethod />}
+          {activeTab === "orders" && <UserOrders />} {/* Thêm tab UserOrders */}
         </div>
         <ProfileSidebar setActiveTab={setActiveTab} />
       </div>

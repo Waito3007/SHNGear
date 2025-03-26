@@ -7,6 +7,10 @@ import {
   List,
   ListItem,
   ListItemText,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  CircularProgress,
 } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -30,6 +34,9 @@ const Checkout = () => {
     country: "",
   });
   const [voucherId, setVoucherId] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("1"); // 1: Tiền mặt, 2: MoMo
+  const [isLoading, setIsLoading] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState([]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -48,15 +55,16 @@ const Checkout = () => {
     if (voucherCode) {
       fetchVoucherId(voucherCode);
     }
+
+    // Load payment methods
+    fetchPaymentMethods();
   }, [voucherCode]);
 
   const fetchAddresses = async (userId) => {
     try {
-      console.log(`Fetching addresses for userId: ${userId}`);
       const response = await axios.get(
         `https://localhost:7107/api/address/user/${userId}`
       );
-      console.log("Addresses fetched:", response.data);
       setAddresses(response.data);
     } catch (error) {
       console.error("Lỗi khi lấy địa chỉ:", error);
@@ -65,14 +73,23 @@ const Checkout = () => {
 
   const fetchVoucherId = async (code) => {
     try {
-      console.log(`Fetching voucherId for code: ${code}`);
       const response = await axios.get(
         `https://localhost:7107/api/vouchers/code/${code}`
       );
-      console.log("Voucher fetched:", response.data);
       setVoucherId(response.data.id);
     } catch (error) {
       console.error("Lỗi khi lấy voucher:", error);
+    }
+  };
+
+  const fetchPaymentMethods = async () => {
+    try {
+      const response = await axios.get(
+        "https://localhost:7107/api/PaymentMethod"
+      );
+      setPaymentMethods(response.data);
+    } catch (error) {
+      console.error("Lỗi khi lấy phương thức thanh toán:", error);
     }
   };
 
@@ -86,63 +103,61 @@ const Checkout = () => {
 
     if (!userId && !addressId) {
       try {
-        console.log("Adding guest address:", guestAddress);
+        setIsLoading(true);
         const response = await axios.post(
           "https://localhost:7107/api/address/add",
           {
-            userId: null, // Để null cho khách chưa đăng nhập
+            userId: null,
             ...guestAddress,
           }
         );
-        console.log("Guest address added:", response.data);
         addressId = response.data.addressId;
       } catch (error) {
         console.error("Lỗi khi thêm địa chỉ:", error);
-        console.error("Phản hồi lỗi từ API:", error.response?.data);
-        if (
-          error.response &&
-          error.response.data &&
-          error.response.data.errors
-        ) {
-          console.error("Chi tiết lỗi xác thực:", error.response.data.errors);
-        }
         alert("Lỗi khi thêm địa chỉ, vui lòng thử lại.");
+        setIsLoading(false);
         return;
       }
     }
 
     const orderDto = {
-      userId: userId || null, // Đảm bảo userId là null nếu không có
+      userId: userId || null,
       orderDate: new Date().toISOString(),
       totalAmount: totalAmount,
       orderStatus: "Pending",
       addressId: addressId,
-      paymentMethodId: 1, // Giả sử PaymentMethodId là 1
+      paymentMethodId: parseInt(paymentMethod),
       orderItems: selectedItems.map((item) => ({
         productVariantId: item.productVariantId,
         quantity: item.quantity,
         price: item.productVariant.discountPrice,
       })),
-      voucherId: voucherId ? voucherId : null,
+      voucherId: voucherId || null,
     };
 
-    console.log("Đơn hàng:", orderDto);
-
     try {
+      setIsLoading(true);
       const response = await axios.post(
         "https://localhost:7107/api/orders",
         orderDto
       );
-      console.log("Order created:", response.data);
-      alert("Đơn hàng đã được tạo thành công!");
+
+      // Xử lý thanh toán MoMo
+      if (paymentMethod === "2" && response.data.paymentUrl) {
+        window.location.href = response.data.paymentUrl;
+        return;
+      }
+
+      // Xử lý thanh toán tiền mặt
       navigate("/order-success", { state: { orderId: response.data.orderId } });
     } catch (error) {
       console.error("Lỗi khi tạo đơn hàng:", error);
-      console.error("Phản hồi lỗi từ API:", error.response?.data);
-      if (error.response && error.response.data && error.response.data.errors) {
-        console.error("Chi tiết lỗi xác thực:", error.response.data.errors);
-      }
-      alert("Lỗi khi tạo đơn hàng, vui lòng thử lại.");
+      alert(
+        error.response?.data?.message ||
+          "Lỗi khi tạo đơn hàng, vui lòng thử lại."
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -258,6 +273,30 @@ const Checkout = () => {
       )}
 
       <Typography variant="h6" mt={4}>
+        Phương thức thanh toán
+      </Typography>
+      <RadioGroup
+        value={paymentMethod}
+        onChange={(e) => setPaymentMethod(e.target.value)}
+      >
+        {paymentMethods.map((method) => (
+          <FormControlLabel
+            key={method.id}
+            value={method.id.toString()}
+            control={<Radio />}
+            label={method.name}
+          />
+        ))}
+      </RadioGroup>
+
+      {paymentMethod === "2" && (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          Bạn sẽ được chuyển hướng đến trang thanh toán MoMo sau khi xác nhận
+          đơn hàng
+        </Typography>
+      )}
+
+      <Typography variant="h6" mt={4}>
         Thông tin đơn hàng
       </Typography>
       <List>
@@ -265,9 +304,9 @@ const Checkout = () => {
           <ListItem key={item.productVariantId}>
             <ListItemText
               primary={`${item.productVariant?.color} - ${item.productVariant?.storage}`}
-              secondary={`Số lượng: ${item.quantity} - ${
+              secondary={`Số lượng: ${item.quantity} - ${(
                 item.productVariant?.discountPrice * item.quantity
-              } VND`}
+              ).toLocaleString()} VND`}
             />
           </ListItem>
         ))}
@@ -283,8 +322,15 @@ const Checkout = () => {
         fullWidth
         sx={{ mt: 4 }}
         onClick={handlePlaceOrder}
+        disabled={isLoading}
       >
-        Đặt hàng ngay
+        {isLoading ? (
+          <CircularProgress size={24} color="inherit" />
+        ) : paymentMethod === "2" ? (
+          "Thanh toán với MoMo"
+        ) : (
+          "Đặt hàng ngay"
+        )}
       </Button>
     </Box>
   );

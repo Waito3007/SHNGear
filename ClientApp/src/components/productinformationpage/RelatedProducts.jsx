@@ -102,10 +102,16 @@ const RelatedProducts = ({ productId, brandId, categoryId }) => {
                 onClick={() => navigate(`/product/${product.id}`)}
               >
                 <img
-                  src={product.image}
+                  src={
+                      product.image?.startsWith("http")
+                          ? product.image // Ảnh từ API (URL đầy đủ)
+                          : `https://localhost:7107/${product.image}` // Ảnh local từ wwwroot
+                  }
                   alt={product.name}
-                  className="w-full h-40 object-contain mb-3 transition-transform duration-300 hover:scale-105"
-                />
+                  className="w-full h-40 object-contain mb-3 hover:scale-110"
+                  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/150"; }}
+              />
+
                 <div className="text-gray-700 text-sm space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-500 line-through">

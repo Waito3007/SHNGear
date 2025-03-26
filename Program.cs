@@ -23,8 +23,8 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// Thêm các dịch vụ vào DI container
-builder.Services.AddControllers();
+
+
 builder.Services.AddScoped<UserService>(); // Đăng ký UserService
 builder.Services.AddScoped<EmailService>(); // Đăng ký EmailService
 
@@ -75,15 +75,15 @@ builder.Services.AddControllersWithViews()
 
 
 builder.Services.AddHttpContextAccessor();
-
+builder.Services.AddScoped<MoMoPaymentService>();
 var app = builder.Build();
 
 
-app.UseStaticFiles();
 
 app.UseRouting();
 app.UseAuthorization();
 app.MapControllers();
+app.UseStaticFiles(); // Cho phép truy cập file tĩnh từ wwwroot
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

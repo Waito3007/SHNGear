@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Modal, Box, TextField, Button, Typography, CircularProgress } from "@mui/material";
 import axios from "axios";
+import jwtDecode from "jwt-decode"; // Import jwt-decode
 import React from "react";
 
 const ProfileInfo = () => {
@@ -18,7 +19,7 @@ const ProfileInfo = () => {
   const fetchUserProfile = async () => {
     try {
       const token = localStorage.getItem("token"); // Lấy token từ localStorage
-      const response = await axios.get("https://localhost:7107/api/Auth/profile", {
+      const response = await axios.get(`https://localhost:7107/api/Auth/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log("Dữ liệu api trả về:", response.data);
@@ -53,14 +54,12 @@ const ProfileInfo = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        "https://localhost:7107/api/Auth/profile",
+        `https://localhost:7107/api/Auth/profile`,
         { fullName: updatedUser.fullName, email: updatedUser.email },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setUser(updatedUser);
       handleCloseModal();
-      //reload trang
-      window.location.reload();
     } catch (error) {
       console.error("Lỗi khi cập nhật thông tin user:", error);
     }
@@ -84,7 +83,7 @@ const ProfileInfo = () => {
       <Typography variant="h5" fontWeight="bold" mb={2}>Thông tin cá nhân</Typography>
       <Box sx={{ textAlign: "left",border: "2px solid black", padding: "8px 16px", borderRadius: "8px", backgroundColor: "#f5f5f5", mb: 1 }}>
         <Typography variant="subtitle2" color="gray">Họ và tên</Typography>
-        <Typography variant="body1">{user.fullName||"Khách Hàng"}</Typography>
+        <Typography variant="body1">{user.fullName || "Khách Hàng"}</Typography>
       </Box>
       <Box sx={{ textAlign: "left",border: "2px solid black", padding: "8px 16px", borderRadius: "8px", backgroundColor: "#f5f5f5", mb: 1 }}>
         <Typography variant="subtitle2" color="gray">Email</Typography>

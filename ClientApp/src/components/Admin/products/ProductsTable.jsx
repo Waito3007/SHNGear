@@ -235,16 +235,24 @@ const ProductsTable = () => {
                                 transition={{ duration: 0.3 }}
                             >
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100 flex gap-2 items-center">
-                                    <img
-                                        src={product.images?.[0]?.imageUrl || "https://via.placeholder.com/50"}
-                                        alt="Product img"
-                                        className="size-10 rounded-full"
-                                    />
-                                    {product.name || "Không có tên"}
-                                </td>
+                                <img
+                                src={
+                                    product.images?.[0]?.imageUrl?.startsWith("http")
+                                        ? product.images[0].imageUrl // Ảnh từ API (URL đầy đủ)
+                                        : `https://localhost:7107/${product.images?.[0]?.imageUrl}` // Ảnh local trong wwwroot
+                                }
+                                alt="Product img"
+                                className="size-10 rounded-full"
+                                onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/50"; }}
+                            />
+
+
+                                {product.name || "Không có tên"}
+                            </td>
+
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-    {getBrandName(product.brandId)}
-</td>
+                                    {getBrandName(product.brandId)}
+                                </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                                     {/* Tương tự với CategoryId */}
                                     {product.categoryId || "Chưa có danh mục"}

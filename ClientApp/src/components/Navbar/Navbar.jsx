@@ -6,19 +6,17 @@ import "./Navbar.css";
 import menuIcon from "../../assets/icon/menu.svg";
 import logo from "../../assets/img/Phone/logo.png";
 import AuthModal from "../Auth/AuthModal";
-import CartDrawer from "../shoppingcart/CartDrawer"; // Import Drawer
 
-const Navbar = () => {
+function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
   const [avatarUrl, setAvatarUrl] = useState(localStorage.getItem("AvatarUrl"));
   const [anchorEl, setAnchorEl] = useState(null);
-  const [searchQuery, setSearchQuery] = useState(""); // State cho ô tìm kiếm
+  const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
-  const [isCartOpen, setIsCartOpen] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -52,22 +50,25 @@ const Navbar = () => {
     setAnchorEl(null);
   };
 
-  // Xử lý tìm kiếm sản phẩm hoặc danh mục
+  // Cập nhật: Xử lý tìm kiếm sản phẩm và danh mục
   const handleSearch = () => {
     if (searchQuery.trim()) {
+      // Tìm danh mục có tên khớp với từ khóa tìm kiếm
       const matchedCategory = categories.find((category) =>
         category.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
       if (matchedCategory) {
+        // Nếu tìm thấy danh mục, điều hướng đến danh mục đó
         navigate(`/ProductList?categoryId=${matchedCategory.id}`);
       } else {
+        // Nếu không tìm thấy danh mục, thực hiện tìm kiếm sản phẩm
         navigate(`/ProductList?search=${encodeURIComponent(searchQuery)}`);
       }
     }
   };
 
-  // Xử lý khi nhấn Enter trong ô tìm kiếm
+  // Xử lý tìm kiếm khi nhấn Enter
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       handleSearch();
@@ -77,7 +78,6 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        {/* Logo */}
         <img
           src={logo}
           alt="SHN Gear"
@@ -86,7 +86,6 @@ const Navbar = () => {
           style={{ cursor: "pointer" }}
         />
 
-        {/* Menu danh mục */}
         <div className="menu-container" ref={dropdownRef}>
           <button
             className="menu-button"
@@ -102,9 +101,10 @@ const Navbar = () => {
                   <div
                     key={category.id}
                     className="dropdown-item"
-                    onClick={() =>
-                      navigate(`/ProductList?categoryId=${category.id}`)
-                    }
+                    onClick={() => {
+                      navigate(`/ProductList?categoryId=${category.id}`);
+                      setIsDropdownOpen(false);
+                    }}
                   >
                     <span>{category.name}</span>
                   </div>
@@ -116,7 +116,7 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Thanh tìm kiếm */}
+        {/* Ô tìm kiếm */}
         <div className="search-bar">
           <input
             type="text"
@@ -124,7 +124,7 @@ const Navbar = () => {
             className="search-input"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={handleKeyPress} // Nhấn Enter để tìm kiếm
+            onKeyPress={handleKeyPress} // Nhấn Enter để tìm kiếm
           />
           <button
             type="submit"
@@ -135,7 +135,6 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Avatar và Giỏ hàng */}
         <div className="avatarandcart">
           {isLoggedIn ? (
             <>
@@ -169,7 +168,10 @@ const Navbar = () => {
               onClick={() => setIsAuthModalOpen(true)}
             />
           )}
-          <button className="cart-button" onClick={() => setIsCartOpen(true)}>
+          <button
+            className="cart-button"
+            onClick={() => navigate("/shoppingcart")}
+          >
             <ShoppingCart size={22} />
             Giỏ Hàng
           </button>
@@ -181,9 +183,8 @@ const Navbar = () => {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
       />
-      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </nav>
   );
-};
+}
 
 export default Navbar;
