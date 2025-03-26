@@ -338,7 +338,7 @@ namespace SHN_Gear.Controllers
             return Ok(orderDtos);
         }
 
-        // Các phương thức thống kê giữ nguyên
+        // Tổng doanh thu theo ngày
         [HttpGet("revenue/day")]
         public async Task<IActionResult> GetDailyRevenue()
         {
@@ -350,7 +350,85 @@ namespace SHN_Gear.Controllers
             return Ok(new { Revenue = revenue });
         }
 
-        // ... (Các phương thức thống kê khác giữ nguyên) ...
+        // Tổng doanh thu theo tuần
+        [HttpGet("revenue/week")]
+        public async Task<IActionResult> GetWeeklyRevenue()
+        {
+            var startOfWeek = DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek);
+            var revenue = await _context.Orders
+                .Where(o => o.OrderDate.Date >= startOfWeek && o.OrderStatus == "Delivered")
+                .SumAsync(o => o.TotalAmount);
+
+            return Ok(new { Revenue = revenue });
+        }
+
+        // Tổng doanh thu theo tháng
+        [HttpGet("revenue/month")]
+        public async Task<IActionResult> GetMonthlyRevenue()
+        {
+            var startOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+            var revenue = await _context.Orders
+                .Where(o => o.OrderDate.Date >= startOfMonth && o.OrderStatus == "Delivered")
+                .SumAsync(o => o.TotalAmount);
+
+            return Ok(new { Revenue = revenue });
+        }
+
+        // Tổng doanh thu theo năm
+        [HttpGet("revenue/year")]
+        public async Task<IActionResult> GetYearlyRevenue()
+        {
+            var startOfYear = new DateTime(DateTime.UtcNow.Year, 1, 1);
+            var revenue = await _context.Orders
+                .Where(o => o.OrderDate.Date >= startOfYear && o.OrderStatus == "Delivered")
+                .SumAsync(o => o.TotalAmount);
+
+            return Ok(new { Revenue = revenue });
+        }
+
+        // Số lượng đơn hàng đã hoàn thành
+        [HttpGet("completed-orders")]
+        public async Task<IActionResult> GetCompletedOrdersCount()
+        {
+            var count = await _context.Orders
+                .Where(o => o.OrderStatus == "Delivered")
+                .CountAsync();
+
+            return Ok(new { CompletedOrders = count });
+        }
+
+        // Số lượng đơn hàng chờ xác nhận
+        [HttpGet("pending-orders")]
+        public async Task<IActionResult> GetPendingOrdersCount()
+        {
+            var count = await _context.Orders
+                .Where(o => o.OrderStatus == "Pending")
+                .CountAsync();
+
+            return Ok(new { PendingOrders = count });
+        }
+
+        // Tổng tiền đơn hàng đã hoàn thành
+        [HttpGet("completed-orders-total")]
+        public async Task<IActionResult> GetCompletedOrdersTotal()
+        {
+            var total = await _context.Orders
+                .Where(o => o.OrderStatus == "Delivered")
+                .SumAsync(o => o.TotalAmount);
+
+            return Ok(new { CompletedOrdersTotal = total });
+        }
+
+        // Tổng doanh thu
+        [HttpGet("total-revenue")]
+        public async Task<IActionResult> GetTotalRevenue()
+        {
+            var totalRevenue = await _context.Orders
+                .Where(o => o.OrderStatus == "Delivered")
+                .SumAsync(o => o.TotalAmount);
+
+            return Ok(new { TotalRevenue = totalRevenue });
+        }
     }
 
     public class MoMoCallbackModel
