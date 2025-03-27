@@ -167,7 +167,7 @@ const Checkout = () => {
         return;
       }
       
-      navigate("/order-success", { state: { orderId: response.data.orderId } });
+      navigate("/", { state: { orderId: response.data.orderId } });
     } catch (error) {
       console.error("Lỗi khi tạo đơn hàng:", error);
       alert(error.response?.data?.message || "Lỗi khi tạo đơn hàng, vui lòng thử lại.");

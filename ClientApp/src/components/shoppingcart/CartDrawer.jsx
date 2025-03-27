@@ -1,6 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { Drawer, IconButton, List, ListItemText, Avatar, Typography, Button, Box, TextField, Modal, Checkbox } from "@mui/material";
-import { X, Delete, Plus, Minus } from "lucide-react";
+import { 
+  Drawer, 
+  IconButton, 
+  List, 
+  ListItemText, 
+  Avatar, 
+  Typography, 
+  Button, 
+  Box, 
+  TextField, 
+  Modal, 
+  Checkbox,
+  Chip,
+  Divider,
+  CircularProgress
+} from "@mui/material";
+import { X, Delete, Plus, Minus, Gift } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
@@ -12,88 +27,136 @@ const CartDrawer = ({ isOpen, onClose }) => {
   const [voucherCode, setVoucherCode] = useState("");
   const [discountAmount, setDiscountAmount] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
+  const [originalTotal, setOriginalTotal] = useState(0);
   const [selectedItem, setSelectedItem] = useState(null);
   const [quantityModalOpen, setQuantityModalOpen] = useState(false);
   const [voucherApplied, setVoucherApplied] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [voucherLoading, setVoucherLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-  const fetchCart = async () => {
-    const token = localStorage.getItem("token");
-    setLoading(true);
-    
-    try {
-      let items = [];
+    const fetchCart = async () => {
+      const token = localStorage.getItem("token");
+      setLoading(true);
       
-      if (token) {
-        // Đã đăng nhập: lấy từ API
-        const decoded = jwtDecode(token);
-        const id = parseInt(decoded.sub, 10);
-        const response = await axios.get(`https://localhost:7107/api/Cart?userId=${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        items = response.data;
-      } else {
-        // Chưa đăng nhập: lấy từ session storage
-        const sessionCart = sessionStorage.getItem("cart");
-        if (sessionCart) {
-          const sessionItems = JSON.parse(sessionCart);
+      try {
+        let items = [];
+        let id = null;
+        
+        if (token) {
+          const decoded = jwtDecode(token);
+          id = parseInt(decoded.sub, 10);
+          setUserId(id);
           
-          // Gọi API variant-info cho từng sản phẩm
-          // Trong hàm fetchCart, thay đổi phần map sessionItems như sau:
-          items = await Promise.all(
-            sessionItems.map(async (item) => {
-              try {
-                const response = await axios.get(
-                  `https://localhost:7107/api/Cart/variant-info/${item.productVariantId}`
-                );
-                return {
-                  ...item,
-                  productName: response.data.productName, // Đổi từ ProductName -> productName
-                  productImage: response.data.productImage, // Đổi từ ProductImage -> productImage
-                  variantColor: response.data.variantColor, // Đổi từ VariantColor -> variantColor
-                  variantStorage: response.data.variantStorage, // Đổi từ VariantStorage -> variantStorage
-                  productPrice: response.data.price, // Đổi từ Price -> price
-                  productDiscountPrice: response.data.discountPrice // Đổi từ DiscountPrice -> discountPrice
-                };
-              } catch (error) {
-                console.error("Error fetching variant info:", error);
-                return {
-                  ...item,
-                  productName: "Sản phẩm không tên",
-                  productImage: "https://via.placeholder.com/100",
-                  variantColor: "Không xác định",
-                  variantStorage: "Không xác định",
-                  productPrice: 0,
-                  productDiscountPrice: 0
-                };
-              }
-            })
-          );
+          // Lấy cả giỏ hàng từ API và session storage nếu có
+          const [apiResponse, sessionCart] = await Promise.all([
+            axios.get(`https://localhost:7107/api/Cart?userId=${id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            sessionStorage.getItem("cart")
+          ]);
+
+          items = apiResponse.data;
+
+          // Merge với giỏ hàng từ session nếu có
+          if (sessionCart) {
+            const sessionItems = JSON.parse(sessionCart);
+            const mergedItems = await mergeCartItems(items, sessionItems);
+            items = mergedItems;
+            sessionStorage.removeItem("cart");
+          }
+        } else {
+          // Chưa đăng nhập: lấy từ session storage
+          const sessionCart = sessionStorage.getItem("cart");
+          if (sessionCart) {
+            const sessionItems = JSON.parse(sessionCart);
+            items = await Promise.all(
+              sessionItems.map(async (item) => {
+                try {
+                  const response = await axios.get(
+                    `https://localhost:7107/api/Cart/variant-info/${item.productVariantId}`
+                  );
+                  return {
+                    ...item,
+                    productName: response.data.productName,
+                    productImage: response.data.productImage,
+                    variantColor: response.data.variantColor,
+                    variantStorage: response.data.variantStorage,
+                    productPrice: response.data.price,
+                    productDiscountPrice: response.data.discountPrice
+                  };
+                } catch (error) {
+                  console.error("Error fetching variant info:", error);
+                  return {
+                    ...item,
+                    productName: "Sản phẩm không tên",
+                    productImage: "https://via.placeholder.com/100",
+                    variantColor: "Không xác định",
+                    variantStorage: "Không xác định",
+                    productPrice: 0,
+                    productDiscountPrice: 0
+                  };
+                }
+              })
+            );
+          }
+        }
+
+        setCartItems(items);
+        setSelectedItems(items);
+        calculateTotalAmount(items);
+      } catch (error) {
+        console.error("Error fetching cart:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const mergeCartItems = async (apiItems, sessionItems) => {
+      // Gộp các sản phẩm trùng nhau
+      const merged = [...apiItems];
+      
+      for (const sessionItem of sessionItems) {
+        const existingItem = merged.find(item => 
+          item.productVariantId === sessionItem.productVariantId);
+        
+        if (existingItem) {
+          existingItem.quantity += sessionItem.quantity;
+        } else {
+          try {
+            const response = await axios.get(
+              `https://localhost:7107/api/Cart/variant-info/${sessionItem.productVariantId}`
+            );
+            merged.push({
+              ...sessionItem,
+              productName: response.data.productName,
+              productImage: response.data.productImage,
+              variantColor: response.data.variantColor,
+              variantStorage: response.data.variantStorage,
+              productPrice: response.data.price,
+              productDiscountPrice: response.data.discountPrice
+            });
+          } catch (error) {
+            console.error("Error fetching variant info:", error);
+          }
         }
       }
-console.log("Items from session storage:", items);
-      setCartItems(items);
-      setSelectedItems(items);
-      calculateTotalAmount(items);
-    } catch (error) {
-      console.error("Error fetching cart:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      
+      return merged;
+    };
 
-  if (isOpen) {
-    fetchCart();
-  }
-}, [isOpen]);
+    if (isOpen) {
+      fetchCart();
+    }
+  }, [isOpen]);
 
   const calculateTotalAmount = (items) => {
     const total = items.reduce((sum, item) => {
       const price = item.productDiscountPrice || item.productPrice;
       return sum + price * item.quantity;
     }, 0);
+    setOriginalTotal(total);
     setTotalAmount(total - discountAmount);
   };
 
@@ -134,6 +197,7 @@ console.log("Items from session storage:", items);
       return;
     }
 
+    setVoucherLoading(true);
     try {
       const response = await axios.post("https://localhost:7107/api/vouchers/apply", { 
         code: voucherCode, 
@@ -144,7 +208,9 @@ console.log("Items from session storage:", items);
       calculateTotalAmount(selectedItems);
     } catch (error) {
       console.error("Error applying voucher:", error);
-      alert("Voucher không hợp lệ hoặc đã hết hạn.");
+      alert(error.response?.data?.message || "Voucher không hợp lệ hoặc đã hết hạn.");
+    } finally {
+      setVoucherLoading(false);
     }
   };
 
@@ -157,10 +223,18 @@ console.log("Items from session storage:", items);
 
   const handlePlaceOrder = () => {
     if (selectedItems.length === 0) {
-      alert("Chưa chọn sản phẩm nào!");
+      alert("Vui lòng chọn ít nhất một sản phẩm!");
       return;
     }
-    navigate("/checkout", { state: { selectedItems, totalAmount, voucherCode } });
+    navigate("/checkout", { 
+      state: { 
+        selectedItems, 
+        totalAmount, 
+        originalTotal,
+        discountAmount,
+        voucherCode: voucherApplied ? voucherCode : null 
+      } 
+    });
   };
 
   const handleQuantityChange = (item) => {
@@ -223,21 +297,33 @@ console.log("Items from session storage:", items);
   };
 
   return (
-    <Drawer anchor="right" open={isOpen} onClose={onClose} PaperProps={{ sx: { width: 500, p: 2 } }}>
+    <Drawer 
+      anchor="right" 
+      open={isOpen} 
+      onClose={onClose} 
+      PaperProps={{ 
+        sx: { 
+          width: { xs: '100%', sm: 500 }, 
+          p: 2,
+          display: 'flex',
+          flexDirection: 'column'
+        } 
+      }}
+    >
       <Box className="flex items-center justify-between p-4 border-b">
-        <Typography variant="h6">Giỏ Hàng</Typography>
+        <Typography variant="h6" fontWeight="bold">Giỏ Hàng Của Bạn</Typography>
         <IconButton onClick={onClose}>
           <X />
         </IconButton>
       </Box>
 
       {loading ? (
-        <Box display="flex" justifyContent="center" p={4}>
-          <Typography>Đang tải giỏ hàng...</Typography>
+        <Box display="flex" justifyContent="center" alignItems="center" flexGrow={1}>
+          <CircularProgress />
         </Box>
       ) : cartItems.length > 0 ? (
         <>
-          <List sx={{ height: "100%", overflowY: "auto", px: 1 }}>
+          <List sx={{ flexGrow: 1, overflowY: 'auto', px: 1 }}>
             {cartItems.map((item) => (
               <Box
                 key={item.productVariantId}
@@ -249,7 +335,10 @@ console.log("Items from session storage:", items);
                   display: "flex",
                   alignItems: "center",
                   gap: 2,
-                  backgroundColor: "#f9f9f9",
+                  backgroundColor: "#fff",
+                  '&:hover': {
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  }
                 }}
               >
                 <Checkbox
@@ -257,6 +346,7 @@ console.log("Items from session storage:", items);
                     (selectedItem) => selectedItem.productVariantId === item.productVariantId
                   )}
                   onChange={() => handleSelectItem(item)}
+                  color="primary"
                 />
                 <Avatar
                   src={item.productImage || "https://via.placeholder.com/100"}
@@ -264,166 +354,275 @@ console.log("Items from session storage:", items);
                   sx={{ 
                     width: 80, 
                     height: 80, 
-                    border: "1px solid #e0e0e0", 
-                    borderRadius: 2 
+                    borderRadius: 2,
+                    objectFit: 'cover'
                   }}
+                  variant="rounded"
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = "https://via.placeholder.com/100";
                   }}
                 />
-                <ListItemText
-                  primary={
-                    <Typography fontWeight="medium">
-                      {item.productName}
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography fontWeight="medium" sx={{ mb: 0.5 }}>
+                    {item.productName}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                    {item.variantColor} - {item.variantStorage}
+                  </Typography>
+                  {item.productDiscountPrice ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="body2" sx={{ textDecoration: 'line-through', color: 'text.secondary' }}>
+                        {(item.productPrice * item.quantity).toLocaleString()}₫
+                      </Typography>
+                      <Typography variant="body2" fontWeight="bold" color="error">
+                        {(item.productDiscountPrice * item.quantity).toLocaleString()}₫
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" fontWeight="medium">
+                      {(item.productPrice * item.quantity).toLocaleString()}₫
                     </Typography>
-                  }
-                  secondary={
-                    <>
-                      <Typography variant="body2" color="text.secondary">
-                        {item.variantColor} - {item.variantStorage}
-                      </Typography>
-                      <Typography variant="body2" fontWeight="medium">
-                        {((item.productDiscountPrice || item.productPrice) * item.quantity).toLocaleString()} VND
-                      </Typography>
-                      <Typography 
-                        variant="body2" 
-                        color="text.secondary"
-                        onClick={() => handleQuantityChange(item)}
-                        sx={{ cursor: 'pointer', mt: 0.5 }}
-                      >
-                        Số lượng: {item.quantity}
-                      </Typography>
-                    </>
-                  }
-                />
+                  )}
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 1,
+                      mt: 0.5 
+                    }}
+                    onClick={() => handleQuantityChange(item)}
+                  >
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ cursor: 'pointer' }}
+                    >
+                      Số lượng: 
+                    </Typography>
+                    <Chip 
+                      label={item.quantity} 
+                      size="small"
+                      sx={{ cursor: 'pointer' }}
+                    />
+                  </Box>
+                </Box>
                 <IconButton 
                   onClick={() => handleRemoveItem(item.productVariantId)}
                   sx={{ color: 'error.main' }}
                 >
-                  <Delete />
+                  <Delete size={20} />
                 </IconButton>
               </Box>
             ))}
           </List>
 
-          <Box className="p-4 border-t flex flex-col gap-2">
-            <TextField
-              label="Mã Voucher"
-              variant="outlined"
-              value={voucherCode}
-              onChange={(e) => setVoucherCode(e.target.value)}
-              fullWidth
-              disabled={voucherApplied || !userId}
-              size="small"
-            />
-            <Box sx={{ display: "flex", justifyContent: "flex-start", gap: 1 }}>
-              {voucherApplied ? (
-                <Button 
-                  variant="contained" 
-                  color="primary" 
-                  size="small"
-                  onClick={handleRemoveVoucher}
-                >
-                  Xóa Voucher
-                </Button>
-              ) : (
-                <Button 
-                  variant="contained" 
-                  color="primary" 
-                  size="small"
-                  onClick={handleApplyVoucher}
-                  disabled={!voucherCode}
-                >
-                  Áp dụng
-                </Button>
-              )}
-            </Box>
-            {discountAmount > 0 && (
-              <Typography variant="body2" color="success.main">
-                Đã áp dụng giảm: {discountAmount.toLocaleString()} VND
-              </Typography>
+          <Box sx={{ p: 2, borderTop: '1px solid #e0e0e0', bgcolor: '#fafafa' }}>
+            {userId && (
+              <>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Gift size={20} color="#ff6b6b" style={{ marginRight: 8 }} />
+                  <Typography variant="subtitle1" fontWeight="medium">
+                    Mã giảm giá
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    variant="outlined"
+                    placeholder="Nhập mã giảm giá"
+                    value={voucherCode}
+                    onChange={(e) => setVoucherCode(e.target.value)}
+                    disabled={voucherApplied}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: '4px',
+                      }
+                    }}
+                  />
+                  {voucherApplied ? (
+                    <Button 
+                      variant="outlined" 
+                      color="error"
+                      onClick={handleRemoveVoucher}
+                      sx={{ minWidth: '100px' }}
+                    >
+                      Hủy
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="contained" 
+                      color="primary"
+                      onClick={handleApplyVoucher}
+                      disabled={!voucherCode || voucherLoading}
+                      sx={{ minWidth: '100px' }}
+                    >
+                      {voucherLoading ? <CircularProgress size={20} /> : 'Áp dụng'}
+                    </Button>
+                  )}
+                </Box>
+                {discountAmount > 0 && (
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    mb: 1 
+                  }}>
+                    <Typography variant="body2">Giảm giá:</Typography>
+                    <Typography variant="body2" color="error" fontWeight="medium">
+                      -{discountAmount.toLocaleString()}₫
+                    </Typography>
+                  </Box>
+                )}
+                <Divider sx={{ my: 1 }} />
+              </>
             )}
+            
             <Box sx={{ 
-              display: "flex", 
-              alignItems: "center", 
-              justifyContent: "space-between", 
-              mt: 2 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              mb: 1 
             }}>
-              <Typography variant="h6">
-                Tổng tiền: {totalAmount.toLocaleString()} VND
+              <Typography variant="body1">Tạm tính:</Typography>
+              <Typography variant="body1" fontWeight="medium">
+                {originalTotal.toLocaleString()}₫
               </Typography>
-              <Button
-                variant="contained"
-                color="error"
-                size="medium"
-                sx={{ minWidth: "140px" }}
-                onClick={handlePlaceOrder}
-              >
-                Đặt hàng
-              </Button>
             </Box>
+            
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              mb: 2 
+            }}>
+              <Typography variant="h6">Tổng cộng:</Typography>
+              <Typography variant="h6" fontWeight="bold" color="error">
+                {totalAmount.toLocaleString()}₫
+              </Typography>
+            </Box>
+            
+            <Button
+              fullWidth
+              variant="contained"
+              color="error"
+              size="large"
+              onClick={handlePlaceOrder}
+              disabled={selectedItems.length === 0}
+              sx={{
+                py: 1.5,
+                borderRadius: '4px',
+                fontWeight: 'bold',
+                fontSize: '1rem'
+              }}
+            >
+              Tiến hành đặt hàng
+            </Button>
           </Box>
         </>
       ) : (
-        <Box display="flex" justifyContent="center" p={4}>
-          <Typography>Giỏ hàng trống</Typography>
+        <Box 
+          display="flex" 
+          flexDirection="column" 
+          justifyContent="center" 
+          alignItems="center" 
+          flexGrow={1}
+          textAlign="center"
+          p={4}
+        >
+          <img 
+            src="/empty-cart.png" 
+            alt="Empty cart" 
+            style={{ width: 200, marginBottom: 16 }} 
+          />
+          <Typography variant="h6" gutterBottom>
+            Giỏ hàng của bạn đang trống
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Hãy thêm sản phẩm vào giỏ hàng để bắt đầu mua sắm
+          </Typography>
+          <Button 
+            variant="outlined" 
+            color="primary"
+            onClick={onClose}
+          >
+            Tiếp tục mua sắm
+          </Button>
         </Box>
       )}
 
       <Modal open={quantityModalOpen} onClose={() => setQuantityModalOpen(false)}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 300,
-            bgcolor: "background.paper",
-            boxShadow: 24,
-            p: 4,
-            borderRadius: 2,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 2,
-          }}
-        >
-          <Typography variant="h6">Thay đổi số lượng</Typography>
-          <Box display="flex" alignItems="center" gap={3}>
-            <IconButton 
-              onClick={handleDecreaseQuantity}
-              disabled={selectedItem?.quantity <= 1}
-            >
-              <Minus />
-            </IconButton>
-            <Typography variant="h6" sx={{ minWidth: 30, textAlign: 'center' }}>
-              {selectedItem?.quantity}
-            </Typography>
-            <IconButton onClick={handleIncreaseQuantity}>
-              <Plus />
-            </IconButton>
-          </Box>
-          <Box display="flex" gap={2} width="100%">
-            <Button 
-              variant="outlined" 
-              fullWidth
-              onClick={() => setQuantityModalOpen(false)}
-            >
-              Hủy
-            </Button>
-            <Button 
-              variant="contained" 
-              fullWidth
-              onClick={() => {
-                setQuantityModalOpen(false);
-              }}
-            >
-              Xác nhận
-            </Button>
-          </Box>
+      <Box
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: 300,
+          bgcolor: "background.paper",
+          boxShadow: 24,
+          p: 3,
+          borderRadius: 2,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 2,
+        }}
+      >
+        <Typography variant="h6" fontWeight="medium">
+          Điều chỉnh số lượng
+        </Typography>
+        <Box display="flex" alignItems="center" gap={3}>
+          <IconButton 
+            onClick={() => {
+              const newQuantity = Math.max(1, selectedItem.quantity - 1);
+              setSelectedItem({...selectedItem, quantity: newQuantity});
+            }}
+            disabled={selectedItem?.quantity <= 1}
+            sx={{ 
+              border: '1px solid #e0e0e0',
+              '&:hover': { bgcolor: '#f5f5f5' }
+            }}
+          >
+            <Minus size={20} />
+          </IconButton>
+          <Typography variant="h5" sx={{ minWidth: 40, textAlign: 'center' }}>
+            {selectedItem?.quantity}
+          </Typography>
+          <IconButton 
+            onClick={() => {
+              const newQuantity = selectedItem.quantity + 1;
+              setSelectedItem({...selectedItem, quantity: newQuantity});
+            }}
+            sx={{ 
+              border: '1px solid #e0e0e0',
+              '&:hover': { bgcolor: '#f5f5f5' }
+            }}
+          >
+            <Plus size={20} />
+          </IconButton>
         </Box>
-      </Modal>
+        <Box display="flex" gap={2} width="100%">
+          <Button 
+            variant="outlined" 
+            fullWidth
+            onClick={() => setQuantityModalOpen(false)}
+            sx={{ py: 1 }}
+          >
+            Hủy
+          </Button>
+          <Button 
+            variant="contained" 
+            fullWidth
+            onClick={() => {
+              updateQuantity(selectedItem.quantity);
+              setQuantityModalOpen(false);
+            }}
+            sx={{ py: 1 }}
+          >
+            Xác nhận
+          </Button>
+        </Box>
+      </Box>
+    </Modal>
     </Drawer>
   );
 };

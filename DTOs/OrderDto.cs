@@ -23,4 +23,5 @@ namespace SHN_Gear.DTOs
     {
         public string NewStatus { get; set; }
     }
+
 }
