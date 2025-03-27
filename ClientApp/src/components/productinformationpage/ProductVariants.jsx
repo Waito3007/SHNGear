@@ -190,9 +190,6 @@ const ProductVariants = ({ variants }) => {
                   {selectedColor === color && (
                     <CheckCircle color="error" fontSize="small" />
                   )}
-                  {selectedColor === color && (
-                    <CheckCircle color="error" fontSize="small" />
-                  )}
                 </CardContent>
               </CardActionArea>
             </Card>
