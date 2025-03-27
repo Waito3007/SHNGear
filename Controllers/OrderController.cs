@@ -311,6 +311,8 @@ namespace SHN_Gear.Controllers
                 .Where(o => o.UserId == userId)
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.ProductVariant)
+                .ThenInclude(pv => pv.Product)
+                .ThenInclude(p => p.Images) // Lấy hình ảnh sản phẩm
                 .ToListAsync();
 
             if (orders == null || orders.Count == 0)
@@ -318,7 +320,7 @@ namespace SHN_Gear.Controllers
                 return NotFound("Không tìm thấy đơn hàng nào cho người dùng này.");
             }
 
-            var orderDtos = orders.Select(order => new OrderDto
+            var orderDtos = orders.Select(order => new
             {
                 Id = order.Id,
                 UserId = order.UserId,
@@ -327,15 +329,66 @@ namespace SHN_Gear.Controllers
                 OrderStatus = order.OrderStatus,
                 AddressId = order.AddressId,
                 PaymentMethodId = order.PaymentMethodId,
-                OrderItems = order.OrderItems.Select(oi => new OrderItemDto
+                Items = order.OrderItems.Select(oi => new
                 {
-                    ProductVariantId = oi.ProductVariantId,
+                    ProductName = oi.ProductVariant.Product.Name,
+                    ProductDescription = oi.ProductVariant.Product.Description,
+                    ProductImage = oi.ProductVariant.Product.Images.FirstOrDefault(img => img.IsPrimary)?.ImageUrl,
+                    VariantColor = oi.ProductVariant.Color,
+                    VariantStorage = oi.ProductVariant.Storage,
                     Quantity = oi.Quantity,
                     Price = oi.Price
                 }).ToList()
             }).ToList();
 
             return Ok(orderDtos);
+        }
+
+        [HttpGet("user/{userId}/paged")]
+        public async Task<IActionResult> GetPagedOrdersByUserId(int userId, int page = 1, int pageSize = 10)
+        {
+            var query = _context.Orders
+                .Where(o => o.UserId == userId)
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.ProductVariant)
+                .ThenInclude(pv => pv.Product)
+                .ThenInclude(p => p.Images) // Lấy hình ảnh sản phẩm
+                .OrderByDescending(o => o.OrderDate);
+
+            var totalOrders = await query.CountAsync();
+            var orders = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var orderDtos = orders.Select(order => new
+            {
+                Id = order.Id,
+                UserId = order.UserId,
+                OrderDate = order.OrderDate,
+                TotalAmount = order.TotalAmount,
+                OrderStatus = order.OrderStatus,
+                AddressId = order.AddressId,
+                PaymentMethodId = order.PaymentMethodId,
+                Items = order.OrderItems.Select(oi => new
+                {
+                    ProductName = oi.ProductVariant.Product.Name,
+                    ProductDescription = oi.ProductVariant.Product.Description,
+                    ProductImage = oi.ProductVariant.Product.Images.FirstOrDefault(img => img.IsPrimary)?.ImageUrl,
+                    VariantColor = oi.ProductVariant.Color,
+                    VariantStorage = oi.ProductVariant.Storage,
+                    Quantity = oi.Quantity,
+                    Price = oi.Price
+                }).ToList()
+            }).ToList();
+
+            return Ok(new
+            {
+                TotalOrders = totalOrders,
+                Page = page,
+                PageSize = pageSize,
+                Orders = orderDtos
+            });
         }
 
         // Tổng doanh thu theo ngày
@@ -428,6 +481,45 @@ namespace SHN_Gear.Controllers
                 .SumAsync(o => o.TotalAmount);
 
             return Ok(new { TotalRevenue = totalRevenue });
+        }
+
+        [HttpGet("{id}/details")]
+        public async Task<IActionResult> GetOrderDetails(int id)
+        {
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.ProductVariant)
+                .ThenInclude(pv => pv.Product)
+                .ThenInclude(p => p.Images) // Lấy hình ảnh sản phẩm
+                .FirstOrDefaultAsync(o => o.Id == id);
+
+            if (order == null)
+            {
+                return NotFound("Đơn hàng không tồn tại.");
+            }
+
+            var orderDetails = new
+            {
+                Id = order.Id,
+                UserId = order.UserId,
+                OrderDate = order.OrderDate,
+                TotalAmount = order.TotalAmount,
+                OrderStatus = order.OrderStatus,
+                AddressId = order.AddressId,
+                PaymentMethodId = order.PaymentMethodId,
+                Items = order.OrderItems.Select(oi => new
+                {
+                    ProductName = oi.ProductVariant.Product.Name,
+                    ProductDescription = oi.ProductVariant.Product.Description,
+                    ProductImage = oi.ProductVariant.Product.Images.FirstOrDefault(img => img.IsPrimary)?.ImageUrl,
+                    VariantColor = oi.ProductVariant.Color,
+                    VariantStorage = oi.ProductVariant.Storage,
+                    Quantity = oi.Quantity,
+                    Price = oi.Price
+                }).ToList()
+            };
+
+            return Ok(orderDetails);
         }
     }
 

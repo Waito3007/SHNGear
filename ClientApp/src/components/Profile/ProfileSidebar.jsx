@@ -11,8 +11,6 @@ const ProfileSidebar = ({ setActiveTab }) => {
         <li onClick={() => setActiveTab("loyalty")}>Khách hàng thân thiết</li>
         <li onClick={() => setActiveTab("address")}> Sổ địa chỉ nhận hàng</li>
         <li onClick={() => setActiveTab("viewed")}>Sản phẩm đã xem</li>
-        <li onClick={() => setActiveTab("paymentmethod")}>Phương thức thanh toán</li>
-
       </ul>
     </div>
   );

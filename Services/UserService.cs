@@ -95,15 +95,10 @@ namespace SHN_Gear.Services
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return null;
 
-            // Kiểm tra nếu có dữ liệu thì mới update
-            if (!string.IsNullOrWhiteSpace(editDto.FullName))
-                user.FullName = editDto.FullName;
-            if (!string.IsNullOrWhiteSpace(editDto.Email))
-                user.Email = editDto.Email;
+            user.FullName = editDto.FullName;
+            user.Email = editDto.Email;
 
-            _context.Users.Update(user);
             await _context.SaveChangesAsync();
-
             return user;
         }
     }
