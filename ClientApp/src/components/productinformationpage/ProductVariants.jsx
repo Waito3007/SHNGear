@@ -62,71 +62,57 @@ const ProductVariants = ({ variants, onAddToCart }) => {
 
     const token = localStorage.getItem("token");
     
-    // Chuẩn bị dữ liệu đầy đủ cho cả 2 trường hợp
-    const cartItem = {
-      productVariantId: selectedVariant.id,
-      quantity: 1,
-      // Thông tin sản phẩm đầy đủ
-      productId: selectedVariant.product?.id || 0,
-      productName: selectedVariant.product?.name || "Sản phẩm không tên",
-      productImage: selectedVariant.product?.images?.find(img => img.isPrimary)?.imageUrl || "",
-      variantColor: selectedVariant.color || "Không xác định",
-      variantStorage: selectedVariant.storage || "Không xác định",
-      productPrice: selectedVariant.price || 0,
-      productDiscountPrice: selectedVariant.discountPrice || 0,
-      // Thêm các trường khác nếu cần
-      brand: selectedVariant.product?.brand?.name || "",
-      category: selectedVariant.product?.category?.name || ""
-    };
+    // Lấy thông tin hiển thị trực tiếp từ component hiện tại
+    const primaryImage = selectedVariant.product?.images?.find(img => img.isPrimary)?.imageUrl || "";
+    const productName = selectedVariant.product?.name || "Sản phẩm không tên";
+    const variantColor = selectedColor;
+    const variantStorage = selectedStorage;
+    const price = selectedVariant.price || 0;
+    const discountPrice = selectedVariant.discountPrice || 0;
 
     if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        const userId = parseInt(decoded.sub, 10);
-        if (!Number.isInteger(userId)) throw new Error("User ID không hợp lệ.");
-        
-        // Gọi API chỉ với các trường cần thiết
-        await axios.post(
-          "https://localhost:7107/api/Cart",
-          {
-            productVariantId: selectedVariant.id,
-            quantity: 1,
-            userId: userId
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` }
-          }
-        );
-        
-        showSnackbar("🛒 Sản phẩm đã được thêm vào giỏ hàng!", "success");
-        if (onAddToCart) onAddToCart();
-      } catch (error) {
-        console.error("❌ Lỗi khi thêm vào giỏ hàng:", error);
-        showSnackbar("❌ Phiên đăng nhập không hợp lệ, vui lòng đăng nhập lại!", "error");
-      }
+      // Gọi API chỉ với dữ liệu cần thiết
+      const decoded = jwtDecode(token);
+      const userId = parseInt(decoded.sub, 10);
+      await axios.post(
+        "https://localhost:7107/api/Cart",
+        {
+          productVariantId: selectedVariant.id,
+          quantity: 1,
+          userId: userId
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
     } else {
-      // Xử lý cho người dùng chưa đăng nhập - lưu đầy đủ thông tin vào session
+      // Lưu đầy đủ thông tin hiển thị vào session
       const sessionCart = JSON.parse(sessionStorage.getItem("cart")) || [];
       const existingItemIndex = sessionCart.findIndex(
-        item => item.productVariantId === cartItem.productVariantId
+        item => item.productVariantId === selectedVariant.id
       );
 
       if (existingItemIndex >= 0) {
         sessionCart[existingItemIndex].quantity += 1;
       } else {
         sessionCart.push({
-          ...cartItem,
-          // Thêm ID tạm thời cho session
-          id: Date.now(),
-          // Thêm thời gian thêm vào giỏ
+          productVariantId: selectedVariant.id,
+          quantity: 1,
+          // Thông tin hiển thị lấy từ trang hiện tại
+          productImage: primaryImage,
+          productName: productName,
+          variantColor: variantColor,
+          variantStorage: variantStorage,
+          productPrice: price,
+          productDiscountPrice: discountPrice,
+          // Thêm timestamp để quản lý
           addedAt: new Date().toISOString()
         });
       }
 
       sessionStorage.setItem("cart", JSON.stringify(sessionCart));
-      showSnackbar("🛒 Sản phẩm đã được thêm vào giỏ hàng!", "success");
-      if (onAddToCart) onAddToCart();
     }
+
+    showSnackbar("🛒 Sản phẩm đã được thêm vào giỏ hàng!", "success");
+    if (onAddToCart) onAddToCart();
   } catch (error) {
     console.error("❌ Lỗi khi thêm vào giỏ hàng:", error);
     showSnackbar(`❌ Không thể thêm vào giỏ hàng: ${error.message}`, "error");

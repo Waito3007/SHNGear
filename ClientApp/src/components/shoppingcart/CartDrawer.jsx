@@ -15,52 +15,86 @@ const CartDrawer = ({ isOpen, onClose }) => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [quantityModalOpen, setQuantityModalOpen] = useState(false);
   const [voucherApplied, setVoucherApplied] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchCart = async () => {
-      const token = localStorage.getItem("token");
+  const fetchCart = async () => {
+    const token = localStorage.getItem("token");
+    setLoading(true);
+    
+    try {
+      let items = [];
       
-      try {
-        let items = [];
-        
-        if (token) {
-          const decoded = jwtDecode(token);
-          const id = parseInt(decoded.sub, 10);
-          if (Number.isInteger(id)) {
-            setUserId(id);
-            const cartResponse = await axios.get(`https://localhost:7107/api/Cart?userId=${id}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            items = cartResponse.data;
-          }
-        } else {
-          const sessionCart = sessionStorage.getItem("cart");
-          if (sessionCart) {
-            const parsedCart = JSON.parse(sessionCart);
-            items = parsedCart;
-          }
+      if (token) {
+        // Đã đăng nhập: lấy từ API
+        const decoded = jwtDecode(token);
+        const id = parseInt(decoded.sub, 10);
+        const response = await axios.get(`https://localhost:7107/api/Cart?userId=${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        items = response.data;
+      } else {
+        // Chưa đăng nhập: lấy từ session storage
+        const sessionCart = sessionStorage.getItem("cart");
+        if (sessionCart) {
+          const sessionItems = JSON.parse(sessionCart);
+          
+          // Gọi API variant-info cho từng sản phẩm
+          // Trong hàm fetchCart, thay đổi phần map sessionItems như sau:
+          items = await Promise.all(
+            sessionItems.map(async (item) => {
+              try {
+                const response = await axios.get(
+                  `https://localhost:7107/api/Cart/variant-info/${item.productVariantId}`
+                );
+                return {
+                  ...item,
+                  productName: response.data.productName, // Đổi từ ProductName -> productName
+                  productImage: response.data.productImage, // Đổi từ ProductImage -> productImage
+                  variantColor: response.data.variantColor, // Đổi từ VariantColor -> variantColor
+                  variantStorage: response.data.variantStorage, // Đổi từ VariantStorage -> variantStorage
+                  productPrice: response.data.price, // Đổi từ Price -> price
+                  productDiscountPrice: response.data.discountPrice // Đổi từ DiscountPrice -> discountPrice
+                };
+              } catch (error) {
+                console.error("Error fetching variant info:", error);
+                return {
+                  ...item,
+                  productName: "Sản phẩm không tên",
+                  productImage: "https://via.placeholder.com/100",
+                  variantColor: "Không xác định",
+                  variantStorage: "Không xác định",
+                  productPrice: 0,
+                  productDiscountPrice: 0
+                };
+              }
+            })
+          );
         }
-        console.log("Fetched cart items:", items);
-        setCartItems(items);
-        setSelectedItems(items); // Select all items by default
-        calculateTotalAmount(items);
-      } catch (error) {
-        console.error("Error fetching cart:", error);
       }
-    };
-
-    if (isOpen) {
-      fetchCart();
+console.log("Items from session storage:", items);
+      setCartItems(items);
+      setSelectedItems(items);
+      calculateTotalAmount(items);
+    } catch (error) {
+      console.error("Error fetching cart:", error);
+    } finally {
+      setLoading(false);
     }
-  }, [isOpen]);
+  };
+
+  if (isOpen) {
+    fetchCart();
+  }
+}, [isOpen]);
 
   const calculateTotalAmount = (items) => {
     const total = items.reduce((sum, item) => {
       const price = item.productDiscountPrice || item.productPrice;
       return sum + price * item.quantity;
     }, 0);
-    setTotalAmount(total);
+    setTotalAmount(total - discountAmount);
   };
 
   const handleRemoveItem = async (id) => {
@@ -91,12 +125,12 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
   const handleApplyVoucher = async () => {
     if (!userId) {
-      alert("Please login to use vouchers");
+      alert("Vui lòng đăng nhập để tận hưởng ưu đãi.");
       return;
     }
 
     if (voucherApplied) {
-      alert("Voucher already applied");
+      alert("Voucher đã được áp dụng.");
       return;
     }
 
@@ -106,11 +140,11 @@ const CartDrawer = ({ isOpen, onClose }) => {
         userId 
       });
       setDiscountAmount(response.data.discountAmount);
-      setTotalAmount((prevTotal) => Math.max(0, prevTotal - response.data.discountAmount));
       setVoucherApplied(true);
+      calculateTotalAmount(selectedItems);
     } catch (error) {
       console.error("Error applying voucher:", error);
-      alert("Invalid or expired voucher");
+      alert("Voucher không hợp lệ hoặc đã hết hạn.");
     }
   };
 
@@ -123,7 +157,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
   const handlePlaceOrder = () => {
     if (selectedItems.length === 0) {
-      alert("No items selected!");
+      alert("Chưa chọn sản phẩm nào!");
       return;
     }
     navigate("/checkout", { state: { selectedItems, totalAmount, voucherCode } });
@@ -173,11 +207,8 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
   const handleDecreaseQuantity = () => {
     if (!selectedItem) return;
-    const newQuantity = Math.max(0, selectedItem.quantity - 1);
+    const newQuantity = Math.max(1, selectedItem.quantity - 1);
     updateQuantity(newQuantity);
-    if (newQuantity === 0) {
-      setQuantityModalOpen(false);
-    }
   };
 
   const handleSelectItem = (item) => {
@@ -194,13 +225,17 @@ const CartDrawer = ({ isOpen, onClose }) => {
   return (
     <Drawer anchor="right" open={isOpen} onClose={onClose} PaperProps={{ sx: { width: 500, p: 2 } }}>
       <Box className="flex items-center justify-between p-4 border-b">
-        <Typography variant="h6">Shopping Cart</Typography>
+        <Typography variant="h6">Giỏ Hàng</Typography>
         <IconButton onClick={onClose}>
           <X />
         </IconButton>
       </Box>
 
-      {cartItems.length > 0 ? (
+      {loading ? (
+        <Box display="flex" justifyContent="center" p={4}>
+          <Typography>Đang tải giỏ hàng...</Typography>
+        </Box>
+      ) : cartItems.length > 0 ? (
         <>
           <List sx={{ height: "100%", overflowY: "auto", px: 1 }}>
             {cartItems.map((item) => (
@@ -208,7 +243,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                 key={item.productVariantId}
                 sx={{
                   p: 2,
-                  border: "1px solid black",
+                  border: "1px solid #e0e0e0",
                   borderRadius: 2,
                   mb: 2,
                   display: "flex",
@@ -226,18 +261,47 @@ const CartDrawer = ({ isOpen, onClose }) => {
                 <Avatar
                   src={item.productImage || "https://via.placeholder.com/100"}
                   alt={item.productName}
-                  sx={{ width: 100, height: "100%", border: "1px solid black", borderRadius: 2 }}
+                  sx={{ 
+                    width: 80, 
+                    height: 80, 
+                    border: "1px solid #e0e0e0", 
+                    borderRadius: 2 
+                  }}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "https://via.placeholder.com/100";
+                  }}
                 />
                 <ListItemText
-                  primary={`${item.productName} (${item.variantColor} - ${item.variantStorage})`}
+                  primary={
+                    <Typography fontWeight="medium">
+                      {item.productName}
+                    </Typography>
+                  }
                   secondary={
-                    <span onClick={() => handleQuantityChange(item)}>
-                      Quantity: {item.quantity} - {(item.productDiscountPrice || item.productPrice) * item.quantity} VND
-                    </span>
+                    <>
+                      <Typography variant="body2" color="text.secondary">
+                        {item.variantColor} - {item.variantStorage}
+                      </Typography>
+                      <Typography variant="body2" fontWeight="medium">
+                        {((item.productDiscountPrice || item.productPrice) * item.quantity).toLocaleString()} VND
+                      </Typography>
+                      <Typography 
+                        variant="body2" 
+                        color="text.secondary"
+                        onClick={() => handleQuantityChange(item)}
+                        sx={{ cursor: 'pointer', mt: 0.5 }}
+                      >
+                        Số lượng: {item.quantity}
+                      </Typography>
+                    </>
                   }
                 />
-                <IconButton onClick={() => handleRemoveItem(item.productVariantId)}>
-                  <Delete color="red" />
+                <IconButton 
+                  onClick={() => handleRemoveItem(item.productVariantId)}
+                  sx={{ color: 'error.main' }}
+                >
+                  <Delete />
                 </IconButton>
               </Box>
             ))}
@@ -245,42 +309,66 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
           <Box className="p-4 border-t flex flex-col gap-2">
             <TextField
-              label="Voucher Code"
+              label="Mã Voucher"
               variant="outlined"
               value={voucherCode}
               onChange={(e) => setVoucherCode(e.target.value)}
               fullWidth
               disabled={voucherApplied || !userId}
+              size="small"
             />
-            <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
+            <Box sx={{ display: "flex", justifyContent: "flex-start", gap: 1 }}>
               {voucherApplied ? (
-                <Button variant="contained" color="primary" size="small" onClick={handleRemoveVoucher}>
-                  Remove Voucher
+                <Button 
+                  variant="contained" 
+                  color="primary" 
+                  size="small"
+                  onClick={handleRemoveVoucher}
+                >
+                  Xóa Voucher
                 </Button>
               ) : (
-                <Button variant="contained" color="primary" size="small" onClick={handleApplyVoucher}>
-                  Apply
+                <Button 
+                  variant="contained" 
+                  color="primary" 
+                  size="small"
+                  onClick={handleApplyVoucher}
+                  disabled={!voucherCode}
+                >
+                  Áp dụng
                 </Button>
               )}
             </Box>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mt: 2 }}>
+            {discountAmount > 0 && (
+              <Typography variant="body2" color="success.main">
+                Đã áp dụng giảm: {discountAmount.toLocaleString()} VND
+              </Typography>
+            )}
+            <Box sx={{ 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "space-between", 
+              mt: 2 
+            }}>
               <Typography variant="h6">
-                Total: {totalAmount.toLocaleString()} VND
+                Tổng tiền: {totalAmount.toLocaleString()} VND
               </Typography>
               <Button
                 variant="contained"
                 color="error"
-                size="small"
-                sx={{ minWidth: "120px", ml: 1 }}
+                size="medium"
+                sx={{ minWidth: "140px" }}
                 onClick={handlePlaceOrder}
               >
-                Checkout
+                Đặt hàng
               </Button>
             </Box>
           </Box>
         </>
       ) : (
-        <Typography className="text-center mt-4">Your cart is empty</Typography>
+        <Box display="flex" justifyContent="center" p={4}>
+          <Typography>Giỏ hàng trống</Typography>
+        </Box>
       )}
 
       <Modal open={quantityModalOpen} onClose={() => setQuantityModalOpen(false)}>
@@ -292,28 +380,48 @@ const CartDrawer = ({ isOpen, onClose }) => {
             transform: "translate(-50%, -50%)",
             width: 300,
             bgcolor: "background.paper",
-            border: "2px solid #000",
             boxShadow: 24,
             p: 4,
+            borderRadius: 2,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             gap: 2,
           }}
         >
-          <Typography variant="h6">Change Quantity</Typography>
-          <Box display="flex" alignItems="center" gap={2}>
-            <IconButton onClick={handleDecreaseQuantity}>
+          <Typography variant="h6">Thay đổi số lượng</Typography>
+          <Box display="flex" alignItems="center" gap={3}>
+            <IconButton 
+              onClick={handleDecreaseQuantity}
+              disabled={selectedItem?.quantity <= 1}
+            >
               <Minus />
             </IconButton>
-            <Typography>{selectedItem?.quantity}</Typography>
+            <Typography variant="h6" sx={{ minWidth: 30, textAlign: 'center' }}>
+              {selectedItem?.quantity}
+            </Typography>
             <IconButton onClick={handleIncreaseQuantity}>
               <Plus />
             </IconButton>
           </Box>
-          <Button variant="contained" onClick={() => setQuantityModalOpen(false)}>
-            Close
-          </Button>
+          <Box display="flex" gap={2} width="100%">
+            <Button 
+              variant="outlined" 
+              fullWidth
+              onClick={() => setQuantityModalOpen(false)}
+            >
+              Hủy
+            </Button>
+            <Button 
+              variant="contained" 
+              fullWidth
+              onClick={() => {
+                setQuantityModalOpen(false);
+              }}
+            >
+              Xác nhận
+            </Button>
+          </Box>
         </Box>
       </Modal>
     </Drawer>
