@@ -19,9 +19,17 @@ const ProductImage = ({ images, name }) => {
             {images.map((image, index) => (
               <SwiperSlide key={index}>
                 <img
-                  className="w-full h-auto rounded-lg shadow-lg"
-                  src={image.imageUrl}
-                  alt={`${name} - ${index + 1}`}
+                  src={
+                    image?.imageUrl?.startsWith("http")
+                      ? image.imageUrl
+                      : `https://localhost:7107/${image.imageUrl}`
+                  }
+                  alt={name || "Product Image"}
+                  className="w-full h-auto object-contain mb-3 transition-transform"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "/images/placeholder.jpg";
+                  }}
                 />
               </SwiperSlide>
             ))}

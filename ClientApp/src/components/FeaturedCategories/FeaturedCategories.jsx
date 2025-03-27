@@ -1,19 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
+import { useNavigate } from "react-router-dom"; // Hook điều hướng
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-import "aos/dist/aos.css"; // Import CSS cho AOS
-import AOS from "aos"; // Thư viện animation khi cuộn
+import "aos/dist/aos.css";
+import AOS from "aos";
 import CategoryLarge from "./CategoryLarge";
 
 const FeaturedCategories = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate(); // Hook điều hướng
 
-  // Gọi API lấy danh mục
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -23,7 +24,6 @@ const FeaturedCategories = () => {
         const data = await response.json();
         console.log("Dữ liệu từ API:", data);
 
-        // Xử lý dữ liệu linh hoạt: $values hoặc mảng trực tiếp
         const categoriesArray = Array.isArray(data.$values)
           ? data.$values
           : Array.isArray(data)
@@ -38,14 +38,12 @@ const FeaturedCategories = () => {
         setLoading(false);
       }
 
-      // Khởi tạo AOS
       AOS.init({ duration: 1000 });
     };
 
     fetchCategories();
   }, []);
 
-  // Xử lý trạng thái loading và error
   if (loading) {
     return <div className="text-center py-6">Đang tải danh mục...</div>;
   }
@@ -57,7 +55,6 @@ const FeaturedCategories = () => {
   return (
     <div className="w-full flex justify-center py-6">
       <div className="max-w-[1200px] w-full px-4">
-        {/* Swiper */}
         <Swiper
           modules={[Navigation, Pagination]}
           navigation
@@ -73,10 +70,14 @@ const FeaturedCategories = () => {
         >
           {categories.map((category) => (
             <SwiperSlide
-              key={category.id} // Sử dụng id thay vì index để key duy nhất
+              key={category.id}
               className="flex justify-center transform hover:scale-105 transition-all duration-300"
             >
-              <CategoryLarge name={category.name} image={category.image} />
+              <CategoryLarge
+                id={category.id}
+                name={category.name}
+                image={category.image}
+              />
             </SwiperSlide>
           ))}
         </Swiper>

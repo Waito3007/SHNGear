@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
-// import { Swiper, SwiperSlide } from "swiper/react";
-// import { Navigation } from "swiper/modules";
-import { useNavigate } from "react-router-dom";
-import "swiper/css";
-import "swiper/css/navigation";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
-const ProductGrid = ({ selectedCategory }) => {
+const ProductGrid = ({
+  selectedCategory,
+  selectedPriceRange,
+  selectedBrand,
+}) => {
   const [products, setProducts] = useState([]);
   const [brands, setBrands] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get("search") || "";
 
   useEffect(() => {
     const fetchProductsAndBrands = async () => {
@@ -27,7 +29,6 @@ const ProductGrid = ({ selectedCategory }) => {
         const productsData = await productsRes.json();
         const brandsData = await brandsRes.json();
 
-        // Xử lý danh sách thương hiệu thành dạng object { brandId: brandName }
         const brandsMap = (brandsData.$values || brandsData || []).reduce(
           (acc, brand) => {
             acc[brand.id] = brand.name;
@@ -36,13 +37,39 @@ const ProductGrid = ({ selectedCategory }) => {
           {}
         );
 
-        // Lọc sản phẩm theo selectedCategory (nếu API không hỗ trợ query)
-        const allProducts = productsData.$values || productsData || [];
-        const filteredProducts = selectedCategory
-          ? allProducts.filter(
-              (product) => product.categoryId === selectedCategory
-            )
-          : allProducts;
+        let filteredProducts = productsData.$values || productsData || [];
+
+        if (searchQuery) {
+          filteredProducts = filteredProducts.filter((product) =>
+            product.name.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+        }
+
+        if (selectedCategory) {
+          filteredProducts = filteredProducts.filter(
+            (product) => product.categoryId === selectedCategory
+          );
+        }
+
+        if (selectedPriceRange && selectedPriceRange !== "all") {
+          const [minPrice, maxPrice] = selectedPriceRange
+            .split("-")
+            .map(Number);
+          filteredProducts = filteredProducts.filter((product) => {
+            const price =
+              product.variants?.[0]?.discountPrice ||
+              product.variants?.[0]?.price ||
+              0;
+            return price >= minPrice && price <= maxPrice;
+          });
+        }
+
+        if (selectedBrand && selectedBrand.length > 0) {
+          const selectedBrandsArray = selectedBrand.map(Number); // Chuyển ID thương hiệu thành số
+          filteredProducts = filteredProducts.filter((product) =>
+            selectedBrandsArray.includes(product.brandId)
+          );
+        }
 
         const processedProducts = filteredProducts.map((product) => {
           const variant = product.variants?.[0] || {};
@@ -84,7 +111,7 @@ const ProductGrid = ({ selectedCategory }) => {
     };
 
     fetchProductsAndBrands();
-  }, [selectedCategory]); // Mỗi khi selectedCategory thay đổi, gọi API lại
+  }, [selectedCategory, selectedPriceRange, selectedBrand, searchQuery]);
 
   if (loading) {
     return <div className="text-center py-6">Đang tải sản phẩm...</div>;
@@ -99,7 +126,7 @@ const ProductGrid = ({ selectedCategory }) => {
       <div className="max-w-[1200px] w-full px-4 bg-white rounded-lg shadow-lg p-6">
         {products.length === 0 ? (
           <p className="text-center text-gray-500 text-lg mt-12">
-            Hiện không có sản phẩm
+            Không có sản phẩm phù hợp
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -110,11 +137,15 @@ const ProductGrid = ({ selectedCategory }) => {
                 onClick={() => navigate(`/product/${product.id}`)}
               >
                 <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-40 object-contain mb-3 hover:scale-110 transition-transform"
-                  onError={(e) => (e.target.src = "/images/placeholder.jpg")}
-                />
+    src={
+        product.images?.[0]?.imageUrl?.startsWith("http")
+            ? product.images[0].imageUrl
+            : `https://localhost:7107/${product.images?.[0]?.imageUrl || product.image}`
+    }
+    alt={product.name || "Product Image"}
+    className="w-full h-40 object-contain mb-3 hover:scale-110 transition-transform rounded-full size-10"
+    onError={(e) => { e.target.onerror = null; e.target.src = "/images/placeholder.jpg"; }}
+/>
                 <div className="text-gray-700 text-sm space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-500 line-through">
