@@ -316,28 +316,42 @@ const ProductsTable = () => {
                         </div>
                         
                         {/* Lọc theo giá tối thiểu */}
-                        <div>
-                            <label className="block text-gray-400 text-sm mb-1 whitespace-nowrap">Giá từ (VND)</label>
-                            <input
-                                type="number"
-                                className="w-full bg-gray-800 text-white rounded p-2"
-                                placeholder="Tối thiểu"
-                                value={filters.minPrice}
-                                onChange={(e) => setFilters({...filters, minPrice: e.target.value})}
-                            />
-                        </div>
-                        
-                        {/* Lọc theo giá tối đa */}
-                        <div>
-                            <label className="block text-gray-400 text-sm mb-1 whitespace-nowrap">Đến (VND)</label>
-                            <input
-                                type="number"
-                                className="w-full bg-gray-800 text-white rounded p-2"
-                                placeholder="Tối đa"
-                                value={filters.maxPrice}
-                                onChange={(e) => setFilters({...filters, maxPrice: e.target.value})}
-                            />
-                        </div>
+<div>
+    <label className="block text-gray-400 text-sm mb-1 whitespace-nowrap">Giá từ (VND)</label>
+    <select
+        className="w-full bg-gray-800 text-white rounded p-2"
+        value={filters.minPrice}
+        onChange={(e) => setFilters({ ...filters, minPrice: Number(e.target.value) })}
+    >
+        <option value={0}>Tối thiểu</option>
+        <option value={5000000}>5 triệu</option>
+        <option value={10000000}>10 triệu</option>
+        <option value={20000000}>20 triệu</option>
+        <option value={30000000}>30 triệu</option>
+        <option value={40000000}>40 triệu</option>
+        <option value={50000000}>50 triệu</option>
+    </select>
+</div>
+
+{/* Lọc theo giá tối đa */}
+<div>
+    <label className="block text-gray-400 text-sm mb-1 whitespace-nowrap">Đến (VND)</label>
+    <select
+        className="w-full bg-gray-800 text-white rounded p-2"
+        value={filters.maxPrice}
+        onChange={(e) => setFilters({ ...filters, maxPrice: Number(e.target.value) })}
+    >
+        <option value={1000000000}>Tối đa</option>
+        <option value={5000000}>5 triệu</option>
+        <option value={10000000}>10 triệu</option>
+        <option value={20000000}>20 triệu</option>
+        <option value={30000000}>30 triệu</option>
+        <option value={40000000}>40 triệu</option>
+        <option value={50000000}>50 triệu</option>
+        <option value={60000000}>Trên 50 triệu</option>
+    </select>
+</div>
+
                     </div>
                     
                     <div className="flex justify-end gap-2 mt-4">
