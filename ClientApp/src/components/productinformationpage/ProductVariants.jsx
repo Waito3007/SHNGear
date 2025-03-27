@@ -7,22 +7,26 @@ import {
   CardContent,
   CardActionArea,
   Button,
+  Snackbar,
+  Alert
 } from "@mui/material";
 import { CheckCircle, ShoppingCart } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
-
-const ProductVariants = ({ variants }) => {
-  const navigate = useNavigate();
+import { jwtDecode } from "jwt-decode";
+import axios from "axios";
+const ProductVariants = ({ variants, onAddToCart }) => {
   const [selectedColor, setSelectedColor] = useState(variants[0].color);
   const availableStorages = variants
     .filter((v) => v.color === selectedColor)
     .map((v) => v.storage);
   const [selectedStorage, setSelectedStorage] = useState(availableStorages[0]);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   const handleSelectColor = (color) => {
     setSelectedColor(color);
     const newStorages = variants
-      .filter((v) => v.color === color)
+      .filter((v) => v.color === color) 
       .map((v) => v.storage);
     setSelectedStorage(newStorages[0]);
   };
@@ -38,112 +42,107 @@ const ProductVariants = ({ variants }) => {
   );
 
   const formatCurrency = (price) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(price);
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
+    return new Intl.NumberFormat("vi-VN", { 
+      style: "currency", 
+      currency: "VND" 
     }).format(price);
   };
 
   const handleAddToCart = async () => {
-    try {
-      if (!selectedVariant) {
-        alert(
-          "⚠️ Vui lòng chọn biến thể sản phẩm trước khi thêm vào giỏ hàng!"
-        );
-        alert(
-          "⚠️ Vui lòng chọn biến thể sản phẩm trước khi thêm vào giỏ hàng!"
-        );
-        return;
-      }
+  try {
+    if (!selectedVariant) {
+      showSnackbar("⚠️ Vui lòng chọn biến thể sản phẩm trước khi thêm vào giỏ hàng!", "warning");
+      return;
+    }
 
+    if (selectedVariant.stockQuantity <= 0) {
+      showSnackbar("❌ Sản phẩm này đã hết hàng!", "error");
+      return;
+    }
 
-      if (selectedVariant.stockQuantity <= 0) {
-        alert("❌ Sản phẩm này đã hết hàng!");
-        return;
-      }
+    const token = localStorage.getItem("token");
+    
+    // Chuẩn bị dữ liệu đầy đủ cho cả 2 trường hợp
+    const cartItem = {
+      productVariantId: selectedVariant.id,
+      quantity: 1,
+      // Thông tin sản phẩm đầy đủ
+      productId: selectedVariant.product?.id || 0,
+      productName: selectedVariant.product?.name || "Sản phẩm không tên",
+      productImage: selectedVariant.product?.images?.find(img => img.isPrimary)?.imageUrl || "",
+      variantColor: selectedVariant.color || "Không xác định",
+      variantStorage: selectedVariant.storage || "Không xác định",
+      productPrice: selectedVariant.price || 0,
+      productDiscountPrice: selectedVariant.discountPrice || 0,
+      // Thêm các trường khác nếu cần
+      brand: selectedVariant.product?.brand?.name || "",
+      category: selectedVariant.product?.category?.name || ""
+    };
 
-
-      const token = localStorage.getItem("token");
-      const cartItem = {
-        productId: selectedVariant.productId,
-        productVariantId: selectedVariant.id,
-        quantity: 1,
-        productVariant: {
-          color: selectedVariant.color || "Không xác định",
-          storage: selectedVariant.storage || "Không xác định",
-          discountPrice: selectedVariant.discountPrice || 0,
-        },
-      };
-
-
-      if (token) {
-        console.log("🔍 Đang lấy profile...");
-        const profileResponse = await fetch(
-          "https://localhost:7107/api/Auth/profile",
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        const userId = parseInt(decoded.sub, 10);
+        if (!Number.isInteger(userId)) throw new Error("User ID không hợp lệ.");
+        
+        // Gọi API chỉ với các trường cần thiết
+        await axios.post(
+          "https://localhost:7107/api/Cart",
           {
-            method: "GET",
-            headers: { Authorization: `Bearer ${token}` },
+            productVariantId: selectedVariant.id,
+            quantity: 1,
+            userId: userId
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` }
           }
         );
+        
+        showSnackbar("🛒 Sản phẩm đã được thêm vào giỏ hàng!", "success");
+        if (onAddToCart) onAddToCart();
+      } catch (error) {
+        console.error("❌ Lỗi khi thêm vào giỏ hàng:", error);
+        showSnackbar("❌ Phiên đăng nhập không hợp lệ, vui lòng đăng nhập lại!", "error");
+      }
+    } else {
+      // Xử lý cho người dùng chưa đăng nhập - lưu đầy đủ thông tin vào session
+      const sessionCart = JSON.parse(sessionStorage.getItem("cart")) || [];
+      const existingItemIndex = sessionCart.findIndex(
+        item => item.productVariantId === cartItem.productVariantId
+      );
 
-        if (!profileResponse.ok) {
-          const errorData = await profileResponse.text();
-          throw new Error(`Lỗi profile: ${errorData}`);
-        }
-
-        const profileData = await profileResponse.json();
-        cartItem.userId = String(profileData.id);
-
-        console.log(
-          "📦 Gửi lên API giỏ hàng:",
-          JSON.stringify(cartItem, null, 2)
-        );
-
-        const response = await fetch("https://localhost:7107/api/Cart", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(cartItem),
-          credentials: "include",
-        });
-
-        if (!response.ok) {
-          const errorData = await response.text();
-          throw new Error(`Lỗi API giỏ hàng: ${errorData}`);
-        }
-
-        console.log("✅ Đã thêm vào giỏ hàng!");
+      if (existingItemIndex >= 0) {
+        sessionCart[existingItemIndex].quantity += 1;
       } else {
-        const cart = JSON.parse(sessionStorage.getItem("cart")) || [];
-        const existingItem = cart.find(
-          (item) => item.productVariantId === cartItem.productVariantId
-        );
-
-
-        if (existingItem) {
-          existingItem.quantity += 1;
-        } else {
-          cart.push(cartItem);
-        }
-
-
-        sessionStorage.setItem("cart", JSON.stringify(cart));
-        console.log("📦 Đã lưu vào sessionStorage!", cart);
+        sessionCart.push({
+          ...cartItem,
+          // Thêm ID tạm thời cho session
+          id: Date.now(),
+          // Thêm thời gian thêm vào giỏ
+          addedAt: new Date().toISOString()
+        });
       }
 
-
-      alert("🛒 Sản phẩm đã được thêm vào giỏ hàng!");
-    } catch (error) {
-      console.error("❌ Lỗi khi thêm vào giỏ hàng:", error);
-      alert(`❌ Không thể thêm vào giỏ hàng: ${error.message}`);
+      sessionStorage.setItem("cart", JSON.stringify(sessionCart));
+      showSnackbar("🛒 Sản phẩm đã được thêm vào giỏ hàng!", "success");
+      if (onAddToCart) onAddToCart();
     }
+  } catch (error) {
+    console.error("❌ Lỗi khi thêm vào giỏ hàng:", error);
+    showSnackbar(`❌ Không thể thêm vào giỏ hàng: ${error.message}`, "error");
+  }
+};
+
+  const showSnackbar = (message, severity) => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
   };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+  };
+
   return (
     <Box mt={4}>
       {/* Chọn màu sắc trước */}
@@ -155,22 +154,8 @@ const ProductVariants = ({ variants }) => {
           <Grid item key={color}>
             <Card
               sx={{
-                border:
-                  selectedColor === color
-                    ? "2px solid #d32f2f"
-                    : "1px solid #ddd",
-                boxShadow:
-                  selectedColor === color
-                    ? "0px 4px 12px rgba(211, 47, 47, 0.3)"
-                    : "none",
-                border:
-                  selectedColor === color
-                    ? "2px solid #d32f2f"
-                    : "1px solid #ddd",
-                boxShadow:
-                  selectedColor === color
-                    ? "0px 4px 12px rgba(211, 47, 47, 0.3)"
-                    : "none",
+                border: selectedColor === color ? "2px solid #d32f2f" : "1px solid #ddd",
+                boxShadow: selectedColor === color ? "0px 4px 12px rgba(211, 47, 47, 0.3)" : "none",
                 transition: "0.3s",
                 width: "auto",
                 textAlign: "center",
@@ -187,12 +172,7 @@ const ProductVariants = ({ variants }) => {
                   >
                     {color}
                   </Typography>
-                  {selectedColor === color && (
-                    <CheckCircle color="error" fontSize="small" />
-                  )}
-                  {selectedColor === color && (
-                    <CheckCircle color="error" fontSize="small" />
-                  )}
+                  {selectedColor === color && <CheckCircle color="error" fontSize="small" />}
                 </CardContent>
               </CardActionArea>
             </Card>
@@ -209,22 +189,8 @@ const ProductVariants = ({ variants }) => {
           <Grid item key={storage}>
             <Card
               sx={{
-                border:
-                  selectedStorage === storage
-                    ? "2px solid #d32f2f"
-                    : "1px solid #ddd",
-                boxShadow:
-                  selectedStorage === storage
-                    ? "0px 4px 12px rgba(211, 47, 47, 0.3)"
-                    : "none",
-                border:
-                  selectedStorage === storage
-                    ? "2px solid #d32f2f"
-                    : "1px solid #ddd",
-                boxShadow:
-                  selectedStorage === storage
-                    ? "0px 4px 12px rgba(211, 47, 47, 0.3)"
-                    : "none",
+                border: selectedStorage === storage ? "2px solid #d32f2f" : "1px solid #ddd",
+                boxShadow: selectedStorage === storage ? "0px 4px 12px rgba(211, 47, 47, 0.3)" : "none",
                 transition: "0.3s",
                 padding: "6px 12px",
                 opacity: availableStorages.includes(storage) ? 1 : 0.5,
@@ -255,11 +221,7 @@ const ProductVariants = ({ variants }) => {
       {/* Giá tiền */}
       {selectedVariant && (
         <Box mt={3} textAlign="center">
-          <Typography
-            variant="body1"
-            color="textSecondary"
-            sx={{ textDecoration: "line-through" }}
-          >
+          <Typography variant="body1" color="textSecondary" sx={{ textDecoration: "line-through" }}>
             {formatCurrency(selectedVariant.price)}
           </Typography>
           <Typography variant="h5" fontWeight="bold" color="error">
@@ -301,19 +263,21 @@ const ProductVariants = ({ variants }) => {
               backgroundColor: "#b71c1c",
             },
           }}
-          onClick={() => {
-            if (!selectedVariant) {
-              alert("⚠️ Vui lòng chọn biến thể sản phẩm trước khi mua!");
-              return;
-            }
-            navigate("/checkout", { state: { product: [selectedVariant] } });
-          }}
         >
-          {selectedVariant
-            ? `Mua ngay - ${formatCurrency(selectedVariant.discountPrice)}`
-            : "Mua ngay"}
+          {selectedVariant ? `Mua ngay - ${formatCurrency(selectedVariant.discountPrice)}` : "Mua ngay"}
         </Button>
       </Box>
+      {/* Snackbar thông báo */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

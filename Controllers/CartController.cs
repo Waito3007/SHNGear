@@ -100,23 +100,71 @@ namespace SHN_Gear.Controllers
         {
             if (userId > 0)
             {
+                // Lấy giỏ hàng của người dùng đã đăng nhập
                 var cart = await _context.Carts
                     .Include(c => c.Items)
-                    .ThenInclude(i => i.ProductVariant)
+                        .ThenInclude(i => i.ProductVariant)
+                            .ThenInclude(v => v.Product)
+                                .ThenInclude(p => p.Images) // Lấy hình ảnh sản phẩm
                     .FirstOrDefaultAsync(c => c.UserId == userId);
 
-                return Ok(cart?.Items ?? new List<CartItem>());
+                if (cart == null || cart.Items.Count == 0)
+                {
+                    return Ok(new List<object>()); // Trả về danh sách rỗng nếu giỏ hàng trống
+                }
+
+                // Chuẩn bị dữ liệu trả về
+                var cartItems = cart.Items.Select(i => new
+                {
+                    i.Id,
+                    i.Quantity,
+                    i.ProductVariantId,
+                    ProductName = i.ProductVariant.Product.Name,
+                    ProductDescription = i.ProductVariant.Product.Description,
+                    ProductPrice = i.ProductVariant.Price,
+                    ProductDiscountPrice = i.ProductVariant.DiscountPrice,
+                    ProductImage = i.ProductVariant.Product.Images.FirstOrDefault(img => img.IsPrimary)?.ImageUrl,
+                    VariantColor = i.ProductVariant.Color,
+                    VariantStorage = i.ProductVariant.Storage
+                }).ToList();
+
+                return Ok(cartItems);
             }
             else
             {
+                // Lấy giỏ hàng từ session cho người dùng chưa đăng nhập
                 var session = _httpContextAccessor.HttpContext!.Session;
-                var sessionCart = session.Get("Cart");
-                var cartItems = sessionCart == null
+                var sessionCart = session.GetString("Cart");
+                var cartItems = string.IsNullOrEmpty(sessionCart)
                     ? new List<CartItemSession>()
                     : JsonSerializer.Deserialize<List<CartItemSession>>(sessionCart) ?? new List<CartItemSession>();
 
+                // Lấy thông tin sản phẩm từ database
+                var productVariantIds = cartItems.Select(i => i.ProductVariantId).ToList();
+                var productVariants = await _context.ProductVariants
+                    .Include(v => v.Product)
+                        .ThenInclude(p => p.Images)
+                    .Where(v => productVariantIds.Contains(v.Id))
+                    .ToListAsync();
 
-                return Ok(cartItems);
+                var result = cartItems.Select(i =>
+                {
+                    var variant = productVariants.FirstOrDefault(v => v.Id == i.ProductVariantId);
+                    return new
+                    {
+                        i.ProductVariantId,
+                        i.Quantity,
+                        ProductName = variant?.Product.Name,
+                        ProductDescription = variant?.Product.Description,
+                        ProductPrice = variant?.Price,
+                        ProductDiscountPrice = variant?.DiscountPrice,
+                        ProductImage = variant?.Product.Images.FirstOrDefault(img => img.IsPrimary)?.ImageUrl,
+                        VariantColor = variant?.Color,
+                        VariantStorage = variant?.Storage
+                    };
+                }).ToList();
+
+                return Ok(result);
             }
         }
 
