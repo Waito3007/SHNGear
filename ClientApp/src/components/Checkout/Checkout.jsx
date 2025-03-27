@@ -333,15 +333,9 @@ const Checkout = () => {
                     value={method.id.toString()}
                     control={<Radio />}
                     label={
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Avatar 
-                          src={method.imageUrl} 
-                          alt={method.name} 
-                          sx={{ width: 40, height: 40, mr: 2 }}
-                        />
-                        <Typography>{method.name}</Typography>
-                      </Box>
+                      <Typography>{method.name}</Typography>
                     }
+                    sx={{ marginLeft: 0 }} // Điều chỉnh khoảng cách nếu cần
                   />
                 </Box>
               ))}
@@ -366,12 +360,18 @@ const Checkout = () => {
               {selectedItems.map((item) => (
                 <ListItem key={item.productVariantId} sx={{ px: 0 }}>
                   <ListItemAvatar>
-                    <Avatar 
-                      src={item.productImage} 
-                      alt={item.productName}
-                      sx={{ width: 60, height: 60, mr: 2 }}
-                    />
-                  </ListItemAvatar>
+                <Avatar 
+                  src={item.productImage} 
+                  alt={item.productName}
+                  sx={{ 
+                    width: 60, 
+                    height: 60, 
+                    mr: 2,
+                    borderRadius: '4px', // Bo góc nhẹ 
+                  }}
+                  variant="square" // Quan trọng: Đặt variant thành square để có hình vuông
+                />
+              </ListItemAvatar>
                   <ListItemText
                     primary={`${item.productName}`}
                     secondary={`${item.variantColor} - ${item.variantStorage}`}
@@ -412,7 +412,7 @@ const Checkout = () => {
               <Divider sx={{ my: 1 }} />
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                 <Typography variant="h6">Tổng cộng:</Typography>
-                <Typography variant="h6" color="primary">
+                <Typography variant="h6" color="error">
                   {finalAmount.toLocaleString()}₫
                 </Typography>
               </Box>
@@ -420,7 +420,7 @@ const Checkout = () => {
 
             <Button
               variant="contained"
-              color="primary"
+              color="error"
               fullWidth
               size="large"
               onClick={handlePlaceOrder}
@@ -432,7 +432,7 @@ const Checkout = () => {
               ) : paymentMethod === "2" ? (
                 "Thanh toán với MoMo"
               ) : (
-                "Đặt hàng ngay"
+                "Thanh toán với Tiền Mặt"
               )}
             </Button>
           </Box>
