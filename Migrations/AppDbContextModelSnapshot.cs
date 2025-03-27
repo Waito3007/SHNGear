@@ -408,6 +408,20 @@ namespace SHN_Gear.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PaymentMethods");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "Thanh toán bằng tiền mặt",
+                            Name = "Tiền Mặt"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Description = "momo",
+                            Name = "MoMo"
+                        });
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.PhoneSpecification", b =>

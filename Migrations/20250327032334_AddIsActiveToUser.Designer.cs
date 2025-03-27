@@ -12,8 +12,8 @@ using SHN_Gear.Data;
 namespace SHN_Gear.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250325171743_AddMomoAndVoucherId")]
-    partial class AddMomoAndVoucherId
+    [Migration("20250326185106_AddIsActiveToUser")]
+    partial class AddIsActiveToUser
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -685,6 +685,9 @@ namespace SHN_Gear.Migrations
 
                     b.Property<string>("Gender")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<string>("OtpCode")
                         .HasColumnType("nvarchar(max)");
