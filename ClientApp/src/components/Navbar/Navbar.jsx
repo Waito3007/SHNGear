@@ -51,6 +51,7 @@ const Navbar = () => {
   };
 
   return (
+          <div className="navbar-wrapper">
     <nav className="navbar">
       <div className="navbar-container">
         {/* Logo */}
@@ -122,7 +123,7 @@ const Navbar = () => {
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </nav>
-    
+  </div>
   );
 };
 

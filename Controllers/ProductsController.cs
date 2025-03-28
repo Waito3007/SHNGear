@@ -262,6 +262,36 @@ public class ProductsController : ControllerBase
 
         return Ok(topBrand);
     }
+
+    // GET: api/Products/lowest-price
+    [HttpGet("lowest-price")]
+    public async Task<ActionResult<IEnumerable<Product>>> GetProductsWithLowestPrice()
+    {
+        var now = DateTime.UtcNow;
+
+        var products = await _context.Products
+            .Include(p => p.Images)
+            .Include(p => p.Variants)
+            .Include(p => p.Brand)  // Bao gồm thông tin Brand
+            .Include(p => p.Category)  // Bao gồm thông tin Category
+            .Where(p => p.Variants.Any())  // Chỉ lấy sản phẩm có ít nhất 1 variant
+            .Select(p => new
+            {
+                Product = p,
+                // Lấy giá thấp nhất (ưu tiên giá khuyến mãi nếu có)
+                MinPrice = p.Variants.Min(v =>
+                    v.FlashSaleStart <= now && now <= v.FlashSaleEnd
+                        ? v.DiscountPrice ?? v.Price
+                        : v.Price)
+            })
+            .OrderBy(x => x.MinPrice)  // Sắp xếp theo giá thấp nhất
+            .Take(10)  // Lấy 10 sản phẩm
+            .Select(x => x.Product)  // Chỉ lấy thông tin Product
+            .ToListAsync();
+
+        return Ok(products);
+    }
+
     // Lấy thông tin sản phẩm và hình ảnh dựa trên variantId
     [HttpGet("by-variant/{variantId}")]
     public async Task<ActionResult<object>> GetProductByVariantId(int variantId)
