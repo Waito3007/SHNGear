@@ -44,25 +44,25 @@ const UsersPage = () => {
 					transition={{ duration: 1 }}
 				>
 					<StatCard
-						name='Total Users'
+						name='Tổng người dùng'
 						icon={UsersIcon}
 						value={userStats.totalUsers.toLocaleString()}
 						color='#6366F1'
 					/>
 					<StatCard
-						name='New Users Today'
+						name='Người dùng mới tạo'
 						icon={UserPlus}
 						value={userStats.newUsersToday.toLocaleString()}
 						color='#10B981'
 					/>
 					<StatCard
-						name='Active Users'
+						name='Trạng thái đã kích hoạt'
 						icon={UserCheck}
 						value={userStats.activeUsers.toLocaleString()}
 						color='#F59E0B'
 					/>
 					<StatCard
-						name='Retention Rate' // Cập nhật tên
+						name='Tỉ lệ giữ chân người dùng' // Cập nhật tên
 						icon={UserCheck} // Có thể giữ UserCheck hoặc đổi icon phù hợp
 						value={userStats.retentionRate}
 						color='#34D399' // Màu xanh lá thể hiện mức độ giữ chân tốt hơn

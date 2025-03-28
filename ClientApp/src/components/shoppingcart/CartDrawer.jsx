@@ -152,13 +152,14 @@ const CartDrawer = ({ isOpen, onClose }) => {
   }, [isOpen]);
 
   const calculateTotalAmount = (items) => {
-    const total = items.reduce((sum, item) => {
-      const price = item.productDiscountPrice || item.productPrice;
-      return sum + price * item.quantity;
-    }, 0);
-    setOriginalTotal(total);
-    setTotalAmount(total - discountAmount);
-  };
+  const total = items.reduce((sum, item) => {
+    const price = item.productDiscountPrice || item.productPrice;
+    return sum + price * item.quantity;
+  }, 0);
+  
+  setOriginalTotal(total);
+  setTotalAmount(total - discountAmount); // Luôn cập nhật totalAmount = originalTotal - discountAmount
+};
 
   const handleRemoveItem = async (id) => {
     try {

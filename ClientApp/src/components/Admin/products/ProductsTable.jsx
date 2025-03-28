@@ -32,9 +32,15 @@ const ProductsTable = () => {
     const [isCategoryBrandDrawerOpen, setIsCategoryBrandDrawerOpen] = useState(false);
     const [isBrandDrawerOpen, setIsBrandDrawerOpen] = useState(false);
     const [isVoucherDrawerOpen, setIsVoucherDrawerOpen] = useState(false); // Thêm state cho VoucherDrawer
+    const [isSpecDrawerOpen, setIsSpecDrawerOpen] = useState(false);
+    const [selectedProductForSpec, setSelectedProductForSpec] = useState(null);
+
     const [page, setPage] = useState(1);
     const productsPerPage = 11;
-
+    const handleAddSpecification = (product) => {
+    setSelectedProductForSpec(product);
+    setIsSpecDrawerOpen(true);
+    };
 
     // Thêm các state mới cho bộ lọc
     const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -445,6 +451,12 @@ const ProductsTable = () => {
                                         <Edit size={18} />
                                     </button>
                                     <button
+                                        className="text-green-400 hover:text-green-300 mr-2"
+                                        onClick={() => handleAddSpecification(product)}
+                                    >
+                                        <Settings size={18} />
+                                    </button>
+                                    <button
                                         className="text-red-400 hover:text-red-300"
                                         onClick={() => handleDeleteProduct(product)}
                                     >
@@ -512,6 +524,11 @@ const ProductsTable = () => {
             <VoucherDrawer
                 open={isVoucherDrawerOpen}
                 onClose={() => setIsVoucherDrawerOpen(false)}
+            />
+            <AddSpecificationDrawer 
+            open={isSpecDrawerOpen} 
+            onClose={() => setIsSpecDrawerOpen(false)} 
+            product={selectedProductForSpec} 
             />
         </motion.div>
     );

@@ -97,6 +97,8 @@ namespace SHN_Gear.Controllers
 
             user.FullName = userUpdateDto.FullName;
             user.Gender = userUpdateDto.Gender;
+            user.PhoneNumber = userUpdateDto.PhoneNumber;
+            user.Email = userUpdateDto.Email;
             user.DateOfBirth = userUpdateDto.DateOfBirth;
             user.RoleId = userUpdateDto.RoleId;
             user.IsActive = userUpdateDto.IsActive;
