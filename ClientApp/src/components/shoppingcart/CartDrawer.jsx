@@ -349,21 +349,22 @@ const CartDrawer = ({ isOpen, onClose }) => {
                   onChange={() => handleSelectItem(item)}
                   color="primary"
                 />
-                <Avatar
-                  src={item.productImage || "https://via.placeholder.com/100"}
-                  alt={item.productName}
-                  sx={{ 
-                    width: 80, 
-                    height: 80, 
-                    borderRadius: 2,
-                    objectFit: 'cover'
-                  }}
-                  variant="rounded"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "https://via.placeholder.com/100";
-                  }}
-                />
+                <img
+  src={item.productImage?.startsWith("http") 
+    ? item.productImage 
+    : `https://localhost:7107/${item.productImage}`}
+  alt={item.productName}
+  className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+  onError={(e) => { 
+    e.target.onerror = null; 
+    e.target.src = "https://via.placeholder.com/150"; 
+  }}
+  style={{
+    width: '80px',
+    height: '80px',
+    objectFit: 'contain'
+  }}
+/>
                 <Box sx={{ flexGrow: 1 }}>
                   <Typography fontWeight="medium" sx={{ mb: 0.5 }}>
                     {item.productName}
