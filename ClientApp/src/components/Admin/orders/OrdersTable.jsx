@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Search, Eye, Edit, Trash2, Filter, X } from "lucide-react";
 import axios from "axios";
 import { Modal, Box, Typography, Button, Select, MenuItem } from "@mui/material";
-
+import OrderDetailDrawer from './OrderDetailDrawer';
 const OrdersTable = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [orders, setOrders] = useState([]);
@@ -19,7 +19,9 @@ const OrdersTable = () => {
     const [maxAmount, setMaxAmount] = useState("");
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
     const ordersPerPage = 5;
-
+    //state cho drawer OrderDetail
+    const [selectedOrderId, setSelectedOrderId] = useState(null);
+    const [drawerOpen, setDrawerOpen] = useState(false);
     const getOrderStatusLabel = (status) => {
         switch (status) {
             case "Delivered":
@@ -59,7 +61,11 @@ const OrdersTable = () => {
         };
         fetchOrders();
     }, []);
-
+        // hàm mở drawer Detail
+        const handleViewOrder = (orderId) => {
+        setSelectedOrderId(orderId);
+        setDrawerOpen(true);
+        };
     const handleSearch = (e) => {
         const term = e.target.value.toLowerCase();
         setSearchTerm(term);
@@ -384,9 +390,12 @@ const OrdersTable = () => {
                                         {new Date(order.orderDate).toLocaleDateString()}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                        <button className="text-indigo-400 hover:text-indigo-300 mr-2">
+                                        <button 
+                                            className="text-indigo-400 hover:text-indigo-300 mr-2"
+                                            onClick={() => handleViewOrder(order.id)}
+                                            >
                                             <Eye size={18} />
-                                        </button>
+                                            </button>
                                         <button className="text-yellow-400 hover:text-yellow-300 mr-2">
                                             <Edit size={18} />
                                         </button>
@@ -477,6 +486,11 @@ const OrdersTable = () => {
                     </Button>
                 </Box>
             </Modal>
+            <OrderDetailDrawer 
+            orderId={selectedOrderId}
+            open={drawerOpen}
+            onClose={() => setDrawerOpen(false)}
+            />
         </motion.div>
     );
 };

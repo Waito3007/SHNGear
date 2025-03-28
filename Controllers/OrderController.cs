@@ -474,7 +474,6 @@ namespace SHN_Gear.Controllers
                 Orders = orderDtos
             });
         }
-
         // Tổng doanh thu theo ngày
         [HttpGet("revenue/day")]
         public async Task<IActionResult> GetDailyRevenue()
@@ -571,16 +570,16 @@ namespace SHN_Gear.Controllers
         public async Task<IActionResult> GetOrderDetails(int id)
         {
             var order = await _context.Orders
-                .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.ProductVariant)
-                .ThenInclude(pv => pv.Product)
-                .ThenInclude(p => p.Images) // Lấy hình ảnh sản phẩm
+                .Include(o => o.OrderItems) // Chỉ cần Include OrderItems
+                .Include(o => o.Address)    // Giữ Include Address để lấy thông tin địa chỉ
                 .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null)
             {
                 return NotFound("Đơn hàng không tồn tại.");
             }
+
+            Console.WriteLine($"Order {id} has {order.OrderItems.Count} items"); // Log số lượng items
 
             var orderDetails = new
             {
@@ -590,14 +589,22 @@ namespace SHN_Gear.Controllers
                 TotalAmount = order.TotalAmount,
                 OrderStatus = order.OrderStatus,
                 AddressId = order.AddressId,
+                Address = order.Address != null ? new
+                {
+                    Id = order.Address.Id,
+                    FullName = order.Address.FullName,
+                    PhoneNumber = order.Address.PhoneNumber,
+                    AddressLine1 = order.Address.AddressLine1,
+                    AddressLine2 = order.Address.AddressLine2,
+                    City = order.Address.City,
+                    State = order.Address.State,
+                    ZipCode = order.Address.ZipCode,
+                    Country = order.Address.Country
+                } : null,
                 PaymentMethodId = order.PaymentMethodId,
                 Items = order.OrderItems.Select(oi => new
                 {
-                    ProductName = oi.ProductVariant.Product.Name,
-                    ProductDescription = oi.ProductVariant.Product.Description,
-                    ProductImage = oi.ProductVariant.Product.Images.FirstOrDefault(img => img.IsPrimary)?.ImageUrl,
-                    VariantColor = oi.ProductVariant.Color,
-                    VariantStorage = oi.ProductVariant.Storage,
+                    VariantId = oi.ProductVariantId, // Chỉ lấy VariantId
                     Quantity = oi.Quantity,
                     Price = oi.Price
                 }).ToList()
