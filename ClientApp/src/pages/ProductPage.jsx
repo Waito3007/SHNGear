@@ -9,6 +9,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import ProductReviews from "../components/ProductInformationPage/ProductReviews";
 import RelatedProducts from "../components/ProductInformationPage/RelatedProducts";
+import SpecificationDisplay from "../components/ProductInformationPage/ProductSpecifications";
 import Commitment from "../components/Commitment/Commitment";
 
 const ProductPage = () => {
@@ -21,9 +22,7 @@ const ProductPage = () => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          `https://localhost:7107/api/Products/${id}`
-        );
+        const response = await fetch(`https://localhost:7107/api/Products/${id}`);
         if (!response.ok) {
           throw new Error("Không thể tải dữ liệu sản phẩm.");
         }
@@ -39,49 +38,79 @@ const ProductPage = () => {
     fetchProduct();
   }, [id]);
 
-  if (loading)
+  const getProductType = () => {
+    if (!product?.category?.name) return null;
+    
+    const categoryName = product.category.name.toLowerCase();
+    if (categoryName.includes('phone') || categoryName.includes('điện thoại')) {
+      return 'phone';
+    } else if (categoryName.includes('laptop') || categoryName.includes('máy tính')) {
+      return 'laptop';
+    } else if (categoryName.includes('headphone') || categoryName.includes('tai nghe')) {
+      return 'headphone';
+    }
+    return null;
+  };
+
+  if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <CircularProgress />
       </div>
     );
+  }
 
-  if (error)
+  if (error) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Alert severity="error">{error}</Alert>
       </div>
     );
+  }
+
+  if (!product) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Alert severity="warning">Không tìm thấy sản phẩm</Alert>
+      </div>
+    );
+  }
+
+  const productType = getProductType();
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Navbar */}
       <Navbar />
 
-      {/* Nội dung chính (Thêm padding trên cùng để tránh bị Navbar che) */}
       <div className="container mx-auto px-4 py-8 pt-40 flex flex-col gap-10">
-        {/* Ảnh và thông tin sản phẩm */}
         <div className="grid md:grid-cols-2 gap-8">
-          <ProductImage images={product?.images} name={product?.name} />
+          <ProductImage images={product.images || []} name={product.name} />
           <div className="flex flex-col gap-6">
             <ProductInfo product={product} />
-            <ProductVariants variants={product?.variants} />
+            <ProductVariants variants={product.variants || []} />
           </div>
         </div>
 
-        {/* Đánh giá sản phẩm */}
+       {productType && (
+        <SpecificationDisplay 
+          productType={productType} 
+          productId={product.id} 
+        />
+      )}
+
         <div className="md:col-span-2 mt-16">
-          <ProductReviews reviews={product?.reviews} />
+          <ProductReviews reviews={product.reviews || []} />
         </div>
 
-        {/* Sản phẩm liên quan */}
         <div className="md:col-span-2 mt-16">
-          <RelatedProducts brandId={product?.brand?.id} currentProductId={id} />
+          <RelatedProducts 
+            brandId={product.brand?.id} 
+            currentProductId={id} 
+          />
         </div>
       </div>
       
       <Commitment />
-      {/* Footer */}
       <Footer />
     </div>
   );
