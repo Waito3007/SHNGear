@@ -45,6 +45,7 @@ const Checkout = () => {
   const [discountAmount, setDiscountAmount] = useState(0);
   const [finalAmount, setFinalAmount] = useState(totalAmount);
   const [error, setError] = useState(null);
+  const [isVoucherApplied, setIsVoucherApplied] = useState(false);
 
   useEffect(() => {
     // Xử lý đăng nhập người dùng
@@ -64,13 +65,19 @@ const Checkout = () => {
     // Xử lý voucher nếu có
     if (voucherCode) {
       fetchVoucherId(voucherCode);
-      applyVoucherOnLoad(voucherCode);
     }
 
     // Lấy danh sách phương thức thanh toán
     fetchPaymentMethods();
     setFinalAmount(totalAmount);
   }, [totalAmount, voucherCode]);
+
+  // Thêm useEffect mới để áp dụng voucher sau khi đã có userId
+  useEffect(() => {
+    if (userId && voucherCode && !isVoucherApplied) {
+      applyVoucher(voucherCode);
+    }
+  }, [userId, voucherCode, isVoucherApplied]);
 
   const fetchAddresses = async (userId) => {
     try {
@@ -95,7 +102,7 @@ const Checkout = () => {
     }
   };
 
-  const applyVoucherOnLoad = async (code) => {
+  const applyVoucher = async (code) => {
     if (!userId) return;
     
     try {
@@ -103,11 +110,16 @@ const Checkout = () => {
         code, 
         userId 
       });
-      setDiscountAmount(response.data.discountAmount);
-      setFinalAmount(totalAmount - response.data.discountAmount);
+      
+      const discount = response.data.discountAmount || 0;
+      setDiscountAmount(discount);
+      setFinalAmount(totalAmount - discount);
+      setIsVoucherApplied(true);
     } catch (error) {
       console.error("Lỗi khi áp dụng voucher:", error);
       setError(error.response?.data?.message || "Lỗi khi áp dụng voucher");
+      setDiscountAmount(0);
+      setFinalAmount(totalAmount);
     }
   };
 
@@ -452,7 +464,7 @@ const Checkout = () => {
                   Mã giảm giá: {voucherCode}
                 </Typography>
                 <Typography variant="body1" color="success.main">
-                  -{discountAmount.toLocaleString()}₫
+                  -{discountAmount > 0 ? discountAmount.toLocaleString() : "0"}₫
                 </Typography>
               </Box>
             )}

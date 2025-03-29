@@ -20,6 +20,7 @@ using System.Drawing.Imaging;
 using System.Globalization; // Cho hàm ConvertToUnsigned
 using System.Text;         // Cho NormalizationForm
 using OfficeOpenXml.Style;
+using Microsoft.AspNetCore.JsonPatch;
 namespace SHN_Gear.Controllers
 {
     [ApiController]
@@ -68,7 +69,160 @@ namespace SHN_Gear.Controllers
 
             return Ok(orderDtos);
         }
+        [HttpPut("{id}")]
+        [Authorize]
+        public async Task<IActionResult> UpdateOrder(int id, [FromBody] UpdateOrderDto updateOrderDto)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
+            try
+            {
+                // Lấy đơn hàng hiện tại
+                var order = await _context.Orders
+                    .Include(o => o.OrderItems)
+                    .FirstOrDefaultAsync(o => o.Id == id);
+
+                if (order == null)
+                {
+                    return NotFound("Đơn hàng không tồn tại.");
+                }
+
+                // Kiểm tra trạng thái đơn hàng - chỉ cho phép chỉnh sửa khi ở trạng thái Pending
+                if (order.OrderStatus != "Pending")
+                {
+                    return BadRequest("Chỉ có thể chỉnh sửa đơn hàng khi ở trạng thái 'Chờ xử lý'");
+                }
+
+                // Cập nhật địa chỉ nếu có
+                if (updateOrderDto.AddressId.HasValue)
+                {
+                    var address = await _context.Addresses.FindAsync(updateOrderDto.AddressId.Value);
+                    if (address == null)
+                    {
+                        return BadRequest("Địa chỉ không tồn tại");
+                    }
+                    order.AddressId = updateOrderDto.AddressId.Value;
+                }
+
+                // Xử lý voucher
+                Voucher? voucher = null;
+                if (updateOrderDto.VoucherId.HasValue)
+                {
+                    voucher = await _context.Vouchers.FindAsync(updateOrderDto.VoucherId.Value);
+                    if (voucher == null || !voucher.IsActive || voucher.ExpiryDate < DateTime.UtcNow)
+                    {
+                        return BadRequest("Voucher không hợp lệ.");
+                    }
+                    order.VoucherId = updateOrderDto.VoucherId;
+                }
+                else
+                {
+                    order.VoucherId = null;
+                }
+
+                // Xử lý các sản phẩm trong đơn hàng
+                if (updateOrderDto.OrderItems != null && updateOrderDto.OrderItems.Count > 0)
+                {
+                    // Xóa các items cũ
+                    _context.OrderItems.RemoveRange(order.OrderItems);
+
+                    // Thêm các items mới
+                    foreach (var itemDto in updateOrderDto.OrderItems)
+                    {
+                        var variant = await _context.ProductVariants
+                            .Include(pv => pv.Product)
+                            .FirstOrDefaultAsync(pv => pv.Id == itemDto.ProductVariantId);
+
+                        if (variant == null)
+                        {
+                            return BadRequest($"Không tìm thấy biến thể sản phẩm với ID {itemDto.ProductVariantId}");
+                        }
+
+                        if (variant.StockQuantity < itemDto.Quantity)
+                        {
+                            return BadRequest($"Số lượng tồn kho không đủ cho sản phẩm {variant.Product.Name}");
+                        }
+
+                        order.OrderItems.Add(new OrderItem
+                        {
+                            ProductVariantId = itemDto.ProductVariantId,
+                            Quantity = itemDto.Quantity,
+                            Price = variant.DiscountPrice ?? variant.Price
+                        });
+                    }
+                }
+
+                // Tính toán lại tổng tiền
+                order.TotalAmount = order.OrderItems.Sum(oi => oi.Quantity * oi.Price);
+
+                // Áp dụng voucher nếu có
+                if (voucher != null)
+                {
+                    order.TotalAmount -= voucher.DiscountAmount;
+                    if (order.TotalAmount < 0) order.TotalAmount = 0;
+                }
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok(new { Message = "Đơn hàng đã được cập nhật thành công." });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, $"Lỗi hệ thống: {ex.Message}");
+            }
+        }
+
+        //cập nhật một phần đơn
+        [HttpPatch("{id}")]
+        [Authorize]
+        public async Task<IActionResult> PartialUpdateOrder(int id, [FromBody] JsonPatchDocument<Order> patchDoc)
+        {
+            if (patchDoc == null)
+            {
+                return BadRequest("Dữ liệu cập nhật không hợp lệ");
+            }
+
+            var order = await _context.Orders.FindAsync(id);
+            if (order == null)
+            {
+                return NotFound("Đơn hàng không tồn tại");
+            }
+
+            // Kiểm tra trạng thái đơn hàng
+            if (order.OrderStatus != "Pending")
+            {
+                return BadRequest("Chỉ có thể chỉnh sửa đơn hàng khi ở trạng thái 'Chờ xử lý'");
+            }
+
+            // Áp dụng các thay đổi
+            patchDoc.ApplyTo(order);
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            // Kiểm tra số lượng tồn kho nếu có thay đổi về sản phẩm
+            if (patchDoc.Operations.Any(op => op.path.Contains("OrderItems")))
+            {
+                var orderWithItems = await _context.Orders
+                    .Include(o => o.OrderItems)
+                    .FirstOrDefaultAsync(o => o.Id == id);
+
+                foreach (var item in orderWithItems.OrderItems)
+                {
+                    var variant = await _context.ProductVariants.FindAsync(item.ProductVariantId);
+                    if (variant.StockQuantity < item.Quantity)
+                    {
+                        return BadRequest($"Số lượng tồn kho không đủ cho sản phẩm ID {item.ProductVariantId}");
+                    }
+                }
+            }
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = "Đơn hàng đã được cập nhật thành công." });
+        }
         // Tạo đơn hàng mới (hỗ trợ cả tiền mặt và MoMo)
         [HttpPost]
         public async Task<IActionResult> CreateOrder([FromBody] OrderDto orderDto)
