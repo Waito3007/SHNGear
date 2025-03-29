@@ -421,6 +421,12 @@ namespace SHN_Gear.Migrations
                             Id = 2,
                             Description = "momo",
                             Name = "MoMo"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Description = "VNPay",
+                            Name = "VNPay"
                         });
                 });
 
