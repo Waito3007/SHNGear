@@ -23,7 +23,13 @@ import { jwtDecode } from "jwt-decode";
 const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { selectedItems = [], totalAmount = 0, voucherCode = "" } = location.state || {};
+  const { 
+    selectedItems = [], 
+    totalAmount = 0, 
+    voucherCode = "", 
+    discountAmount = 0  // Thêm discountAmount từ giỏ hàng
+  } = location.state || {};
+  
   const [userId, setUserId] = useState(null);
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -42,10 +48,8 @@ const Checkout = () => {
   const [momoPaymentType, setMomoPaymentType] = useState("qr"); // qr hoặc card
   const [isLoading, setIsLoading] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState([]);
-  const [discountAmount, setDiscountAmount] = useState(0);
-  const [finalAmount, setFinalAmount] = useState(totalAmount);
   const [error, setError] = useState(null);
-  const [isVoucherApplied, setIsVoucherApplied] = useState(false);
+  const [finalAmount, setFinalAmount] = useState(totalAmount);
 
   useEffect(() => {
     // Xử lý đăng nhập người dùng
@@ -69,15 +73,7 @@ const Checkout = () => {
 
     // Lấy danh sách phương thức thanh toán
     fetchPaymentMethods();
-    setFinalAmount(totalAmount);
-  }, [totalAmount, voucherCode]);
-
-  // Thêm useEffect mới để áp dụng voucher sau khi đã có userId
-  useEffect(() => {
-    if (userId && voucherCode && !isVoucherApplied) {
-      applyVoucher(voucherCode);
-    }
-  }, [userId, voucherCode, isVoucherApplied]);
+  }, [voucherCode]);
 
   const fetchAddresses = async (userId) => {
     try {
@@ -99,27 +95,6 @@ const Checkout = () => {
     } catch (error) {
       console.error("Lỗi khi lấy voucher:", error);
       setError("Mã giảm giá không hợp lệ hoặc đã hết hạn");
-    }
-  };
-
-  const applyVoucher = async (code) => {
-    if (!userId) return;
-    
-    try {
-      const response = await axios.post("https://localhost:7107/api/vouchers/apply", { 
-        code, 
-        userId 
-      });
-      
-      const discount = response.data.discountAmount || 0;
-      setDiscountAmount(discount);
-      setFinalAmount(totalAmount - discount);
-      setIsVoucherApplied(true);
-    } catch (error) {
-      console.error("Lỗi khi áp dụng voucher:", error);
-      setError(error.response?.data?.message || "Lỗi khi áp dụng voucher");
-      setDiscountAmount(0);
-      setFinalAmount(totalAmount);
     }
   };
 
@@ -464,7 +439,7 @@ const Checkout = () => {
                   Mã giảm giá: {voucherCode}
                 </Typography>
                 <Typography variant="body1" color="success.main">
-                  -{discountAmount > 0 ? discountAmount.toLocaleString() : "0"}₫
+                  -{discountAmount.toLocaleString()}₫
                 </Typography>
               </Box>
             )}
@@ -473,7 +448,7 @@ const Checkout = () => {
             <Box sx={{ mb: 2 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                 <Typography>Tạm tính:</Typography>
-                <Typography>{totalAmount.toLocaleString()}₫</Typography>
+                <Typography>{(totalAmount + discountAmount).toLocaleString()}₫</Typography>
               </Box>
               {discountAmount > 0 && (
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
@@ -485,7 +460,7 @@ const Checkout = () => {
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                 <Typography variant="h6">Tổng cộng:</Typography>
                 <Typography variant="h6" color="error">
-                  {finalAmount.toLocaleString()}₫
+                  {totalAmount.toLocaleString()}₫
                 </Typography>
               </Box>
             </Box>
