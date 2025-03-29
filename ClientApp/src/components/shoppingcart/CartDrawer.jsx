@@ -105,7 +105,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
         setCartItems(items);
         setSelectedItems(items);
-        calculateTotalAmount(items);
+        calculateTotalAmount(items, discountAmount);
       } catch (error) {
         console.error("Error fetching cart:", error);
       } finally {
@@ -151,15 +151,16 @@ const CartDrawer = ({ isOpen, onClose }) => {
     }
   }, [isOpen]);
 
-  const calculateTotalAmount = (items) => {
-  const total = items.reduce((sum, item) => {
-    const price = item.productDiscountPrice || item.productPrice;
-    return sum + price * item.quantity;
-  }, 0);
-  
-  setOriginalTotal(total);
-  setTotalAmount(total - discountAmount); // Luôn cập nhật totalAmount = originalTotal - discountAmount
-};
+  // Sửa lỗi: Cập nhật hàm calculateTotalAmount để nhận discountAmount như một tham số
+  const calculateTotalAmount = (items, discount = discountAmount) => {
+    const total = items.reduce((sum, item) => {
+      const price = item.productDiscountPrice || item.productPrice;
+      return sum + price * item.quantity;
+    }, 0);
+    
+    setOriginalTotal(total);
+    setTotalAmount(total - discount); // Áp dụng giảm giá vào tổng tiền
+  };
 
   const handleRemoveItem = async (id) => {
     try {
@@ -187,6 +188,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
     }
   };
 
+  // Sửa lỗi: Cập nhật hàm handleApplyVoucher để tính lại totalAmount
   const handleApplyVoucher = async () => {
     if (!userId) {
       alert("Vui lòng đăng nhập để tận hưởng ưu đãi.");
@@ -204,9 +206,13 @@ const CartDrawer = ({ isOpen, onClose }) => {
         code: voucherCode, 
         userId 
       });
-      setDiscountAmount(response.data.discountAmount);
+      
+      const newDiscountAmount = response.data.discountAmount;
+      setDiscountAmount(newDiscountAmount);
       setVoucherApplied(true);
-      calculateTotalAmount(selectedItems);
+      
+      // Tính toán lại tổng tiền với giá trị giảm giá mới
+      calculateTotalAmount(selectedItems, newDiscountAmount);
     } catch (error) {
       console.error("Error applying voucher:", error);
       alert(error.response?.data?.message || "Voucher không hợp lệ hoặc đã hết hạn.");
@@ -215,11 +221,12 @@ const CartDrawer = ({ isOpen, onClose }) => {
     }
   };
 
+  // Sửa lỗi: Cập nhật hàm handleRemoveVoucher để tính lại totalAmount
   const handleRemoveVoucher = () => {
     setVoucherCode("");
     setDiscountAmount(0);
     setVoucherApplied(false);
-    calculateTotalAmount(selectedItems);
+    calculateTotalAmount(selectedItems, 0); // Đặt discount = 0
   };
 
   const handlePlaceOrder = () => {
@@ -286,6 +293,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
     updateQuantity(newQuantity);
   };
 
+  // Sửa lỗi: Cập nhật hàm handleSelectItem để tính lại totalAmount với discountAmount hiện tại
   const handleSelectItem = (item) => {
     const isSelected = selectedItems.some(
       (selectedItem) => selectedItem.productVariantId === item.productVariantId
@@ -293,8 +301,9 @@ const CartDrawer = ({ isOpen, onClose }) => {
     const updatedSelectedItems = isSelected
       ? selectedItems.filter((selectedItem) => selectedItem.productVariantId !== item.productVariantId)
       : [...selectedItems, item];
+    
     setSelectedItems(updatedSelectedItems);
-    calculateTotalAmount(updatedSelectedItems);
+    calculateTotalAmount(updatedSelectedItems, discountAmount);
   };
 
   return (
@@ -530,11 +539,6 @@ const CartDrawer = ({ isOpen, onClose }) => {
           textAlign="center"
           p={4}
         >
-          <img 
-            src="/empty-cart.png" 
-            alt="Empty cart" 
-            style={{ width: 200, marginBottom: 16 }} 
-          />
           <Typography variant="h6" gutterBottom>
             Giỏ hàng của bạn đang trống
           </Typography>

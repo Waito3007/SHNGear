@@ -10,7 +10,17 @@ using System.Linq;
 using System.Threading.Tasks;
 using System;
 using Newtonsoft.Json;
-
+using System.IO;
+using OfficeOpenXml;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
+using iTextSharp.tool.xml;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Globalization; // Cho hàm ConvertToUnsigned
+using System.Text;         // Cho NormalizationForm
+using OfficeOpenXml.Style;
+using Microsoft.AspNetCore.JsonPatch;
 namespace SHN_Gear.Controllers
 {
     [ApiController]
@@ -59,7 +69,160 @@ namespace SHN_Gear.Controllers
 
             return Ok(orderDtos);
         }
+        [HttpPut("{id}")]
+        [Authorize]
+        public async Task<IActionResult> UpdateOrder(int id, [FromBody] UpdateOrderDto updateOrderDto)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
+            try
+            {
+                // Lấy đơn hàng hiện tại
+                var order = await _context.Orders
+                    .Include(o => o.OrderItems)
+                    .FirstOrDefaultAsync(o => o.Id == id);
+
+                if (order == null)
+                {
+                    return NotFound("Đơn hàng không tồn tại.");
+                }
+
+                // Kiểm tra trạng thái đơn hàng - chỉ cho phép chỉnh sửa khi ở trạng thái Pending
+                if (order.OrderStatus != "Pending")
+                {
+                    return BadRequest("Chỉ có thể chỉnh sửa đơn hàng khi ở trạng thái 'Chờ xử lý'");
+                }
+
+                // Cập nhật địa chỉ nếu có
+                if (updateOrderDto.AddressId.HasValue)
+                {
+                    var address = await _context.Addresses.FindAsync(updateOrderDto.AddressId.Value);
+                    if (address == null)
+                    {
+                        return BadRequest("Địa chỉ không tồn tại");
+                    }
+                    order.AddressId = updateOrderDto.AddressId.Value;
+                }
+
+                // Xử lý voucher
+                Voucher? voucher = null;
+                if (updateOrderDto.VoucherId.HasValue)
+                {
+                    voucher = await _context.Vouchers.FindAsync(updateOrderDto.VoucherId.Value);
+                    if (voucher == null || !voucher.IsActive || voucher.ExpiryDate < DateTime.UtcNow)
+                    {
+                        return BadRequest("Voucher không hợp lệ.");
+                    }
+                    order.VoucherId = updateOrderDto.VoucherId;
+                }
+                else
+                {
+                    order.VoucherId = null;
+                }
+
+                // Xử lý các sản phẩm trong đơn hàng
+                if (updateOrderDto.OrderItems != null && updateOrderDto.OrderItems.Count > 0)
+                {
+                    // Xóa các items cũ
+                    _context.OrderItems.RemoveRange(order.OrderItems);
+
+                    // Thêm các items mới
+                    foreach (var itemDto in updateOrderDto.OrderItems)
+                    {
+                        var variant = await _context.ProductVariants
+                            .Include(pv => pv.Product)
+                            .FirstOrDefaultAsync(pv => pv.Id == itemDto.ProductVariantId);
+
+                        if (variant == null)
+                        {
+                            return BadRequest($"Không tìm thấy biến thể sản phẩm với ID {itemDto.ProductVariantId}");
+                        }
+
+                        if (variant.StockQuantity < itemDto.Quantity)
+                        {
+                            return BadRequest($"Số lượng tồn kho không đủ cho sản phẩm {variant.Product.Name}");
+                        }
+
+                        order.OrderItems.Add(new OrderItem
+                        {
+                            ProductVariantId = itemDto.ProductVariantId,
+                            Quantity = itemDto.Quantity,
+                            Price = variant.DiscountPrice ?? variant.Price
+                        });
+                    }
+                }
+
+                // Tính toán lại tổng tiền
+                order.TotalAmount = order.OrderItems.Sum(oi => oi.Quantity * oi.Price);
+
+                // Áp dụng voucher nếu có
+                if (voucher != null)
+                {
+                    order.TotalAmount -= voucher.DiscountAmount;
+                    if (order.TotalAmount < 0) order.TotalAmount = 0;
+                }
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok(new { Message = "Đơn hàng đã được cập nhật thành công." });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, $"Lỗi hệ thống: {ex.Message}");
+            }
+        }
+
+        //cập nhật một phần đơn
+        [HttpPatch("{id}")]
+        [Authorize]
+        public async Task<IActionResult> PartialUpdateOrder(int id, [FromBody] JsonPatchDocument<Order> patchDoc)
+        {
+            if (patchDoc == null)
+            {
+                return BadRequest("Dữ liệu cập nhật không hợp lệ");
+            }
+
+            var order = await _context.Orders.FindAsync(id);
+            if (order == null)
+            {
+                return NotFound("Đơn hàng không tồn tại");
+            }
+
+            // Kiểm tra trạng thái đơn hàng
+            if (order.OrderStatus != "Pending")
+            {
+                return BadRequest("Chỉ có thể chỉnh sửa đơn hàng khi ở trạng thái 'Chờ xử lý'");
+            }
+
+            // Áp dụng các thay đổi
+            patchDoc.ApplyTo(order);
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            // Kiểm tra số lượng tồn kho nếu có thay đổi về sản phẩm
+            if (patchDoc.Operations.Any(op => op.path.Contains("OrderItems")))
+            {
+                var orderWithItems = await _context.Orders
+                    .Include(o => o.OrderItems)
+                    .FirstOrDefaultAsync(o => o.Id == id);
+
+                foreach (var item in orderWithItems.OrderItems)
+                {
+                    var variant = await _context.ProductVariants.FindAsync(item.ProductVariantId);
+                    if (variant.StockQuantity < item.Quantity)
+                    {
+                        return BadRequest($"Số lượng tồn kho không đủ cho sản phẩm ID {item.ProductVariantId}");
+                    }
+                }
+            }
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = "Đơn hàng đã được cập nhật thành công." });
+        }
         // Tạo đơn hàng mới (hỗ trợ cả tiền mặt và MoMo)
         [HttpPost]
         public async Task<IActionResult> CreateOrder([FromBody] OrderDto orderDto)
@@ -87,22 +250,16 @@ namespace SHN_Gear.Controllers
                     }
                 }
 
-                // Kiểm tra số lượng tồn kho trước khi tạo đơn hàng
+                // Kiểm tra số lượng tồn kho
                 foreach (var item in orderDto.OrderItems)
                 {
                     var variant = await _context.ProductVariants
                         .Include(pv => pv.Product)
                         .FirstOrDefaultAsync(pv => pv.Id == item.ProductVariantId);
 
-                    if (variant == null)
-                    {
-                        return BadRequest($"Không tìm thấy biến thể sản phẩm với ID {item.ProductVariantId}");
-                    }
-
+                    if (variant == null) return BadRequest($"Không tìm thấy biến thể sản phẩm với ID {item.ProductVariantId}");
                     if (variant.StockQuantity < item.Quantity)
-                    {
-                        return BadRequest($"Số lượng tồn kho không đủ cho sản phẩm {variant.Product.Name} ({variant.Color}, {variant.Storage})");
-                    }
+                        return BadRequest($"Số lượng tồn kho không đủ cho sản phẩm {variant.Product.Name}");
                 }
 
                 // Create order
@@ -111,7 +268,7 @@ namespace SHN_Gear.Controllers
                     UserId = orderDto.UserId,
                     OrderDate = DateTime.UtcNow,
                     TotalAmount = orderDto.TotalAmount,
-                    OrderStatus = orderDto.PaymentMethodId == 1 ? "Pending" : "WaitingForPayment", // 1 = Cash, 2 = MoMo
+                    OrderStatus = orderDto.PaymentMethodId == 1 ? "Pending" : "WaitingForPayment",
                     AddressId = orderDto.AddressId,
                     PaymentMethodId = orderDto.PaymentMethodId,
                     VoucherId = orderDto.VoucherId,
@@ -140,21 +297,19 @@ namespace SHN_Gear.Controllers
                     variant.StockQuantity -= item.Quantity;
                 }
 
-                // Process MoMo payment if payment method is MoMo
+                // Thanh toán với momo (cả QR và thẻ)
                 if (orderDto.PaymentMethodId == 2)
                 {
                     try
                     {
                         var momoOrderId = $"SHN{order.Id}";
+                        bool isCardPayment = Request.Headers["Payment-Type"].ToString() == "card";
+
                         var payUrl = await _momoService.CreatePaymentAsync(
                             momoOrderId,
                             $"Thanh toán đơn hàng SHN#{order.Id}",
-                            (long)order.TotalAmount);
-
-                        // Update MoMo info to order
-                        order.MoMoOrderId = momoOrderId;
-                        order.MoMoPayUrl = payUrl;
-                        await _context.SaveChangesAsync();
+                            (long)order.TotalAmount,
+                            isCardPayment);
 
                         await transaction.CommitAsync();
 
@@ -163,16 +318,14 @@ namespace SHN_Gear.Controllers
                             Success = true,
                             OrderId = order.Id,
                             PaymentUrl = payUrl,
-                            Message = "Vui lòng thanh toán qua MoMo để hoàn tất đơn hàng."
+                            Message = isCardPayment
+                                ? "Vui lòng thanh toán bằng thẻ Visa/MasterCard"
+                                : "Vui lòng thanh toán qua QR MoMo"
                         });
                     }
                     catch (Exception ex)
                     {
-                        // If MoMo fails, update order status
-                        order.OrderStatus = "PaymentFailed";
-                        await _context.SaveChangesAsync();
                         await transaction.RollbackAsync();
-
                         return BadRequest(new
                         {
                             Success = false,
@@ -184,13 +337,12 @@ namespace SHN_Gear.Controllers
                 // Process voucher for cash payment
                 if (voucher != null && user != null)
                 {
-                    var userVoucher = new UserVoucher
+                    _context.UserVouchers.Add(new UserVoucher
                     {
                         UserId = orderDto.UserId.Value,
                         VoucherId = voucher.Id,
                         UsedAt = DateTime.UtcNow
-                    };
-                    _context.UserVouchers.Add(userVoucher);
+                    });
                 }
 
                 await _context.SaveChangesAsync();
@@ -612,7 +764,301 @@ namespace SHN_Gear.Controllers
 
             return Ok(orderDetails);
         }
+        [HttpGet("{orderId}/export/excel")]
+        public async Task<IActionResult> ExportOrderToExcel(int orderId)
+        {
+            try
+            {
+                // Lấy thông tin đơn hàng từ database
+                var order = await _context.Orders
+                    .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.ProductVariant)
+                    .ThenInclude(pv => pv.Product)
+                    .Include(o => o.Address)
+                    .FirstOrDefaultAsync(o => o.Id == orderId);
+
+                if (order == null)
+                {
+                    return NotFound(new { Message = $"Không tìm thấy đơn hàng với ID {orderId}" });
+                }
+
+                // Tạo file Excel với EPPlus
+                using (var excelPackage = new ExcelPackage())
+                {
+                    // Tạo worksheet
+                    var worksheet = excelPackage.Workbook.Worksheets.Add("Hóa đơn");
+
+                    // Định dạng tiêu đề
+                    worksheet.Cells["A1"].Value = "HÓA ĐƠN BÁN HÀNG";
+                    worksheet.Cells["A1:E1"].Merge = true;
+                    worksheet.Cells["A1"].Style.Font.Bold = true;
+                    worksheet.Cells["A1"].Style.Font.Size = 16;
+                    worksheet.Cells["A1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                    // Thông tin đơn hàng
+                    worksheet.Cells["A3"].Value = "Mã đơn hàng:";
+                    worksheet.Cells["B3"].Value = order.Id;
+                    worksheet.Cells["A4"].Value = "Ngày tạo:";
+                    worksheet.Cells["B4"].Value = order.OrderDate.ToString("dd/MM/yyyy HH:mm");
+                    worksheet.Cells["A5"].Value = "Khách hàng:";
+                    worksheet.Cells["B5"].Value = order.Address?.FullName ?? "N/A";
+
+                    // Tiêu đề bảng
+                    var headerRow = 7;
+                    worksheet.Cells[headerRow, 1].Value = "STT";
+                    worksheet.Cells[headerRow, 2].Value = "Tên sản phẩm";
+                    worksheet.Cells[headerRow, 3].Value = "Số lượng";
+                    worksheet.Cells[headerRow, 4].Value = "Đơn giá";
+                    worksheet.Cells[headerRow, 5].Value = "Thành tiền";
+
+                    // Định dạng tiêu đề bảng
+                    using (var range = worksheet.Cells[headerRow, 1, headerRow, 5])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    }
+
+                    // Đổ dữ liệu sản phẩm
+                    int row = 8;
+                    foreach (var item in order.OrderItems)
+                    {
+                        worksheet.Cells[row, 1].Value = row - headerRow;
+                        worksheet.Cells[row, 2].Value = item.ProductVariant.Product.Name;
+                        worksheet.Cells[row, 3].Value = item.Quantity;
+                        worksheet.Cells[row, 4].Value = item.Price;
+                        worksheet.Cells[row, 4].Style.Numberformat.Format = "#,##0";
+                        worksheet.Cells[row, 5].Value = item.Quantity * item.Price;
+                        worksheet.Cells[row, 5].Style.Numberformat.Format = "#,##0";
+                        row++;
+                    }
+
+                    // Tổng cộng
+                    worksheet.Cells[row, 4].Value = "Tổng cộng:";
+                    worksheet.Cells[row, 4].Style.Font.Bold = true;
+                    worksheet.Cells[row, 5].Value = order.TotalAmount;
+                    worksheet.Cells[row, 5].Style.Font.Bold = true;
+                    worksheet.Cells[row, 5].Style.Numberformat.Format = "#,##0";
+
+                    // Tự động điều chỉnh độ rộng cột
+                    worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+
+                    // Xuất file
+                    var stream = new MemoryStream();
+                    excelPackage.SaveAs(stream);
+                    stream.Position = 0;
+
+                    return File(
+                        fileContents: stream.ToArray(),
+                        contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        fileDownloadName: $"HoaDon_{orderId}.xlsx");
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi xuất file Excel" });
+            }
+        }
+
+        [HttpGet("{id}/export/image")]
+        public async Task<IActionResult> ExportOrderToImage(int id)
+        {
+            try
+            {
+                // Lấy thông tin đơn hàng từ database
+                var order = await _context.Orders
+                    .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.ProductVariant)
+                    .ThenInclude(pv => pv.Product)
+                    .Include(o => o.Address)
+                    .FirstOrDefaultAsync(o => o.Id == id);
+
+                if (order == null)
+                {
+                    return NotFound("Không tìm thấy đơn hàng");
+                }
+
+                // Tính toán kích thước hình ảnh dựa trên số lượng sản phẩm
+                int width = 800;
+                int itemHeight = 30;
+                int headerHeight = 200;
+                int footerHeight = 50;
+                int height = headerHeight + (order.OrderItems.Count * itemHeight) + footerHeight;
+
+                // Tạo bitmap và graphics
+                using (var bitmap = new System.Drawing.Bitmap(width, height))
+                using (var graphics = System.Drawing.Graphics.FromImage(bitmap))
+                {
+                    // Vẽ nền trắng
+                    graphics.Clear(System.Drawing.Color.White);
+
+                    // Định dạng font và brush
+                    var titleFont = new System.Drawing.Font("Arial", 20, System.Drawing.FontStyle.Bold);
+                    var headerFont = new System.Drawing.Font("Arial", 12, System.Drawing.FontStyle.Bold);
+                    var normalFont = new System.Drawing.Font("Arial", 10);
+                    var blackBrush = System.Drawing.Brushes.Black;
+                    var grayBrush = new System.Drawing.SolidBrush(System.Drawing.Color.Gray);
+
+                    // Vẽ tiêu đề
+                    graphics.DrawString("HÓA ĐƠN BÁN HÀNG", titleFont, blackBrush,
+                        new System.Drawing.PointF(width / 2 - 150, 20));
+
+                    // Vẽ thông tin đơn hàng
+                    graphics.DrawString($"Mã đơn hàng: {order.Id}", normalFont, blackBrush, 20, 60);
+                    graphics.DrawString($"Ngày tạo: {order.OrderDate:dd/MM/yyyy HH:mm}", normalFont, blackBrush, 20, 85);
+                    graphics.DrawString($"Khách hàng: {order.Address?.FullName ?? "N/A"}", normalFont, blackBrush, 20, 110);
+                    graphics.DrawString($"Địa chỉ: {order.Address?.AddressLine1 ?? "N/A"}", normalFont, blackBrush, 20, 135);
+
+                    // Vẽ tiêu đề bảng
+                    graphics.DrawString("STT", headerFont, blackBrush, 20, 170);
+                    graphics.DrawString("Tên sản phẩm", headerFont, blackBrush, 60, 170);
+                    graphics.DrawString("Số lượng", headerFont, blackBrush, 400, 170);
+                    graphics.DrawString("Đơn giá", headerFont, blackBrush, 500, 170);
+                    graphics.DrawString("Thành tiền", headerFont, blackBrush, 600, 170);
+
+                    // Vẽ đường kẻ ngang dưới tiêu đề
+                    graphics.DrawLine(System.Drawing.Pens.Gray, 20, 190, width - 20, 190);
+
+                    // Vẽ từng sản phẩm
+                    int yPos = 200;
+                    int index = 1;
+                    foreach (var item in order.OrderItems)
+                    {
+                        graphics.DrawString(index.ToString(), normalFont, blackBrush, 20, yPos);
+                        graphics.DrawString(item.ProductVariant.Product.Name, normalFont, blackBrush, 60, yPos);
+                        graphics.DrawString(item.Quantity.ToString(), normalFont, blackBrush, 400, yPos);
+                        graphics.DrawString(item.Price.ToString("N0"), normalFont, blackBrush, 500, yPos);
+                        graphics.DrawString((item.Quantity * item.Price).ToString("N0"), normalFont, blackBrush, 600, yPos);
+
+                        yPos += itemHeight;
+                        index++;
+                    }
+
+                    // Vẽ tổng cộng
+                    graphics.DrawLine(System.Drawing.Pens.Gray, 20, yPos, width - 20, yPos);
+                    yPos += 10;
+                    graphics.DrawString("TỔNG CỘNG:  ", headerFont, blackBrush, 500, yPos);
+                    graphics.DrawString(order.TotalAmount.ToString("N0"), headerFont, blackBrush, 600, yPos);
+
+                    // Vẽ footer
+                    yPos += 30;
+                    graphics.DrawString("Cảm ơn quý khách đã mua hàng!", normalFont, grayBrush,
+                        new System.Drawing.PointF(width / 2 - 100, yPos));
+
+                    // Lưu hình ảnh vào memory stream
+                    using (var stream = new MemoryStream())
+                    {
+                        bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                        stream.Position = 0;
+
+                        // Trả về file hình ảnh
+                        return File(stream.ToArray(), "image/png", $"HoaDon_{order.Id}.png");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi khi xuất hóa đơn: {ex.Message}");
+            }
+        }
+        private string ConvertToUnsigned(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return text;
+
+            text = text.Normalize(NormalizationForm.FormD);
+            var chars = text.Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark).ToArray();
+            return new string(chars).Normalize(NormalizationForm.FormC);
+        }
+
+        [HttpGet("{id}/export/template")]
+        public async Task<IActionResult> ExportOrderToTemplate(int id)
+        {
+            try
+            {
+                var order = await _context.Orders
+                    .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.ProductVariant)
+                    .ThenInclude(pv => pv.Product)
+                    .Include(o => o.Address)
+                    .FirstOrDefaultAsync(o => o.Id == id);
+
+                if (order == null)
+                {
+                    return NotFound("Order not found");
+                }
+
+                using (var stream = new MemoryStream())
+                {
+                    var document = new Document(PageSize.A4);
+                    var writer = PdfWriter.GetInstance(document, stream);
+                    document.Open();
+
+                    // Add title
+                    var titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18);
+                    var title = new Paragraph(ConvertToUnsigned("HOA DON BAN HANG"), titleFont)
+                    {
+                        Alignment = Element.ALIGN_CENTER,
+                        SpacingAfter = 20f
+                    };
+                    document.Add(title);
+
+                    // Add order info
+                    var infoFont = FontFactory.GetFont(FontFactory.HELVETICA, 12);
+                    document.Add(new Paragraph(ConvertToUnsigned($"Mã đơn hàng: {order.Id}"), infoFont));
+                    document.Add(new Paragraph(ConvertToUnsigned($"Ngày tạo: {order.OrderDate:dd/MM/yyyy}"), infoFont));
+                    document.Add(new Paragraph(ConvertToUnsigned($"Khách hàng: {order.Address?.FullName ?? "N/A"}"), infoFont));
+                    document.Add(new Paragraph(" "));
+
+                    // Create table
+                    var table = new PdfPTable(5)
+                    {
+                        WidthPercentage = 100,
+                        SpacingBefore = 10f,
+                        SpacingAfter = 10f
+                    };
+
+                    // Table headers
+                    table.AddCell(new PdfPCell(new Phrase(ConvertToUnsigned("STT"), infoFont)));
+                    table.AddCell(new PdfPCell(new Phrase(ConvertToUnsigned("Tên sản phẩm"), infoFont)));
+                    table.AddCell(new PdfPCell(new Phrase(ConvertToUnsigned("Số lượng"), infoFont)));
+                    table.AddCell(new PdfPCell(new Phrase(ConvertToUnsigned("Don Gia"), infoFont)));
+                    table.AddCell(new PdfPCell(new Phrase(ConvertToUnsigned("Thành tiền"), infoFont)));
+
+                    // Table data
+                    int index = 1;
+                    foreach (var item in order.OrderItems)
+                    {
+                        table.AddCell(new PdfPCell(new Phrase(index.ToString(), infoFont)));
+                        table.AddCell(new PdfPCell(new Phrase(ConvertToUnsigned(item.ProductVariant.Product.Name), infoFont)));
+                        table.AddCell(new PdfPCell(new Phrase(item.Quantity.ToString(), infoFont)));
+                        table.AddCell(new PdfPCell(new Phrase(item.Price.ToString("N0"), infoFont)));
+                        table.AddCell(new PdfPCell(new Phrase((item.Quantity * item.Price).ToString("N0"), infoFont)));
+                        index++;
+                    }
+
+                    document.Add(table);
+
+                    // Add total
+                    var totalFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
+                    document.Add(new Paragraph(ConvertToUnsigned($"Tổng cộng: {order.TotalAmount.ToString("N0")}"), totalFont)
+                    {
+                        Alignment = Element.ALIGN_RIGHT
+                    });
+
+                    document.Close();
+                    writer.Close();
+
+                    return File(stream.ToArray(), "application/pdf", $"HoaDon_{order.Id}.pdf");
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error exporting to template: {ex.Message}");
+            }
+        }
     }
+
 
     public class MoMoCallbackModel
     {

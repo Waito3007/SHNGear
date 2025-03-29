@@ -3,7 +3,6 @@ import {
   Drawer,
   Box,
   Typography,
-  Button,
   Divider,
   List,
   ListItem,
@@ -11,27 +10,23 @@ import {
   ListItemAvatar,
   Avatar,
   IconButton,
-  Select,
-  MenuItem,
   Chip,
   CircularProgress,
   Grid,
   Tooltip,
   ImageList,
   ImageListItem,
+  Button,
+  ButtonGroup,
 } from '@mui/material';
-import { Close, Edit, Save, Cancel } from '@mui/icons-material';
+import { Close, PictureAsPdf, InsertDriveFile, Receipt } from '@mui/icons-material';
 import axios from 'axios';
 
 const OrderDetailDrawer = ({ orderId, open, onClose }) => {
   const [order, setOrder] = useState(null);
   const [variantDetails, setVariantDetails] = useState({});
   const [loading, setLoading] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [editData, setEditData] = useState({
-    status: '',
-    addressId: '',
-  });
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     if (open && orderId) {
@@ -39,7 +34,6 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
     } else {
       setOrder(null);
       setVariantDetails({});
-      setEditing(false);
     }
   }, [open, orderId]);
 
@@ -48,10 +42,6 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
       setLoading(true);
       const response = await axios.get(`https://localhost:7107/api/orders/${orderId}/details`);
       setOrder(response.data);
-      setEditData({
-        status: response.data.orderStatus || 'Pending',
-        addressId: response.data.addressId || '',
-      });
       if (response.data.items?.length > 0) {
         await fetchVariantDetails(response.data.items);
       }
@@ -78,31 +68,69 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
     }
   };
 
-  const handleEditToggle = () => {
-    setEditing(!editing);
-  };
-
-  const handleEditChange = (e) => {
-    const { name, value } = e.target;
-    setEditData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSaveChanges = async () => {
+  const handleExportExcel = async () => {
     try {
-      setLoading(true);
-      await axios.put(`https://localhost:7107/api/orders/${orderId}/status`, {
-        NewStatus: editData.status,
-        AddressId: editData.addressId,
-      });
-      fetchOrderDetails();
-      setEditing(false);
+      setExporting(true);
+      const response = await axios.get(
+        `https://localhost:7107/api/orders/${orderId}/export/excel`,
+        { responseType: 'blob' }
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `HoaDon_${orderId}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
     } catch (error) {
-      console.error('Failed to update order:', error);
+      console.error('Failed to export Excel:', error);
+      alert('Xuất file Excel thất bại');
     } finally {
-      setLoading(false);
+      setExporting(false);
+    }
+  };
+
+  const handleExportImage = async () => {
+    try {
+      setExporting(true);
+      const response = await axios.get(
+        `https://localhost:7107/api/orders/${orderId}/export/image`,
+        { responseType: 'blob' }
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `HoaDon_${orderId}.png`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Failed to export image:', error);
+      alert('Xuất hình ảnh thất bại');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportTemplate = async () => {
+    try {
+      setExporting(true);
+      const response = await axios.get(
+        `https://localhost:7107/api/orders/${orderId}/export/template`,
+        { responseType: 'blob' }
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `HoaDon_${orderId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Failed to export template:', error);
+      alert('Xuất hóa đơn theo mẫu thất bại');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -162,6 +190,33 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
           </IconButton>
         </Box>
 
+        {/* Nút xuất hóa đơn */}
+        <Box sx={{ mb: 3 }}>
+          <ButtonGroup fullWidth variant="contained" disabled={exporting || !order}>
+            <Button 
+              startIcon={exporting ? <CircularProgress size={20} /> : <InsertDriveFile />}
+              onClick={handleExportExcel}
+              color="success"
+            >
+              Excel
+            </Button>
+            <Button 
+              startIcon={exporting ? <CircularProgress size={20} /> : <Receipt />}
+              onClick={handleExportImage}
+              color="error"
+            >
+              Ảnh hóa đơn
+            </Button>
+            <Button 
+              startIcon={exporting ? <CircularProgress size={20} /> : <PictureAsPdf />}
+              onClick={handleExportTemplate}
+              color="primary"
+            >
+              PDF
+            </Button>
+          </ButtonGroup>
+        </Box>
+
         {loading && !order ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
             <CircularProgress />
@@ -211,57 +266,27 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
                   <Typography variant="body2" color="text.secondary">
                     Trạng thái:
                   </Typography>
-                  {editing ? (
-                    <Select
-                      name="status"
-                      value={editData.status}
-                      onChange={handleEditChange}
-                      size="small"
-                      sx={{ minWidth: 150 }}
-                    >
-                      <MenuItem value="Pending">Chờ xác nhận</MenuItem>
-                      <MenuItem value="Processing">Đã xác nhận</MenuItem>
-                      <MenuItem value="Shipped">Đang vận chuyển</MenuItem>
-                      <MenuItem value="Delivered">Đã giao hàng</MenuItem>
-                      <MenuItem value="Cancelled">Đã hủy</MenuItem>
-                    </Select>
-                  ) : (
-                    <Chip
-                      label={order.orderStatus || 'Unknown'}
-                      color={getStatusColor(order.orderStatus)}
-                      size="small"
-                    />
-                  )}
+                  <Chip
+                    label={order.orderStatus || 'Unknown'}
+                    color={getStatusColor(order.orderStatus)}
+                    size="small"
+                  />
                 </Grid>
                 <Grid item xs={12}>
                   <Typography variant="body2" color="text.secondary">
                     Địa chỉ giao hàng:
                   </Typography>
-                  {editing ? (
-                    <Select
-                      name="addressId"
-                      value={editData.addressId}
-                      onChange={handleEditChange}
-                      size="small"
-                      sx={{ minWidth: 200 }}
-                    >
-                      <MenuItem value={order.addressId}>
-                        {order.address ? formatAddress(order.address) : 'Chưa chọn'}
-                      </MenuItem>
-                    </Select>
-                  ) : (
-                    <Box>
-                      <Typography variant="body2" fontWeight="medium">
-                        {order.address?.fullName || 'N/A'}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {order.address?.phoneNumber || 'N/A'}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {formatAddress(order.address)}
-                      </Typography>
-                    </Box>
-                  )}
+                  <Box>
+                    <Typography variant="body2" fontWeight="medium">
+                      {order.address?.fullName || 'N/A'}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {order.address?.phoneNumber || 'N/A'}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {formatAddress(order.address)}
+                    </Typography>
+                  </Box>
                 </Grid>
               </Grid>
             </Box>
@@ -340,7 +365,6 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
                               <strong>Giá giảm:</strong> {formatCurrency(variant.discountPrice)}
                             </Typography>
                           )}
-                         
 
                           {/* Hiển thị tất cả hình ảnh */}
                           {images.length > 0 ? (
@@ -381,34 +405,6 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
                 <Typography variant="body2" color="text.secondary">
                   Không có sản phẩm trong đơn hàng.
                 </Typography>
-              )}
-            </Box>
-
-            {/* Nút hành động */}
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-              {editing ? (
-                <>
-                  <Button
-                    variant="outlined"
-                    startIcon={<Cancel />}
-                    onClick={handleEditToggle}
-                    disabled={loading}
-                  >
-                    Hủy
-                  </Button>
-                  <Button
-                    variant="contained"
-                    startIcon={loading ? <CircularProgress size={20} /> : <Save />}
-                    onClick={handleSaveChanges}
-                    disabled={loading}
-                  >
-                    Lưu thay đổi
-                  </Button>
-                </>
-              ) : (
-                <Button variant="contained" startIcon={<Edit />} onClick={handleEditToggle}>
-                  Chỉnh sửa
-                </Button>
               )}
             </Box>
           </>

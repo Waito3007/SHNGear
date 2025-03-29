@@ -19,6 +19,8 @@ const OrdersTable = () => {
     const [maxAmount, setMaxAmount] = useState("");
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
     const ordersPerPage = 5;
+    //state edit 
+    
     //state cho drawer OrderDetail
     const [selectedOrderId, setSelectedOrderId] = useState(null);
     const [drawerOpen, setDrawerOpen] = useState(false);

@@ -47,15 +47,15 @@ const ProductsPage = () => {
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 1 }}
 				>
-					<StatCard name='Total Products' icon={Package} value={totalProducts} color='#6366F1' />
+					<StatCard name='Tổng sản phẩm' icon={Package} value={totalProducts} color='#6366F1' />
 					<StatCard
-						name="Top Selling"
+						name="Bán chạy"
 						icon={TrendingUp}
 						value={topSelling}
 						color="#10B981"
 					/>
-					<StatCard name='Low Stock' icon={AlertTriangle} value={lowStockProducts} color='#F59E0B' />
-					<StatCard name='Total Revenue' icon={DollarSign} value={"$543,210"} color='#EF4444' />
+					<StatCard name='Gần hết hàng' icon={AlertTriangle} value={lowStockProducts} color='#F59E0B' />
+					<StatCard name='Tổng thu' icon={DollarSign} value={"145002000VND"} color='#EF4444' />
 				</motion.div>
 
 				<ProductsTable />
