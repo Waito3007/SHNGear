@@ -358,20 +358,17 @@ const CartDrawer = ({ isOpen, onClose }) => {
                   onChange={() => handleSelectItem(item)}
                   color="primary"
                 />
-                <img
-  src={item.productImage?.startsWith("http") 
-    ? item.productImage 
-    : `${process.env.REACT_APP_API_BASE_URL}/${item.productImage}`}
-  alt={item.productName}
-  className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
-  onError={(e) => { 
-    e.target.onerror = null; 
-    e.target.src = "https://via.placeholder.com/150"; 
-  }}
-  style={{
-    width: '80px',
-    height: '80px',
-    objectFit: 'contain'
+                <Avatar
+                  variant="rounded"
+                  src={item.productImage?.startsWith("http") 
+                    ? item.productImage 
+                    : `${process.env.REACT_APP_API_BASE_URL}/${item.productImage}`}
+                  alt={item.productName}
+                  sx={{ width: 80, height: 80 }}
+  
+                onError={(e) => {
+                  e.target.onerror = null; // Prevent infinite loop
+                  e.target.src = "https://via.placeholder.com/80"; // Fallback image
   }}
 />
                 <Box sx={{ flexGrow: 1 }}>

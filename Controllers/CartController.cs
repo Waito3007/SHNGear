@@ -119,7 +119,10 @@ namespace SHN_Gear.Controllers
                     i.Quantity,
                     i.ProductVariantId,
                     ProductName = i.ProductVariant.Product.Name,
-                    ProductImage = i.ProductVariant.Product.Images.FirstOrDefault(img => img.IsPrimary)?.ImageUrl,
+                    ProductImage = i.ProductVariant.Product.Images
+        .OrderByDescending(img => img.IsPrimary) // Ưu tiên ảnh IsPrimary
+        .ThenBy(img => img.Id)                  // Sau đó sắp xếp theo ID
+        .FirstOrDefault()?.ImageUrl ?? "/images/default-product.png", // Fallback image
                     VariantColor = i.ProductVariant.Color,
                     VariantStorage = i.ProductVariant.Storage,
                     ProductPrice = i.ProductVariant.Price,
@@ -153,7 +156,10 @@ namespace SHN_Gear.Controllers
                             item.ProductVariantId,
                             item.Quantity,
                             ProductName = variant.Product.Name,
-                            ProductImage = variant.Product.Images.FirstOrDefault(img => img.IsPrimary)?.ImageUrl,
+                            ProductImage = variant.Product.Images
+                                .OrderByDescending(img => img.IsPrimary)
+                                .ThenBy(img => img.Id)
+                                .FirstOrDefault()?.ImageUrl ?? "/images/default-product.png",
                             VariantColor = variant.Color,
                             VariantStorage = variant.Storage,
                             ProductPrice = variant.Price,
