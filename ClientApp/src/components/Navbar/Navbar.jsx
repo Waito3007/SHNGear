@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ShoppingCart, User, Search, Star, MapPin, LogOut, ShoppingBag } from "lucide-react";
+import { ShoppingCart, User, Search, Star, MapPin, LogOut, ShoppingBag, Settings } from "lucide-react";
 import { useNavigate, NavLink } from "react-router-dom";
 import "./Navbar.css";
 import axios from 'axios';
@@ -488,7 +488,17 @@ const handleSearchSubmit = (e) => {
     {user?.email || 'user@example.com'}
   </p>
 </div>
-          
+           {/* Thêm điều kiện hiển thị cho admin */}
+          {user.role?.id === 1 && (
+            <NavLink 
+              to="/admin/overview"
+              className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
+              activeClassName="bg-blue-50 text-blue-600"
+            >
+              <Settings className="w-4 h-4 mr-3" />
+              Trang quản trị
+            </NavLink>
+          )}
           <NavLink 
             to="/profile"
             className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
