@@ -41,6 +41,63 @@ namespace SHN_Gear.Controllers
             _configuration = configuration;
         }
 
+
+        // Lấy thông tin đơn hàng
+        [HttpGet("confirm/{orderId}")]
+        public async Task<IActionResult> GetOrderConfirmationDetails(int orderId)
+        {
+            try
+            {
+                var order = await _context.Orders
+                    .Include(o => o.OrderItems)
+                        .ThenInclude(oi => oi.ProductVariant)
+                            .ThenInclude(pv => pv.Product)
+                                .ThenInclude(p => p.Images)
+                    .Include(o => o.Address)
+                    .Include(o => o.PaymentMethod)
+                    .FirstOrDefaultAsync(o => o.Id == orderId);
+
+                if (order == null)
+                {
+                    return NotFound(new { Message = "Không tìm thấy đơn hàng" });
+                }
+
+                var result = new
+                {
+                    OrderId = order.Id,
+                    OrderDate = order.OrderDate.ToString("dd/MM/yyyy HH:mm"),
+                    TotalAmount = order.TotalAmount,
+                    FormattedTotal = order.TotalAmount.ToString("N0") + " VNĐ",
+                    PaymentMethod = order.PaymentMethod?.Name ?? "Tiền mặt",
+                    OrderStatus = order.OrderStatus,
+                    ShippingInfo = new
+                    {
+                        FullName = order.Address?.FullName ?? "N/A",
+                        Phone = order.Address?.PhoneNumber ?? "N/A",
+                        Address = $"{order.Address?.AddressLine1}, {order.Address?.City}, {order.Address?.State}",
+                        Email = order.User?.Email ?? "N/A"
+                    },
+                    Products = order.OrderItems.Select(oi => new
+                    {
+                        Id = oi.ProductVariant.Product.Id,
+                        Name = oi.ProductVariant.Product.Name,
+                        Image = oi.ProductVariant.Product.Images.FirstOrDefault(i => i.IsPrimary)?.ImageUrl
+                               ?? "/images/default-product.png",
+                        Variant = $"{oi.ProductVariant.Color} - {oi.ProductVariant.Storage}",
+                        Quantity = oi.Quantity,
+                        Price = oi.Price,
+                        Total = oi.Price * oi.Quantity
+                    }),
+                    EstimatedDelivery = order.OrderDate.AddDays(3).ToString("dd/MM/yyyy")
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Lỗi khi lấy thông tin đơn hàng", Error = ex.Message });
+            }
+        }
         // Lấy danh sách đơn hàng
         [HttpGet]
         public async Task<IActionResult> GetOrders()
@@ -429,16 +486,33 @@ namespace SHN_Gear.Controllers
                         };
                         _context.UserVouchers.Add(userVoucher);
                     }
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    // Trả về URL xác nhận
+                    return Ok(new
+                    {
+                        Success = true,
+                        RedirectUrl = $"/order-confirmation/{orderId}",
+                        OrderId = orderId
+                    });
                 }
                 else // Failed
                 {
                     order.OrderStatus = "PaymentFailed";
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    return Ok(new
+                    {
+                        Success = false,
+                        RedirectUrl = $"/checkout?payment=failed&orderId={orderId}",
+                        Message = callback.Message
+                    });
                 }
 
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
 
-                return Ok();
             }
             catch (Exception ex)
             {
