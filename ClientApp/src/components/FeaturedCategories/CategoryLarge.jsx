@@ -18,10 +18,18 @@ const CategoryLarge = ({ id, name, image }) => {
       </span>
       <div className="absolute right-4 top-1/2 transform -translate-y-1/2 h-full flex items-center">
         <img
-          src={image}
-          alt={name}
+    src={
+        image?.startsWith("http")
+            ? image // Full external URL
+            : `${process.env.REACT_APP_API_BASE_URL}${image}`
+    }
+    alt={`logo`}
           className="max-h-[130px] sm:max-h-[110px] xs:max-h-[100px] object-contain transition-transform duration-300 hover:scale-115 hover:rotate-2"
-        />
+    onError={(e) => {
+        e.target.onerror = null;
+        e.target.src = "https://via.placeholder.com/50";
+    }}
+/>
       </div>
       <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-red-400 to-purple-500 opacity-75"></div>
     </div>

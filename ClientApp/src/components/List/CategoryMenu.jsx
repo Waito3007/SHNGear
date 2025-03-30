@@ -34,10 +34,18 @@ const CategoryMenu = () => {
         >
           {/* Hiển thị hình ảnh danh mục */}
           <img
-            src={category.image} // Lấy ảnh từ API
-            alt={category.name}
-            style={styles.categoryImage}
-          />
+    src={
+        category.image?.startsWith("http")
+            ? category.image // Full external URL
+            : `${process.env.REACT_APP_API_BASE_URL}${category.image}`
+    }
+    alt={`${category.name} logo`}
+    className="size-10 rounded-full"
+    onError={(e) => {
+        e.target.onerror = null;
+        e.target.src = "https://via.placeholder.com/50";
+    }}
+/>
           <span>{category.name}</span>
         </div>
       ))}

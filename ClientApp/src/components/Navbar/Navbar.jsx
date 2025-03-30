@@ -1,19 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ShoppingCart, User, Search, Star, MapPin, LogOut, ShoppingBag } from "lucide-react";
 import { useNavigate, NavLink } from "react-router-dom";
-import {
-  LocalMall as LocalMallIcon,
-  Category as CategoryIcon,
-  Business as BusinessIcon,
-  ChevronRight as ChevronRightIcon,
-  Image as ImageIcon,
-  Folder as FolderIcon,
-  BusinessCenter as BusinessCenterIcon,
-  SearchOff as SearchOffIcon,
-  ArrowForward as ArrowForwardIcon
-} from '@mui/icons-material';
 import "./Navbar.css";
 import axios from 'axios';
+import { jwtDecode } from "jwt-decode"; // Import jwt-decode
 import menuIcon from "../../assets/icon/menu.svg";
 import logo from "../../assets/img/Phone/logo.png";
 import AuthModal from "../Auth/AuthModal";
@@ -29,45 +19,43 @@ const Navbar = () => {
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
-  const [userInfo, setUserInfo] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const dropdownRef = useRef(null);
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const [isCartOpen, setIsCartOpen] = useState(false);
 
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
-  const fetchUserProfile = async () => {
     const token = localStorage.getItem("token");
-    
-    if (!token) {
-      console.error("No token found");
-      return;
-    }
-
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/Auth/profile`, {
-        headers: {
-          Authorization: `Bearer ${token}` // Đảm bảo có "Bearer "
+    if (token) {
+        try {
+            const decoded = jwtDecode(token);
+            const id = parseInt(decoded.sub, 10); // Lấy `sub` từ token và chuyển thành số nguyên
+            if (!Number.isInteger(id)) return;
+            setUserId(id);
+            fetchUserProfile(id); // Gọi API với `userId`
+        } catch (error) {
+            console.error("Lỗi khi giải mã token:", error);
         }
-      });
-      setUserInfo(response.data);
-    } catch (error) {
-      console.error("Error fetching profile:", {
-        status: error.response?.status,
-        message: error.response?.data?.message || error.message
-      });
+    }
+  }, []);
 
-      // Nếu token hết hạn, clear localStorage
-      if (error.response?.status === 401) {
-        localStorage.removeItem("token");
-        setIsLoggedIn(false);
-      }
+  // 📌 Lấy thông tin user từ API
+  const fetchUserProfile = async (id) => {
+    try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/users/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        setUser(response.data);
+    } catch (error) {
+        console.error("Lỗi khi lấy thông tin user:", error);
+    } finally {
+        setIsLoading(false);
     }
   };
-
-  if (isLoggedIn) fetchUserProfile();
-}, [isLoggedIn]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -498,10 +486,10 @@ const handleSearchSubmit = (e) => {
         <div className="py-1 flex flex-col">
           <div className="px-4 py-3 border-b border-gray-100">
   <p className="text-sm font-medium text-gray-900">
-    Xin chào, {userInfo?.FullName || 'Khách'}
+    Xin chào, {user?.fullName || 'Khách'}
   </p>
   <p className="text-xs text-gray-500 truncate">
-    {userInfo?.Email || 'user@example.com'}
+    {user?.email || 'user@example.com'}
   </p>
 </div>
           
