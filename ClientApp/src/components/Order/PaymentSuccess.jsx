@@ -1,7 +1,8 @@
 import React from 'react';
-import { Box, Typography, Button, Container } from '@mui/material';
+import { Box, Typography, Button, Container, Stack } from '@mui/material';
 import { motion } from 'framer-motion';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate } from 'react-router-dom';
 
 const PaymentSuccess = () => {
@@ -57,33 +58,62 @@ const PaymentSuccess = () => {
               textAlign: 'left',
             }}
           >
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              Thông tin đơn hàng:
+            </Typography>
+            <Typography variant="body2">
+              Bạn có thể tra cứu đơn hàng bất kỳ lúc nào bằng số điện thoại đã đăng ký
+            </Typography>
           </Box>
 
           {/* Nút hành động */}
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Button
-              variant="contained"
-              size="large"
-              onClick={() => navigate('/')}
-              sx={{
-                px: 4,
-                py: 1.5,
-                borderRadius: 2,
-                fontWeight: 'bold',
-                textTransform: 'none',
-              }}
+          <Stack direction="row" spacing={2} sx={{ width: '100%', justifyContent: 'center' }}>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              Quay về trang chủ
-            </Button>
-          </motion.div>
+              <Button
+                variant="outlined"
+                size="large"
+                startIcon={<SearchIcon />}
+                onClick={() => navigate('/order-lookup')}
+                sx={{
+                  px: 4,
+                  py: 1.5,
+                  borderRadius: 2,
+                  fontWeight: 'bold',
+                  textTransform: 'none',
+                }}
+              >
+                Tra cứu đơn hàng
+              </Button>
+            </motion.div>
+            
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button
+                variant="contained"
+                size="large"
+                onClick={() => navigate('/')}
+                sx={{
+                  px: 4,
+                  py: 1.5,
+                  borderRadius: 2,
+                  fontWeight: 'bold',
+                  textTransform: 'none',
+                }}
+              >
+                Về trang chủ
+              </Button>
+            </motion.div>
+          </Stack>
 
           {/* Thông báo phụ */}
-          {/* <Typography variant="caption" color="text.secondary" sx={{ mt: 3 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 3 }}>
             Bạn sẽ nhận được email xác nhận đơn hàng trong ít phút.
-          </Typography> */}
+          </Typography>
         </Box>
       </motion.div>
     </Container>
