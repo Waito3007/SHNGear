@@ -23,4 +23,10 @@ namespace SHN_Gear.DTOs
     {
         public string NewStatus { get; set; }
     }
+    public class UpdateOrderDto
+    {
+        public int? AddressId { get; set; }
+        public List<OrderItemDto> OrderItems { get; set; } = new List<OrderItemDto>();
+        public int? VoucherId { get; set; }
+    }
 }

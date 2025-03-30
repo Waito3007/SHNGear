@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Modal, Box, TextField, Button, Typography, CircularProgress } from "@mui/material";
 import axios from "axios";
-import jwtDecode from "jwt-decode"; // Import jwt-decode
+import { jwtDecode } from "jwt-decode"; // Import jwt-decode
 import React from "react";
 
 const ProfileInfo = () => {
@@ -9,26 +9,51 @@ const ProfileInfo = () => {
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [openModal, setOpenModal] = useState(false);
-  const [updatedUser, setUpdatedUser] = useState({ fullName: "", email: "" });
+  const [updatedUser, setUpdatedUser] = useState({
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    gender: "",
+    avatarUrl: "",
+    dateOfBirth: ""
+  });
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
-    fetchUserProfile();
+    const token = localStorage.getItem("token");
+    if (token) {
+        try {
+            const decoded = jwtDecode(token);
+            const id = parseInt(decoded.sub, 10); // Lấy `sub` từ token và chuyển thành số nguyên
+            if (!Number.isInteger(id)) return;
+            setUserId(id);
+            fetchUserProfile(id); // Gọi API với `userId`
+        } catch (error) {
+            console.error("Lỗi khi giải mã token:", error);
+        }
+    }
   }, []);
 
   // 📌 Lấy thông tin user từ API
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = async (id) => {
     try {
-      const token = localStorage.getItem("token"); // Lấy token từ localStorage
-      const response = await axios.get(`https://localhost:7107/api/Auth/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      console.log("Dữ liệu api trả về:", response.data);
-      setUser(response.data);
-      setUpdatedUser({ fullName: response.data.fullName, email: response.data.email });
+        const token = localStorage.getItem("token");
+        const response = await axios.get(`https://localhost:7107/api/users/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        setUser(response.data);
+        setUpdatedUser({
+            fullName: response.data.fullName,
+            email: response.data.email,
+            phoneNumber: response.data.phoneNumber || "",
+            gender: response.data.gender || "",
+            avatarUrl: response.data.avatarUrl || "",
+            dateOfBirth: response.data.dateOfBirth || ""
+        });
     } catch (error) {
-      console.error("Lỗi khi lấy thông tin user:", error);
+        console.error("Lỗi khi lấy thông tin user:", error);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 
@@ -52,18 +77,33 @@ const ProfileInfo = () => {
   // 📌 Gửi API cập nhật thông tin người dùng
   const handleSaveProfile = async () => {
     try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        `https://localhost:7107/api/Auth/profile`,
-        { fullName: updatedUser.fullName, email: updatedUser.email },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setUser(updatedUser);
-      handleCloseModal();
-    } catch (error) {
-      console.error("Lỗi khi cập nhật thông tin user:", error);
-    }
-  };
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("Token không tồn tại. Vui lòng đăng nhập lại.");
+            return;
+        }
+
+        await axios.put(
+            `https://localhost:7107/api/auth/profile/${userId}`,
+            {
+                fullName: updatedUser.fullName,
+                email: updatedUser.email,
+                phoneNumber: updatedUser.phoneNumber,
+                gender: updatedUser.gender,
+                avatarUrl: updatedUser.avatarUrl,
+                dateOfBirth: updatedUser.dateOfBirth
+            },
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+              setUser(updatedUser);
+              handleCloseModal();
+              alert("Cập nhật thông tin thành công!");
+          } catch (error) {
+              console.error("Lỗi khi cập nhật thông tin user:", error);
+              alert("Lỗi khi cập nhật thông tin, vui lòng thử lại.");
+          }
+      };
 
   if (loading) return <CircularProgress sx={{ display: "block", margin: "auto", mt: 3 }} />;
 
@@ -89,9 +129,22 @@ const ProfileInfo = () => {
         <Typography variant="subtitle2" color="gray">Email</Typography>
         <Typography variant="body1">{user.email}</Typography>
       </Box>
-      <Box sx={{ textAlign: "left",border: "2px solid black", padding: "8px 16px", borderRadius: "8px", backgroundColor: "#f5f5f5", mb: 2 }}>
-        <Typography variant="subtitle2" color="gray">Hạng Thành Viên</Typography>
-        <Typography variant="body1">{user.role}</Typography>
+      <Box
+        sx={{
+          textAlign: "left",
+          border: "2px solid black",
+          padding: "8px 16px",
+          borderRadius: "8px",
+          backgroundColor: "#f5f5f5",
+          mb: 2,
+        }}
+      >
+        <Typography variant="subtitle2" color="gray">
+          Hạng Thành Viên
+        </Typography>
+        <Typography variant="body1">
+          {user.role?.name || "Chưa có vai trò"}
+        </Typography>
       </Box>
       <Button variant="contained" color="error" fullWidth onClick={handleOpenModal} sx={{ borderRadius: "8px",height:"50px" }}>
         Chỉnh sửa
@@ -115,9 +168,22 @@ const ProfileInfo = () => {
           }}
         >
           <Typography variant="h6" textAlign="center" mb={2} fontWeight="bold">Chỉnh sửa thông tin</Typography>
-          <TextField fullWidth label="Họ và tên" name="fullName" value={updatedUser.fullName} onChange={handleInputChange} margin="normal" sx={{ borderRadius: "8px" }} />
-          <TextField fullWidth label="Email" name="email" value={updatedUser.email} onChange={handleInputChange} margin="normal" sx={{ borderRadius: "8px" }} />
-          <Button variant="contained" color="error" fullWidth onClick={handleSaveProfile} sx={{ mt: 2, borderRadius: "8px" }}>
+          <TextField fullWidth label="Họ và tên" name="fullName" value={updatedUser.fullName} onChange={handleInputChange} margin="normal" />
+          <TextField fullWidth label="Email" name="email" value={updatedUser.email} onChange={handleInputChange} margin="normal" />
+          <TextField fullWidth label="Số điện thoại" name="phoneNumber" value={updatedUser.phoneNumber} onChange={handleInputChange} margin="normal" />
+          <TextField fullWidth label="Giới tính" name="gender" value={updatedUser.gender} onChange={handleInputChange} margin="normal" />
+          <TextField fullWidth label="Avatar URL" name="avatarUrl" value={updatedUser.avatarUrl} onChange={handleInputChange} margin="normal" />
+          <TextField
+            fullWidth
+            label="Ngày sinh"
+            name="dateOfBirth"
+            type="date"
+            value={updatedUser.dateOfBirth}
+            onChange={handleInputChange}
+            margin="normal"
+            InputLabelProps={{ shrink: true }}
+          />
+          <Button variant="contained" color="error" fullWidth onClick={handleSaveProfile} sx={{ mt: 2 }}>
             Lưu thay đổi
           </Button>
         </Box>

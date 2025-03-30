@@ -17,7 +17,7 @@ public class ProductsController : ControllerBase
         _context = context;
     }
 
-    // 📌 Lấy danh sách sản phẩm (có hỗ trợ lọc theo danh mục)
+    // Lấy danh sách sản phẩm (có hỗ trợ lọc theo danh mục)
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Product>>> GetProducts([FromQuery] int? categoryId = null)
     {
@@ -36,7 +36,7 @@ public class ProductsController : ControllerBase
         return await query.ToListAsync();
     }
 
-    // 📌 Lấy thông tin chi tiết sản phẩm theo ID
+    //Lấy thông tin chi tiết sản phẩm theo ID
     [HttpGet("{id}")]
     public async Task<ActionResult<Product>> GetProduct(int id)
     {
@@ -55,7 +55,7 @@ public class ProductsController : ControllerBase
         return product;
     }
 
-    // 📌 Thêm sản phẩm mới
+    // Thêm sản phẩm mới
     [HttpPost]
     public async Task<ActionResult<Product>> PostProduct([FromBody] ProductDto productDto)
     {
@@ -94,7 +94,7 @@ public class ProductsController : ControllerBase
         return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
     }
 
-    // 📌 Cập nhật sản phẩm
+    // Cập nhật sản phẩm
     [HttpPut("{id}")]
     public async Task<IActionResult> PutProduct(int id, [FromBody] ProductDto productDto)
     {
@@ -137,7 +137,7 @@ public class ProductsController : ControllerBase
         return NoContent();
     }
 
-    // 📌 Xóa sản phẩm
+    // Xóa sản phẩm
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteProduct(int id)
     {
@@ -157,7 +157,7 @@ public class ProductsController : ControllerBase
         return NoContent();
     }
 
-    // 📌 Lấy danh sách sản phẩm liên quan theo thương hiệu (brand)
+    // Lấy danh sách sản phẩm liên quan theo thương hiệu (brand)
     [HttpGet("related-by-brand/{brandId}/{currentProductId}")]
     public async Task<ActionResult<IEnumerable<Product>>> GetRelatedProductsByBrand(int brandId, int currentProductId)
     {
@@ -168,7 +168,7 @@ public class ProductsController : ControllerBase
 
         return Ok(relatedProducts);
     }
-    // 📌 API lấy danh sách biến thể (màu sắc + dung lượng + số lượng tồn) của sản phẩm
+    // API lấy danh sách biến thể (màu sắc + dung lượng + số lượng tồn) của sản phẩm
     [HttpGet("{id}/variants")]
     public async Task<ActionResult<IEnumerable<object>>> GetProductVariants(int id)
     {
@@ -192,7 +192,7 @@ public class ProductsController : ControllerBase
 
         return Ok(variants);
     }
-    // 📌 Lấy tổng số sản phẩm
+    // Lấy tổng số sản phẩm
     [HttpGet("count")]
     public async Task<ActionResult<int>> GetProductCount()
     {
@@ -250,7 +250,7 @@ public class ProductsController : ControllerBase
 
         return Ok(categoryCounts);
     }
-
+    // Lấy brand có số lượng sản phẩm nhiều nhất
     [HttpGet("by-brand")]
     public async Task<ActionResult> GetProductCountByBrand()
     {
@@ -263,4 +263,82 @@ public class ProductsController : ControllerBase
         return Ok(topBrand);
     }
 
+    // GET: api/Products/lowest-price
+    [HttpGet("lowest-price")]
+    public async Task<ActionResult<IEnumerable<Product>>> GetProductsWithLowestPrice()
+    {
+        var now = DateTime.UtcNow;
+
+        var products = await _context.Products
+            .Include(p => p.Images)
+            .Include(p => p.Variants)
+            .Include(p => p.Brand)  // Bao gồm thông tin Brand
+            .Include(p => p.Category)  // Bao gồm thông tin Category
+            .Where(p => p.Variants.Any())  // Chỉ lấy sản phẩm có ít nhất 1 variant
+            .Select(p => new
+            {
+                Product = p,
+                // Lấy giá thấp nhất (ưu tiên giá khuyến mãi nếu có)
+                MinPrice = p.Variants.Min(v =>
+                    v.FlashSaleStart <= now && now <= v.FlashSaleEnd
+                        ? v.DiscountPrice ?? v.Price
+                        : v.Price)
+            })
+            .OrderBy(x => x.MinPrice)  // Sắp xếp theo giá thấp nhất
+            .Take(10)  // Lấy 10 sản phẩm
+            .Select(x => x.Product)  // Chỉ lấy thông tin Product
+            .ToListAsync();
+
+        return Ok(products);
+    }
+
+    // Lấy thông tin sản phẩm và hình ảnh dựa trên variantId
+    [HttpGet("by-variant/{variantId}")]
+    public async Task<ActionResult<object>> GetProductByVariantId(int variantId)
+    {
+        // Tìm variant theo variantId và bao gồm thông tin sản phẩm và hình ảnh
+        var variant = await _context.ProductVariants
+            .Include(v => v.Product)
+                .ThenInclude(p => p.Images)
+            .Include(v => v.Product)
+                .ThenInclude(p => p.Category)
+            .Include(v => v.Product)
+                .ThenInclude(p => p.Brand)
+            .FirstOrDefaultAsync(v => v.Id == variantId);
+
+        if (variant == null)
+        {
+            return NotFound("Không tìm thấy biến thể sản phẩm.");
+        }
+
+        // Tạo đối tượng trả về với thông tin sản phẩm và hình ảnh
+        var result = new
+        {
+            Product = new
+            {
+                variant.Product.Id,
+                variant.Product.Name,
+                variant.Product.Description,
+                Category = variant.Product.Category?.Name,
+                Brand = variant.Product.Brand?.Name
+            },
+            Variant = new
+            {
+                variant.Id,
+                variant.Color,
+                variant.Storage,
+                variant.Price,
+                variant.DiscountPrice,
+                variant.StockQuantity
+            },
+            Images = variant.Product.Images.Select(img => new
+            {
+                img.Id,
+                img.ImageUrl,
+                img.IsPrimary
+            }).ToList()
+        };
+
+        return Ok(result);
+    }
 }

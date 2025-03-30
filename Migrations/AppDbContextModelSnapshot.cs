@@ -408,6 +408,26 @@ namespace SHN_Gear.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PaymentMethods");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "Thanh toán bằng tiền mặt",
+                            Name = "Tiền Mặt"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Description = "momo",
+                            Name = "MoMo"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Description = "VNPay",
+                            Name = "VNPay"
+                        });
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.PhoneSpecification", b =>
@@ -682,6 +702,9 @@ namespace SHN_Gear.Migrations
 
                     b.Property<string>("Gender")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<string>("OtpCode")
                         .HasColumnType("nvarchar(max)");

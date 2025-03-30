@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
-import { Edit, Search, Trash2, Settings } from "lucide-react"; // Thêm Settings icon
+import { Edit, Search, Trash2, Settings, Filter, X } from "lucide-react"; // Thêm Settings icon
 import { useState, useEffect } from "react";
 import ProductDrawer from "./AddProductDrawer";
 import EditProductDrawer from "./EditProductDrawer";
@@ -15,10 +15,12 @@ import CategoryBrandDrawer from "./CategoryBrandDrawer";
 import BrandDrawer from "./BrandDrawer";
 import Pagination from "@mui/material/Pagination";
 import VoucherDrawer from "./VoucherDrawer"; // Thêm VoucherDrawer
+import { Category } from "@mui/icons-material";
 
 const ProductsTable = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [brands, setBrands] = useState([]); // Thêm state cho brands
+    const [categories, setCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [products, setProducts] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState([]);
@@ -30,39 +32,97 @@ const ProductsTable = () => {
     const [isCategoryBrandDrawerOpen, setIsCategoryBrandDrawerOpen] = useState(false);
     const [isBrandDrawerOpen, setIsBrandDrawerOpen] = useState(false);
     const [isVoucherDrawerOpen, setIsVoucherDrawerOpen] = useState(false); // Thêm state cho VoucherDrawer
+    const [isSpecDrawerOpen, setIsSpecDrawerOpen] = useState(false);
+    const [selectedProductForSpec, setSelectedProductForSpec] = useState(null);
+
     const [page, setPage] = useState(1);
     const productsPerPage = 11;
+    const handleAddSpecification = (product) => {
+    setSelectedProductForSpec(product);
+    setIsSpecDrawerOpen(true);
+    };
+
+    // Thêm các state mới cho bộ lọc
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [filters, setFilters] = useState({
+        brandId: '',
+        categoryId: '',
+        minPrice: '',
+        maxPrice: ''
+    });
+
 
     // Logic gọi API đã chỉnh sửa
     useEffect(() => {
-        const fetchProducts = async () => {
+        const fetchData = async () => {
             try {
-                const response = await fetch("https://localhost:7107/api/Products");
-                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                const data = await response.json();
-                console.log("Raw API Data:", data); // Debug dữ liệu từ API
-                // Giả sử API trả về mảng ProductDto trực tiếp (không có $values)
-                setProducts(data);
-                setFilteredProducts(data);
+                const [productsRes, brandsRes, categoriesRes] = await Promise.all([
+                    fetch("https://localhost:7107/api/Products"),
+                    fetch("https://localhost:7107/api/brands"),
+                    fetch("https://localhost:7107/api/categories")
+                ]);
+
+                const productsData = await productsRes.json();
+                const brandsData = await brandsRes.json();
+                const categoriesData = await categoriesRes.json();
+
+                setProducts(productsData);
+                setFilteredProducts(productsData);
+                setBrands(brandsData.$values || brandsData || []);
+                setCategories(categoriesData.$values || categoriesData || []);
             } catch (error) {
                 console.error("Fetch error:", error);
+                toast.error("Lỗi khi tải dữ liệu");
             }
         };
-        fetchProducts();
-    }, []);
 
-    useEffect(() => {
-    const fetchBrands = async () => {
-        try {
-            const response = await fetch("https://localhost:7107/api/brands");
-            const data = await response.json();
-            setBrands(data);
-        } catch (error) {
-            console.error("Lỗi khi lấy danh sách thương hiệu:", error);
+        fetchData();
+    }, []);
+    
+
+    // Hàm áp dụng bộ lọc
+    const applyFilters = () => {
+        let filtered = [...products];
+        
+        // Lọc theo brand
+        if (filters.brandId) {
+            filtered = filtered.filter(product => product.brandId == filters.brandId);
         }
+        
+        // Lọc theo category
+        if (filters.categoryId) {
+            filtered = filtered.filter(product => product.categoryId == filters.categoryId);
+        }
+        
+        // Lọc theo giá
+        if (filters.minPrice) {
+            filtered = filtered.filter(product => 
+                product.variants?.[0]?.price >= Number(filters.minPrice)
+            );
+        }
+        
+        if (filters.maxPrice) {
+            filtered = filtered.filter(product => 
+                product.variants?.[0]?.price <= Number(filters.maxPrice)
+            );
+        }
+        
+        setFilteredProducts(filtered);
+        setPage(1); // Reset về trang đầu tiên khi lọc
+        setIsFilterOpen(false);
     };
-    fetchBrands();
-}, []);
+
+    // Hàm reset bộ lọc
+    const resetFilters = () => {
+        setFilters({
+            brandId: '',
+            categoryId: '',
+            minPrice: '',
+            maxPrice: ''
+        });
+        setFilteredProducts(products);
+        setPage(1);
+    };
 
    const handleSearch = async (e) => {
     const term = e.target.value;
@@ -92,6 +152,11 @@ const ProductsTable = () => {
     return brand ? brand.name : "Không xác định";
 };
 
+    const getCategoryName = (categoryId) => {
+    const category = categories.find((c) => c.id === categoryId);
+    return category ? category.name : "Không xác định";
+};
+    
     const handleAddProduct = (newProduct) => {
         setProducts([...products, newProduct]);
         setFilteredProducts([...products, newProduct]);
@@ -199,8 +264,119 @@ const ProductsTable = () => {
                 >
                     Voucher
                 </button>
+                
+            </div>
+            {/* Thêm nút mở bộ lọc */}
+            <div className="flex justify-between items-center mb-4">
+                <button 
+                    className="flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm rounded-lg px-3 py-1 border border-indigo-400"
+                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                >
+                    {isFilterOpen ? <X size={18} /> : <Filter size={18} />}
+                    {isFilterOpen ? 'Đóng lọc' : 'Lọc sản phẩm'}
+                </button>
+                
+                {/* Hiển thị số sản phẩm đang hiển thị */}
+                <span className="text-gray-400 text-sm">
+                    Hiển thị {filteredProducts.length} sản phẩm
+                </span>
             </div>
 
+            {/* Panel bộ lọc */}
+            {isFilterOpen && (
+                <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="bg-gray-700 p-4 rounded-lg mb-4"
+                >
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {/* Lọc theo brand */}
+                        <div>
+                            <label className="block text-gray-400 text-sm mb-1 whitespace-nowrap">Thương hiệu</label>
+                            <select
+                                className="w-full bg-gray-800 text-white rounded p-2"
+                                value={filters.brandId}
+                                onChange={(e) => setFilters({...filters, brandId: e.target.value})}
+                            >
+                                <option value="">Tất cả thương hiệu</option>
+                                {brands.map(brand => (
+                                    <option key={brand.id} value={brand.id}>{brand.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        
+                        {/* Lọc theo category */}
+                        <div>
+                            <label className="block text-gray-400 text-sm mb-1 whitespace-nowrap">Danh mục</label>
+                            <select
+                                className="w-full bg-gray-800 text-white rounded p-2"
+                                value={filters.categoryId}
+                                onChange={(e) => setFilters({...filters, categoryId: e.target.value})}
+                            >
+                                <option value="">Tất cả danh mục</option>
+                                {categories.map(category => (
+                                    <option key={category.id} value={category.id}>{category.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        
+                        {/* Lọc theo giá tối thiểu */}
+<div>
+    <label className="block text-gray-400 text-sm mb-1 whitespace-nowrap">Giá từ (VND)</label>
+    <select
+        className="w-full bg-gray-800 text-white rounded p-2"
+        value={filters.minPrice}
+        onChange={(e) => setFilters({ ...filters, minPrice: Number(e.target.value) })}
+    >
+        <option value={0}>Tối thiểu</option>
+        <option value={5000000}>5 triệu</option>
+        <option value={10000000}>10 triệu</option>
+        <option value={20000000}>20 triệu</option>
+        <option value={30000000}>30 triệu</option>
+        <option value={40000000}>40 triệu</option>
+        <option value={50000000}>50 triệu</option>
+    </select>
+</div>
+
+{/* Lọc theo giá tối đa */}
+<div>
+    <label className="block text-gray-400 text-sm mb-1 whitespace-nowrap">Đến (VND)</label>
+    <select
+        className="w-full bg-gray-800 text-white rounded p-2"
+        value={filters.maxPrice}
+        onChange={(e) => setFilters({ ...filters, maxPrice: Number(e.target.value) })}
+    >
+        <option value={1000000000}>Tối đa</option>
+        <option value={5000000}>5 triệu</option>
+        <option value={10000000}>10 triệu</option>
+        <option value={20000000}>20 triệu</option>
+        <option value={30000000}>30 triệu</option>
+        <option value={40000000}>40 triệu</option>
+        <option value={50000000}>50 triệu</option>
+        <option value={60000000}>Trên 50 triệu</option>
+    </select>
+</div>
+
+                    </div>
+                    
+                    <div className="flex justify-end gap-2 mt-4">
+                        <button 
+                            className="text-gray-300 hover:text-white text-sm rounded-lg px-3 py-1 border border-gray-500"
+                            onClick={resetFilters}
+                        >
+                            Xóa lọc
+                        </button>
+                        <button 
+                            className="text-indigo-400 hover:text-indigo-300 text-sm rounded-lg px-3 py-1 border border-indigo-400"
+                            onClick={applyFilters}
+                        >
+                            Áp dụng
+                        </button>
+                    </div>
+                </motion.div>
+            )}
+            
             <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-700">
                     <thead>
@@ -255,7 +431,7 @@ const ProductsTable = () => {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                                     {/* Tương tự với CategoryId */}
-                                    {product.categoryId || "Chưa có danh mục"}
+                                    {getCategoryName(product.categoryId)}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                                     {product.variants?.[0]?.price
@@ -273,6 +449,12 @@ const ProductsTable = () => {
                                         onClick={() => handleEditProduct(product)}
                                     >
                                         <Edit size={18} />
+                                    </button>
+                                    <button
+                                        className="text-green-400 hover:text-green-300 mr-2"
+                                        onClick={() => handleAddSpecification(product)}
+                                    >
+                                        <Settings size={18} />
                                     </button>
                                     <button
                                         className="text-red-400 hover:text-red-300"
@@ -342,6 +524,11 @@ const ProductsTable = () => {
             <VoucherDrawer
                 open={isVoucherDrawerOpen}
                 onClose={() => setIsVoucherDrawerOpen(false)}
+            />
+            <AddSpecificationDrawer 
+            open={isSpecDrawerOpen} 
+            onClose={() => setIsSpecDrawerOpen(false)} 
+            product={selectedProductForSpec} 
             />
         </motion.div>
     );

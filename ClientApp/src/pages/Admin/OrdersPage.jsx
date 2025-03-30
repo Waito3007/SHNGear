@@ -60,7 +60,7 @@ const OrdersPage = () => {
                         value={orderStats.completedOrders}
                         color='#10B981'
                     />
-                    <StatCard name='Tổng tiền đã thu' icon={DollarSign} value={orderStats.totalRevenue+" VND"} color='#EF4444' />
+                    <StatCard name='Tổng tiền dự tính' icon={DollarSign} value={orderStats.totalRevenue+" VND"} color='#EF4444' />
                 </motion.div>
 
                 <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8'>

@@ -1,8 +1,22 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Search, PlusCircle, Pencil, Trash2 } from "lucide-react";
 import axios from "axios";
-import { Modal, Box, Typography, Button, Select, MenuItem } from "@mui/material";
+import { motion } from "framer-motion";
+import { Search, PlusCircle, Pencil, Trash2, Users } from "lucide-react";
+import {
+  Modal,
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+} from "@mui/material";
+import { message } from "antd";
+
+import RoleDrawer from "./RoleDrawer"; // Import nội bộ
+import UpdateUserDrawer from "./UpdateUserDrawer";
 
 const UsersTable = () => {
   const [users, setUsers] = useState([]);
@@ -12,35 +26,44 @@ const UsersTable = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [updateDrawerVisible, setUpdateDrawerVisible] = useState(false);
+    const [isModalStatusVisible, setIsModalStatusVisible] = useState(false);
   const [newRole, setNewRole] = useState("");
+    const [newStatus, setNewStatus] = useState("");
   const [openModal, setOpenModal] = useState(false);
+  const [roleDrawerVisible, setRoleDrawerVisible] = useState(false);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get("https://localhost:7107/api/users");
-        setUsers(response.data);
-        setFilteredUsers(response.data);
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const [newUser, setNewUser] = useState({
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    password: "",
+    roleId: "",
+  });
+  const [openUserModal, setOpenUserModal] = useState(false);
 
-    const fetchRoles = async () => {
-      try {
-        const response = await axios.get("https://localhost:7107/api/roles");
-        setRoles(response.data);
-      } catch (error) {
-        setError(error.message);
-      }
-    };
+ useEffect(() => {
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [usersRes, rolesRes] = await Promise.all([
+        axios.get("https://localhost:7107/api/users"),
+        axios.get("https://localhost:7107/api/roles"),
+      ]);
+      setUsers(usersRes.data);
+      setFilteredUsers(usersRes.data);
+      setRoles(rolesRes.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchUsers();
-    fetchRoles();
-  }, []);
+  fetchData();
+}, []);
+
 
   const handleSearch = (e) => {
     const term = e.target.value.toLowerCase();
@@ -62,20 +85,58 @@ const UsersTable = () => {
     setSelectedUser(null);
   };
 
+  const handleOpenUpdateDrawer = (user) => {
+  setSelectedUser(user);
+  setUpdateDrawerVisible(true);
+};
+
   const handleUpdateRole = async () => {
     if (selectedUser) {
-      try {
-        await axios.put(`https://localhost:7107/api/users/${selectedUser.id}/role`, { roleId: newRole });
-        setUsers(users.map(user => user.id === selectedUser.id ? { ...user, roleId: newRole } : user));
-        setFilteredUsers(filteredUsers.map(user => user.id === selectedUser.id ? { ...user, roleId: newRole } : user));
-        alert("Vai trò người dùng đã được cập nhật thành công!");
-        handleCloseModal();
-      } catch (error) {
-        console.error("Lỗi khi cập nhật vai trò người dùng:", error);
-        alert("Lỗi khi cập nhật vai trò người dùng, vui lòng thử lại.");
-      }
+        console.log("Updating role for user:", selectedUser); // Log thông tin người dùng
+        console.log("New role ID:", newRole); // Log vai trò mới
+
+        try {
+            await axios.put(`https://localhost:7107/api/users/${selectedUser.id}/role`, { roleId: newRole });
+            console.log("Role updated successfully"); // Log khi cập nhật thành công
+            setUsers(users.map(user => user.id === selectedUser.id ? { ...user, roleId: newRole } : user));
+            setFilteredUsers(filteredUsers.map(user => user.id === selectedUser.id ? { ...user, roleId: newRole } : user));
+            alert("Vai trò người dùng đã được cập nhật thành công!");
+            handleCloseModal();
+        } catch (error) {
+            console.error("Error updating user role:", error); // Log lỗi khi cập nhật vai trò
+            alert("Lỗi khi cập nhật vai trò người dùng, vui lòng thử lại.");
+        }
+    }
+};
+
+
+  const handleAddUser = async () => {
+    if (!newUser.fullName || !newUser.email || !newUser.phoneNumber || !newUser.password || !newUser.roleId) {
+        alert("Vui lòng điền đầy đủ thông tin.");
+        return;
+    }
+
+    try {
+        const response = await axios.post("https://localhost:7107/api/users", newUser);
+        setUsers([...users, response.data]);
+        setFilteredUsers([...filteredUsers, response.data]);
+        message.success("Người dùng mới đã được thêm thành công!");
+
+        setOpenUserModal(false);
+        setNewUser({
+            fullName: "",
+            email: "",
+            phoneNumber: "",
+            password: "",
+            roleId: "",
+        });
+    } catch (error) {
+        console.error("Lỗi khi thêm người dùng mới:", error);
+        alert("Lỗi khi thêm người dùng mới, vui lòng thử lại.");
     }
   };
+
+
 
   return (
     <motion.div
@@ -88,24 +149,31 @@ const UsersTable = () => {
       <div className='flex justify-between items-center mb-6'>
         <h2 className='text-xl font-semibold text-gray-100'>Users</h2>
         <div className='flex space-x-3'>
-          {/* Add User Button */}
-          <button className='flex items-center text-sm text-white bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg'>
-            <PlusCircle size={18} className='mr-2' />
-            Add User
-          </button>
-          {/* Add Role Button */}
-          <button className='flex items-center text-sm text-white bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg'>
-            <PlusCircle size={18} className='mr-2' />
-            Add Role
-          </button>
-        </div>
+  {/* Add User Button */}
+  <button
+    className="flex items-center text-sm text-white bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg"
+    onClick={() => setOpenUserModal(true)}
+  >
+    <PlusCircle size={18} className="mr-2" />
+    Thêm người dùng
+  </button>
+
+  {/* Role Management Button */}
+  <button
+    className="flex items-center text-sm text-white bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg"
+    onClick={() => setRoleDrawerVisible(true)}
+  >
+    <Users size={18} className="mr-2" />
+    Quản lý Role
+  </button>
+</div>
       </div>
 
       {/* Search Bar */}
       <div className='relative mb-4'>
         <input
           type='text'
-          placeholder='Search users...'
+          placeholder='Tìm kiếm...'
           className='bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full'
           value={searchTerm}
           onChange={handleSearch}
@@ -118,11 +186,11 @@ const UsersTable = () => {
         <table className='min-w-full divide-y divide-gray-700'>
           <thead>
             <tr>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>Name</th>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>Tên người dùng</th>
               <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>Email</th>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>Role</th>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>Status</th>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>Actions</th>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>Vai trò</th>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>Trạng thái</th>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>Hành động</th>
             </tr>
           </thead>
 
@@ -134,7 +202,7 @@ const UsersTable = () => {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                <td className='px-6 py-4 whitespace-nowrap'>
+                <td className='px-6 py-3 whitespace-nowrap'>
                   <div className='flex items-center'>
                     <div className='flex-shrink-0 h-10 w-10'>
                       <div className='h-10 w-10 rounded-full bg-gradient-to-r from-purple-400 to-blue-500 flex items-center justify-center text-white font-semibold'>
@@ -147,35 +215,35 @@ const UsersTable = () => {
                   </div>
                 </td>
 
-                <td className='px-6 py-4 whitespace-nowrap'>
+                <td className='px-6 py-3 whitespace-nowrap'>
                   <div className='text-sm text-gray-300'>{user.email}</div>
                 </td>
 
-                <td className='px-6 py-4 whitespace-nowrap'>
-                  <span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-800 text-blue-100'>
-                    {user.role ? user.role.name : "N/A"}
-                  </span>
-                </td>
+                <td className='px-6 py-3 whitespace-nowrap'>
+  <span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-800 text-blue-100'>
+    {roles.find(r => r.id === user.roleId)?.name || "N/A"}
+  </span>
+</td>
 
-                <td className='px-6 py-4 whitespace-nowrap'>
-                  <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      user.status === "Active"
-                        ? "bg-green-800 text-green-100"
-                        : "bg-red-800 text-red-100"
-                    }`}
-                  >
-                    {user.status}
-                  </span>
-                </td>
+                <td className="px-6 py-3 whitespace-nowrap">
+  <span
+    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer ${
+      user.isActive ? "bg-green-800 text-green-100" : "bg-red-800 text-red-100"
+    }`}
+  >
+    {user.isActive ? "Active" : "Inactive"}
+  </span>
+</td>
 
-                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-300'>
+
+                <td className='px-6 py-3 whitespace-nowrap text-sm text-gray-300'>
                   <button
-                    className='text-indigo-400 hover:text-indigo-300 mr-4'
-                    onClick={() => handleOpenModal(user)}
-                  >
-                    <Pencil size={18} />
-                  </button>
+  className='text-indigo-400 hover:text-indigo-300 mr-4'
+  onClick={() => handleOpenUpdateDrawer(user)}
+>
+  <Pencil size={18} />
+</button>
+
                   <button
                     className='text-red-400 hover:text-red-300'
                     onClick={() => console.log("Delete", user.id)}
@@ -228,6 +296,112 @@ const UsersTable = () => {
           </Button>
         </Box>
       </Modal>
+
+
+
+            <Modal open={openUserModal} onClose={() => setOpenUserModal(false)}>
+      <Box
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: 420,
+          bgcolor: "white",
+          borderRadius: 3,
+          boxShadow: 24,
+          p: 4,
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
+        <Typography variant="h6" component="h2" textAlign="center">
+          Thêm Người Dùng Mới
+        </Typography>
+
+        <TextField
+          label="Họ và tên"
+          variant="outlined"
+          fullWidth
+          value={newUser.fullName}
+          onChange={(e) => setNewUser({ ...newUser, fullName: e.target.value })}
+        />
+
+        <TextField
+          label="Email"
+          type="email"
+          variant="outlined"
+          fullWidth
+          value={newUser.email}
+          onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+        />
+
+        <TextField
+          label="Số điện thoại"
+          type="tel"
+          variant="outlined"
+          fullWidth
+          value={newUser.phoneNumber}
+          onChange={(e) => setNewUser({ ...newUser, phoneNumber: e.target.value })}
+        />
+
+        <TextField
+          label="Mật khẩu"
+          type="password"
+          variant="outlined"
+          fullWidth
+          value={newUser.password}
+          onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+        />
+
+        <FormControl fullWidth>
+  <Select
+    value={newUser.roleId}
+    onChange={(e) => setNewUser({ ...newUser, roleId: e.target.value })}
+    displayEmpty
+  >
+    <MenuItem value="" disabled>
+      Chọn vai trò
+    </MenuItem>
+    {roles.map((role) => (
+      <MenuItem key={role.id} value={role.id}>
+        {role.name}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
+
+
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleAddUser}
+          fullWidth
+          sx={{
+            textTransform: "none",
+            fontWeight: "bold",
+            py: 1.5,
+            borderRadius: 2,
+          }}
+        >
+          Thêm Người Dùng
+        </Button>
+      </Box>
+    </Modal>
+
+      <RoleDrawer visible={roleDrawerVisible} onClose={() => setRoleDrawerVisible(false)} />
+
+        <UpdateUserDrawer
+  open={updateDrawerVisible}
+  onClose={() => setUpdateDrawerVisible(false)}
+  user={selectedUser}
+  roles={roles}
+  onUpdate={(id, updatedData) => {
+    setUsers(users.map(user => user.id === id ? { ...user, ...updatedData } : user));
+    setFilteredUsers(filteredUsers.map(user => user.id === id ? { ...user, ...updatedData } : user));
+  }}
+/>
     </motion.div>
   );
 };

@@ -16,6 +16,7 @@ namespace SHN_Gear.Controllers
             _context = context;
         }
 
+        #region Phone Specifications
         // POST: api/Specifications/PhoneSpecifications
         [HttpPost("PhoneSpecifications")]
         public async Task<ActionResult<PhoneSpecification>> CreatePhoneSpecification([FromBody] PhoneSpecificationDto specDto)
@@ -29,7 +30,7 @@ namespace SHN_Gear.Controllers
             var phoneSpec = new PhoneSpecification
             {
                 ProductId = specDto.ProductId,
-                Product = product, // Liên kết với sản phẩm hiện có
+                Product = product,
                 ScreenSize = specDto.ScreenSize,
                 Resolution = specDto.Resolution,
                 ScreenType = specDto.ScreenType,
@@ -59,6 +60,110 @@ namespace SHN_Gear.Controllers
             return spec;
         }
 
+        // PUT: api/Specifications/PhoneSpecifications/{id}
+        [HttpPut("PhoneSpecifications/{id}")]
+        public async Task<IActionResult> UpdatePhoneSpecification(int id, [FromBody] PhoneSpecificationDto specDto)
+        {
+            var existingSpec = await _context.PhoneSpecifications.FindAsync(id);
+            if (existingSpec == null)
+            {
+                return NotFound();
+            }
+
+            // Cập nhật từng thuộc tính
+            existingSpec.ScreenSize = specDto.ScreenSize;
+            existingSpec.Resolution = specDto.Resolution;
+            existingSpec.ScreenType = specDto.ScreenType;
+            existingSpec.Weight = specDto.Weight;
+            existingSpec.Material = specDto.Material;
+            existingSpec.CPUModel = specDto.CPUModel;
+            existingSpec.CPUCores = specDto.CPUCores;
+            existingSpec.RAM = specDto.RAM;
+            existingSpec.InternalStorage = specDto.InternalStorage;
+            existingSpec.FrontCamera = specDto.FrontCamera;
+            existingSpec.RearCamera = specDto.RearCamera;
+            existingSpec.BatteryCapacity = specDto.BatteryCapacity;
+            existingSpec.SupportsNFC = specDto.SupportsNFC;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!PhoneSpecificationExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // PATCH: api/Specifications/PhoneSpecifications/{id}
+        [HttpPatch("PhoneSpecifications/{id}")]
+        public async Task<IActionResult> PartialUpdatePhoneSpecification(int id, [FromBody] Dictionary<string, object> patchDoc)
+        {
+            var existingSpec = await _context.PhoneSpecifications.FindAsync(id);
+            if (existingSpec == null)
+            {
+                return NotFound();
+            }
+
+            foreach (var item in patchDoc)
+            {
+                var property = typeof(PhoneSpecification).GetProperty(item.Key);
+                if (property != null && property.CanWrite)
+                {
+                    property.SetValue(existingSpec, Convert.ChangeType(item.Value, property.PropertyType));
+                }
+            }
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!PhoneSpecificationExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // DELETE: api/Specifications/PhoneSpecifications/{id}
+        [HttpDelete("PhoneSpecifications/{id}")]
+        public async Task<IActionResult> DeletePhoneSpecification(int id)
+        {
+            var phoneSpec = await _context.PhoneSpecifications.FindAsync(id);
+            if (phoneSpec == null)
+            {
+                return NotFound();
+            }
+
+            _context.PhoneSpecifications.Remove(phoneSpec);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+        private bool PhoneSpecificationExists(int id)
+        {
+            return _context.PhoneSpecifications.Any(e => e.Id == id);
+        }
+        #endregion
+
+        #region Laptop Specifications
         // POST: api/Specifications/LaptopSpecifications
         [HttpPost("LaptopSpecifications")]
         public async Task<ActionResult<LaptopSpecification>> CreateLaptopSpecification([FromBody] LaptopSpecificationDto specDto)
@@ -100,6 +205,69 @@ namespace SHN_Gear.Controllers
             return spec;
         }
 
+        // PUT: api/Specifications/LaptopSpecifications/{id}
+        [HttpPut("LaptopSpecifications/{id}")]
+        public async Task<IActionResult> UpdateLaptopSpecification(int id, [FromBody] LaptopSpecificationDto specDto)
+        {
+            var existingSpec = await _context.LaptopSpecifications.FindAsync(id);
+            if (existingSpec == null)
+            {
+                return NotFound();
+            }
+
+            existingSpec.Weight = specDto.Weight;
+            existingSpec.Material = specDto.Material;
+            existingSpec.CPUType = specDto.CPUType;
+            existingSpec.CPUNumberOfCores = specDto.CPUNumberOfCores;
+            existingSpec.RAM = specDto.RAM;
+            existingSpec.MaxRAMSupport = specDto.MaxRAMSupport;
+            existingSpec.SSDStorage = specDto.SSDStorage;
+            existingSpec.ScreenSize = specDto.ScreenSize;
+            existingSpec.Resolution = specDto.Resolution;
+            existingSpec.RefreshRate = specDto.RefreshRate;
+            existingSpec.SupportsTouch = specDto.SupportsTouch;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!LaptopSpecificationExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // DELETE: api/Specifications/LaptopSpecifications/{id}
+        [HttpDelete("LaptopSpecifications/{id}")]
+        public async Task<IActionResult> DeleteLaptopSpecification(int id)
+        {
+            var laptopSpec = await _context.LaptopSpecifications.FindAsync(id);
+            if (laptopSpec == null)
+            {
+                return NotFound();
+            }
+
+            _context.LaptopSpecifications.Remove(laptopSpec);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+        private bool LaptopSpecificationExists(int id)
+        {
+            return _context.LaptopSpecifications.Any(e => e.Id == id);
+        }
+        #endregion
+
+        #region Headphone Specifications
         // POST: api/Specifications/HeadphoneSpecifications
         [HttpPost("HeadphoneSpecifications")]
         public async Task<ActionResult<HeadphoneSpecification>> CreateHeadphoneSpecification([FromBody] HeadphoneSpecificationDto specDto)
@@ -132,6 +300,91 @@ namespace SHN_Gear.Controllers
             var spec = await _context.HeadphoneSpecifications.FindAsync(id);
             if (spec == null) return NotFound();
             return spec;
+        }
+
+        // PUT: api/Specifications/HeadphoneSpecifications/{id}
+        [HttpPut("HeadphoneSpecifications/{id}")]
+        public async Task<IActionResult> UpdateHeadphoneSpecification(int id, [FromBody] HeadphoneSpecificationDto specDto)
+        {
+            var existingSpec = await _context.HeadphoneSpecifications.FindAsync(id);
+            if (existingSpec == null)
+            {
+                return NotFound();
+            }
+
+            existingSpec.Weight = specDto.Weight;
+            existingSpec.Type = specDto.Type;
+            existingSpec.ConnectionType = specDto.ConnectionType;
+            existingSpec.Port = specDto.Port;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!HeadphoneSpecificationExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // DELETE: api/Specifications/HeadphoneSpecifications/{id}
+        [HttpDelete("HeadphoneSpecifications/{id}")]
+        public async Task<IActionResult> DeleteHeadphoneSpecification(int id)
+        {
+            var headphoneSpec = await _context.HeadphoneSpecifications.FindAsync(id);
+            if (headphoneSpec == null)
+            {
+                return NotFound();
+            }
+
+            _context.HeadphoneSpecifications.Remove(headphoneSpec);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool HeadphoneSpecificationExists(int id)
+        {
+            return _context.HeadphoneSpecifications.Any(e => e.Id == id);
+        }
+        #endregion
+
+        // GET: api/Specifications/{endpoint}/product/{productId}
+        [HttpGet("{endpoint}/product/{productId}")]
+        public async Task<ActionResult> GetSpecificationByProduct(string endpoint, int productId)
+        {
+            switch (endpoint)
+            {
+                case "PhoneSpecifications":
+                    var phoneSpec = await _context.PhoneSpecifications
+                        .FirstOrDefaultAsync(s => s.ProductId == productId);
+                    if (phoneSpec == null) return NotFound();
+                    return Ok(phoneSpec);
+
+                case "LaptopSpecifications":
+                    var laptopSpec = await _context.LaptopSpecifications
+                        .FirstOrDefaultAsync(s => s.ProductId == productId);
+                    if (laptopSpec == null) return NotFound();
+                    return Ok(laptopSpec);
+
+                case "HeadphoneSpecifications":
+                    var headphoneSpec = await _context.HeadphoneSpecifications
+                        .FirstOrDefaultAsync(s => s.ProductId == productId);
+                    if (headphoneSpec == null) return NotFound();
+                    return Ok(headphoneSpec);
+
+                default:
+                    return BadRequest("Loại thông số không hợp lệ");
+            }
         }
     }
 }

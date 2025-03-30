@@ -7,22 +7,26 @@ import {
   CardContent,
   CardActionArea,
   Button,
+  Snackbar,
+  Alert
 } from "@mui/material";
 import { CheckCircle, ShoppingCart } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
-
-const ProductVariants = ({ variants }) => {
-  const navigate = useNavigate();
+import { jwtDecode } from "jwt-decode";
+import axios from "axios";
+const ProductVariants = ({ variants, onAddToCart }) => {
   const [selectedColor, setSelectedColor] = useState(variants[0].color);
   const availableStorages = variants
     .filter((v) => v.color === selectedColor)
     .map((v) => v.storage);
   const [selectedStorage, setSelectedStorage] = useState(availableStorages[0]);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   const handleSelectColor = (color) => {
     setSelectedColor(color);
     const newStorages = variants
-      .filter((v) => v.color === color)
+      .filter((v) => v.color === color) 
       .map((v) => v.storage);
     setSelectedStorage(newStorages[0]);
   };
@@ -38,13 +42,14 @@ const ProductVariants = ({ variants }) => {
   );
 
   const formatCurrency = (price) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
+    return new Intl.NumberFormat("vi-VN", { 
+      style: "currency", 
+      currency: "VND" 
     }).format(price);
   };
 
   const handleAddToCart = async () => {
+<<<<<<< HEAD
     try {
       if (!selectedVariant) {
         alert(
@@ -129,8 +134,88 @@ const ProductVariants = ({ variants }) => {
     } catch (error) {
       console.error("❌ Lỗi khi thêm vào giỏ hàng:", error);
       alert(`❌ Không thể thêm vào giỏ hàng: ${error.message}`);
+=======
+  try {
+    if (!selectedVariant) {
+      showSnackbar("⚠️ Vui lòng chọn biến thể sản phẩm trước khi thêm vào giỏ hàng!", "warning");
+      return;
+>>>>>>> f0d7cb4cd5986b63623ca8ccd1a45a6972c28af4
     }
+
+    if (selectedVariant.stockQuantity <= 0) {
+      showSnackbar("❌ Sản phẩm này đã hết hàng!", "error");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    
+    // Lấy thông tin hiển thị trực tiếp từ component hiện tại
+    const primaryImage = selectedVariant.product?.images?.find(img => img.isPrimary)?.imageUrl || "";
+    const productName = selectedVariant.product?.name || "Sản phẩm không tên";
+    const variantColor = selectedColor;
+    const variantStorage = selectedStorage;
+    const price = selectedVariant.price || 0;
+    const discountPrice = selectedVariant.discountPrice || 0;
+
+    if (token) {
+      // Gọi API chỉ với dữ liệu cần thiết
+      const decoded = jwtDecode(token);
+      const userId = parseInt(decoded.sub, 10);
+      await axios.post(
+        "https://localhost:7107/api/Cart",
+        {
+          productVariantId: selectedVariant.id,
+          quantity: 1,
+          userId: userId
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } else {
+      // Lưu đầy đủ thông tin hiển thị vào session
+      const sessionCart = JSON.parse(sessionStorage.getItem("cart")) || [];
+      const existingItemIndex = sessionCart.findIndex(
+        item => item.productVariantId === selectedVariant.id
+      );
+
+      if (existingItemIndex >= 0) {
+        sessionCart[existingItemIndex].quantity += 1;
+      } else {
+        sessionCart.push({
+          productVariantId: selectedVariant.id,
+          quantity: 1,
+          // Thông tin hiển thị lấy từ trang hiện tại
+          productImage: primaryImage,
+          productName: productName,
+          variantColor: variantColor,
+          variantStorage: variantStorage,
+          productPrice: price,
+          productDiscountPrice: discountPrice,
+          // Thêm timestamp để quản lý
+          addedAt: new Date().toISOString()
+        });
+      }
+
+      sessionStorage.setItem("cart", JSON.stringify(sessionCart));
+    }
+
+    showSnackbar("🛒 Sản phẩm đã được thêm vào giỏ hàng!", "success");
+    if (onAddToCart) onAddToCart();
+  } catch (error) {
+    console.error("❌ Lỗi khi thêm vào giỏ hàng:", error);
+    showSnackbar(`❌ Không thể thêm vào giỏ hàng: ${error.message}`, "error");
+  }
+};
+
+  const showSnackbar = (message, severity) => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
   };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+  };
+
   return (
     <Box mt={4}>
       {/* Chọn màu sắc trước */}
@@ -142,14 +227,8 @@ const ProductVariants = ({ variants }) => {
           <Grid item key={color}>
             <Card
               sx={{
-                border:
-                  selectedColor === color
-                    ? "2px solid #d32f2f"
-                    : "1px solid #ddd",
-                boxShadow:
-                  selectedColor === color
-                    ? "0px 4px 12px rgba(211, 47, 47, 0.3)"
-                    : "none",
+                border: selectedColor === color ? "2px solid #d32f2f" : "1px solid #ddd",
+                boxShadow: selectedColor === color ? "0px 4px 12px rgba(211, 47, 47, 0.3)" : "none",
                 transition: "0.3s",
                 width: "auto",
                 textAlign: "center",
@@ -166,9 +245,7 @@ const ProductVariants = ({ variants }) => {
                   >
                     {color}
                   </Typography>
-                  {selectedColor === color && (
-                    <CheckCircle color="error" fontSize="small" />
-                  )}
+                  {selectedColor === color && <CheckCircle color="error" fontSize="small" />}
                 </CardContent>
               </CardActionArea>
             </Card>
@@ -185,14 +262,8 @@ const ProductVariants = ({ variants }) => {
           <Grid item key={storage}>
             <Card
               sx={{
-                border:
-                  selectedStorage === storage
-                    ? "2px solid #d32f2f"
-                    : "1px solid #ddd",
-                boxShadow:
-                  selectedStorage === storage
-                    ? "0px 4px 12px rgba(211, 47, 47, 0.3)"
-                    : "none",
+                border: selectedStorage === storage ? "2px solid #d32f2f" : "1px solid #ddd",
+                boxShadow: selectedStorage === storage ? "0px 4px 12px rgba(211, 47, 47, 0.3)" : "none",
                 transition: "0.3s",
                 padding: "6px 12px",
                 opacity: availableStorages.includes(storage) ? 1 : 0.5,
@@ -223,11 +294,7 @@ const ProductVariants = ({ variants }) => {
       {/* Giá tiền */}
       {selectedVariant && (
         <Box mt={3} textAlign="center">
-          <Typography
-            variant="body1"
-            color="textSecondary"
-            sx={{ textDecoration: "line-through" }}
-          >
+          <Typography variant="body1" color="textSecondary" sx={{ textDecoration: "line-through" }}>
             {formatCurrency(selectedVariant.price)}
           </Typography>
           <Typography variant="h5" fontWeight="bold" color="error">
@@ -269,19 +336,21 @@ const ProductVariants = ({ variants }) => {
               backgroundColor: "#b71c1c",
             },
           }}
-          onClick={() => {
-            if (!selectedVariant) {
-              alert("⚠️ Vui lòng chọn biến thể sản phẩm trước khi mua!");
-              return;
-            }
-            navigate("/checkout", { state: { product: [selectedVariant] } });
-          }}
         >
-          {selectedVariant
-            ? `Mua ngay - ${formatCurrency(selectedVariant.discountPrice)}`
-            : "Mua ngay"}
+          {selectedVariant ? `Mua ngay - ${formatCurrency(selectedVariant.discountPrice)}` : "Mua ngay"}
         </Button>
       </Box>
+      {/* Snackbar thông báo */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

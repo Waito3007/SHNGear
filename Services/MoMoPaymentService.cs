@@ -18,14 +18,16 @@ namespace SHN_Gear.Services
             _configuration = configuration;
         }
 
-        public async Task<string> CreatePaymentAsync(string orderId, string orderInfo, long amount, string paymentType = "captureWallet")
+        public async Task<string> CreatePaymentAsync(string orderId, string orderInfo, long amount, bool isCardPayment = false)
         {
             var momoConfig = _configuration.GetSection("MoMoConfig");
 
+            // Tạo requestId mới cho mỗi lần gọi API
             var requestId = Guid.NewGuid().ToString();
-            var extraData = "";
+            var requestType = isCardPayment ? "capture" : "captureWallet";
+            var extraData = isCardPayment ? "{\"paymentType\":\"CREDIT_CARD\"}" : "";
 
-            // Thêm paymentType vào rawHash
+            // Tạo rawHash với requestId
             var rawHash = "accessKey=" + momoConfig["AccessKey"] +
                          "&amount=" + amount +
                          "&extraData=" + extraData +
@@ -34,8 +36,8 @@ namespace SHN_Gear.Services
                          "&orderInfo=" + orderInfo +
                          "&partnerCode=" + momoConfig["PartnerCode"] +
                          "&redirectUrl=" + momoConfig["ReturnUrl"] +
-                         "&requestId=" + requestId +
-                         "&requestType=" + paymentType; // Sử dụng paymentType được truyền vào
+                         "&requestId=" + requestId +  // Đảm bảo requestId được thêm vào
+                         "&requestType=" + requestType;
 
             var signature = ComputeHmacSha256(rawHash, momoConfig["SecretKey"]);
 
@@ -43,19 +45,18 @@ namespace SHN_Gear.Services
             {
                 partnerCode = momoConfig["PartnerCode"],
                 partnerName = "SHN Gear",
-                requestId = requestId,
+                requestId = requestId,  // Truyền requestId vào body
                 amount = amount,
                 orderId = orderId,
                 orderInfo = orderInfo,
                 redirectUrl = momoConfig["ReturnUrl"],
                 ipnUrl = momoConfig["NotifyUrl"],
-                requestType = paymentType, // Sử dụng paymentType
+                requestType = requestType,
                 extraData = extraData,
                 signature = signature,
                 lang = "vi"
             };
 
-            // Gọi API MoMo
             using (var httpClient = new HttpClient())
             {
                 var content = new StringContent(
@@ -65,20 +66,16 @@ namespace SHN_Gear.Services
 
                 var response = await httpClient.PostAsync(momoConfig["ApiEndpoint"], content);
 
-                if (response.IsSuccessStatusCode)
+                if (!response.IsSuccessStatusCode)
                 {
-                    var responseContent = await response.Content.ReadAsStringAsync();
-                    var responseData = JsonConvert.DeserializeObject<Dictionary<string, string>>(responseContent);
-
-                    if (responseData.ContainsKey("payUrl"))
-                    {
-                        return responseData["payUrl"];
-                    }
-                    throw new Exception("Không nhận được URL thanh toán từ MoMo");
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Lỗi từ MoMo API: {response.StatusCode} - {errorContent}");
                 }
 
-                var errorContent = await response.Content.ReadAsStringAsync();
-                throw new Exception($"Lỗi từ MoMo API: {response.StatusCode} - {errorContent}");
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var responseData = JsonConvert.DeserializeObject<Dictionary<string, string>>(responseContent);
+
+                return responseData?["payUrl"] ?? throw new Exception("Không nhận được URL thanh toán từ MoMo");
             }
         }
 
