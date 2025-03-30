@@ -12,8 +12,8 @@ using SHN_Gear.Data;
 namespace SHN_Gear.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250326185106_AddIsActiveToUser")]
-    partial class AddIsActiveToUser
+    [Migration("20250330191701_AddPayPalFieldsToOrder")]
+    partial class AddPayPalFieldsToOrder
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -338,6 +338,18 @@ namespace SHN_Gear.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("PayPalOrderId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PayPalPaymentUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PayPalResponse")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PayPalTransactionId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("PaymentMethodId")
                         .HasColumnType("int");
 
@@ -411,6 +423,26 @@ namespace SHN_Gear.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PaymentMethods");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "Thanh toán bằng tiền mặt",
+                            Name = "Tiền Mặt"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Description = "Thanh toán bằng Momo",
+                            Name = "MoMo"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Description = "Thanh toán bằng ví Paypal",
+                            Name = "Paypal"
+                        });
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.PhoneSpecification", b =>
