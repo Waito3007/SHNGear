@@ -14,6 +14,7 @@ const Navbar = () => {
   const [searchResults, setSearchResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const searchRef = useRef(null);
+  const [isDropdownProfileOpen, setIsDropdownProfileOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -465,7 +466,7 @@ const handleSearchSubmit = (e) => {
   {isLoggedIn ? (
   <div className="relative">
     <button
-      onClick={(e) => setAnchorEl(e.currentTarget)}
+    onClick={() => setIsDropdownProfileOpen(!isDropdownProfileOpen)}
       className="p-1 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
       aria-label="Menu người dùng"
       aria-haspopup="true"
@@ -474,14 +475,9 @@ const handleSearchSubmit = (e) => {
       <User className="w-8 h-8 text-white" />
     </button>
     
-    {anchorEl && (
+    {isDropdownProfileOpen && (
       <div 
         className="absolute right-0 mt-2 w-56 origin-top-right bg-white rounded-lg shadow-xl z-50 overflow-hidden transition-all duration-200 ease-out"
-        style={{
-          transform: anchorEl ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(-10px)',
-          opacity: anchorEl ? 1 : 0
-        }}
-        onClick={(e) => e.stopPropagation()}
       >
         <div className="py-1 flex flex-col">
           <div className="px-4 py-3 border-b border-gray-100">
@@ -497,7 +493,6 @@ const handleSearchSubmit = (e) => {
             to="/profile"
             className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
             activeClassName="bg-blue-50 text-blue-600"
-            onClick={() => setAnchorEl(null)} 
           >
             <User className="w-4 h-4 mr-3" />
             Thông tin cá nhân
@@ -507,7 +502,6 @@ const handleSearchSubmit = (e) => {
             to="/orders"
             className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
             activeClassName="bg-blue-50 text-blue-600"
-            onClick={() => setAnchorEl(null)} 
           >
             <ShoppingBag className="w-4 h-4 mr-3" />
             Đơn hàng của tôi
@@ -517,7 +511,6 @@ const handleSearchSubmit = (e) => {
             to="/loyalty"
             className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
             activeClassName="bg-blue-50 text-blue-600"
-            onClick={() => setAnchorEl(null)} 
           >
             <Star className="w-4 h-4 mr-3" />
             Khách hàng thân thiết
@@ -527,7 +520,6 @@ const handleSearchSubmit = (e) => {
             to="/address"
             className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
             activeClassName="bg-blue-50 text-blue-600"
-            onClick={() => setAnchorEl(null)}
           >
             <MapPin className="w-4 h-4 mr-3" />
             Sổ địa chỉ
@@ -537,7 +529,6 @@ const handleSearchSubmit = (e) => {
             to="/"
             onClick={() => {
               handleLogout();
-              setAnchorEl(null); // Thêm dòng này
             }}
             className="px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center mt-1 border-t border-gray-100"
           >

@@ -407,17 +407,16 @@ const Checkout = () => {
               {selectedItems.map((item) => (
                 <ListItem key={item.productVariantId} sx={{ px: 0 }}>
                   <ListItemAvatar>
-                    <Avatar 
-                      src={item.productImage} 
-                      alt={item.productName}
-                      sx={{ 
-                        width: 60, 
-                        height: 60, 
-                        mr: 2,
-                        borderRadius: '4px',
-                      }}
-                      variant="square"
-                    />
+                    <img
+                                src={
+                                    item.productImage.startsWith("http")
+                                        ? item.productImage // Ảnh từ API (URL đầy đủ)
+                                        : `${process.env.REACT_APP_API_BASE_URL}/${item.productImage}` // Ảnh local trong wwwroot
+                                }
+                                alt="Product img"
+                                className="size-10"
+                                onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/50"; }}
+                            />
                   </ListItemAvatar>
                   <ListItemText
                     primary={`${item.productName}`}
