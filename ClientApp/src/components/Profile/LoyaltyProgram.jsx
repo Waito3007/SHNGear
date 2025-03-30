@@ -37,7 +37,7 @@ const LoyaltyProgram = () => {
           return;
         }
 
-        const response = await axios.get('https://localhost:7107/api/loyalty/my-status', {
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/loyalty/my-status`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -58,7 +58,7 @@ const LoyaltyProgram = () => {
       setClaiming(true);
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        'https://localhost:7107/api/loyalty/claim-voucher',
+        `${process.env.REACT_APP_API_BASE_URL}/api/loyalty/claim-voucher`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -67,7 +67,7 @@ const LoyaltyProgram = () => {
       setOpenDialog(true);
       
       // Refresh loyalty data after claiming
-      const updatedResponse = await axios.get('https://localhost:7107/api/loyalty/my-status', {
+      const updatedResponse = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/loyalty/my-status`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setLoyaltyData(updatedResponse.data);

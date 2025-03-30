@@ -59,13 +59,15 @@ namespace SHN_Gear.Services
         }
 
 
-        public async Task<User?> AuthenticateUserAsync(LoginDto loginDto)
+        public async Task<User> AuthenticateUserAsync(LoginDto loginDto)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+            // Thêm Include để load thông tin Role
+            var user = await _context.Users
+                .Include(u => u.Role) // Quan trọng
+                .FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+
             if (user == null || !VerifyPassword(loginDto.Password, user.Password))
-            {
-                return null; // Không tìm thấy user hoặc sai mật khẩu
-            }
+                return null;
 
             return user;
         }

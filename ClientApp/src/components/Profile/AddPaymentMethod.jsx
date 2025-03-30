@@ -11,7 +11,7 @@ const AddPaymentMethod = () => {
     const paymentMethod = { name, description };
 
     try {
-      const response = await fetch("https://localhost:7107/api/PaymentMethod", {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/PaymentMethod`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

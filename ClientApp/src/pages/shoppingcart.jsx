@@ -16,7 +16,7 @@ const Shoppingcart = () => {
   useEffect(() => {
     const fetchCart = async () => {
       try {
-        const response = await fetch("https://localhost:7107/api/cart", {
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/cart`, {
           method: "GET",
           credentials: "include",
         });

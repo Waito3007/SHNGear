@@ -10,40 +10,51 @@ import ProductPage from "./pages/ProductPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProductList from "./pages/ProductList";
 import Shoppingcart from "./pages/shoppingcart";
+import Unauthorized from "./pages/Unauthorized";
 
 const AppRoutes = [
   {
     path: "/",
     element: <Home />,
   },
+  // Admin routes - will be protected by ProtectedRoute
   {
     path: "/admin/overview",
     element: <OverviewPage />,
+    requiresAdmin: true 
+    
   },
   {
     path: "/admin/products",
     element: <ProductsPage />,
+    requiresAdmin: true 
   },
   {
     path: "/admin/users",
     element: <UsersPage />,
+    requiresAdmin: true 
   },
   {
     path: "/admin/sales",
     element: <SalesPage />,
+    requiresAdmin: true 
   },
   {
     path: "/admin/orders",
     element: <OrdersPage />,
+    requiresAdmin: true 
   },
   {
     path: "/admin/analytics",
     element: <AnalyticsPage />,
+    requiresAdmin: true 
   },
   {
     path: "/admin/settings",
     element: <SettingsPage />,
+    requiresAdmin: true 
   },
+  // Public routes
   {
     path: "/ProductPage/",
     element: <ProductPage />,
@@ -59,6 +70,10 @@ const AppRoutes = [
   {
     path: "/shoppingcart/",
     element: <Shoppingcart />,
+  },
+  {
+    path: "/unauthorized",
+    element: <Unauthorized />,
   },
 ];
 

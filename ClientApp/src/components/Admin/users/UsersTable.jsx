@@ -47,8 +47,8 @@ const UsersTable = () => {
     setLoading(true);
     try {
       const [usersRes, rolesRes] = await Promise.all([
-        axios.get("https://localhost:7107/api/users"),
-        axios.get("https://localhost:7107/api/roles"),
+        axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/users`),
+        axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/roles`),
       ]);
       setUsers(usersRes.data);
       setFilteredUsers(usersRes.data);
@@ -96,7 +96,7 @@ const UsersTable = () => {
         console.log("New role ID:", newRole); // Log vai trò mới
 
         try {
-            await axios.put(`https://localhost:7107/api/users/${selectedUser.id}/role`, { roleId: newRole });
+            await axios.put(`${process.env.REACT_APP_API_BASE_URL}/api/users/${selectedUser.id}/role`, { roleId: newRole });
             console.log("Role updated successfully"); // Log khi cập nhật thành công
             setUsers(users.map(user => user.id === selectedUser.id ? { ...user, roleId: newRole } : user));
             setFilteredUsers(filteredUsers.map(user => user.id === selectedUser.id ? { ...user, roleId: newRole } : user));
@@ -117,7 +117,7 @@ const UsersTable = () => {
     }
 
     try {
-        const response = await axios.post("https://localhost:7107/api/users", newUser);
+        const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/users`, newUser);
         setUsers([...users, response.data]);
         setFilteredUsers([...filteredUsers, response.data]);
         message.success("Người dùng mới đã được thêm thành công!");

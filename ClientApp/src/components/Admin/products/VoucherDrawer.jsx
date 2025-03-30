@@ -16,7 +16,7 @@ const VoucherDrawer = ({ open, onClose }) => {
 
     const fetchVouchers = async () => {
         try {
-            const response = await axios.get("https://localhost:7107/api/vouchers");
+            const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/vouchers`);
             setVouchers(response.data);
         } catch (error) {
             console.error("Failed to fetch vouchers:", error);
@@ -36,11 +36,11 @@ const VoucherDrawer = ({ open, onClose }) => {
         e.preventDefault();
         try {
             if (isEditing) {
-                await axios.put(`https://localhost:7107/api/vouchers/${selectedVoucherId}`, voucher);
+                await axios.put(`${process.env.REACT_APP_API_BASE_URL}/api/vouchers/${selectedVoucherId}`, voucher);
                 setIsEditing(false);
                 setSelectedVoucherId(null);
             } else {
-                await axios.post("https://localhost:7107/api/vouchers", voucher);
+                await axios.post("${process.env.REACT_APP_API_BASE_URL}/api/vouchers", voucher);
             }
             fetchVouchers();
             handleCloseModal();
@@ -58,7 +58,7 @@ const VoucherDrawer = ({ open, onClose }) => {
 
     const handleDelete = async (id) => {
         try {
-            await axios.delete(`https://localhost:7107/api/vouchers/${id}`);
+            await axios.delete(`${process.env.REACT_APP_API_BASE_URL}/api/vouchers/${id}`);
             fetchVouchers();
         } catch (error) {
             console.error("Failed to delete voucher:", error);

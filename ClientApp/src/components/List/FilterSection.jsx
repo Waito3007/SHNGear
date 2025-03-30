@@ -28,7 +28,7 @@ const FilterSection = ({ onPriceChange, onBrandChange }) => {
   useEffect(() => {
     const fetchBrands = async () => {
       try {
-        const response = await fetch("https://localhost:7107/api/brands");
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/brands`);
         if (!response.ok)
           throw new Error("Không thể tải danh sách thương hiệu");
         const data = await response.json();

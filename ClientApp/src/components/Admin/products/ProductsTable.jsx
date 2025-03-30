@@ -57,9 +57,9 @@ const ProductsTable = () => {
         const fetchData = async () => {
             try {
                 const [productsRes, brandsRes, categoriesRes] = await Promise.all([
-                    fetch("https://localhost:7107/api/Products"),
-                    fetch("https://localhost:7107/api/brands"),
-                    fetch("https://localhost:7107/api/categories")
+                    fetch(`${process.env.REACT_APP_API_BASE_URL}/api/Products`),
+                    fetch(`${process.env.REACT_APP_API_BASE_URL}/api/brands`),
+                    fetch(`${process.env.REACT_APP_API_BASE_URL}/api/categories`)
                 ]);
 
                 const productsData = await productsRes.json();
@@ -135,7 +135,7 @@ const ProductsTable = () => {
     }
 
     try {
-        const response = await fetch(`https://localhost:7107/api/Products/search?keyword=${encodeURIComponent(term)}`);
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/Products/search?keyword=${encodeURIComponent(term)}`);
         if (!response.ok) throw new Error("Không tìm thấy sản phẩm nào.");
         
         const data = await response.json();
@@ -184,7 +184,7 @@ const ProductsTable = () => {
     if (!productToDelete) return;
     setIsLoading(true);
     try {
-        const response = await fetch(`https://localhost:7107/api/Products/${productToDelete.id}`, {
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/Products/${productToDelete.id}`, {
             method: "DELETE",
         });
 
@@ -415,7 +415,7 @@ const ProductsTable = () => {
                                 src={
                                     product.images?.[0]?.imageUrl?.startsWith("http")
                                         ? product.images[0].imageUrl // Ảnh từ API (URL đầy đủ)
-                                        : `https://localhost:7107/${product.images?.[0]?.imageUrl}` // Ảnh local trong wwwroot
+                                        : `${process.env.REACT_APP_API_BASE_URL}/${product.images?.[0]?.imageUrl}` // Ảnh local trong wwwroot
                                 }
                                 alt="Product img"
                                 className="size-10 rounded-full"

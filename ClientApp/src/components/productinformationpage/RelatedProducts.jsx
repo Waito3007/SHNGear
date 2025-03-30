@@ -16,11 +16,11 @@ const RelatedProducts = ({ productId, brandId, categoryId }) => {
       try {
         setLoading(true);
 
-        const productsRes = await fetch("https://localhost:7107/api/Products");
+        const productsRes = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/Products`);
         if (!productsRes.ok) throw new Error("Không thể tải sản phẩm.");
         const productsData = await productsRes.json();
 
-        const brandsRes = await fetch("https://localhost:7107/api/brands");
+        const brandsRes = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/brands`);
         if (!brandsRes.ok) throw new Error("Không thể tải thương hiệu.");
         const brandsData = await brandsRes.json();
 
@@ -105,7 +105,7 @@ const RelatedProducts = ({ productId, brandId, categoryId }) => {
                   src={
                       product.image?.startsWith("http")
                           ? product.image // Ảnh từ API (URL đầy đủ)
-                          : `https://localhost:7107/${product.image}` // Ảnh local từ wwwroot
+                          : `${process.env.REACT_APP_API_BASE_URL}/${product.image}` // Ảnh local từ wwwroot
                   }
                   alt={product.name}
                   className="w-full h-40 object-contain mb-3 hover:scale-110"

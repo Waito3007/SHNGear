@@ -50,7 +50,7 @@ const UserOrders = () => {
         setLoading(true);
         // Lấy danh sách đơn hàng với thông tin chi tiết sản phẩm
         const response = await axios.get(
-          `https://localhost:7107/api/orders/user/${userId}/paged`,
+          `${process.env.REACT_APP_API_BASE_URL}/api/orders/user/${userId}/paged`,
           {
             headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
             params: {

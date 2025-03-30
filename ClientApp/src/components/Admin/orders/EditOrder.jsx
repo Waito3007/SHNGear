@@ -19,9 +19,9 @@ const EditOrder = ({ open, onClose, order, onOrderUpdated }) => {
         // Fetch addresses, vouchers and products when component mounts
         const fetchData = async () => {
             try {
-                const addressesRes = await axios.get('https://localhost:7107/api/addresses');
-                const vouchersRes = await axios.get('https://localhost:7107/api/vouchers');
-                const productsRes = await axios.get('https://localhost:7107/api/products');
+                const addressesRes = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/addresses`);
+                const vouchersRes = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/vouchers`);
+                const productsRes = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/products`);
                 
                 setAddresses(addressesRes.data);
                 setVouchers(vouchersRes.data.filter(v => v.isActive && new Date(v.expiryDate) > new Date()));
@@ -69,7 +69,7 @@ const EditOrder = ({ open, onClose, order, onOrderUpdated }) => {
     const handleSubmit = async () => {
         try {
             const response = await axios.put(
-                `https://localhost:7107/api/orders/${order.id}`,
+                `${process.env.REACT_APP_API_BASE_URL}/api/orders/${order.id}`,
                 formData
             );
             

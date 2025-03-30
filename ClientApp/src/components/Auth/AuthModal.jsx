@@ -23,7 +23,7 @@ const AuthModal = ({ isOpen, onClose }) => {
     setError("");
     setIsLoading(true);
     try {
-      const response = await axios.post("https://localhost:7107/api/Auth/check-email", { email });
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/Auth/check-email`, { email });
       setStep(response.data.exists ? 1 : 2);
     } catch (error) {
       setError("Lỗi khi kiểm tra email! Vui lòng thử lại.");
@@ -37,7 +37,7 @@ const AuthModal = ({ isOpen, onClose }) => {
     setError("");
     setIsLoading(true);
     try {
-      const response = await axios.post("https://localhost:7107/api/Auth/login", { email, password });
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/Auth/login`, { email, password });
       localStorage.setItem("token", response.data.token);
       onClose();
       setTimeout(() => window.location.reload(), 300);
@@ -54,7 +54,7 @@ const AuthModal = ({ isOpen, onClose }) => {
     setError("");
     setIsLoading(true);
     try {
-      await axios.post("https://localhost:7107/api/Auth/register", { email, fullName, phoneNumber, password });
+      await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/Auth/register`, { email, fullName, phoneNumber, password });
       setStep(1);
     } catch (error) {
       setError("Đăng ký thất bại! Hãy thử lại.");

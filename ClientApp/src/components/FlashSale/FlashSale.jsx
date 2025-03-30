@@ -54,7 +54,7 @@ useEffect(() => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("https://localhost:7107/api/Products/lowest-price");
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/Products/lowest-price`);
         if (!response.ok) throw new Error("Không thể tải sản phẩm");
         const productsData = await response.json();
 
@@ -202,7 +202,7 @@ useEffect(() => {
                   src={
                     product.image?.startsWith("http")
                       ? product.image
-                      : `https://localhost:7107/${product.image}`
+                      : `${process.env.REACT_APP_API_BASE_URL}/${product.image}`
                   }
                   alt={product.name}
                   className="absolute top-0 left-0 w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"

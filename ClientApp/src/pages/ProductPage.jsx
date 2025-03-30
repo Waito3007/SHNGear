@@ -22,7 +22,7 @@ const ProductPage = () => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`https://localhost:7107/api/Products/${id}`);
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/Products/${id}`);
         if (!response.ok) {
           throw new Error("Không thể tải dữ liệu sản phẩm.");
         }

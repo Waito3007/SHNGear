@@ -44,7 +44,7 @@ const AddressComponent = () => {
     if (!userId) return;
     const fetchAddresses = async () => {
       try {
-        const response = await axios.get(`https://localhost:7107/api/Address/user/${userId}`, {
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/Address/user/${userId}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         setAddresses(response.data);
@@ -92,14 +92,14 @@ const AddressComponent = () => {
     try {
       if (editMode && selectedAddress) {
         const response = await axios.put(
-          `https://localhost:7107/api/Address/update/${selectedAddress.id}`,
+          `${process.env.REACT_APP_API_BASE_URL}/api/Address/update/${selectedAddress.id}`,
           { ...newAddress, userId },
           { headers: { Authorization: `Bearer ${localStorage.getItem("token")}`, "Content-Type": "application/json" } }
         );
         setAddresses(addresses.map((addr) => (addr.id === selectedAddress.id ? response.data : addr)));
       } else {
         const response = await axios.post(
-          "https://localhost:7107/api/Address/add",
+          `${process.env.REACT_APP_API_BASE_URL}/api/Address/add`,
           { ...newAddress, userId },
           { headers: { Authorization: `Bearer ${localStorage.getItem("token")}`, "Content-Type": "application/json" } }
         );
@@ -124,7 +124,7 @@ const AddressComponent = () => {
   const handleDeleteAddress = async () => {
     if (!addressToDelete) return;
     try {
-      await axios.delete(`https://localhost:7107/api/Address/delete/${addressToDelete.id}`, {
+      await axios.delete(`${process.env.REACT_APP_API_BASE_URL}/api/Address/delete/${addressToDelete.id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setAddresses(addresses.filter((addr) => addr.id !== addressToDelete.id));

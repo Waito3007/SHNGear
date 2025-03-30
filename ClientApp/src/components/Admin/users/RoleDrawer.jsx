@@ -14,7 +14,7 @@ const RoleDrawer = ({ visible, onClose }) => {
 
   const fetchRoles = async () => {
     try {
-      const res = await fetch("https://localhost:7107/api/roles");
+      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/roles`);
       const data = await res.json();
       setRoles(data);
     } catch (error) {
@@ -26,7 +26,7 @@ const RoleDrawer = ({ visible, onClose }) => {
     try {
       if (editingRole) {
         // API cập nhật
-        await fetch(`https://localhost:7107/api/roles/${editingRole.id}`, {
+        await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/roles/${editingRole.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(values),
@@ -35,7 +35,7 @@ const RoleDrawer = ({ visible, onClose }) => {
         setRoles((prev) => prev.map((r) => (r.id === editingRole.id ? { ...r, ...values } : r)));
       } else {
         // API thêm mới
-        const res = await fetch("https://localhost:7107/api/roles", {
+        const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/roles`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(values),
@@ -61,7 +61,7 @@ const RoleDrawer = ({ visible, onClose }) => {
       cancelText: "Hủy",
       onOk: async () => {
         try {
-          await fetch(`https://localhost:7107/api/roles/${id}`, { method: "DELETE" });
+          await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/roles/${id}`, { method: "DELETE" });
           message.success("Xóa role thành công");
           setRoles((prev) => prev.filter((r) => r.id !== id));
         } catch (error) {

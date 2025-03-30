@@ -9,7 +9,7 @@ const UserGrowthChart = () => {
 	useEffect(() => {
 		const fetchUserGrowthData = async () => {
 			try {
-				const response = await axios.get("https://localhost:7107/api/users/growth");
+				const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/users/growth`);
 				setChartData(response.data); // API trả về dữ liệu dạng [{ month: "Jan", users: 1000 }, ...]
 			} catch (error) {
 				console.error("Lỗi khi lấy dữ liệu người dùng:", error);

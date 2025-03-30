@@ -6,7 +6,7 @@ const CartItem = ({ item }) => {
 
   const addToCart = async (productVariantId, quantity) => {
     try {
-      const response = await fetch("https://localhost:7107/api/cart/add", {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/cart/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

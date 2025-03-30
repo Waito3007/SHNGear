@@ -80,7 +80,7 @@ const ProductVariants = ({ variants, onAddToCart }) => {
         const decoded = jwtDecode(token);
         const userId = parseInt(decoded.sub, 10);
         await axios.post(
-          "https://localhost:7107/api/Cart",
+          `${process.env.REACT_APP_API_BASE_URL}/api/Cart`,
           {
             productVariantId: selectedVariant.id,
             quantity: 1,

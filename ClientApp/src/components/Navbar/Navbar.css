@@ -100,7 +100,6 @@ background-color: #090d14;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 10px;
   overflow: hidden;
-  min-width: 200px;
   animation: fadeIn 0.2s ease-in-out;
   display: flex;
   flex-direction: column;

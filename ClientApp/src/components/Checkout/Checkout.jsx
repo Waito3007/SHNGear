@@ -78,7 +78,7 @@ const Checkout = () => {
   const fetchAddresses = async (userId) => {
     try {
       const response = await axios.get(
-        `https://localhost:7107/api/address/user/${userId}`
+        `${process.env.REACT_APP_API_BASE_URL}/api/address/user/${userId}`
       );
       setAddresses(response.data);
       if (response.data.length > 0) {
@@ -93,7 +93,7 @@ const Checkout = () => {
   const fetchVoucherId = async (code) => {
     try {
       const response = await axios.get(
-        `https://localhost:7107/api/vouchers/code/${code}`
+        `${process.env.REACT_APP_API_BASE_URL}/api/vouchers/code/${code}`
       );
       setVoucherId(response.data.id);
     } catch (error) {
@@ -105,7 +105,7 @@ const Checkout = () => {
   const fetchPaymentMethods = async () => {
     try {
       const response = await axios.get(
-        "https://localhost:7107/api/PaymentMethod"
+        `${process.env.REACT_APP_API_BASE_URL}/api/PaymentMethod`
       );
       // Chỉ lấy phương thức tiền mặt và MoMo (loại bỏ VNPay nếu có)
       const filteredMethods = response.data.filter((method) => method.id !== 3);
@@ -143,7 +143,7 @@ const Checkout = () => {
       try {
         setIsLoading(true);
         const response = await axios.post(
-          "https://localhost:7107/api/address/add",
+          `${process.env.REACT_APP_API_BASE_URL}/api/address/add`,
           {
             userId: null,
             ...guestAddress,
@@ -184,7 +184,7 @@ const Checkout = () => {
       }
 
       const response = await axios.post(
-        "https://localhost:7107/api/orders",
+        `${process.env.REACT_APP_API_BASE_URL}/api/orders`,
         orderDto,
         { headers }
       );

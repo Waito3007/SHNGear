@@ -37,7 +37,9 @@ const BrandDrawer = ({ open, onClose }) => {
 
   const fetchBrands = async () => {
     try {
-      const response = await axios.get("https://localhost:7107/api/brands");
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_BASE_URL}/api/brands`
+      );
       setBrands(response.data);
     } catch (error) {
       console.error("Failed to fetch brands:", error);
@@ -49,7 +51,7 @@ const BrandDrawer = ({ open, onClose }) => {
 
     try {
       await axios.delete(
-        `https://localhost:7107/api/brands/${brandToDelete.id}`
+        `${process.env.REACT_APP_API_BASE_URL}/api/brands/${brandToDelete.id}`
       );
       await fetchBrands();
       setDeleteDialogOpen(false);
@@ -108,13 +110,14 @@ const BrandDrawer = ({ open, onClose }) => {
             <TableHead>
               <TableRow>
                 <TableCell>
-                  <b>Tên thương hiệu</b>
-                </TableCell>
-                <TableCell>
-                  <b>Mô tả</b>
+                  <b>Thương hiệu</b>
                 </TableCell>
                 <TableCell>
                   <b>Logo</b>
+                </TableCell>
+
+                <TableCell>
+                  <b>Mô tả</b>
                 </TableCell>
                 <TableCell>
                   <b>Hành động</b>
@@ -125,10 +128,24 @@ const BrandDrawer = ({ open, onClose }) => {
               {brands.map((brand) => (
                 <TableRow key={brand.id}>
                   <TableCell>{brand.name}</TableCell>
-                  <TableCell>{brand.description}</TableCell>
                   <TableCell>
-                    <img src={brand.logo} alt={brand.name} width={50} />
+                    {" "}
+                    <img
+                      src={
+                        brand.logo?.startsWith("http")
+                          ? brand.logo // Full external URL
+                          : `${process.env.REACT_APP_API_BASE_URL}${brand.logo}`
+                      }
+                      alt={`${brand.name} logo`}
+                      className="size-10 rounded-full"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "https://via.placeholder.com/50";
+                      }}
+                    />
                   </TableCell>
+                  <TableCell>{brand.description}</TableCell>
+
                   <TableCell>
                     <IconButton onClick={() => handleOpenModal(brand)}>
                       <Edit size={20} />

@@ -19,9 +19,9 @@ const DiscountProductSlider = () => {
       try {
         // Giữ nguyên phần fetch data như cũ
         const [productsResponse, categoriesResponse, brandsResponse] = await Promise.all([
-          fetch("https://localhost:7107/api/Products"),
-          fetch("https://localhost:7107/api/categories"),
-          fetch("https://localhost:7107/api/brands")
+          fetch(`${process.env.REACT_APP_API_BASE_URL}/api/Products`),
+          fetch(`${process.env.REACT_APP_API_BASE_URL}/api/categories`),
+          fetch(`${process.env.REACT_APP_API_BASE_URL}/api/brands`)
         ]);
 
         if (!productsResponse.ok) throw new Error("Không thể tải sản phẩm");
@@ -147,7 +147,7 @@ const DiscountProductSlider = () => {
                 
                 <div className="relative h-40 mb-3 overflow-hidden rounded-lg">
                   <img
-                    src={product.image?.startsWith("http") ? product.image : `https://localhost:7107/${product.image}`}
+                    src={product.image?.startsWith("http") ? product.image : `${process.env.REACT_APP_API_BASE_URL}/${product.image}`}
                     alt={product.name}
                     className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
                     onError={(e) => { 

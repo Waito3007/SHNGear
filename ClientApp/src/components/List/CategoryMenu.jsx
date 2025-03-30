@@ -8,7 +8,7 @@ const CategoryMenu = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch("https://localhost:7107/api/categories");
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/categories`);
         const data = await response.json();
         setCategories(data);
       } catch (error) {
@@ -34,10 +34,18 @@ const CategoryMenu = () => {
         >
           {/* Hiển thị hình ảnh danh mục */}
           <img
-            src={category.image} // Lấy ảnh từ API
-            alt={category.name}
-            style={styles.categoryImage}
-          />
+    src={
+        category.image?.startsWith("http")
+            ? category.image // Full external URL
+            : `${process.env.REACT_APP_API_BASE_URL}${category.image}`
+    }
+    alt={`${category.name} logo`}
+    className="size-10 rounded-full"
+    onError={(e) => {
+        e.target.onerror = null;
+        e.target.src = "https://via.placeholder.com/50";
+    }}
+/>
           <span>{category.name}</span>
         </div>
       ))}

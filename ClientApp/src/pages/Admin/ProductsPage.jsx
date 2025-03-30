@@ -21,8 +21,8 @@ const ProductsPage = () => {
 	const fetchStats = useCallback(async () => {
 		try {
 			const [lowStockRes, totalProductsRes] = await Promise.all([
-				axios.get("https://localhost:7107/api/Products/low-stock"),
-				axios.get("https://localhost:7107/api/Products/count")			]);
+				axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/Products/low-stock`),
+				axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/Products/count`)			]);
 
 			setLowStockProducts(lowStockRes.data);
 			setTotalProducts(totalProductsRes.data);

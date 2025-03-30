@@ -40,7 +40,7 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
   const fetchOrderDetails = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`https://localhost:7107/api/orders/${orderId}/details`);
+      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/orders/${orderId}/details`);
       setOrder(response.data);
       if (response.data.items?.length > 0) {
         await fetchVariantDetails(response.data.items);
@@ -55,7 +55,7 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
   const fetchVariantDetails = async (items) => {
     try {
       const variantPromises = items.map((item) =>
-        axios.get(`https://localhost:7107/api/products/by-variant/${item.variantId}`)
+        axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/products/by-variant/${item.variantId}`)
       );
       const variantResponses = await Promise.all(variantPromises);
       const details = variantResponses.reduce((acc, res, index) => {
@@ -72,7 +72,7 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
     try {
       setExporting(true);
       const response = await axios.get(
-        `https://localhost:7107/api/orders/${orderId}/export/excel`,
+        `${process.env.REACT_APP_API_BASE_URL}/api/orders/${orderId}/export/excel`,
         { responseType: 'blob' }
       );
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -94,7 +94,7 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
     try {
       setExporting(true);
       const response = await axios.get(
-        `https://localhost:7107/api/orders/${orderId}/export/image`,
+        `${process.env.REACT_APP_API_BASE_URL}/api/orders/${orderId}/export/image`,
         { responseType: 'blob' }
       );
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -116,7 +116,7 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
     try {
       setExporting(true);
       const response = await axios.get(
-        `https://localhost:7107/api/orders/${orderId}/export/template`,
+        `${process.env.REACT_APP_API_BASE_URL}/api/orders/${orderId}/export/template`,
         { responseType: 'blob' }
       );
       const url = window.URL.createObjectURL(new Blob([response.data]));

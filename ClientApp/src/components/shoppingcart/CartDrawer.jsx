@@ -51,7 +51,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
           
           // Lấy cả giỏ hàng từ API và session storage nếu có
           const [apiResponse, sessionCart] = await Promise.all([
-            axios.get(`https://localhost:7107/api/Cart?userId=${id}`, {
+            axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/Cart?userId=${id}`, {
               headers: { Authorization: `Bearer ${token}` },
             }),
             sessionStorage.getItem("cart")
@@ -75,7 +75,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
               sessionItems.map(async (item) => {
                 try {
                   const response = await axios.get(
-                    `https://localhost:7107/api/Cart/variant-info/${item.productVariantId}`
+                    `${process.env.REACT_APP_API_BASE_URL}/api/Cart/variant-info/${item.productVariantId}`
                   );
                   return {
                     ...item,
@@ -126,7 +126,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
         } else {
           try {
             const response = await axios.get(
-              `https://localhost:7107/api/Cart/variant-info/${sessionItem.productVariantId}`
+              `${process.env.REACT_APP_API_BASE_URL}/api/Cart/variant-info/${sessionItem.productVariantId}`
             );
             merged.push({
               ...sessionItem,
@@ -168,7 +168,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
       const numericId = Number(id);
 
       if (token && userId) {
-        await axios.delete(`https://localhost:7107/api/Cart/remove/${numericId}?userId=${userId}`, {
+        await axios.delete(`${process.env.REACT_APP_API_BASE_URL}/api/Cart/remove/${numericId}?userId=${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
       } else {
@@ -202,7 +202,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
     setVoucherLoading(true);
     try {
-      const response = await axios.post("https://localhost:7107/api/vouchers/apply", { 
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/vouchers/apply`, { 
         code: voucherCode, 
         userId 
       });
@@ -262,7 +262,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
     try {
       const token = localStorage.getItem("token");
       if (token && userId) {
-        await axios.put("https://localhost:7107/api/Cart/update", {
+        await axios.put(`${process.env.REACT_APP_API_BASE_URL}/api/Cart/update`, {
           userId,
           productVariantId: selectedItem.productVariantId,
           quantity: newQuantity
@@ -361,7 +361,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                 <img
   src={item.productImage?.startsWith("http") 
     ? item.productImage 
-    : `https://localhost:7107/${item.productImage}`}
+    : `${process.env.REACT_APP_API_BASE_URL}/${item.productImage}`}
   alt={item.productName}
   className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
   onError={(e) => { 
