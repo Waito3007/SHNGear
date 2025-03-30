@@ -1,4 +1,4 @@
-import { BarChart2, DollarSign, Menu, Settings, ShoppingBag, ShoppingCart, TrendingUp, Users } from "lucide-react";
+import { BarChart2, DollarSign, Menu, Settings, ShoppingBag, ShoppingCart, TrendingUp, Users, Home } from "lucide-react";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -37,8 +37,30 @@ const Sidebar = () => {
 				>
 					<Menu size={24} />
 				</motion.button>
-
+				
 				<nav className='mt-8 flex-grow'>
+					{/* Logo/Home Link */}
+        <Link to="/" className="mb-6">
+          <motion.div 
+            className="flex items-center p-2 rounded-lg hover:bg-gray-700 transition-colors"
+            whileHover={{ scale: 1.05 }}
+          >
+            <Home size={24} className="text-indigo-400" />
+            <AnimatePresence>
+              {isSidebarOpen && (
+                <motion.span
+                  className="ml-3 text-xl font-bold text-white"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  SHN Gear
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </Link>
 					{SIDEBAR_ITEMS.map((item) => (
 						<Link key={item.href} to={item.href}>
 							<motion.div className='flex items-center p-4 text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors mb-2'>
@@ -59,6 +81,8 @@ const Sidebar = () => {
 							</motion.div>
 						</Link>
 					))}
+
+					
 				</nav>
 			</div>
 		</motion.div>
