@@ -137,21 +137,17 @@ const ProductGrid = ({
                 onClick={() => navigate(`/product/${product.id}`)}
               >
                 <img
-<<<<<<< HEAD
-                  src={product.image}
+                  src={
+                    product.image?.startsWith("http")
+                      ? product.image // Ảnh từ API (URL đầy đủ)
+                      : `https://localhost:7107/${product.image}` // Ảnh local từ wwwroot
+                  }
                   alt={product.name}
-                  className="w-full h-40 object-contain mb-3 hover:scale-110 transition-transform"
-                  onError={(e) => (e.target.src = "/images/placeholder.jpg")}
-=======
-                    src={
-                        product.image?.startsWith("http")
-                            ? product.image // Ảnh từ API (URL đầy đủ)
-                            : `https://localhost:7107/${product.image}` // Ảnh local từ wwwroot
-                    }
-                    alt={product.name}
-                    className="w-full h-40 object-contain mb-3 hover:scale-110"
-                    onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/150"; }}
->>>>>>> f0d7cb4cd5986b63623ca8ccd1a45a6972c28af4
+                  className="w-full h-40 object-contain mb-3 hover:scale-110"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "https://via.placeholder.com/150";
+                  }}
                 />
                 <div className="text-gray-700 text-sm space-y-2">
                   <div className="flex justify-between items-center">
