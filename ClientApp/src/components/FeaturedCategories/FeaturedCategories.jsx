@@ -19,7 +19,7 @@ const FeaturedCategories = () => {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const response = await fetch("https://localhost:7107/api/categories");
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/categories`);
         if (!response.ok) throw new Error("Không thể tải danh mục");
         const data = await response.json();
         console.log("Dữ liệu từ API:", data);

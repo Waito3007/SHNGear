@@ -23,9 +23,9 @@ const BrandModal = ({ open, onClose, brand, refreshBrands }) => {
         e.preventDefault();
         try {
             if (brand) {
-                await axios.put(`https://localhost:7107/api/brands/${brand.id}`, brandData);
+                await axios.put(`${process.env.REACT_APP_API_BASE_URL}/api/brands/${brand.id}`, brandData);
             } else {
-                await axios.post("https://localhost:7107/api/brands", brandData);
+                await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/brands`, brandData);
             }
             refreshBrands();
             onClose();

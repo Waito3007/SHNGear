@@ -8,7 +8,7 @@ const CategoryMenu = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch("https://localhost:7107/api/categories");
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/categories`);
         const data = await response.json();
         setCategories(data);
       } catch (error) {

@@ -31,8 +31,8 @@ const [imageError, setImageError] = useState("");
     const fetchData = async () => {
       try {
         const [categoriesRes, brandsRes] = await Promise.all([
-          axios.get("https://localhost:7107/api/categories"),
-          axios.get("https://localhost:7107/api/brands"),
+          axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/categories`),
+          axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/brands`),
         ]);
         setCategories(categoriesRes.data.$values || categoriesRes.data || []);
         setBrands(brandsRes.data.$values || brandsRes.data || []);
@@ -83,7 +83,7 @@ const [imageError, setImageError] = useState("");
         formData.append("file", img.file);
 
         try {
-          const response = await axios.post("https://localhost:7107/api/upload", formData, {
+          const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/upload`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
 
@@ -119,7 +119,7 @@ const [imageError, setImageError] = useState("");
       })),
     };
 
-    const response = await axios.post("https://localhost:7107/api/Products", productData);
+    const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/Products`, productData);
     onAddProduct(response.data);
     reset();
     setLocalImages([]); // Xoá ảnh tạm sau khi thêm sản phẩm thành công

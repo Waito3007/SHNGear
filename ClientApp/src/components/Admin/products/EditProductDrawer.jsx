@@ -78,7 +78,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
     const fetchCategories = async () => {
       try {
         const response = await axios.get(
-          "https://localhost:7107/api/categories"
+          "${process.env.REACT_APP_API_BASE_URL}/api/categories"
         );
         setCategories(response.data.$values || response.data || []);
       } catch (error) {
@@ -93,7 +93,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
   useEffect(() => {
     const fetchBrands = async () => {
       try {
-        const response = await axios.get("https://localhost:7107/api/brands");
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/brands`);
         setBrands(response.data.$values || response.data || []);
       } catch (error) {
         console.error("Lỗi khi lấy thương hiệu:", error);
@@ -194,7 +194,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
       console.log("Submitting data:", updatedData); // Debug dữ liệu gửi lên
 
       const response = await axios.put(
-        `https://localhost:7107/api/products/${product.id}`,
+        `${process.env.REACT_APP_API_BASE_URL}/api/products/${product.id}`,
         updatedData,
         { headers: { "Content-Type": "application/json" } }
       );

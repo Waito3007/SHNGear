@@ -38,7 +38,7 @@ const ProfileInfo = () => {
   const fetchUserProfile = async (id) => {
     try {
         const token = localStorage.getItem("token");
-        const response = await axios.get(`https://localhost:7107/api/users/${id}`, {
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/users/${id}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         setUser(response.data);
@@ -84,7 +84,7 @@ const ProfileInfo = () => {
         }
 
         await axios.put(
-            `https://localhost:7107/api/auth/profile/${userId}`,
+            `${process.env.REACT_APP_API_BASE_URL}/api/auth/profile/${userId}`,
             {
                 fullName: updatedUser.fullName,
                 email: updatedUser.email,

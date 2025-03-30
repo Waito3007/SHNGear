@@ -11,7 +11,7 @@ import { X, Trash, Check, Plus } from "lucide-react";
 import axios from "axios";
 
 // Constants
-const API_BASE_URL = "https://localhost:7107/api/Specifications";
+const API_BASE_URL = `${process.env.REACT_APP_API_BASE_URL}/api/Specifications`;
 const CATEGORY_ENDPOINTS = {
   1: "PhoneSpecifications",
   2: "LaptopSpecifications",

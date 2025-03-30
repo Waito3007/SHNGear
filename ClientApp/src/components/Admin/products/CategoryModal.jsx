@@ -28,14 +28,14 @@ const CategoryModal = ({ open, onClose, category, refreshCategories }) => {
     try {
         if (category) {
             // Đảm bảo gửi đúng id khi cập nhật
-            await axios.put(`https://localhost:7107/api/categories/${category.id}`, {
+            await axios.put(`${process.env.REACT_APP_API_BASE_URL}/api/categories/${category.id}`, {
                 id: category.id, // Đảm bảo gửi ID nếu backend yêu cầu
                 name: formData.name,
                 description: formData.description,
                 image: formData.image,
             });
         } else {
-            await axios.post("https://localhost:7107/api/categories", formData);
+            await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/categories`, formData);
         }
         await refreshCategories(); // Load lại danh sách sau khi cập nhật
         onClose();

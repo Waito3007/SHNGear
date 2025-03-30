@@ -21,7 +21,7 @@ const UsersPage = () => {
 	useEffect(() => {
 		const fetchUserStats = async () => {
 			try {
-				const response = await axios.get("https://localhost:7107/api/users/statistics");
+				const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/users/statistics`);
 				setUserStats(response.data);
 			} catch (error) {
 				console.error("Lỗi khi lấy dữ liệu người dùng:", error);

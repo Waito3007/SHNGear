@@ -49,7 +49,7 @@ const SpecificationDisplay = ({ productType, productId }) => {
         }
 
         const response = await fetch(
-          `https://localhost:7107/api/Specifications/${endpoint}/product/${productId}`
+          `${process.env.REACT_APP_API_BASE_URL}/api/Specifications/${endpoint}/product/${productId}`
         );
         
         if (!response.ok) {

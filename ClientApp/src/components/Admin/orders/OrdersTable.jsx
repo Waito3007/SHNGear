@@ -42,11 +42,11 @@ const OrdersTable = () => {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const response = await axios.get("https://localhost:7107/api/orders");
+                const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/orders`);
                 const ordersWithCustomerNames = await Promise.all(
                     response.data.map(async (order) => {
                         try {
-                            const addressResponse = await axios.get(`https://localhost:7107/api/address/${order.addressId}`);
+                            const addressResponse = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/address/${order.addressId}`);
                             order.customer = addressResponse.data.fullName;
                         } catch (error) {
                             console.error(`Lỗi khi lấy dữ liệu địa chỉ với ID ${order.addressId}:`, error);
@@ -128,7 +128,7 @@ const OrdersTable = () => {
     const handleDeleteOrder = async (orderId) => {
         if (window.confirm("Bạn có chắc chắn muốn xóa đơn hàng này không?")) {
             try {
-                await axios.delete(`https://localhost:7107/api/orders/${orderId}`);
+                await axios.delete(`${process.env.REACT_APP_API_BASE_URL}/api/orders/${orderId}`);
                 setOrders(orders.filter(order => order.id !== orderId));
                 setFilteredOrders(filteredOrders.filter(order => order.id !== orderId));
                 alert("Đơn hàng đã được xóa thành công!");
@@ -154,7 +154,7 @@ const OrdersTable = () => {
         if (selectedOrder) {
             try {
                 console.log(`Updating status for order ID: ${selectedOrder.id} to ${newStatus}`);
-                const response = await axios.put(`https://localhost:7107/api/orders/${selectedOrder.id}/status`, { newStatus });
+                const response = await axios.put(`${process.env.REACT_APP_API_BASE_URL}/api/orders/${selectedOrder.id}/status`, { newStatus });
                 console.log("Update response:", response.data);
                 setOrders(orders.map(order => order.id === selectedOrder.id ? { ...order, orderStatus: newStatus } : order));
                 setFilteredOrders(filteredOrders.map(order => order.id === selectedOrder.id ? { ...order, orderStatus: newStatus } : order));

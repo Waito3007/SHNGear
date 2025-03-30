@@ -19,7 +19,7 @@ const BrandDrawer = ({ open, onClose }) => {
 
     const fetchBrands = async () => {
         try {
-            const response = await axios.get("https://localhost:7107/api/brands");
+            const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/brands`);
             setBrands(response.data);
         } catch (error) {
             console.error("Failed to fetch brands:", error);
@@ -30,7 +30,7 @@ const BrandDrawer = ({ open, onClose }) => {
     if (!brandToDelete) return;
 
     try {
-        await axios.delete(`https://localhost:7107/api/brands/${brandToDelete.id}`);
+        await axios.delete(`${process.env.REACT_APP_API_BASE_URL}/api/brands/${brandToDelete.id}`);
         await fetchBrands();
         setDeleteDialogOpen(false);
         setBrandToDelete(null);

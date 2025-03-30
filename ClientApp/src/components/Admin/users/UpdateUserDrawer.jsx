@@ -39,7 +39,7 @@ const UpdateUserDrawer = ({ open, onClose, user, roles, onUpdate }) => {
     }
 
     try {
-      await axios.put(`https://localhost:7107/api/users/${user.id}`, userData);
+      await axios.put(`${process.env.REACT_APP_API_BASE_URL}/api/users/${user.id}`, userData);
       message.success("Cập nhật thông tin thành công!");
       onUpdate(user.id, userData);
       onClose();

@@ -21,10 +21,10 @@ const OrdersPage = () => {
         const fetchOrderStats = async () => {
             try {
                 const [totalOrdersRes, pendingOrdersRes, completedOrdersRes, totalRevenueRes] = await Promise.all([
-                    axios.get("https://localhost:7107/api/orders"),
-                    axios.get("https://localhost:7107/api/orders/pending-orders"),
-                    axios.get("https://localhost:7107/api/orders/completed-orders"),
-                    axios.get("https://localhost:7107/api/orders/total-revenue"),
+                    axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/orders`),
+                    axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/orders/pending-orders`),
+                    axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/orders/completed-orders`),
+                    axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/orders/total-revenue`),
                 ]);
 
                 setOrderStats({

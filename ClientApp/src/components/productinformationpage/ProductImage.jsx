@@ -22,7 +22,7 @@ const ProductImage = ({ images, name }) => {
                   src={
                     image?.imageUrl?.startsWith("http")
                       ? image.imageUrl
-                      : `https://localhost:7107/${image.imageUrl}`
+                      : `${process.env.REACT_APP_API_BASE_URL}/${image.imageUrl}`
                   }
                   alt={name || "Product Image"}
                   className="w-full h-auto object-contain mb-3 transition-transform"

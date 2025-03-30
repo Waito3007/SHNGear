@@ -1,11 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ShoppingCart, User, Search } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { Menu, MenuItem, Avatar, IconButton } from "@mui/material";
-import { 
-  CircularProgress,
-  Button
-} from '@mui/material';
+import { ShoppingCart, User, Search, Star, MapPin, LogOut, ShoppingBag } from "lucide-react";
+import { useNavigate, NavLink } from "react-router-dom";
 import {
   LocalMall as LocalMallIcon,
   Category as CategoryIcon,
@@ -34,15 +29,50 @@ const Navbar = () => {
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
-  const [avatarUrl, setAvatarUrl] = useState(localStorage.getItem("AvatarUrl"));
+  const [userInfo, setUserInfo] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const [isCartOpen, setIsCartOpen] = useState(false);
+
+
+  useEffect(() => {
+  const fetchUserProfile = async () => {
+    const token = localStorage.getItem("token");
+    
+    if (!token) {
+      console.error("No token found");
+      return;
+    }
+
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/Auth/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}` // Đảm bảo có "Bearer "
+        }
+      });
+      setUserInfo(response.data);
+    } catch (error) {
+      console.error("Error fetching profile:", {
+        status: error.response?.status,
+        message: error.response?.data?.message || error.message
+      });
+
+      // Nếu token hết hạn, clear localStorage
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        setIsLoggedIn(false);
+      }
+    }
+  };
+
+  if (isLoggedIn) fetchUserProfile();
+}, [isLoggedIn]);
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch("https://localhost:7107/api/categories");
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/categories`);
         if (!response.ok) throw new Error("Không thể tải danh mục");
         const data = await response.json();
         setCategories(data.$values || data || []);
@@ -56,7 +86,7 @@ const Navbar = () => {
   useEffect(() => {
     const fetchBrands = async () => {
       try {
-        const response = await fetch("https://localhost:7107/api/brands");
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/brands`);
         if (!response.ok) throw new Error("Không thể tải danh mục");
         const data = await response.json();
         setBrands(data.$values || data || []);
@@ -81,7 +111,6 @@ const Navbar = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("AvatarUrl");
     setIsLoggedIn(false);
-    setAvatarUrl(null);
     setAnchorEl(null);
   };
   // thanh tìm kiếm
@@ -113,7 +142,7 @@ const Navbar = () => {
   const fetchSearchResults = async () => {
   try {
     setIsLoading(true);
-    const response = await axios.get(`https://localhost:7107/api/search`, {
+    const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/search`, {
       params: {
         query: searchTerm,  // Thay đổi từ 'keyword' thành 'query'
         limit: 5  // Có thể điều chỉnh số lượng kết quả mong muốn
@@ -145,7 +174,7 @@ const handleSearchSubmit = (e) => {
     navigate(
       type === 'product' ? `/product/${id}` :
       type === 'category' ? `/ProductList?categoryId=${id}` :
-      `/products?brandId=${id}`
+      `/ProductList?brandIds=${id}`
     );
     setSearchTerm('');
     setSearchResults(null);
@@ -335,7 +364,7 @@ const handleSearchSubmit = (e) => {
                   <img
                     src={product.imageUrl?.startsWith("http") 
                       ? product.imageUrl 
-                      : `https://localhost:7107${product.imageUrl?.startsWith('/') ? '' : '/'}${product.imageUrl}`}
+                      : `${process.env.REACT_APP_API_BASE_URL}${product.imageUrl?.startsWith('/') ? '' : '/'}${product.imageUrl}`}
                     alt={product.name}
                     className="w-full h-full object-contain"
                     onError={(e) => { 
@@ -443,22 +472,104 @@ const handleSearchSubmit = (e) => {
 </div>
         {/* Avatar và Giỏ hàng */}
         <div className="avatarandcart">
-          {isLoggedIn ? (
-            <>
-              <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
-                <Avatar src={avatarUrl || "default-avatar.png"} alt="Avatar" />
-              </IconButton>
-              <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
-                <MenuItem onClick={() => navigate("/profile")}>Thông tin cá nhân</MenuItem>
-                <MenuItem onClick={() => navigate("/orders")}>Đơn hàng của tôi</MenuItem>
-                <MenuItem onClick={() => navigate("/loyalty")}>Khách hàng thân thiết</MenuItem>
-                <MenuItem onClick={() => navigate("/address")}>Sổ địa chỉ nhận hàng</MenuItem>
-                <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
-              </Menu>
-            </>
-          ) : (
-            <User size={35} className="avatar-icon" onClick={() => setIsAuthModalOpen(true)} />
-          )}
+          {/* Avatar và Giỏ hàng */}
+<div className="flex items-center gap-4">
+  {isLoggedIn ? (
+  <div className="relative">
+    <button
+      onClick={(e) => setAnchorEl(e.currentTarget)}
+      className="p-1 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+      aria-label="Menu người dùng"
+      aria-haspopup="true"
+      aria-expanded={!!anchorEl}
+    >
+      <User className="w-8 h-8 text-white" />
+    </button>
+    
+    {anchorEl && (
+      <div 
+        className="absolute right-0 mt-2 w-56 origin-top-right bg-white rounded-lg shadow-xl z-50 overflow-hidden transition-all duration-200 ease-out"
+        style={{
+          transform: anchorEl ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(-10px)',
+          opacity: anchorEl ? 1 : 0
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="py-1 flex flex-col">
+          <div className="px-4 py-3 border-b border-gray-100">
+  <p className="text-sm font-medium text-gray-900">
+    Xin chào, {userInfo?.FullName || 'Khách'}
+  </p>
+  <p className="text-xs text-gray-500 truncate">
+    {userInfo?.Email || 'user@example.com'}
+  </p>
+</div>
+          
+          <NavLink 
+            to="/profile"
+            className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
+            activeClassName="bg-blue-50 text-blue-600"
+            onClick={() => setAnchorEl(null)} 
+          >
+            <User className="w-4 h-4 mr-3" />
+            Thông tin cá nhân
+          </NavLink>
+          
+          <NavLink 
+            to="/orders"
+            className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
+            activeClassName="bg-blue-50 text-blue-600"
+            onClick={() => setAnchorEl(null)} 
+          >
+            <ShoppingBag className="w-4 h-4 mr-3" />
+            Đơn hàng của tôi
+          </NavLink>
+          
+          <NavLink 
+            to="/loyalty"
+            className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
+            activeClassName="bg-blue-50 text-blue-600"
+            onClick={() => setAnchorEl(null)} 
+          >
+            <Star className="w-4 h-4 mr-3" />
+            Khách hàng thân thiết
+          </NavLink>
+          
+          <NavLink 
+            to="/address"
+            className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
+            activeClassName="bg-blue-50 text-blue-600"
+            onClick={() => setAnchorEl(null)}
+          >
+            <MapPin className="w-4 h-4 mr-3" />
+            Sổ địa chỉ
+          </NavLink>
+          
+          <NavLink
+            to="/"
+            onClick={() => {
+              handleLogout();
+              setAnchorEl(null); // Thêm dòng này
+            }}
+            className="px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center mt-1 border-t border-gray-100"
+          >
+            <LogOut className="w-4 h-4 mr-3" />
+            Đăng xuất
+          </NavLink>
+        </div>
+      </div>
+    )}
+  </div>
+) : (
+  <button
+    onClick={() => setIsAuthModalOpen(true)}
+    className="p-1 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+    aria-label="Đăng nhập"
+  >
+    <User className="w-8 h-8 text-white" />
+  </button>
+)}
+</div>
           <button className="cart-button"onClick={() => setIsCartOpen(true)}>
             <ShoppingCart size={22} />
             Giỏ Hàng

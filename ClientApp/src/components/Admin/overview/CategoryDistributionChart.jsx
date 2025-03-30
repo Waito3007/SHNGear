@@ -11,7 +11,7 @@ const CategoryDistributionChart = () => {
 	useEffect(() => {
 		const fetchCategoryData = async () => {
 			try {
-				const response = await axios.get("https://localhost:7107/api/categories/product-count");
+				const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/categories/product-count`);
 				setCategoryData(response.data);
 			} catch (error) {
 				console.error("Lỗi khi lấy dữ liệu danh mục:", error);

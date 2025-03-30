@@ -13,7 +13,7 @@ const ProductReviews = ({ productVariantId }) => {
     const fetchReviews = async () => {
       try {
         const response = await fetch(
-          `https://localhost:7107/api/review/product/${productVariantId}`
+          `${process.env.REACT_APP_API_BASE_URL}/api/review/product/${productVariantId}`
         );
         if (!response.ok) {
           throw new Error("Chưa có đánh giá.");
@@ -46,7 +46,7 @@ const ProductReviews = ({ productVariantId }) => {
     };
 
     try {
-      const response = await fetch("https://localhost:7107/api/review", {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/review`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newReview),

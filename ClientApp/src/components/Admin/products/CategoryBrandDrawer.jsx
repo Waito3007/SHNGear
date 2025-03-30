@@ -18,7 +18,7 @@ const CategoryBrandDrawer = ({ open, onClose }) => {
 
     const fetchCategories = async () => {
         try {
-            const response = await axios.get("https://localhost:7107/api/categories");
+            const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/categories`);
             setCategories(response.data);
         } catch (error) {
             console.error("Failed to fetch categories:", error);
@@ -29,7 +29,7 @@ const CategoryBrandDrawer = ({ open, onClose }) => {
     if (!categoryToDelete) return;
 
     try {
-        await axios.delete(`https://localhost:7107/api/categories/${categoryToDelete.id}`);
+        await axios.delete(`${process.env.REACT_APP_API_BASE_URL}/api/categories/${categoryToDelete.id}`);
         await fetchCategories();
         setDeleteDialogOpen(false);
         setCategoryToDelete(null);
