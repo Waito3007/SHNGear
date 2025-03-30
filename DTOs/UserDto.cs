@@ -12,4 +12,9 @@ namespace SHN_Gear.DTOs
     {
         public int RoleId { get; set; }
     }
+    public class UserRoleDto
+    {
+        public int RoleId { get; set; }
+        public string RoleName { get; set; } = string.Empty;
+    }
 }

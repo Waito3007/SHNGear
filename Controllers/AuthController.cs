@@ -175,11 +175,17 @@ namespace SHN_Gear.Controllers
         private string GenerateJwtToken(User user)
         {
             var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]);
+            var roleName = user.Role?.Name ?? "User";
+
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                // Chỉ dùng MỘT trong hai cách sau:
+                
+                new Claim("roleId", user.RoleId.ToString()), // Quan trọng
                 new Claim(ClaimTypes.Role, user.Role?.Name ?? "User"),
+                new Claim("http://schemas.microsoft.com/.../role", user.Role?.Name ?? "User"),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 

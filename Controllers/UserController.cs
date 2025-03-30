@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using SHN_Gear.DTOs;
 using SHN_Gear.Services;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 namespace SHN_Gear.Controllers
 {
     [ApiController]
@@ -79,7 +81,7 @@ namespace SHN_Gear.Controllers
 
             return Ok(user);
         }
-
+        // Cập nhật thông tin người dùng (Admin)
         [HttpPut("{id}")]
         public async Task<IActionResult> AdminUpdateUser(int id, [FromBody] AdminUserUpdateDto userUpdateDto)
         {
@@ -184,7 +186,70 @@ namespace SHN_Gear.Controllers
 
             return Ok(formattedData);
         }
+        //api lấy role của người dùng hiện tại
+        // [HttpGet("current/role")]
+        // [Authorize]
+        // public async Task<IActionResult> GetCurrentUserRole()
+        // {
+        //     try
+        //     {
+        //         // Lấy UserId từ claims trong token
+        //         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
 
+        //         if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+        //         {
+        //             return Unauthorized(new { Message = "Token không hợp lệ - Không xác định được người dùng" });
+        //         }
 
+        //         // Lấy thông tin user và role từ database
+        //         var userWithRole = await _context.Users
+        //             .Where(u => u.Id == userId)
+        //             .Select(u => new
+        //             {
+        //                 UserId = u.Id,
+        //                 RoleId = u.Role.Id,
+        //                 RoleName = u.Role.Name,
+        //                 // Thêm các thông tin cần thiết khác
+        //                 Email = u.Email,
+        //                 IsActive = u.IsActive
+        //             })
+        //             .FirstOrDefaultAsync();
+
+        //         if (userWithRole == null)
+        //         {
+        //             return NotFound(new { Message = "Không tìm thấy thông tin người dùng" });
+        //         }
+
+        //         // Tạo response object
+        //         var response = new
+        //         {
+        //             userWithRole.UserId,
+        //             userWithRole.Email,
+        //             userWithRole.IsActive,
+        //             Role = new
+        //             {
+        //                 userWithRole.RoleId,
+        //                 userWithRole.RoleName
+        //             },
+        //             // Thêm thông tin từ token nếu cần
+        //             Claims = new
+        //             {
+        //                 // Lấy trực tiếp từ claims hiện tại
+        //                 RoleClaim = User.FindFirst(ClaimTypes.Role)?.Value,
+        //                 MicrosoftRoleClaim = User.FindFirst("http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value
+        //             }
+        //         };
+
+        //         return Ok(response);
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, new
+        //         {
+        //             Message = "Lỗi server khi lấy thông tin role",
+        //             Error = ex.Message
+        //         });
+        //     }
+        // }
     }
 }
