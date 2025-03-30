@@ -9,11 +9,13 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Authorization;
 
 namespace SHN_Gear.Controllers
 {
     [Route("api/[controller]")]
+    [EnableCors("AllowFrontend")]
     [ApiController]
     public class AuthController : ControllerBase
     {

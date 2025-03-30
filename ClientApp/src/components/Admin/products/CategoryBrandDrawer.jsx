@@ -90,7 +90,19 @@ const CategoryBrandDrawer = ({ open, onClose }) => {
                                 <TableRow key={category.id}>
                                     <TableCell>{category.name}</TableCell>
                                     <TableCell>{category.description}</TableCell>
-                                    <TableCell><img src={category.image} alt={category.name} width={50} /></TableCell>
+                                    <TableCell><img
+    src={
+        category.image?.startsWith("http")
+            ? category.image // Full external URL
+            : `${process.env.REACT_APP_API_BASE_URL}${category.image}`
+    }
+    alt={`${category.name} logo`}
+    className="size-10 rounded-full"
+    onError={(e) => {
+        e.target.onerror = null;
+        e.target.src = "https://via.placeholder.com/50";
+    }}
+/></TableCell>
                                     <TableCell>
                                         <IconButton onClick={() => handleOpenModal(category)}>
                                             <Edit size={20} />

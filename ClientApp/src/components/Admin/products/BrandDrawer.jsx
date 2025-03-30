@@ -79,9 +79,10 @@ const BrandDrawer = ({ open, onClose }) => {
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell><b>Tên thương hiệu</b></TableCell>
+                                <TableCell><b>Thương hiệu</b></TableCell>
+                                                                <TableCell><b>Logo</b></TableCell>
+
                                 <TableCell><b>Mô tả</b></TableCell>
-                                <TableCell><b>Logo</b></TableCell>
                                 <TableCell><b>Hành động</b></TableCell>
                             </TableRow>
                         </TableHead>
@@ -89,8 +90,21 @@ const BrandDrawer = ({ open, onClose }) => {
                             {brands.map((brand) => (
                                 <TableRow key={brand.id}>
                                     <TableCell>{brand.name}</TableCell>
+                                    <TableCell> <img
+    src={
+        brand.logo?.startsWith("http")
+            ? brand.logo // Full external URL
+            : `${process.env.REACT_APP_API_BASE_URL}${brand.logo}`
+    }
+    alt={`${brand.name} logo`}
+    className="size-10 rounded-full"
+    onError={(e) => {
+        e.target.onerror = null;
+        e.target.src = "https://via.placeholder.com/50";
+    }}
+/></TableCell>
                                     <TableCell>{brand.description}</TableCell>
-                                    <TableCell><img src={brand.logo} alt={brand.name} width={50} /></TableCell>
+                                    
                                     <TableCell>
                                         <IconButton onClick={() => handleOpenModal(brand)}>
                                             <Edit size={20} />
