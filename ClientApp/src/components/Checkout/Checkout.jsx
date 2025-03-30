@@ -199,7 +199,7 @@ const Checkout = () => {
           orderDto, 
           { headers }
         );
-        navigate("/order-confirmation", { state: { orderId: response.data.orderId } });
+        navigate("/payment-success", { state: { orderId: response.data.orderId } });
       }
     } catch (error) {
       console.error("Lỗi khi tạo đơn hàng:", error);

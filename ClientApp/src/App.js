@@ -7,6 +7,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ProductList from "./pages/ProductList";
 import Shoppingcart from "./pages/shoppingcart";
 import Checkout from "./components/Checkout/Checkout";
+import PaymentSuccess from "./components/Order/PaymentSuccess";
 import Unauthorized from "./pages/Unauthorized";
 import { jwtDecode } from "jwt-decode";
 
@@ -48,7 +49,7 @@ export default class App extends Component {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/product/:id" element={<ProductPage />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
-        
+        <Route path="/payment-success" element={<PaymentSuccess />} />
         {/* Xử lý các route từ AppRoutes */}
         {AppRoutes.map((route) => {
           const isAdminRoute = route.path?.startsWith('/admin');

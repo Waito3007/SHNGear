@@ -252,6 +252,7 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
                   </Typography>
                   <Typography variant="body2" fontWeight="medium">
                     {formatCurrency(order.totalAmount)}
+                    {order.orderStatus === "Paid" || order.orderStatus === "ShippedPayment" ? " (Đã thanh toán)" : ""}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
@@ -259,7 +260,13 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
                     Phương thức thanh toán:
                   </Typography>
                   <Typography variant="body2" fontWeight="medium">
-                    {order.paymentMethodId === 1 ? 'Tiền mặt' : 'MoMo'}
+                    {order.paymentMethodId === 1 
+                      ? 'Tiền mặt' 
+                      : order.paymentMethodId === 2 
+                        ? 'MoMo' 
+                        : order.paymentMethodId === 3 
+                          ? 'PayPal' 
+                          : 'Không xác định'}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
