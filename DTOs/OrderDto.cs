@@ -29,4 +29,5 @@ namespace SHN_Gear.DTOs
         public List<OrderItemDto> OrderItems { get; set; } = new List<OrderItemDto>();
         public int? VoucherId { get; set; }
     }
+
 }

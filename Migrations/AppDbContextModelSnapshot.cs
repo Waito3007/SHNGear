@@ -335,6 +335,18 @@ namespace SHN_Gear.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("PayPalOrderId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PayPalPaymentUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PayPalResponse")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PayPalTransactionId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("PaymentMethodId")
                         .HasColumnType("int");
 
@@ -419,14 +431,14 @@ namespace SHN_Gear.Migrations
                         new
                         {
                             Id = 2,
-                            Description = "momo",
+                            Description = "Thanh toán bằng Momo",
                             Name = "MoMo"
                         },
                         new
                         {
                             Id = 3,
-                            Description = "VNPay",
-                            Name = "VNPay"
+                            Description = "Thanh toán bằng ví Paypal",
+                            Name = "Paypal"
                         });
                 });
 

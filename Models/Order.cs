@@ -22,6 +22,10 @@ namespace SHN_Gear.Models
         public string? MoMoTransId { get; set; } // Mã giao dịch từ MoMo
         public string? MoMoPayUrl { get; set; } // URL thanh toán MoMo
         public string? MoMoResponse { get; set; } // Raw response từ MoMo
-
+        // paypal
+        public string? PayPalOrderId { get; set; }
+        public string? PayPalPaymentUrl { get; set; }
+        public string? PayPalTransactionId { get; set; }
+        public string? PayPalResponse { get; set; }
     }
 }

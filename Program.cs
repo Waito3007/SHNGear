@@ -27,6 +27,7 @@ builder.Services.AddSession(options =>
 
 builder.Services.AddScoped<UserService>(); // Đăng ký UserService
 builder.Services.AddScoped<EmailService>(); // Đăng ký EmailService
+builder.Services.AddSingleton<PayPalService>();
 // Thêm JWT Authentication
 var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
