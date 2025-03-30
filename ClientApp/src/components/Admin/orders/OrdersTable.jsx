@@ -24,21 +24,49 @@ const OrdersTable = () => {
     //state cho drawer OrderDetail
     const [selectedOrderId, setSelectedOrderId] = useState(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
-    const getOrderStatusLabel = (status) => {
-        switch (status) {
-            case "Delivered":
-                return "Đã giao hàng";
+    // Hàm xác định các trạng thái được phép chuyển đổi
+    const getAllowedStatuses = (currentStatus) => {
+        switch (currentStatus) {
+            case "Pending":
+                return ["Processing", "Cancelled"]; // Chờ xác nhận -> Đã xác nhận hoặc Hủy
             case "Processing":
-                return "Đang xử lý";
+                return ["Shipped", "Cancelled"]; // Đã xác nhận -> Đang vận chuyển hoặc Hủy
             case "Shipped":
-                return "Đang vận chuyển";
-            case "Cancelled":
-                return "Đã hủy";
+                return ["Delivered"]; // Đang vận chuyển -> Đã xong
+            case "WaitingForPayment":
+                return ["Paid", "Cancelled"]; // Chờ thanh toán -> Đã thanh toán hoặc Hủy
+            case "Paid":
+                return ["ShippedPayment"]; // Đã thanh toán -> Đang vận chuyển đơn đã thanh toán
+            case "ShippedPayment":
+                return ["Delivered"]; // Đang vận chuyển đơn đã thanh toán -> Đã xong
             default:
-                return "Chờ xác nhận";
+                return []; // Các trạng thái khác không cho phép chuyển đổi
         }
     };
 
+    // Hàm lấy tên hiển thị của trạng thái
+    const getStatusDisplayName = (status) => {
+        switch (status) {
+            case "Pending":
+                return "Chờ xác nhận";
+            case "Processing":
+                return "Đã xác nhận";
+            case "Shipped":
+                return "Đang vận chuyển";
+            case "Delivered":
+                return "Đã xong";
+            case "Cancelled":
+                return "Đã hủy";
+            case "WaitingForPayment":
+                return "Chờ thanh toán";
+            case "Paid":
+                return "Đã thanh toán";
+            case "ShippedPayment":
+                return "Đang vận chuyển (đã thanh toán)";
+            default:
+                return status;
+        }
+    };
     useEffect(() => {
         const fetchOrders = async () => {
             try {
@@ -261,6 +289,8 @@ const OrdersTable = () => {
                                 <option value="Shipped">Đang vận chuyển</option>
                                 <option value="Delivered">Đã xong</option>
                                 <option value="Cancelled">Đã hủy</option>
+                                <option value="WaitingForPayment">Chờ thanh toán</option>
+                                <option value="Paid">Đã thanh toán</option>
                             </select>
                         </div>
 
@@ -385,7 +415,7 @@ const OrdersTable = () => {
                                             }`}
                                             onClick={() => handleOpenModal(order)}
                                         >
-                                            {getOrderStatusLabel(order.orderStatus)}
+                                            {getStatusDisplayName(order.orderStatus)}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
@@ -450,44 +480,48 @@ const OrdersTable = () => {
             </div>
 
             <Modal open={openModal} onClose={handleCloseModal}>
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: 400,
-                        bgcolor: 'background.paper',
-                        border: '2px solid #000',
-                        boxShadow: 24,
-                        p: 4,
-                    }}
-                >
-                    <Typography variant="h6" component="h2">
-                        Cập nhật trạng thái đơn hàng
-                    </Typography>
-                    <Select
-                        value={newStatus}
-                        onChange={(e) => setNewStatus(e.target.value)}
-                        fullWidth
-                        sx={{ mt: 2 }}
-                    >
-                        <MenuItem value="Pending">Chờ xác nhận</MenuItem>
-                        <MenuItem value="Processing">Đã xác nhận</MenuItem>
-                        <MenuItem value="Shipped">Đang vận chuyển</MenuItem>
-                        <MenuItem value="Delivered">Đã xong</MenuItem>
-                        <MenuItem value="Cancelled">Đã hủy</MenuItem>
-                    </Select>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleUpdateStatus}
-                        sx={{ mt: 2 }}
-                    >
-                        Cập nhật
-                    </Button>
-                </Box>
-            </Modal>
+        <Box
+            sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 400,
+                bgcolor: 'background.paper',
+                border: '2px solid #000',
+                boxShadow: 24,
+                p: 4,
+            }}
+        >
+            <Typography variant="h6" component="h2">
+                Cập nhật trạng thái đơn hàng
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 1, mb: 2 }}>
+                Trạng thái hiện tại: <strong>{getStatusDisplayName(selectedOrder?.orderStatus)}</strong>
+            </Typography>
+            <Select
+                value={newStatus}
+                onChange={(e) => setNewStatus(e.target.value)}
+                fullWidth
+                sx={{ mt: 2 }}
+            >
+                {selectedOrder && getAllowedStatuses(selectedOrder.orderStatus).map(status => (
+                    <MenuItem key={status} value={status}>
+                        {getStatusDisplayName(status)}
+                    </MenuItem>
+                ))}
+            </Select>
+            <Button
+                variant="contained"
+                color="primary"
+                onClick={handleUpdateStatus}
+                sx={{ mt: 2 }}
+                disabled={!newStatus || newStatus === selectedOrder?.orderStatus}
+            >
+                Cập nhật
+            </Button>
+        </Box>
+    </Modal>
             <OrderDetailDrawer 
             orderId={selectedOrderId}
             open={drawerOpen}

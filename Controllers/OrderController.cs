@@ -1131,7 +1131,75 @@ namespace SHN_Gear.Controllers
                 return StatusCode(500, $"Error exporting to template: {ex.Message}");
             }
         }
+        // Lấy địa chỉ theo đơn
+        [HttpGet("by-phone/{phoneNumber}")]
+        public async Task<IActionResult> GetOrdersByPhoneNumber(string phoneNumber)
+        {
+            try
+            {
+                // Tìm các địa chỉ có số điện thoại trùng khớp
+                var addresses = await _context.Addresses
+                    .Where(a => a.PhoneNumber == phoneNumber)
+                    .Select(a => a.Id) // Chỉ lấy ID
+                    .ToListAsync();
+
+                if (!addresses.Any())
+                {
+                    return NotFound(new { Message = "Không tìm thấy đơn hàng nào với số điện thoại này" });
+                }
+
+                // Lấy các đơn hàng
+                var orders = await _context.Orders
+                    .Where(o => addresses.Contains(o.Id))
+                    .Include(o => o.OrderItems)
+                        .ThenInclude(oi => oi.ProductVariant)
+                            .ThenInclude(pv => pv.Product)
+                    .Include(o => o.Address)
+                    .Include(o => o.PaymentMethod)
+                    .OrderByDescending(o => o.OrderDate)
+                    .ToListAsync();
+
+                var result = orders.Select(order => new
+                {
+                    OrderId = order.Id,
+                    OrderDate = order.OrderDate.ToString("dd/MM/yyyy HH:mm"),
+                    TotalAmount = order.TotalAmount,
+                    FormattedTotal = order.TotalAmount.ToString("N0") + " VNĐ",
+                    PaymentMethod = order.PaymentMethod != null ? order.PaymentMethod.Name : "Tiền mặt",
+                    OrderStatus = order.OrderStatus,
+                    ShippingInfo = new
+                    {
+                        FullName = order.Address != null ? order.Address.FullName : "N/A",
+                        Phone = order.Address != null ? order.Address.PhoneNumber : "N/A",
+                        Address = order.Address != null
+                            ? $"{order.Address.AddressLine1}, {order.Address.City}, {order.Address.State}"
+                            : "N/A",
+                        Email = order.User != null ? order.User.Email : "N/A"
+                    },
+                    Products = order.OrderItems.Select(oi => new
+                    {
+                        Id = oi.ProductVariant.Product.Id,
+                        Name = oi.ProductVariant.Product.Name,
+                        Image = oi.ProductVariant.Product.Images.FirstOrDefault(i => i.IsPrimary) != null
+                            ? oi.ProductVariant.Product.Images.First(i => i.IsPrimary).ImageUrl
+                            : "/images/default-product.png",
+                        Variant = $"{oi.ProductVariant.Color} - {oi.ProductVariant.Storage}",
+                        Quantity = oi.Quantity,
+                        Price = oi.Price,
+                        Total = oi.Price * oi.Quantity
+                    }),
+                    EstimatedDelivery = order.OrderDate.AddDays(3).ToString("dd/MM/yyyy")
+                });
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Lỗi khi lấy thông tin đơn hàng", Error = ex.Message });
+            }
+        }
     }
+
 
 
     public class MoMoCallbackModel
