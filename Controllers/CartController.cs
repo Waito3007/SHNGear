@@ -290,7 +290,10 @@ namespace SHN_Gear.Controllers
                 var result = new
                 {
                     ProductName = variant.Product.Name,
-                    ProductImage = variant.Product.Images.FirstOrDefault(img => img.IsPrimary)?.ImageUrl,
+                    ProductImage = variant.Product.Images
+                                .OrderByDescending(img => img.IsPrimary)
+                                .ThenBy(img => img.Id)
+                                .FirstOrDefault()?.ImageUrl ?? "/images/default-product.png",
                     VariantColor = variant.Color,
                     VariantStorage = variant.Storage,
                     Price = variant.Price,

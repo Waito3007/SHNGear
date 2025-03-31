@@ -684,7 +684,10 @@ namespace SHN_Gear.Controllers
                 {
                     ProductName = oi.ProductVariant.Product.Name,
                     ProductDescription = oi.ProductVariant.Product.Description,
-                    ProductImage = oi.ProductVariant.Product.Images.FirstOrDefault(img => img.IsPrimary)?.ImageUrl,
+                    ProductImage = oi.ProductVariant.Product.Images
+                                .OrderByDescending(img => img.IsPrimary)
+                                .ThenBy(img => img.Id)
+                                .FirstOrDefault()?.ImageUrl ?? "/images/default-product.png",
                     VariantColor = oi.ProductVariant.Color,
                     VariantStorage = oi.ProductVariant.Storage,
                     Quantity = oi.Quantity,
@@ -1180,9 +1183,11 @@ namespace SHN_Gear.Controllers
                     {
                         Id = oi.ProductVariant.Product.Id,
                         Name = oi.ProductVariant.Product.Name,
-                        Image = oi.ProductVariant.Product.Images.FirstOrDefault(i => i.IsPrimary) != null
-                            ? oi.ProductVariant.Product.Images.First(i => i.IsPrimary).ImageUrl
-                            : "/images/default-product.png",
+                        Image = oi.ProductVariant.Product.Images
+        .OrderByDescending(i => i.IsPrimary) // Ưu tiên ảnh IsPrimary
+        .ThenBy(i => i.Id)                  // Sắp xếp thứ tự
+        .FirstOrDefault()?                  // Lấy ảnh đầu tiên
+        .ImageUrl ?? "/images/default-product.png", // Fallback nếu null
                         Variant = $"{oi.ProductVariant.Color} - {oi.ProductVariant.Storage}",
                         Quantity = oi.Quantity,
                         Price = oi.Price,

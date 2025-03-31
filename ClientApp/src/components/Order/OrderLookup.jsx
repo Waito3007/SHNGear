@@ -212,13 +212,11 @@ const OrderLookup = () => {
                               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 <Box 
                             component="img"
-                            src={
-                                !product.image 
-                                ? '/images/default-product.png'
-                                : product.image.startsWith('http') || product.image.startsWith('https') 
-                                    ? product.image 
-                                    : `${process.env.REACT_APP_API_BASE_URL || ''}${product.image}`
-                            }
+                             src={
+                                    product.images?.imageUrl?.startsWith("http")
+                                        ? product.images.imageUrl // Ảnh từ API (URL đầy đủ)
+                                        : `${process.env.REACT_APP_API_BASE_URL}/${product.images?.imageUrl}` // Ảnh local trong wwwroot
+                                }
                             alt={product.name || 'Ảnh sản phẩm'}
                             sx={{ 
                                 width: 60, 
@@ -228,10 +226,7 @@ const OrderLookup = () => {
                                 borderRadius: 1,
                                 backgroundColor: 'grey.100'
                             }}
-                            onError={(e) => {
-                                e.target.src = '/images/default-product.png';
-                            }}
-                            />
+                                                    />
                                 <Typography>{product.name}</Typography>
                               </Box>
                             </TableCell>
