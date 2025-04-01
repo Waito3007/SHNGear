@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { UserCheck, UserPlus, UsersIcon, UserX } from "lucide-react";
+import { UserCheck, UserPlus, UsersIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import axios from "axios";
 

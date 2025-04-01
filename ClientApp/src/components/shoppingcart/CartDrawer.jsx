@@ -3,7 +3,6 @@ import {
   Drawer, 
   IconButton, 
   List, 
-  ListItemText, 
   Avatar, 
   Typography, 
   Button, 
@@ -281,17 +280,17 @@ const CartDrawer = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleIncreaseQuantity = () => {
-    if (!selectedItem) return;
-    const newQuantity = selectedItem.quantity + 1;
-    updateQuantity(newQuantity);
-  };
+  // const handleIncreaseQuantity = () => {
+  //   if (!selectedItem) return;
+  //   const newQuantity = selectedItem.quantity + 1;
+  //   updateQuantity(newQuantity);
+  // };
 
-  const handleDecreaseQuantity = () => {
-    if (!selectedItem) return;
-    const newQuantity = Math.max(1, selectedItem.quantity - 1);
-    updateQuantity(newQuantity);
-  };
+  // const handleDecreaseQuantity = () => {
+  //   if (!selectedItem) return;
+  //   const newQuantity = Math.max(1, selectedItem.quantity - 1);
+  //   updateQuantity(newQuantity);
+  // };
 
   // Sửa lỗi: Cập nhật hàm handleSelectItem để tính lại totalAmount với discountAmount hiện tại
   const handleSelectItem = (item) => {

@@ -5,8 +5,8 @@ import axios from "axios";
 
 import Header from "../../components/Admin/common/Header";
 import StatCard from "../../components/Admin/common/StatCard";
-import DailyOrders from "../../components/Admin/orders/DailyOrders";
-import OrderDistribution from "../../components/Admin/orders/OrderDistribution";
+// import DailyOrders from "../../components/Admin/orders/DailyOrders";
+// import OrderDistribution from "../../components/Admin/orders/OrderDistribution";
 import OrdersTable from "../../components/Admin/orders/OrdersTable";
 
 const OrdersPage = () => {

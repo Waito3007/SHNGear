@@ -103,6 +103,7 @@ const EditProductDrawer = ({ isOpen, onClose, product, onUpdateProduct }) => {
     fetchBrands();
   }, []);
 
+  
   // Xử lý thay đổi giá trị trong form
   const handleChange = (e, index, type) => {
     const { name, value } = e.target;

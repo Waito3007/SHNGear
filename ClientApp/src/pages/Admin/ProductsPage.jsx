@@ -4,7 +4,7 @@ import axios from "axios";
 
 import Header from "../../components/Admin/common/Header";
 import StatCard from "../../components/Admin/common/StatCard";
-import CardProduct from "../../components/Admin/common/CardProduct";
+// import CardProduct from "../../components/Admin/common/CardProduct";
 
 import { AlertTriangle, DollarSign, Package, TrendingUp } from "lucide-react";
 import CategoryDistributionChart from "../../components/Admin/overview/CategoryDistributionChart";
