@@ -110,6 +110,47 @@ namespace SHN_Gear.Controllers
             return Ok(new { Message = "Cập nhật thông tin người dùng thành công." });
         }
 
+        [HttpPut("profile")]
+        public async Task<IActionResult> UpdateProfile([FromBody] EditProfileDto dto)
+        {
+            // Lấy ID người dùng từ token
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { Message = "Không xác thực được người dùng" });
+
+            // Tìm người dùng trong database
+            var user = await _context.Users.FindAsync(int.Parse(userId));
+            if (user == null)
+                return NotFound(new { Message = "Người dùng không tồn tại" });
+
+            // Cập nhật thông tin
+            user.FullName = dto.FullName;
+            user.Email = dto.Email;
+            user.PhoneNumber = dto.PhoneNumber;
+            user.Gender = dto.Gender;
+            user.DateOfBirth = dto.DateOfBirth;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(new
+                {
+                    Message = "Cập nhật thông tin thành công",
+                    User = new
+                    {
+                        user.FullName,
+                        user.Email,
+                        user.PhoneNumber,
+                        user.Gender,
+                        DateOfBirth = user.DateOfBirth?.ToString("yyyy-MM-dd")
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Lỗi khi cập nhật", Error = ex.Message });
+            }
+        }
 
         // Cập nhật vai trò của người dùng
         [HttpPut("{id}/role")]

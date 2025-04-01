@@ -500,7 +500,7 @@ const handleSearchSubmit = (e) => {
             </NavLink>
           )}
           <NavLink 
-            to="/profile"
+            to="/profile/info"
             className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
             activeClassName="bg-blue-50 text-blue-600"
           >
@@ -509,7 +509,7 @@ const handleSearchSubmit = (e) => {
           </NavLink>
           
           <NavLink 
-            to="/orders"
+            to="/profile/orders"
             className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
             activeClassName="bg-blue-50 text-blue-600"
           >
@@ -518,7 +518,7 @@ const handleSearchSubmit = (e) => {
           </NavLink>
           
           <NavLink 
-            to="/loyalty"
+            to="/profile/loyalty"
             className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
             activeClassName="bg-blue-50 text-blue-600"
           >
@@ -527,7 +527,7 @@ const handleSearchSubmit = (e) => {
           </NavLink>
           
           <NavLink 
-            to="/address"
+            to="/profile/address"
             className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
             activeClassName="bg-blue-50 text-blue-600"
           >

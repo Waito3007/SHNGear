@@ -1,8 +1,46 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import { Card, CardContent, CardHeader, Button, Typography, Modal, Box, TextField, IconButton, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
-import { Delete, Edit } from "@mui/icons-material";
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  Button, 
+  Typography, 
+  Modal, 
+  Box, 
+  TextField, 
+  IconButton, 
+  Dialog, 
+  DialogActions, 
+  DialogContent, 
+  DialogContentText, 
+  DialogTitle,
+  Divider,
+  Stack,
+  Paper
+} from "@mui/material";
+import { Delete, Edit, Add, Close } from "@mui/icons-material";
+import { styled } from '@mui/material/styles';
+
+const StyledCard = styled(Card)(({ theme }) => ({
+  maxWidth: '800px',
+  margin: '2rem auto',
+  borderRadius: '12px',
+  boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+  overflow: 'hidden'
+}));
+
+const AddressItem = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginBottom: theme.spacing(2),
+  borderRadius: '8px',
+  border: '1px solid rgba(0,0,0,0.12)',
+  transition: 'box-shadow 0.3s ease',
+  '&:hover': {
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+  }
+}));
 
 const AddressComponent = () => {
   const [addresses, setAddresses] = useState([]);
@@ -134,94 +172,237 @@ const AddressComponent = () => {
     handleCloseDeleteDialog();
   };
 
+  const fieldLabels = {
+    fullName: "Họ và tên",
+    addressLine1: "Địa chỉ dòng 1",
+    addressLine2: "Địa chỉ dòng 2 (tùy chọn)",
+    city: "Thành phố",
+    state: "Tỉnh/Thành phố",
+    zipCode: "Mã bưu điện",
+    country: "Quốc gia",
+    phoneNumber: "Số điện thoại"
+  };
+  const hiddenFieldsInEditMode = ['id', 'userId', 'user'];
+
   return (
-    <div style={{ maxWidth: "600px", margin: "6rem 2rem" }}>
-      <Card style={{ border: "2px solid black", borderRadius: "16px", padding: "16px", backgroundColor: "white", color: "black" }}>
-        <CardHeader title={<Typography variant="h6">Địa chỉ của bạn</Typography>} />
+    <Box sx={{ p: 3 }}>
+      <StyledCard>
+        <CardHeader 
+          title={<Typography variant="h5" fontWeight="600">Địa chỉ của bạn</Typography>}
+          action={
+            <Button 
+              variant="contained" 
+              startIcon={<Add />}
+              onClick={() => handleOpenModal()}
+              sx={{
+                backgroundColor: 'primary.main',
+                '&:hover': {
+                  backgroundColor: 'primary.dark'
+                }
+              }}
+            >
+              Thêm địa chỉ
+            </Button>
+          }
+          sx={{
+            borderBottom: '1px solid rgba(0,0,0,0.08)'
+          }}
+        />
         <CardContent>
           {loading ? (
-            <Typography>Đang tải...</Typography>
+            <Box textAlign="center" py={4}>
+              <Typography color="text.secondary">Đang tải địa chỉ...</Typography>
+            </Box>
           ) : addresses.length === 0 ? (
-            <div style={{ textAlign: "center" }}>
-              <Typography>Bạn chưa có địa chỉ nào.</Typography>
-              <Button variant="outlined" style={{ marginTop: "16px", borderColor: "black", color: "black" }} onClick={() => handleOpenModal()}>
-                Thêm địa chỉ của bạn
+            <Box textAlign="center" py={4}>
+              <Typography variant="body1" color="text.secondary" mb={2}>
+                Bạn chưa có địa chỉ nào được lưu.
+              </Typography>
+              <Button 
+                variant="contained" 
+                startIcon={<Add />}
+                onClick={() => handleOpenModal()}
+              >
+                Thêm địa chỉ mới
               </Button>
-            </div>
+            </Box>
           ) : (
-            <div>
+            <Stack spacing={3}>
               {addresses.map((address) => (
-                <div key={address.id} style={{ padding: "12px", border: "1px solid black", borderRadius: "12px", marginBottom: "12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div>
-                    <Typography variant="subtitle1" fontWeight="bold">{address.fullName}</Typography>
-                    <Typography>{address.addressLine1}</Typography>
-                    {address.addressLine2 && <Typography>{address.addressLine2}</Typography>}
-                    <Typography>{address.city}, {address.state}, {address.zipCode}, {address.country}</Typography>
-                    <Typography>Số điện thoại: {address.phoneNumber}</Typography>
-                  </div>
-                  <div>
-                    <IconButton onClick={() => handleOpenModal(address)}><Edit /></IconButton>
-                    <IconButton onClick={() => handleOpenDeleteDialog(address)}><Delete color="error" /></IconButton>
-                  </div>
-                </div>
+                <AddressItem key={address.id}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                    <Box>
+                      <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                        {address.fullName}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" paragraph>
+                        {address.addressLine1}
+                      </Typography>
+                      {address.addressLine2 && (
+                        <Typography variant="body2" color="text.secondary" paragraph>
+                          {address.addressLine2}
+                        </Typography>
+                      )}
+                      <Typography variant="body2" color="text.secondary" paragraph>
+                        {address.city}, {address.state}, {address.zipCode}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {address.country}
+                      </Typography>
+                      <Typography variant="body2" mt={1}>
+                        <Box component="span" fontWeight="500">Điện thoại:</Box> {address.phoneNumber}
+                      </Typography>
+                    </Box>
+                    <Stack direction="row" spacing={1}>
+                      <IconButton 
+                        onClick={() => handleOpenModal(address)}
+                        sx={{
+                          color: 'primary.main',
+                          '&:hover': {
+                            backgroundColor: 'rgba(25, 118, 210, 0.08)'
+                          }
+                        }}
+                      >
+                        <Edit fontSize="small" />
+                      </IconButton>
+                      <IconButton 
+                        onClick={() => handleOpenDeleteDialog(address)}
+                        sx={{
+                          color: 'error.main',
+                          '&:hover': {
+                            backgroundColor: 'rgba(211, 47, 47, 0.08)'
+                          }
+                        }}
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </Stack>
+                  </Stack>
+                </AddressItem>
               ))}
-              <Button variant="outlined" style={{ marginTop: "16px", borderColor: "black", color: "black" }} onClick={() => handleOpenModal()}>
-                Thêm địa chỉ phụ
-              </Button>
-            </div>
+            </Stack>
           )}
         </CardContent>
-      </Card>
+      </StyledCard>
 
       {/* Modal thêm/sửa địa chỉ */}
       <Modal open={openModal} onClose={handleCloseModal}>
-    <Box
-      sx={{
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        width: 400,
-        bgcolor: "white",
-        boxShadow: 24,
-        p: 4,
-        borderRadius: "12px",
-        maxHeight: "80vh", // Giới hạn chiều cao tối đa
-        overflowY: "auto", // Cho phép cuộn khi nội dung quá dài
-      }}
-    >
-      <Typography variant="h6" textAlign="center" mb={2}>
-        {editMode ? "Chỉnh sửa địa chỉ" : "Thêm địa chỉ phụ"}
-      </Typography>
-      
-      {Object.keys(newAddress).map((key) => (
-        <TextField 
-          key={key} 
-          fullWidth 
-          label={key} 
-          name={key} 
-          value={newAddress[key]} 
-          onChange={handleInputChange} 
-          margin="normal" 
-        />
-      ))}
-      
-      <Button variant="contained" color="primary" onClick={handleSaveAddress}>
-        {editMode ? "Lưu thay đổi" : "Thêm"}
-      </Button>
-    </Box>
-  </Modal>
-
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: { xs: '90%', sm: '500px' },
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            borderRadius: "12px",
+            maxHeight: "90vh",
+            overflowY: "auto",
+          }}
+        >
+          <Box sx={{ p: 3 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+              <Typography variant="h6" fontWeight="600">
+                {editMode ? "Chỉnh sửa địa chỉ" : "Thêm địa chỉ mới"}
+              </Typography>
+              <IconButton onClick={handleCloseModal}>
+                <Close />
+              </IconButton>
+            </Stack>
+            
+            <Divider sx={{ mb: 3 }} />
+            
+            <Stack spacing={2}>
+              {Object.keys(newAddress)
+                .filter(key => !editMode || !hiddenFieldsInEditMode.includes(key))
+                .map((key) => (
+                  <TextField
+                    key={key}
+                    fullWidth
+                    label={fieldLabels[key] || key}
+                    name={key}
+                    value={newAddress[key]}
+                    onChange={handleInputChange}
+                    size="small"
+                    variant="outlined"
+                    required={key !== 'addressLine2'} // Chỉ addressLine2 là không bắt buộc
+                  />
+              ))}
+            </Stack>
+            
+            <Stack direction="row" spacing={2} justifyContent="flex-end" mt={4}>
+              <Button 
+                variant="outlined" 
+                onClick={handleCloseModal}
+                sx={{
+                  color: 'text.primary',
+                  borderColor: 'rgba(0,0,0,0.23)'
+                }}
+              >
+                Hủy
+              </Button>
+              <Button 
+                variant="contained" 
+                onClick={handleSaveAddress}
+                sx={{
+                  backgroundColor: 'primary.main',
+                  '&:hover': {
+                    backgroundColor: 'primary.dark'
+                  }
+                }}
+              >
+                {editMode ? "Cập nhật" : "Lưu địa chỉ"}
+              </Button>
+            </Stack>
+          </Box>
+        </Box>
+      </Modal>
 
       {/* Dialog xác nhận xóa */}
-      <Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog}>
-        <DialogTitle>Xác nhận xóa?</DialogTitle>
-        <DialogActions>
-          <Button onClick={handleCloseDeleteDialog}>Hủy</Button>
-          <Button onClick={handleDeleteAddress} color="error">Xóa</Button>
+      <Dialog 
+        open={deleteDialogOpen} 
+        onClose={handleCloseDeleteDialog}
+        PaperProps={{
+          sx: {
+            borderRadius: '12px',
+            padding: '16px'
+          }
+        }}
+      >
+        <DialogTitle fontWeight="600">Xác nhận xóa địa chỉ</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Bạn có chắc chắn muốn xóa địa chỉ này? Thao tác này không thể hoàn tác.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button 
+            onClick={handleCloseDeleteDialog}
+            sx={{
+              color: 'text.primary',
+              '&:hover': {
+                backgroundColor: 'rgba(0,0,0,0.04)'
+              }
+            }}
+          >
+            Hủy
+          </Button>
+          <Button 
+            onClick={handleDeleteAddress} 
+            color="error"
+            variant="contained"
+            sx={{
+              '&:hover': {
+                backgroundColor: 'error.dark'
+              }
+            }}
+          >
+            Xóa
+          </Button>
         </DialogActions>
       </Dialog>
-    </div>
+    </Box>
   );
 };
 
