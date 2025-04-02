@@ -1213,7 +1213,269 @@ namespace SHN_Gear.Controllers
                 return StatusCode(500, new { Message = "Lỗi khi lấy thông tin đơn hàng", Error = ex.Message });
             }
         }
+        [HttpGet("dashboard/sales-overview")]
+        public async Task<IActionResult> GetSalesOverview([FromQuery] string range = "month")
+        {
+            try
+            {
+                DateTime startDate;
+                Func<DateTime, string> groupByFormat;
+                Func<string, string> formatPeriodLabel;
+                string xAxisKey;
+
+                switch (range.ToLower())
+                {
+                    case "week":
+                        startDate = DateTime.UtcNow.Date.AddDays(-7);
+                        groupByFormat = date => ((int)date.DayOfWeek).ToString();
+                        formatPeriodLabel = periodNum =>
+                        {
+                            var daysOfWeek = new[] { "Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy" };
+                            int dayIndex;
+                            return int.TryParse(periodNum, out dayIndex) && dayIndex >= 0 && dayIndex < 7
+                                ? daysOfWeek[dayIndex]
+                                : periodNum;
+                        };
+                        xAxisKey = "day";
+                        break;
+
+                    case "year":
+                        startDate = DateTime.UtcNow.Date.AddYears(0);
+                        groupByFormat = date => date.Month.ToString();
+                        formatPeriodLabel = period => $"Tháng {period}";
+                        xAxisKey = "month";
+                        break;
+
+                    default: // month
+                        startDate = DateTime.UtcNow.Date.AddMonths(0);
+                        groupByFormat = date => date.Day.ToString();
+                        formatPeriodLabel = period => $"Ngày {period}";
+                        xAxisKey = "day";
+                        break;
+                }
+
+                // Get data from database
+                var orders = await _context.Orders
+                    .Where(o => o.OrderDate >= startDate && o.OrderStatus == "Delivered")
+                    .Select(o => new { o.OrderDate, o.TotalAmount })
+                    .ToListAsync();
+
+                // Group and format data
+                var salesData = orders
+                    .GroupBy(o => groupByFormat(o.OrderDate))
+                    .Select(g => new
+                    {
+                        Period = g.Key,
+                        FormattedPeriod = formatPeriodLabel(g.Key),
+                        ShortPeriod = range switch
+                        {
+                            "week" => formatPeriodLabel(g.Key).Replace("Chủ Nhật", "CN").Replace("Thứ ", ""),
+                            "year" => $"T{g.Key}",
+                            _ => g.Key
+                        },
+                        Sales = g.Sum(o => o.TotalAmount),
+                        OrderCount = g.Count()
+                    })
+                    .OrderBy(x => int.Parse(x.Period))
+                    .ToList();
+
+                // Fill missing periods
+                var allPeriods = range switch
+                {
+                    "week" => Enumerable.Range(0, 7).Select(i => i.ToString()),
+                    "year" => Enumerable.Range(1, 12).Select(i => i.ToString()),
+                    _ => Enumerable.Range(1, DateTime.DaysInMonth(DateTime.UtcNow.Year, DateTime.UtcNow.Month))
+                        .Select(i => i.ToString())
+                };
+
+                salesData = allPeriods
+                    .GroupJoin(salesData,
+                        period => period,
+                        data => data.Period,
+                        (period, data) => new
+                        {
+                            Period = period,
+                            FormattedPeriod = formatPeriodLabel(period),
+                            ShortPeriod = range switch
+                            {
+                                "week" => formatPeriodLabel(period).Replace("Chủ Nhật", "CN").Replace("Thứ ", ""),
+                                "year" => $"T{period}",
+                                _ => period
+                            },
+                            Sales = data.FirstOrDefault()?.Sales ?? 0,
+                            OrderCount = data.FirstOrDefault()?.OrderCount ?? 0
+                        })
+                    .OrderBy(x => int.Parse(x.Period))
+                    .ToList();
+
+                // Create summary object based on range
+                object summary;
+                switch (range.ToLower())
+                {
+                    case "week":
+                        summary = new
+                        {
+                            TotalSales = salesData.Sum(x => x.Sales),
+                            AverageDailySales = salesData.Average(x => x.Sales)
+                        };
+                        break;
+                    case "month":
+                        summary = new
+                        {
+                            TotalSales = salesData.Sum(x => x.Sales),
+                            AverageDailySales = salesData.Average(x => x.Sales)
+                        };
+                        break;
+                    case "year":
+                        summary = new
+                        {
+                            TotalSales = salesData.Sum(x => x.Sales),
+                            AverageMonthlySales = salesData.Average(x => x.Sales),
+                            BestMonth = salesData.OrderByDescending(x => x.Sales).FirstOrDefault()?.FormattedPeriod,
+                            WorstMonth = salesData.OrderBy(x => x.Sales).FirstOrDefault()?.FormattedPeriod
+                        };
+                        break;
+                    default:
+                        summary = new { };
+                        break;
+                }
+
+                return Ok(new
+                {
+                    Data = salesData,
+                    XAxisKey = xAxisKey,
+                    TimeRange = range,
+                    Currency = "VND",
+                    Summary = summary
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Lỗi khi lấy dữ liệu tổng quan bán hàng", Error = ex.Message });
+            }
+        }
+        // Đếm tổng số đơn hàng
+        [HttpGet("total-count")]
+        public async Task<IActionResult> GetTotalOrderCount()
+        {
+            try
+            {
+                var totalOrders = await _context.Orders.CountAsync();
+                return Ok(new { TotalOrders = totalOrders });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Lỗi khi đếm số lượng đơn hàng", Error = ex.Message });
+            }
+        }
+
+        // Thêm vào OrderController
+        [HttpGet("stats")]
+        public async Task<IActionResult> GetOrderStats()
+        {
+            try
+            {
+                var totalOrders = await _context.Orders.CountAsync();
+                var completedOrders = await _context.Orders
+                    .Where(o => o.OrderStatus == "Delivered")
+                    .CountAsync();
+                var pendingOrders = await _context.Orders
+                    .Where(o => o.OrderStatus == "Pending")
+                    .CountAsync();
+                var totalRevenue = await _context.Orders
+                    .Where(o => o.OrderStatus == "Delivered")
+                    .SumAsync(o => o.TotalAmount);
+
+                return Ok(new
+                {
+                    TotalOrders = totalOrders,
+                    CompletedOrders = completedOrders,
+                    PendingOrders = pendingOrders,
+                    TotalRevenue = totalRevenue
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Lỗi khi lấy thống kê", Error = ex.Message });
+            }
+        }
+        [HttpGet("revenue-year")]
+        public async Task<IActionResult> GetRevenueDataYear([FromQuery] string range = "year")
+        {
+            try
+            {
+                DateTime startDate = DateTime.UtcNow.AddYears(-1); // Luôn lấy 1 năm gần nhất
+                var currentDate = DateTime.UtcNow;
+
+                var revenueData = await _context.Orders
+                    .Where(o => o.OrderDate >= startDate &&
+                               o.OrderDate <= currentDate &&
+                               o.OrderStatus == "Delivered")
+                    .GroupBy(o => new { o.OrderDate.Month, o.OrderDate.Year })
+                    .Select(g => new
+                    {
+                        Month = g.Key.Month,
+                        Year = g.Key.Year,
+                        Revenue = g.Sum(o => o.TotalAmount)
+                    })
+                    .OrderBy(x => x.Year)
+                    .ThenBy(x => x.Month)
+                    .ToListAsync();
+
+                // Đảm bảo luôn có đủ 12 tháng
+                var fullYearData = Enumerable.Range(0, 12)
+                    .Select(i => new
+                    {
+                        Date = startDate.AddMonths(i),
+                        Month = startDate.AddMonths(i).Month,
+                        Year = startDate.AddMonths(i).Year,
+                        Revenue = revenueData
+                            .FirstOrDefault(d => d.Month == startDate.AddMonths(i).Month &&
+                                               d.Year == startDate.AddMonths(i).Year)?.Revenue ?? 0
+                    })
+                    .ToList();
+
+                return Ok(fullYearData);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Lỗi khi lấy dữ liệu doanh thu", Error = ex.Message });
+            }
+        }
+
+        [HttpGet("revenue")]
+        public async Task<IActionResult> GetRevenueData([FromQuery] string range = "month")
+        {
+            try
+            {
+                DateTime startDate = range switch
+                {
+                    "week" => DateTime.UtcNow.AddDays(-7),
+                    "year" => DateTime.UtcNow.AddYears(-1),
+                    _ => DateTime.UtcNow.AddMonths(-1)
+                };
+
+                var revenueData = await _context.Orders
+                    .Where(o => o.OrderDate >= startDate && o.OrderStatus == "Delivered")
+                    .GroupBy(o => new { o.OrderDate.Date })
+                    .Select(g => new
+                    {
+                        Date = g.Key.Date,
+                        Revenue = g.Sum(o => o.TotalAmount)
+                    })
+                    .OrderBy(x => x.Date)
+                    .ToListAsync();
+
+                return Ok(revenueData);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Lỗi khi lấy dữ liệu doanh thu", Error = ex.Message });
+            }
+        }
+
     }
+
 
 
 
