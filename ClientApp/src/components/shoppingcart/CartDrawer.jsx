@@ -3,6 +3,7 @@ import {
   Drawer, 
   IconButton, 
   List, 
+  ListItemText, 
   Avatar, 
   Typography, 
   Button, 
@@ -32,7 +33,6 @@ const CartDrawer = ({ isOpen, onClose }) => {
   const [voucherApplied, setVoucherApplied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [voucherLoading, setVoucherLoading] = useState(false);
-  const [voucherError, setVoucherError] = useState(""); // Thêm trạng thái lỗi voucher
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -49,6 +49,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
           id = parseInt(decoded.sub, 10);
           setUserId(id);
           
+          // Lấy cả giỏ hàng từ API và session storage nếu có
           const [apiResponse, sessionCart] = await Promise.all([
             axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/Cart?userId=${id}`, {
               headers: { Authorization: `Bearer ${token}` },
@@ -58,6 +59,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
           items = apiResponse.data;
 
+          // Merge với giỏ hàng từ session nếu có
           if (sessionCart) {
             const sessionItems = JSON.parse(sessionCart);
             const mergedItems = await mergeCartItems(items, sessionItems);
@@ -65,6 +67,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
             sessionStorage.removeItem("cart");
           }
         } else {
+          // Chưa đăng nhập: lấy từ session storage
           const sessionCart = sessionStorage.getItem("cart");
           if (sessionCart) {
             const sessionItems = JSON.parse(sessionCart);
@@ -102,7 +105,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
         setCartItems(items);
         setSelectedItems(items);
-        calculateTotalAmount(items, 0); // Khởi tạo với discount = 0
+        calculateTotalAmount(items, discountAmount);
       } catch (error) {
         console.error("Error fetching cart:", error);
       } finally {
@@ -111,6 +114,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
     };
 
     const mergeCartItems = async (apiItems, sessionItems) => {
+      // Gộp các sản phẩm trùng nhau
       const merged = [...apiItems];
       
       for (const sessionItem of sessionItems) {
@@ -145,16 +149,9 @@ const CartDrawer = ({ isOpen, onClose }) => {
     if (isOpen) {
       fetchCart();
     }
-
-    // Reset trạng thái khi đóng drawer
-    return () => {
-      setVoucherCode("");
-      setDiscountAmount(0);
-      setVoucherApplied(false);
-      setVoucherError("");
-    };
   }, [isOpen]);
 
+  // Sửa lỗi: Cập nhật hàm calculateTotalAmount để nhận discountAmount như một tham số
   const calculateTotalAmount = (items, discount = discountAmount) => {
     const total = items.reduce((sum, item) => {
       const price = item.productDiscountPrice || item.productPrice;
@@ -162,7 +159,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
     }, 0);
     
     setOriginalTotal(total);
-    setTotalAmount(Math.max(0, total - discount)); // Đảm bảo total không âm
+    setTotalAmount(total - discount); // Áp dụng giảm giá vào tổng tiền
   };
 
   const handleRemoveItem = async (id) => {
@@ -191,56 +188,45 @@ const CartDrawer = ({ isOpen, onClose }) => {
     }
   };
 
+  // Sửa lỗi: Cập nhật hàm handleApplyVoucher để tính lại totalAmount
   const handleApplyVoucher = async () => {
     if (!userId) {
-      setVoucherError("Vui lòng đăng nhập để sử dụng voucher.");
+      alert("Vui lòng đăng nhập để tận hưởng ưu đãi.");
       return;
     }
 
     if (voucherApplied) {
-      setVoucherError("Voucher đã được áp dụng.");
-      return;
-    }
-
-    if (!voucherCode.trim()) {
-      setVoucherError("Vui lòng nhập mã voucher.");
-      return;
-    }
-
-    if (selectedItems.length === 0) {
-      setVoucherError("Vui lòng chọn ít nhất một sản phẩm để áp dụng voucher.");
+      alert("Voucher đã được áp dụng.");
       return;
     }
 
     setVoucherLoading(true);
-    setVoucherError("");
     try {
       const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/vouchers/apply`, { 
         code: voucherCode, 
-        userId,
-        totalAmount: originalTotal // Gửi tổng tiền để backend kiểm tra điều kiện
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        userId 
       });
       
-      const newDiscountAmount = response.data.discountAmount || 0;
+      const newDiscountAmount = response.data.discountAmount;
       setDiscountAmount(newDiscountAmount);
       setVoucherApplied(true);
+      
+      // Tính toán lại tổng tiền với giá trị giảm giá mới
       calculateTotalAmount(selectedItems, newDiscountAmount);
     } catch (error) {
       console.error("Error applying voucher:", error);
-      setVoucherError(error.response?.data?.message || "Voucher không hợp lệ hoặc đã hết hạn.");
+      alert(error.response?.data?.message || "Voucher không hợp lệ hoặc đã hết hạn.");
     } finally {
       setVoucherLoading(false);
     }
   };
 
+  // Sửa lỗi: Cập nhật hàm handleRemoveVoucher để tính lại totalAmount
   const handleRemoveVoucher = () => {
     setVoucherCode("");
     setDiscountAmount(0);
     setVoucherApplied(false);
-    setVoucherError("");
-    calculateTotalAmount(selectedItems, 0);
+    calculateTotalAmount(selectedItems, 0); // Đặt discount = 0
   };
 
   const handlePlaceOrder = () => {
@@ -295,6 +281,19 @@ const CartDrawer = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleIncreaseQuantity = () => {
+    if (!selectedItem) return;
+    const newQuantity = selectedItem.quantity + 1;
+    updateQuantity(newQuantity);
+  };
+
+  const handleDecreaseQuantity = () => {
+    if (!selectedItem) return;
+    const newQuantity = Math.max(1, selectedItem.quantity - 1);
+    updateQuantity(newQuantity);
+  };
+
+  // Sửa lỗi: Cập nhật hàm handleSelectItem để tính lại totalAmount với discountAmount hiện tại
   const handleSelectItem = (item) => {
     const isSelected = selectedItems.some(
       (selectedItem) => selectedItem.productVariantId === item.productVariantId
@@ -359,18 +358,22 @@ const CartDrawer = ({ isOpen, onClose }) => {
                   onChange={() => handleSelectItem(item)}
                   color="primary"
                 />
-                <Avatar
-                  variant="rounded"
-                  src={item.productImage?.startsWith("http") 
-                    ? item.productImage 
-                    : `${process.env.REACT_APP_API_BASE_URL}/${item.productImage}`}
-                  alt={item.productName}
-                  sx={{ width: 80, height: 80 }}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "https://via.placeholder.com/80";
-                  }}
-                />
+                <img
+  src={item.productImage?.startsWith("http") 
+    ? item.productImage 
+    : `${process.env.REACT_APP_API_BASE_URL}/${item.productImage}`}
+  alt={item.productName}
+  className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+  onError={(e) => { 
+    e.target.onerror = null; 
+    e.target.src = "https://via.placeholder.com/150"; 
+  }}
+  style={{
+    width: '80px',
+    height: '80px',
+    objectFit: 'contain'
+  }}
+/>
                 <Box sx={{ flexGrow: 1 }}>
                   <Typography fontWeight="medium" sx={{ mb: 0.5 }}>
                     {item.productName}
@@ -441,10 +444,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                     variant="outlined"
                     placeholder="Nhập mã giảm giá"
                     value={voucherCode}
-                    onChange={(e) => {
-                      setVoucherCode(e.target.value);
-                      setVoucherError("");
-                    }}
+                    onChange={(e) => setVoucherCode(e.target.value)}
                     disabled={voucherApplied}
                     sx={{
                       '& .MuiOutlinedInput-root': {
@@ -473,11 +473,6 @@ const CartDrawer = ({ isOpen, onClose }) => {
                     </Button>
                   )}
                 </Box>
-                {voucherError && (
-                  <Typography variant="body2" color="error" sx={{ mb: 1 }}>
-                    {voucherError}
-                  </Typography>
-                )}
                 {discountAmount > 0 && (
                   <Box sx={{ 
                     display: 'flex', 
@@ -561,79 +556,79 @@ const CartDrawer = ({ isOpen, onClose }) => {
       )}
 
       <Modal open={quantityModalOpen} onClose={() => setQuantityModalOpen(false)}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 300,
-            bgcolor: "background.paper",
-            boxShadow: 24,
-            p: 3,
-            borderRadius: 2,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 2,
-          }}
-        >
-          <Typography variant="h6" fontWeight="medium">
-            Điều chỉnh số lượng
+      <Box
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: 300,
+          bgcolor: "background.paper",
+          boxShadow: 24,
+          p: 3,
+          borderRadius: 2,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 2,
+        }}
+      >
+        <Typography variant="h6" fontWeight="medium">
+          Điều chỉnh số lượng
+        </Typography>
+        <Box display="flex" alignItems="center" gap={3}>
+          <IconButton 
+            onClick={() => {
+              const newQuantity = Math.max(1, selectedItem.quantity - 1);
+              setSelectedItem({...selectedItem, quantity: newQuantity});
+            }}
+            disabled={selectedItem?.quantity <= 1}
+            sx={{ 
+              border: '1px solid #e0e0e0',
+              '&:hover': { bgcolor: '#f5f5f5' }
+            }}
+          >
+            <Minus size={20} />
+          </IconButton>
+          <Typography variant="h5" sx={{ minWidth: 40, textAlign: 'center' }}>
+            {selectedItem?.quantity}
           </Typography>
-          <Box display="flex" alignItems="center" gap={3}>
-            <IconButton 
-              onClick={() => {
-                const newQuantity = Math.max(1, selectedItem.quantity - 1);
-                setSelectedItem({...selectedItem, quantity: newQuantity});
-              }}
-              disabled={selectedItem?.quantity <= 1}
-              sx={{ 
-                border: '1px solid #e0e0e0',
-                '&:hover': { bgcolor: '#f5f5f5' }
-              }}
-            >
-              <Minus size={20} />
-            </IconButton>
-            <Typography variant="h5" sx={{ minWidth: 40, textAlign: 'center' }}>
-              {selectedItem?.quantity}
-            </Typography>
-            <IconButton 
-              onClick={() => {
-                const newQuantity = selectedItem.quantity + 1;
-                setSelectedItem({...selectedItem, quantity: newQuantity});
-              }}
-              sx={{ 
-                border: '1px solid #e0e0e0',
-                '&:hover': { bgcolor: '#f5f5f5' }
-              }}
-            >
-              <Plus size={20} />
-            </IconButton>
-          </Box>
-          <Box display="flex" gap={2} width="100%">
-            <Button 
-              variant="outlined" 
-              fullWidth
-              onClick={() => setQuantityModalOpen(false)}
-              sx={{ py: 1 }}
-            >
-              Hủy
-            </Button>
-            <Button 
-              variant="contained" 
-              fullWidth
-              onClick={() => {
-                updateQuantity(selectedItem.quantity);
-                setQuantityModalOpen(false);
-              }}
-              sx={{ py: 1 }}
-            >
-              Xác nhận
-            </Button>
-          </Box>
+          <IconButton 
+            onClick={() => {
+              const newQuantity = selectedItem.quantity + 1;
+              setSelectedItem({...selectedItem, quantity: newQuantity});
+            }}
+            sx={{ 
+              border: '1px solid #e0e0e0',
+              '&:hover': { bgcolor: '#f5f5f5' }
+            }}
+          >
+            <Plus size={20} />
+          </IconButton>
         </Box>
-      </Modal>
+        <Box display="flex" gap={2} width="100%">
+          <Button 
+            variant="outlined" 
+            fullWidth
+            onClick={() => setQuantityModalOpen(false)}
+            sx={{ py: 1 }}
+          >
+            Hủy
+          </Button>
+          <Button 
+            variant="contained" 
+            fullWidth
+            onClick={() => {
+              updateQuantity(selectedItem.quantity);
+              setQuantityModalOpen(false);
+            }}
+            sx={{ py: 1 }}
+          >
+            Xác nhận
+          </Button>
+        </Box>
+      </Box>
+    </Modal>
     </Drawer>
   );
 };

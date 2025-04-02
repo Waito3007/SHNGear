@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
-import { Search, PlusCircle, Pencil, Trash2, Users } from "lucide-react";
+import { Search, PlusCircle, Pencil, Trash2, Users, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Modal,
   Box,
@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { message } from "antd";
 
-import RoleDrawer from "./RoleDrawer"; // Import nội bộ
+import RoleDrawer from "./RoleDrawer";
 import UpdateUserDrawer from "./UpdateUserDrawer";
 
 const UsersTable = () => {
@@ -27,11 +27,15 @@ const UsersTable = () => {
   const [error, setError] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [updateDrawerVisible, setUpdateDrawerVisible] = useState(false);
-    const [isModalStatusVisible, setIsModalStatusVisible] = useState(false);
+  const [isModalStatusVisible, setIsModalStatusVisible] = useState(false);
   const [newRole, setNewRole] = useState("");
-    const [newStatus, setNewStatus] = useState("");
+  const [newStatus, setNewStatus] = useState("");
   const [openModal, setOpenModal] = useState(false);
   const [roleDrawerVisible, setRoleDrawerVisible] = useState(false);
+  
+  // State phân trang
+  const [currentPage, setCurrentPage] = useState(1);
+  const [usersPerPage] = useState(5);
 
   const [newUser, setNewUser] = useState({
     fullName: "",
@@ -42,28 +46,27 @@ const UsersTable = () => {
   });
   const [openUserModal, setOpenUserModal] = useState(false);
 
- useEffect(() => {
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [usersRes, rolesRes] = await Promise.all([
-        axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/users`),
-        axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/roles`),
-      ]);
-      setUsers(usersRes.data);
-      setFilteredUsers(usersRes.data);
-      setRoles(rolesRes.data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [usersRes, rolesRes] = await Promise.all([
+          axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/users`),
+          axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/roles`),
+        ]);
+        setUsers(usersRes.data);
+        setFilteredUsers(usersRes.data);
+        setRoles(rolesRes.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchData();
-}, []);
-
+    fetchData();
+  }, []);
 
   const handleSearch = (e) => {
     const term = e.target.value.toLowerCase();
@@ -72,6 +75,27 @@ const UsersTable = () => {
       (user) => user.fullName.toLowerCase().includes(term) || user.email.toLowerCase().includes(term)
     );
     setFilteredUsers(filtered);
+    setCurrentPage(1); // Reset về trang đầu tiên khi tìm kiếm
+  };
+
+  // Logic phân trang
+  const indexOfLastUser = currentPage * usersPerPage;
+  const indexOfFirstUser = indexOfLastUser - usersPerPage;
+  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
   };
 
   const handleOpenModal = (user) => {
@@ -86,57 +110,51 @@ const UsersTable = () => {
   };
 
   const handleOpenUpdateDrawer = (user) => {
-  setSelectedUser(user);
-  setUpdateDrawerVisible(true);
-};
+    setSelectedUser(user);
+    setUpdateDrawerVisible(true);
+  };
 
   const handleUpdateRole = async () => {
     if (selectedUser) {
-        console.log("Updating role for user:", selectedUser); // Log thông tin người dùng
-        console.log("New role ID:", newRole); // Log vai trò mới
-
-        try {
-            await axios.put(`${process.env.REACT_APP_API_BASE_URL}/api/users/${selectedUser.id}/role`, { roleId: newRole });
-            console.log("Role updated successfully"); // Log khi cập nhật thành công
-            setUsers(users.map(user => user.id === selectedUser.id ? { ...user, roleId: newRole } : user));
-            setFilteredUsers(filteredUsers.map(user => user.id === selectedUser.id ? { ...user, roleId: newRole } : user));
-            alert("Vai trò người dùng đã được cập nhật thành công!");
-            handleCloseModal();
-        } catch (error) {
-            console.error("Error updating user role:", error); // Log lỗi khi cập nhật vai trò
-            alert("Lỗi khi cập nhật vai trò người dùng, vui lòng thử lại.");
-        }
-    }
-};
-
-
-  const handleAddUser = async () => {
-    if (!newUser.fullName || !newUser.email || !newUser.phoneNumber || !newUser.password || !newUser.roleId) {
-        alert("Vui lòng điền đầy đủ thông tin.");
-        return;
-    }
-
-    try {
-        const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/users`, newUser);
-        setUsers([...users, response.data]);
-        setFilteredUsers([...filteredUsers, response.data]);
-        message.success("Người dùng mới đã được thêm thành công!");
-
-        setOpenUserModal(false);
-        setNewUser({
-            fullName: "",
-            email: "",
-            phoneNumber: "",
-            password: "",
-            roleId: "",
-        });
-    } catch (error) {
-        console.error("Lỗi khi thêm người dùng mới:", error);
-        alert("Lỗi khi thêm người dùng mới, vui lòng thử lại.");
+      try {
+        await axios.put(`${process.env.REACT_APP_API_BASE_URL}/api/users/${selectedUser.id}/role`, { roleId: newRole });
+        setUsers(users.map(user => user.id === selectedUser.id ? { ...user, roleId: newRole } : user));
+        setFilteredUsers(filteredUsers.map(user => user.id === selectedUser.id ? { ...user, roleId: newRole } : user));
+        message.success("Vai trò người dùng đã được cập nhật thành công!");
+        handleCloseModal();
+      } catch (error) {
+        console.error("Error updating user role:", error);
+        message.error("Lỗi khi cập nhật vai trò người dùng!");
+      }
     }
   };
 
+  const handleAddUser = async () => {
+    if (!newUser.fullName || !newUser.email || !newUser.phoneNumber || !newUser.password || !newUser.roleId) {
+      message.warning("Vui lòng điền đầy đủ thông tin.");
+      return;
+    }
 
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/users`, newUser);
+      setUsers([...users, response.data]);
+      setFilteredUsers([...filteredUsers, response.data]);
+      message.success("Người dùng mới đã được thêm thành công!");
+
+      setOpenUserModal(false);
+      setNewUser({
+        fullName: "",
+        email: "",
+        phoneNumber: "",
+        password: "",
+        roleId: "",
+      });
+      setCurrentPage(1); // Reset về trang đầu tiên sau khi thêm mới
+    } catch (error) {
+      console.error("Lỗi khi thêm người dùng mới:", error);
+      message.error("Lỗi khi thêm người dùng mới!");
+    }
+  };
 
   return (
     <motion.div
@@ -149,24 +167,22 @@ const UsersTable = () => {
       <div className='flex justify-between items-center mb-6'>
         <h2 className='text-xl font-semibold text-gray-100'>Users</h2>
         <div className='flex space-x-3'>
-  {/* Add User Button */}
-  <button
-    className="flex items-center text-sm text-white bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg"
-    onClick={() => setOpenUserModal(true)}
-  >
-    <PlusCircle size={18} className="mr-2" />
-    Thêm người dùng
-  </button>
+          <button
+            className="flex items-center text-sm text-white bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg"
+            onClick={() => setOpenUserModal(true)}
+          >
+            <PlusCircle size={18} className="mr-2" />
+            Thêm người dùng
+          </button>
 
-  {/* Role Management Button */}
-  <button
-    className="flex items-center text-sm text-white bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg"
-    onClick={() => setRoleDrawerVisible(true)}
-  >
-    <Users size={18} className="mr-2" />
-    Quản lý Role
-  </button>
-</div>
+          <button
+            className="flex items-center text-sm text-white bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg"
+            onClick={() => setRoleDrawerVisible(true)}
+          >
+            <Users size={18} className="mr-2" />
+            Quản lý Role
+          </button>
+        </div>
       </div>
 
       {/* Search Bar */}
@@ -195,7 +211,7 @@ const UsersTable = () => {
           </thead>
 
           <tbody className='divide-y divide-gray-700'>
-            {filteredUsers.map((user) => (
+            {currentUsers.map((user) => (
               <motion.tr
                 key={user.id}
                 initial={{ opacity: 0 }}
@@ -220,29 +236,28 @@ const UsersTable = () => {
                 </td>
 
                 <td className='px-6 py-3 whitespace-nowrap'>
-  <span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-800 text-blue-100'>
-    {roles.find(r => r.id === user.roleId)?.name || "N/A"}
-  </span>
-</td>
+                  <span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-800 text-blue-100'>
+                    {roles.find(r => r.id === user.roleId)?.name || "N/A"}
+                  </span>
+                </td>
 
                 <td className="px-6 py-3 whitespace-nowrap">
-  <span
-    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer ${
-      user.isActive ? "bg-green-800 text-green-100" : "bg-red-800 text-red-100"
-    }`}
-  >
-    {user.isActive ? "Active" : "Inactive"}
-  </span>
-</td>
-
+                  <span
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer ${
+                      user.isActive ? "bg-green-800 text-green-100" : "bg-red-800 text-red-100"
+                    }`}
+                  >
+                    {user.isActive ? "Active" : "Inactive"}
+                  </span>
+                </td>
 
                 <td className='px-6 py-3 whitespace-nowrap text-sm text-gray-300'>
                   <button
-  className='text-indigo-400 hover:text-indigo-300 mr-4'
-  onClick={() => handleOpenUpdateDrawer(user)}
->
-  <Pencil size={18} />
-</button>
+                    className='text-indigo-400 hover:text-indigo-300 mr-4'
+                    onClick={() => handleOpenUpdateDrawer(user)}
+                  >
+                    <Pencil size={18} />
+                  </button>
 
                   <button
                     className='text-red-400 hover:text-red-300'
@@ -257,6 +272,42 @@ const UsersTable = () => {
         </table>
       </div>
 
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-between mt-4">
+        <div className="text-sm text-gray-400">
+          Hiển thị {indexOfFirstUser + 1}-{Math.min(indexOfLastUser, filteredUsers.length)} của {filteredUsers.length} người dùng
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handlePreviousPage}
+            disabled={currentPage === 1}
+            className={`p-1 rounded-md ${currentPage === 1 ? 'text-gray-500 cursor-not-allowed' : 'text-gray-300 hover:bg-gray-700'}`}
+          >
+            <ChevronLeft size={20} />
+          </button>
+          
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(number => (
+            <button
+              key={number}
+              onClick={() => paginate(number)}
+              className={`px-3 py-1 rounded-md ${currentPage === number ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'}`}
+            >
+              {number}
+            </button>
+          ))}
+          
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className={`p-1 rounded-md ${currentPage === totalPages ? 'text-gray-500 cursor-not-allowed' : 'text-gray-300 hover:bg-gray-700'}`}
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
+      </div>
+
+      {/* Role Update Modal */}
       <Modal open={openModal} onClose={handleCloseModal}>
         <Box
           sx={{
@@ -297,111 +348,109 @@ const UsersTable = () => {
         </Box>
       </Modal>
 
-
-
-            <Modal open={openUserModal} onClose={() => setOpenUserModal(false)}>
-      <Box
-        sx={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: 420,
-          bgcolor: "white",
-          borderRadius: 3,
-          boxShadow: 24,
-          p: 4,
-          display: "flex",
-          flexDirection: "column",
-          gap: 2,
-        }}
-      >
-        <Typography variant="h6" component="h2" textAlign="center">
-          Thêm Người Dùng Mới
-        </Typography>
-
-        <TextField
-          label="Họ và tên"
-          variant="outlined"
-          fullWidth
-          value={newUser.fullName}
-          onChange={(e) => setNewUser({ ...newUser, fullName: e.target.value })}
-        />
-
-        <TextField
-          label="Email"
-          type="email"
-          variant="outlined"
-          fullWidth
-          value={newUser.email}
-          onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-        />
-
-        <TextField
-          label="Số điện thoại"
-          type="tel"
-          variant="outlined"
-          fullWidth
-          value={newUser.phoneNumber}
-          onChange={(e) => setNewUser({ ...newUser, phoneNumber: e.target.value })}
-        />
-
-        <TextField
-          label="Mật khẩu"
-          type="password"
-          variant="outlined"
-          fullWidth
-          value={newUser.password}
-          onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-        />
-
-        <FormControl fullWidth>
-  <Select
-    value={newUser.roleId}
-    onChange={(e) => setNewUser({ ...newUser, roleId: e.target.value })}
-    displayEmpty
-  >
-    <MenuItem value="" disabled>
-      Chọn vai trò
-    </MenuItem>
-    {roles.map((role) => (
-      <MenuItem key={role.id} value={role.id}>
-        {role.name}
-      </MenuItem>
-    ))}
-  </Select>
-</FormControl>
-
-
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleAddUser}
-          fullWidth
+      {/* Add User Modal */}
+      <Modal open={openUserModal} onClose={() => setOpenUserModal(false)}>
+        <Box
           sx={{
-            textTransform: "none",
-            fontWeight: "bold",
-            py: 1.5,
-            borderRadius: 2,
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 420,
+            bgcolor: "white",
+            borderRadius: 3,
+            boxShadow: 24,
+            p: 4,
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
           }}
         >
-          Thêm Người Dùng
-        </Button>
-      </Box>
-    </Modal>
+          <Typography variant="h6" component="h2" textAlign="center">
+            Thêm Người Dùng Mới
+          </Typography>
+
+          <TextField
+            label="Họ và tên"
+            variant="outlined"
+            fullWidth
+            value={newUser.fullName}
+            onChange={(e) => setNewUser({ ...newUser, fullName: e.target.value })}
+          />
+
+          <TextField
+            label="Email"
+            type="email"
+            variant="outlined"
+            fullWidth
+            value={newUser.email}
+            onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+          />
+
+          <TextField
+            label="Số điện thoại"
+            type="tel"
+            variant="outlined"
+            fullWidth
+            value={newUser.phoneNumber}
+            onChange={(e) => setNewUser({ ...newUser, phoneNumber: e.target.value })}
+          />
+
+          <TextField
+            label="Mật khẩu"
+            type="password"
+            variant="outlined"
+            fullWidth
+            value={newUser.password}
+            onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+          />
+
+          <FormControl fullWidth>
+            <Select
+              value={newUser.roleId}
+              onChange={(e) => setNewUser({ ...newUser, roleId: e.target.value })}
+              displayEmpty
+            >
+              <MenuItem value="" disabled>
+                Chọn vai trò
+              </MenuItem>
+              {roles.map((role) => (
+                <MenuItem key={role.id} value={role.id}>
+                  {role.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleAddUser}
+            fullWidth
+            sx={{
+              textTransform: "none",
+              fontWeight: "bold",
+              py: 1.5,
+              borderRadius: 2,
+            }}
+          >
+            Thêm Người Dùng
+          </Button>
+        </Box>
+      </Modal>
 
       <RoleDrawer visible={roleDrawerVisible} onClose={() => setRoleDrawerVisible(false)} />
 
-        <UpdateUserDrawer
-  open={updateDrawerVisible}
-  onClose={() => setUpdateDrawerVisible(false)}
-  user={selectedUser}
-  roles={roles}
-  onUpdate={(id, updatedData) => {
-    setUsers(users.map(user => user.id === id ? { ...user, ...updatedData } : user));
-    setFilteredUsers(filteredUsers.map(user => user.id === id ? { ...user, ...updatedData } : user));
-  }}
-/>
+      <UpdateUserDrawer
+        open={updateDrawerVisible}
+        onClose={() => setUpdateDrawerVisible(false)}
+        user={selectedUser}
+        roles={roles}
+        onUpdate={(id, updatedData) => {
+          setUsers(users.map(user => user.id === id ? { ...user, ...updatedData } : user));
+          setFilteredUsers(filteredUsers.map(user => user.id === id ? { ...user, ...updatedData } : user));
+        }}
+      />
     </motion.div>
   );
 };

@@ -188,7 +188,9 @@ namespace SHN_Gear.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                return Redirect($"{Request.Scheme}://{Request.Host}/payment-success?orderId={order.Id}");
+                string apiBaseUrl = Environment.GetEnvironmentVariable("${process.env.REACT_APP_API_BASE_URL}") ?? "localhost:44479";
+                return Redirect($"{Request.Scheme}://{apiBaseUrl}/payment-success");
+                // return Redirect($"{Request.Scheme}://{Request.Host}/payment-success?orderId={order.Id}");
             }
             catch (Exception ex)
             {

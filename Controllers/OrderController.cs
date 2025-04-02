@@ -1174,7 +1174,7 @@ namespace SHN_Gear.Controllers
 
                 // Lấy các đơn hàng
                 var orders = await _context.Orders
-                    .Where(o => addresses.Contains(o.Id))
+                    .Where(o => addresses.Contains(o.AddressId ?? 0))
                     .Include(o => o.OrderItems)
                         .ThenInclude(oi => oi.ProductVariant)
                             .ThenInclude(pv => pv.Product)
@@ -1251,8 +1251,7 @@ namespace SHN_Gear.Controllers
                         break;
 
                     case "year":
-                        // Thay đổi ở đây: chỉ lấy từ đầu năm hiện tại
-                        startDate = new DateTime(DateTime.UtcNow.Year, 1, 1);
+                        startDate = DateTime.UtcNow.Date.AddYears(0);
                         groupByFormat = date => date.Month.ToString();
                         formatPeriodLabel = period => $"Tháng {period}";
                         xAxisKey = "month";
@@ -1486,116 +1485,6 @@ namespace SHN_Gear.Controllers
             }
         }
 
-        [HttpGet("sales-by-category")]
-        public async Task<IActionResult> GetSalesByCategory()
-        {
-            try
-            {
-                // Lấy dữ liệu đơn hàng đã hoàn thành (Delivered) và nhóm theo danh mục
-                var salesData = await _context.Orders
-                    .Where(o => o.OrderStatus == "Delivered")
-                    .Include(o => o.OrderItems)
-                        .ThenInclude(oi => oi.ProductVariant)
-                            .ThenInclude(pv => pv.Product)
-                                .ThenInclude(p => p.Category)
-                    .SelectMany(o => o.OrderItems.Select(oi => new
-                    {
-                        CategoryName = oi.ProductVariant.Product.Category.Name,
-                        Total = oi.Quantity * oi.Price
-                    }))
-                    .GroupBy(x => x.CategoryName)
-                    .Select(g => new
-                    {
-                        Category = g.Key,
-                        TotalSales = g.Sum(x => x.Total)
-                    })
-                    .OrderByDescending(x => x.TotalSales)
-                    .ToListAsync();
-
-                // Nếu không có dữ liệu, trả về mảng rỗng
-                if (!salesData.Any())
-                {
-                    return Ok(new List<object>());
-                }
-
-                // Format dữ liệu phù hợp với biểu đồ
-                var result = salesData.Select(x => new
-                {
-                    name = x.Category,
-                    value = x.TotalSales
-                });
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { Message = "Lỗi khi lấy dữ liệu doanh thu theo danh mục", Error = ex.Message });
-            }
-        }
-        [HttpGet("daily-sales")]
-        public async Task<IActionResult> GetDailySalesTrend(
-    [FromQuery] int days = 7,
-    [FromQuery] string timeZone = "UTC")
-        {
-            try
-            {
-                // Xác định múi giờ
-                TimeZoneInfo timeZoneInfo;
-                try
-                {
-                    timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timeZone);
-                }
-                catch
-                {
-                    timeZoneInfo = TimeZoneInfo.Utc;
-                }
-
-                var endDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo).Date;
-                var startDate = endDate.AddDays(-days + 1);
-
-                // Lấy dữ liệu từ database (vẫn giữ server-side evaluation cho phần này)
-                var orders = await _context.Orders
-                    .Where(o => o.OrderStatus == "Delivered" &&
-                               o.OrderDate >= startDate &&
-                               o.OrderDate <= endDate)
-                    .ToListAsync(); // First materialize the query
-
-                // Client-side processing
-                var salesData = orders
-                    .GroupBy(o => TimeZoneInfo.ConvertTimeFromUtc(o.OrderDate, timeZoneInfo).Date)
-                    .Select(g => new
-                    {
-                        Date = g.Key,
-                        DayName = g.Key.ToString("ddd"),
-                        TotalSales = g.Sum(o => o.TotalAmount)
-                    })
-                    .OrderBy(x => x.Date)
-                    .ToList(); // Use ToList() instead of ToListAsync()
-
-                // Tạo dữ liệu đầy đủ cho tất cả các ngày trong khoảng
-                var fullData = new List<object>();
-                for (var date = startDate; date <= endDate; date = date.AddDays(1))
-                {
-                    var dayData = salesData.FirstOrDefault(d => d.Date == date);
-                    fullData.Add(new
-                    {
-                        name = date.ToString("ddd"),
-                        sales = dayData?.TotalSales ?? 0,
-                        fullDate = date.ToString("MMM dd")
-                    });
-                }
-
-                return Ok(fullData);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    Message = "Lỗi khi lấy dữ liệu xu hướng bán hàng hàng ngày",
-                    Error = ex.Message
-                });
-            }
-        }
     }
 
 
