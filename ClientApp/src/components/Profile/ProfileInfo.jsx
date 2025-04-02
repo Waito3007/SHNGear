@@ -1,195 +1,295 @@
 import { useState, useEffect } from "react";
-import { Modal, Box, TextField, Button, Typography, CircularProgress } from "@mui/material";
+import { User } from "lucide-react";
+import { 
+  Modal, 
+  TextField, 
+  Button, 
+  Typography, 
+  CircularProgress, 
+    Snackbar,
+  Avatar,
+  Alert 
+} from "@mui/material";
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import EditIcon from '@mui/icons-material/Edit';
 import axios from "axios";
-import { jwtDecode } from "jwt-decode"; // Import jwt-decode
-import React from "react";
+import { jwtDecode } from "jwt-decode";
 
 const ProfileInfo = () => {
-  const [user, setUser] = useState({ fullName: "", email: "", role: "" });
-  const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState(false);
-  const [openModal, setOpenModal] = useState(false);
-  const [updatedUser, setUpdatedUser] = useState({
-    fullName: "",
-    email: "",
+  const [user, setUser] = useState({ 
+    fullName: "", 
+    email: "", 
+    role: "",
     phoneNumber: "",
     gender: "",
-    avatarUrl: "",
     dateOfBirth: ""
   });
+  
+  const [loading, setLoading] = useState(true);
+  const [openModal, setOpenModal] = useState(false);
+  const [updatedUser, setUpdatedUser] = useState({ ...user });
   const [userId, setUserId] = useState(null);
+  const [birthDate, setBirthDate] = useState(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success"
+  });
+
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-        try {
-            const decoded = jwtDecode(token);
-            const id = parseInt(decoded.sub, 10); // Lấy `sub` từ token và chuyển thành số nguyên
-            if (!Number.isInteger(id)) return;
-            setUserId(id);
-            fetchUserProfile(id); // Gọi API với `userId`
-        } catch (error) {
-            console.error("Lỗi khi giải mã token:", error);
-        }
+      try {
+        const decoded = jwtDecode(token);
+        const id = parseInt(decoded.sub, 10);
+        if (!Number.isInteger(id)) return;
+        setUserId(id);
+        fetchUserProfile(id);
+      } catch (error) {
+        console.error("Lỗi khi giải mã token:", error);
+      }
     }
   }, []);
 
-  // 📌 Lấy thông tin user từ API
   const fetchUserProfile = async (id) => {
     try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/users/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        setUser(response.data);
-        setUpdatedUser({
-            fullName: response.data.fullName,
-            email: response.data.email,
-            phoneNumber: response.data.phoneNumber || "",
-            gender: response.data.gender || "",
-            avatarUrl: response.data.avatarUrl || "",
-            dateOfBirth: response.data.dateOfBirth || ""
-        });
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/users/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      setUser(response.data);
+      setUpdatedUser(response.data);
+      if (response.data.dateOfBirth) {
+        setBirthDate(new Date(response.data.dateOfBirth));
+      }
     } catch (error) {
-        console.error("Lỗi khi lấy thông tin user:", error);
+      console.error("Lỗi khi lấy thông tin user:", error);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
-  // 📌 Hiển thị Modal chỉnh sửa thông tin
-  const handleOpenModal = () => {
-    setEditMode(true);
-    setOpenModal(true);
-  };
+  const handleOpenModal = () => setOpenModal(true);
+  const handleCloseModal = () => setOpenModal(false);
 
-  // 📌 Đóng Modal
-  const handleCloseModal = () => {
-    setOpenModal(false);
-  };
-
-  // 📌 Cập nhật dữ liệu khi nhập vào TextField
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setUpdatedUser((prev) => ({ ...prev, [name]: value }));
+    setUpdatedUser(prev => ({ ...prev, [name]: value }));
   };
 
-  // 📌 Gửi API cập nhật thông tin người dùng
+  const handleDateChange = (newValue) => {
+    setBirthDate(newValue);
+    setUpdatedUser(prev => ({
+      ...prev,
+      dateOfBirth: newValue ? newValue.toISOString().split('T')[0] : ""
+    }));
+  };
+
   const handleSaveProfile = async () => {
     try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-            alert("Token không tồn tại. Vui lòng đăng nhập lại.");
-            return;
-        }
+      const token = localStorage.getItem("token");
+      const response = await axios.put(
+        `${process.env.REACT_APP_API_BASE_URL}/api/users/profile`,
+        updatedUser,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      setUser(response.data.user);
+      showSnackbar("Cập nhật thông tin thành công", "success");
+      handleCloseModal();
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      showSnackbar(error.response?.data?.message || "Cập nhật thất bại", "error");
+    }
+  };
 
-        await axios.put(
-            `${process.env.REACT_APP_API_BASE_URL}/api/auth/profile/${userId}`,
-            {
-                fullName: updatedUser.fullName,
-                email: updatedUser.email,
-                phoneNumber: updatedUser.phoneNumber,
-                gender: updatedUser.gender,
-                avatarUrl: updatedUser.avatarUrl,
-                dateOfBirth: updatedUser.dateOfBirth
-            },
-            { headers: { Authorization: `Bearer ${token}` } }
-        );
+  const showSnackbar = (message, severity) => {
+    setSnackbar({ open: true, message, severity });
+  };
 
-              setUser(updatedUser);
-              handleCloseModal();
-              alert("Cập nhật thông tin thành công!");
-          } catch (error) {
-              console.error("Lỗi khi cập nhật thông tin user:", error);
-              alert("Lỗi khi cập nhật thông tin, vui lòng thử lại.");
-          }
-      };
-
-  if (loading) return <CircularProgress sx={{ display: "block", margin: "auto", mt: 3 }} />;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <CircularProgress />
+      </div>
+    );
+  }
 
   return (
-    <Box
-      sx={{
-        maxWidth: 400,
-        margin: "6rem 2rem",
-        padding: 3,
-        boxShadow: 3,
-        border: "2px solid black",
-        borderRadius: "16px",
-        bgcolor: "white",
-        textAlign: "center",
-      }}
-    >
-      <Typography variant="h5" fontWeight="bold" mb={2}>Thông tin cá nhân</Typography>
-      <Box sx={{ textAlign: "left",border: "2px solid black", padding: "8px 16px", borderRadius: "8px", backgroundColor: "#f5f5f5", mb: 1 }}>
-        <Typography variant="subtitle2" color="gray">Họ và tên</Typography>
-        <Typography variant="body1">{user.fullName || "Khách Hàng"}</Typography>
-      </Box>
-      <Box sx={{ textAlign: "left",border: "2px solid black", padding: "8px 16px", borderRadius: "8px", backgroundColor: "#f5f5f5", mb: 1 }}>
-        <Typography variant="subtitle2" color="gray">Email</Typography>
-        <Typography variant="body1">{user.email}</Typography>
-      </Box>
-      <Box
-        sx={{
-          textAlign: "left",
-          border: "2px solid black",
-          padding: "8px 16px",
-          borderRadius: "8px",
-          backgroundColor: "#f5f5f5",
-          mb: 2,
-        }}
+    <div className="max-w-4xl mx-auto p-6">
+      {/* Snackbar thông báo */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
       >
-        <Typography variant="subtitle2" color="gray">
-          Hạng Thành Viên
-        </Typography>
-        <Typography variant="body1">
-          {user.role?.name || "Chưa có vai trò"}
-        </Typography>
-      </Box>
-      <Button variant="contained" color="error" fullWidth onClick={handleOpenModal} sx={{ borderRadius: "8px",height:"50px" }}>
-        Chỉnh sửa
-      </Button>
+        <Alert severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
 
-      {/* Modal Chỉnh Sửa Thông Tin */}
+      {/* Profile Card */}
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        {/* Header */}
+        <div className="bg-ưhite p-6 text-black">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold">Thông tin cá nhân</h1>
+            <Button 
+              variant="contained" 
+              startIcon={<EditIcon />}
+              onClick={handleOpenModal}
+              className="bg-black text-purple-600 hover:bg-gray-100 shadow-md"
+            >
+              Chỉnh sửa
+            </Button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 grid md:grid-cols-3 gap-6">
+          {/* Avatar Section */}
+          <div className="md:col-span-1 flex flex-col items-center">
+            <Avatar 
+              sx={{ 
+                width: 120, 
+                height: 120,
+                bgcolor: 'white',
+                fontSize: '3rem'
+              }}
+              className="border-4 border-white shadow-lg mb-4"
+            >
+    <User className="w-24 h-24 text-black" />
+            </Avatar>
+            <Typography variant="h6" className="font-semibold">
+              {user.fullName || "Khách hàng"}
+            </Typography>
+            <Typography variant="body2" className="text-gray-500">
+              {user.role?.name || "Thành viên"}
+            </Typography>
+          </div>
+
+          {/* Info Section */}
+          <div className="md:col-span-2 space-y-4">
+            <InfoField label="Họ và tên" value={user.fullName} />
+            <InfoField label="Email" value={user.email} />
+            <InfoField label="Số điện thoại" value={user.phoneNumber || "Chưa cập nhật"} />
+            <InfoField label="Giới tính" value={user.gender || "Chưa cập nhật"} />
+            <InfoField 
+              label="Ngày sinh" 
+              value={user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString('vi-VN') : "Chưa cập nhật"} 
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Edit Modal */}
       <Modal open={openModal} onClose={handleCloseModal}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 400,
-            bgcolor: "white",
-            boxShadow: 24,
-            p: 4,
-            borderRadius: "16px",
-            maxHeight: "80vh",
-            overflowY: "auto",
-          }}
-        >
-          <Typography variant="h6" textAlign="center" mb={2} fontWeight="bold">Chỉnh sửa thông tin</Typography>
-          <TextField fullWidth label="Họ và tên" name="fullName" value={updatedUser.fullName} onChange={handleInputChange} margin="normal" />
-          <TextField fullWidth label="Email" name="email" value={updatedUser.email} onChange={handleInputChange} margin="normal" />
-          <TextField fullWidth label="Số điện thoại" name="phoneNumber" value={updatedUser.phoneNumber} onChange={handleInputChange} margin="normal" />
-          <TextField fullWidth label="Giới tính" name="gender" value={updatedUser.gender} onChange={handleInputChange} margin="normal" />
-          <TextField fullWidth label="Avatar URL" name="avatarUrl" value={updatedUser.avatarUrl} onChange={handleInputChange} margin="normal" />
-          <TextField
-            fullWidth
-            label="Ngày sinh"
-            name="dateOfBirth"
-            type="date"
-            value={updatedUser.dateOfBirth}
-            onChange={handleInputChange}
-            margin="normal"
-            InputLabelProps={{ shrink: true }}
-          />
-          <Button variant="contained" color="error" fullWidth onClick={handleSaveProfile} sx={{ mt: 2 }}>
-            Lưu thay đổi
-          </Button>
-        </Box>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-xl shadow-2xl p-6 outline-none">
+          <Typography variant="h6" className="font-bold text-center mb-4 text-purple-600">
+            Chỉnh sửa thông tin
+          </Typography>
+          
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <div className="space-y-4">
+              <TextField
+                fullWidth
+                label="Họ và tên"
+                name="fullName"
+                value={updatedUser.fullName}
+                onChange={handleInputChange}
+                variant="outlined"
+                size="small"
+              />
+              
+              <TextField
+                fullWidth
+                label="Email"
+                name="email"
+                value={updatedUser.email}
+                onChange={handleInputChange}
+                variant="outlined"
+                size="small"
+              />
+              
+              <TextField
+                fullWidth
+                label="Số điện thoại"
+                name="phoneNumber"
+                value={updatedUser.phoneNumber}
+                onChange={handleInputChange}
+                variant="outlined"
+                size="small"
+              />
+              
+              <TextField
+                fullWidth
+                label="Giới tính"
+                name="gender"
+                value={updatedUser.gender}
+                onChange={handleInputChange}
+                variant="outlined"
+                size="small"
+                select
+                SelectProps={{ native: true }}
+              >
+                <option value=""></option>
+                <option value="Nam">Nam</option>
+                <option value="Nữ">Nữ</option>
+                <option value="Khác">Khác</option>
+              </TextField>
+              
+              <DatePicker
+                label="Ngày sinh"
+                value={birthDate}
+                onChange={handleDateChange}
+                renderInput={(params) => (
+                  <TextField 
+                    {...params} 
+                    fullWidth 
+                    size="small"
+                  />
+                )}
+                inputFormat="dd/MM/yyyy"
+              />
+              
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button 
+                  variant="outlined" 
+                  onClick={handleCloseModal}
+                  className="border-gray-300 text-gray-600 hover:border-gray-400"
+                >
+                  Hủy
+                </Button>
+                <Button 
+                  variant="contained" 
+                  onClick={handleSaveProfile}
+                  className="bg-purple-600 hover:bg-purple-700 shadow-md"
+                >
+                  Lưu thay đổi
+                </Button>
+              </div>
+            </div>
+          </LocalizationProvider>
+        </div>
       </Modal>
-    </Box>
+    </div>
   );
 };
+
+// Reusable Info Field Component
+const InfoField = ({ label, value }) => (
+  <div className="border-b border-gray-100 pb-3">
+    <Typography variant="subtitle2" className="text-gray-500 font-medium">
+      {label}
+    </Typography>
+    <Typography variant="body1" className="font-semibold">
+      {value}
+    </Typography>
+  </div>
+);
 
 export default ProfileInfo;

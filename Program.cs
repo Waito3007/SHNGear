@@ -27,6 +27,7 @@ builder.Services.AddSession(options =>
 
 builder.Services.AddScoped<UserService>(); // Đăng ký UserService
 builder.Services.AddScoped<EmailService>(); // Đăng ký EmailService
+builder.Services.AddSingleton<PayPalService>();
 // Thêm JWT Authentication
 var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -105,6 +106,7 @@ app.UseRouting();
 
 // Sử dụng CORS
 app.UseCors("AllowFrontend");
+app.UseCors("AllowAll"); // Nếu bạn muốn cho phép tất cả các nguồn gốc
 // 🔹 Thêm Authentication & Authorization (QUAN TRỌNG)
 app.UseAuthentication();  // Xác thực JWT Token từ request
 app.UseAuthorization();   //Kiểm tra quyền truy cập của user

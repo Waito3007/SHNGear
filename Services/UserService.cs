@@ -99,6 +99,9 @@ namespace SHN_Gear.Services
 
             user.FullName = editDto.FullName;
             user.Email = editDto.Email;
+            user.PhoneNumber = editDto.PhoneNumber;
+            user.Gender = editDto.Gender;
+            user.DateOfBirth = editDto.DateOfBirth;
 
             await _context.SaveChangesAsync();
             return user;

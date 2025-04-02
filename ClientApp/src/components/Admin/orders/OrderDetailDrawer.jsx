@@ -67,7 +67,7 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
       console.error('Failed to fetch variant details:', error);
     }
   };
-
+  
   const handleExportExcel = async () => {
     try {
       setExporting(true);
@@ -252,6 +252,7 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
                   </Typography>
                   <Typography variant="body2" fontWeight="medium">
                     {formatCurrency(order.totalAmount)}
+                    {order.orderStatus === "Paid" || order.orderStatus === "ShippedPayment" ? " (Đã thanh toán)" : ""}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
@@ -259,7 +260,13 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
                     Phương thức thanh toán:
                   </Typography>
                   <Typography variant="body2" fontWeight="medium">
-                    {order.paymentMethodId === 1 ? 'Tiền mặt' : 'MoMo'}
+                    {order.paymentMethodId === 1 
+                      ? 'Tiền mặt' 
+                      : order.paymentMethodId === 2 
+                        ? 'MoMo' 
+                        : order.paymentMethodId === 3 
+                          ? 'PayPal' 
+                          : 'Không xác định'}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
@@ -313,11 +320,9 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
                         <Box sx={{ display: 'flex', width: '100%', mb: 1 }}>
                           <ListItemAvatar>
                             <Avatar
-                              src={
-                                images.find((img) => img.isPrimary)?.imageUrl ||
-                                images[0]?.imageUrl ||
-                                'https://via.placeholder.com/80'
-                              }
+                             src={item.productImage?.startsWith("http") 
+                    ? item.productImage 
+                    : `${process.env.REACT_APP_API_BASE_URL}/${item.productImage}`}
                               alt={product.name || 'Sản phẩm'}
                               variant="square"
                               sx={{ width: 80, height: 80, mr: 2 }}
@@ -366,7 +371,7 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
                             </Typography>
                           )}
 
-                          {/* Hiển thị tất cả hình ảnh */}
+                          {/* Hiển thị tất cả hình ảnh
                           {images.length > 0 ? (
                             <Box sx={{ mt: 2 }}>
                               <Typography variant="body2" color="text.secondary" fontWeight="medium">
@@ -377,7 +382,11 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
                                   <ImageListItem key={img.id}>
                                     <Tooltip title={img.isPrimary ? 'Ảnh chính' : 'Ảnh phụ'}>
                                       <img
-                                        src={img.imageUrl}
+                                         src={
+                                    product.images?.[0]?.imageUrl?.startsWith("http")
+                                        ? product.images[0].imageUrl // Ảnh từ API (URL đầy đủ)
+                                        : `${process.env.REACT_APP_API_BASE_URL}/${product.images?.[0]?.imageUrl}` // Ảnh local trong wwwroot
+                                }
                                         alt={product.name || 'Sản phẩm'}
                                         style={{
                                           width: '100%',
@@ -395,7 +404,7 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
                             <Typography variant="body2" color="text.secondary">
                               Không có hình ảnh sản phẩm.
                             </Typography>
-                          )}
+                          )} */}
                         </Box>
                       </ListItem>
                     );

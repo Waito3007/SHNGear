@@ -27,7 +27,7 @@ const Checkout = () => {
     selectedItems = [],
     totalAmount = 0,
     voucherCode = "",
-    discountAmount = 0, // Thêm discountAmount từ giỏ hàng
+    discountAmount = 0,
   } = location.state || {};
 
   const [userId, setUserId] = useState(null);
@@ -44,15 +44,14 @@ const Checkout = () => {
     country: "",
   });
   const [voucherId, setVoucherId] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState("1"); // 1 = Tiền mặt, 2 = MoMo
-  const [momoPaymentType, setMomoPaymentType] = useState("qr"); // qr hoặc card
+  const [paymentMethod, setPaymentMethod] = useState("1"); // 1 = Tiền mặt, 2 = MoMo, 3 = PayPal
+  const [momoPaymentType, setMomoPaymentType] = useState("qr");
   const [isLoading, setIsLoading] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [error, setError] = useState(null);
   const [finalAmount, setFinalAmount] = useState(totalAmount);
 
   useEffect(() => {
-    // Xử lý đăng nhập người dùng
     const token = localStorage.getItem("token");
     if (token) {
       try {
@@ -66,12 +65,10 @@ const Checkout = () => {
       }
     }
 
-    // Xử lý voucher nếu có
     if (voucherCode) {
       fetchVoucherId(voucherCode);
     }
 
-    // Lấy danh sách phương thức thanh toán
     fetchPaymentMethods();
   }, [voucherCode]);
 
@@ -107,9 +104,7 @@ const Checkout = () => {
       const response = await axios.get(
         `${process.env.REACT_APP_API_BASE_URL}/api/PaymentMethod`
       );
-      // Chỉ lấy phương thức tiền mặt và MoMo (loại bỏ VNPay nếu có)
-      const filteredMethods = response.data.filter((method) => method.id !== 3);
-      setPaymentMethods(filteredMethods);
+      setPaymentMethods(response.data);
     } catch (error) {
       console.error("Lỗi khi lấy phương thức thanh toán:", error);
       setError("Lỗi khi tải phương thức thanh toán");
@@ -127,7 +122,6 @@ const Checkout = () => {
     let addressId = selectedAddress ? selectedAddress.id : null;
 
     if (!userId && !addressId) {
-      // Validate guest address
       if (
         !guestAddress.fullName ||
         !guestAddress.phoneNumber ||
@@ -178,35 +172,55 @@ const Checkout = () => {
 
       const headers = { "Content-Type": "application/json" };
 
-      // Thêm header nếu là thanh toán MoMo bằng thẻ
       if (paymentMethod === "2" && momoPaymentType === "card") {
         headers["Payment-Method"] = "card";
       }
 
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_BASE_URL}/api/orders`,
-        orderDto,
-        { headers }
-      );
-
-      // Chuyển hướng nếu là thanh toán MoMo
-      if (paymentMethod === "2" && response.data.paymentUrl) {
-        localStorage.setItem(
-          "currentOrder",
-          JSON.stringify({
-            orderId: response.data.orderId,
-            paymentMethod: paymentMethod,
-          })
+      // Handle PayPal payment
+      if (paymentMethod === "3") {
+        const response = await axios.post(
+          `${process.env.REACT_APP_API_BASE_URL}/api/paypal/create-order`,
+          orderDto,
+          { headers }
         );
 
-        window.location.href = response.data.paymentUrl;
-        return;
+        if (response.data.approvalUrl) {
+          window.location.href = response.data.approvalUrl;
+          return;
+        }
       }
+      // Handle MoMo payment
+      else if (paymentMethod === "2") {
+        const response = await axios.post(
+          `${process.env.REACT_APP_API_BASE_URL}/api/orders`,
+          orderDto,
+          { headers }
+        );
 
-      // Nếu là thanh toán tiền mặt
-      navigate("/order-confirmation", {
-        state: { orderId: response.data.orderId },
-      });
+        if (response.data.paymentUrl) {
+          localStorage.setItem(
+            "currentOrder",
+            JSON.stringify({
+              orderId: response.data.orderId,
+              paymentMethod: paymentMethod,
+            })
+          );
+
+          window.location.href = response.data.paymentUrl;
+          return;
+        }
+      }
+      // Handle cash payment
+      else {
+        const response = await axios.post(
+          `${process.env.REACT_APP_API_BASE_URL}/api/orders`,
+          orderDto,
+          { headers }
+        );
+        navigate("/payment-success", {
+          state: { orderId: response.data.orderId },
+        });
+      }
     } catch (error) {
       console.error("Lỗi khi tạo đơn hàng:", error);
       setError(
@@ -231,9 +245,7 @@ const Checkout = () => {
       )}
 
       <Box sx={{ display: "flex", gap: 4 }}>
-        {/* Left column - Delivery and Payment */}
         <Box sx={{ flex: 2 }}>
-          {/* Delivery Address */}
           <Box
             sx={{ mb: 4, p: 3, border: "1px solid #e0e0e0", borderRadius: 2 }}
           >
@@ -404,7 +416,6 @@ const Checkout = () => {
             )}
           </Box>
 
-          {/* Payment Method */}
           <Box
             sx={{ mb: 4, p: 3, border: "1px solid #e0e0e0", borderRadius: 2 }}
           >
@@ -431,6 +442,7 @@ const Checkout = () => {
                     label={<Typography>{method.name}</Typography>}
                     sx={{ marginLeft: 0 }}
                   />
+
                   {method.id === 2 && paymentMethod === "2" && (
                     <Box sx={{ mt: 1, pl: 4 }}>
                       <RadioGroup
@@ -462,10 +474,15 @@ const Checkout = () => {
                   : "Bạn sẽ được chuyển hướng đến trang thanh toán QR MoMo"}
               </Typography>
             )}
+
+            {paymentMethod === "3" && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Bạn sẽ được chuyển hướng đến trang thanh toán PayPal
+              </Typography>
+            )}
           </Box>
         </Box>
 
-        {/* Right column - Order Summary */}
         <Box sx={{ flex: 1 }}>
           <Box sx={{ p: 3, border: "1px solid #e0e0e0", borderRadius: 2 }}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold" }}>
@@ -476,16 +493,18 @@ const Checkout = () => {
               {selectedItems.map((item) => (
                 <ListItem key={item.productVariantId} sx={{ px: 0 }}>
                   <ListItemAvatar>
-                    <Avatar
-                      src={item.productImage}
-                      alt={item.productName}
-                      sx={{
-                        width: 60,
-                        height: 60,
-                        mr: 2,
-                        borderRadius: "4px",
+                    <img
+                      src={
+                        item.productImage.startsWith("http")
+                          ? item.productImage
+                          : `${process.env.REACT_APP_API_BASE_URL}/${item.productImage}`
+                      }
+                      alt="Product img"
+                      className="size-10"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "https://via.placeholder.com/50";
                       }}
-                      variant="square"
                     />
                   </ListItemAvatar>
                   <ListItemText
@@ -505,7 +524,6 @@ const Checkout = () => {
 
             <Divider sx={{ my: 2 }} />
 
-            {/* Voucher */}
             {voucherCode && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body1">
@@ -517,7 +535,6 @@ const Checkout = () => {
               </Box>
             )}
 
-            {/* Order Summary */}
             <Box sx={{ mb: 2 }}>
               <Box
                 sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
@@ -569,6 +586,8 @@ const Checkout = () => {
                 ) : (
                   "Thanh toán bằng QR MoMo"
                 )
+              ) : paymentMethod === "3" ? (
+                "Thanh toán bằng PayPal"
               ) : (
                 "Thanh toán với Tiền Mặt"
               )}

@@ -85,8 +85,8 @@ namespace SHN_Gear.Controllers
         }
         // 🔹 API lấy thông tin người dùng đang đăng nhập
         [HttpGet("profile")]
-        [Authorize] // Bắt buộc đăng nhập
-        public IActionResult GetProfile()
+        [Authorize]
+        public async Task<IActionResult> GetProfile()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -104,74 +104,63 @@ namespace SHN_Gear.Controllers
 
             return Ok(new
             {
-                Id = user.Id,
-                FullName = user.FullName,
-                Email = user.Email,
-                Role = user.Role?.Name
+                user.Id,
+                user.FullName,
+                user.Email,
+                user.PhoneNumber,
+                user.Gender,
+                DateOfBirth = user.DateOfBirth?.ToString("yyyy-MM-dd")
             });
         }
         // 🔹 API chỉnh sửa thông tin cá nhân
         [HttpPut("profile")]
         [Authorize]
+        public async Task<IActionResult> UpdateProfile([FromBody] EditProfileDto editDto)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var updatedUser = await _userService.UpdateUserProfileAsync(int.Parse(userId), editDto);
+            if (updatedUser == null)
+                return BadRequest();
+
+            return Ok(new
+            {
+                updatedUser.Id,
+                updatedUser.FullName,
+                updatedUser.Email,
+                updatedUser.PhoneNumber,
+                updatedUser.Gender,
+                DateOfBirth = updatedUser.DateOfBirth?.ToString("yyyy-MM-dd")
+            });
+        }
+
+        // 🔹 API chỉnh sửa thông tin cá nhân
+        [HttpPut("profile/{id}")]
+        [Authorize]
         public async Task<IActionResult> EditProfile([FromBody] EditProfileDto editDto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized(new { message = "Không tìm thấy ID trong token" });
-            }
+                return Unauthorized();
 
             var updatedUser = await _userService.UpdateUserProfileAsync(int.Parse(userId), editDto);
             if (updatedUser == null)
-            {
-                return BadRequest(new { message = "Cập nhật thất bại" });
-            }
+                return BadRequest();
 
             return Ok(new
             {
-                message = "Cập nhật thông tin thành công",
-                user = new
-                {
-                    Id = updatedUser.Id,
-                    FullName = updatedUser.FullName,
-                    Email = updatedUser.Email
-                }
+                updatedUser.Id,
+                updatedUser.FullName,
+                updatedUser.Email,
+                updatedUser.PhoneNumber,
+                updatedUser.Gender,
+                DateOfBirth = updatedUser.DateOfBirth?.ToString("yyyy-MM-dd")
             });
         }
 
-        [HttpPut("profile/{id}")]
-        [Authorize]
-        public async Task<IActionResult> EditProfile(int id, [FromBody] EditProfileDto editDto)
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            // Chuyển đổi userId từ string sang int và so sánh
-            if (string.IsNullOrEmpty(userId) || int.Parse(userId) != id)
-            {
-                return Unauthorized(new { message = "Bạn không có quyền chỉnh sửa thông tin người dùng này" });
-            }
-
-            var updatedUser = await _userService.UpdateUserProfileAsync(id, editDto);
-            if (updatedUser == null)
-            {
-                return BadRequest(new { message = "Cập nhật thất bại" });
-            }
-
-            return Ok(new
-            {
-                message = "Cập nhật thông tin thành công",
-                user = new
-                {
-                    Id = updatedUser.Id,
-                    FullName = updatedUser.FullName,
-                    Email = updatedUser.Email,
-                    PhoneNumber = updatedUser.PhoneNumber,
-                    Gender = updatedUser.Gender,
-                    AvatarUrl = updatedUser.AvatarUrl,
-                    DateOfBirth = updatedUser.DateOfBirth
-                }
-            });
-        }
 
         // Tạo JWT Token
         private string GenerateJwtToken(User user)

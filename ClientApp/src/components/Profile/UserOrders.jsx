@@ -182,11 +182,18 @@ const UserOrders = () => {
                                 <TableRow key={`${order.id}-${item.productVariantId}`}>
                                   <TableCell>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                      <Avatar 
-                                        src={item.productImage} 
-                                        alt={item.productName}
-                                        sx={{ width: 60, height: 60 }}
-                                      />
+                                       <Avatar
+                                src={
+                                    item.productImage?.startsWith("http")
+                                        ? item.productImage // Ảnh từ API (URL đầy đủ)
+                                        : `${process.env.REACT_APP_API_BASE_URL}/${item.productImage}` // Ảnh local trong wwwroot
+                                }
+                                sx={{ width: 56, height: 56 }}
+                                variant="rounded"
+                                alt="Product img"
+                                className="size-10"
+                                onError={(e) => { e.target.onerror = null; }}
+                            />
                                       <Box>
                                         <Typography variant="subtitle1">{item.productName}</Typography>
                                         <Typography variant="body2" color="text.secondary">

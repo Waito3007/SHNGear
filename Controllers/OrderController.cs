@@ -41,6 +41,63 @@ namespace SHN_Gear.Controllers
             _configuration = configuration;
         }
 
+
+        // Lấy thông tin đơn hàng
+        [HttpGet("confirm/{orderId}")]
+        public async Task<IActionResult> GetOrderConfirmationDetails(int orderId)
+        {
+            try
+            {
+                var order = await _context.Orders
+                    .Include(o => o.OrderItems)
+                        .ThenInclude(oi => oi.ProductVariant)
+                            .ThenInclude(pv => pv.Product)
+                                .ThenInclude(p => p.Images)
+                    .Include(o => o.Address)
+                    .Include(o => o.PaymentMethod)
+                    .FirstOrDefaultAsync(o => o.Id == orderId);
+
+                if (order == null)
+                {
+                    return NotFound(new { Message = "Không tìm thấy đơn hàng" });
+                }
+
+                var result = new
+                {
+                    OrderId = order.Id,
+                    OrderDate = order.OrderDate.ToString("dd/MM/yyyy HH:mm"),
+                    TotalAmount = order.TotalAmount,
+                    FormattedTotal = order.TotalAmount.ToString("N0") + " VNĐ",
+                    PaymentMethod = order.PaymentMethod?.Name ?? "Tiền mặt",
+                    OrderStatus = order.OrderStatus,
+                    ShippingInfo = new
+                    {
+                        FullName = order.Address?.FullName ?? "N/A",
+                        Phone = order.Address?.PhoneNumber ?? "N/A",
+                        Address = $"{order.Address?.AddressLine1}, {order.Address?.City}, {order.Address?.State}",
+                        Email = order.User?.Email ?? "N/A"
+                    },
+                    Products = order.OrderItems.Select(oi => new
+                    {
+                        Id = oi.ProductVariant.Product.Id,
+                        Name = oi.ProductVariant.Product.Name,
+                        Image = oi.ProductVariant.Product.Images.FirstOrDefault(i => i.IsPrimary)?.ImageUrl
+                               ?? "/images/default-product.png",
+                        Variant = $"{oi.ProductVariant.Color} - {oi.ProductVariant.Storage}",
+                        Quantity = oi.Quantity,
+                        Price = oi.Price,
+                        Total = oi.Price * oi.Quantity
+                    }),
+                    EstimatedDelivery = order.OrderDate.AddDays(3).ToString("dd/MM/yyyy")
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Lỗi khi lấy thông tin đơn hàng", Error = ex.Message });
+            }
+        }
         // Lấy danh sách đơn hàng
         [HttpGet]
         public async Task<IActionResult> GetOrders()
@@ -429,16 +486,33 @@ namespace SHN_Gear.Controllers
                         };
                         _context.UserVouchers.Add(userVoucher);
                     }
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    // Trả về URL xác nhận
+                    return Ok(new
+                    {
+                        Success = true,
+                        RedirectUrl = $"/order-confirmation/{orderId}",
+                        OrderId = orderId
+                    });
                 }
                 else // Failed
                 {
                     order.OrderStatus = "PaymentFailed";
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    return Ok(new
+                    {
+                        Success = false,
+                        RedirectUrl = $"/checkout?payment=failed&orderId={orderId}",
+                        Message = callback.Message
+                    });
                 }
 
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
 
-                return Ok();
             }
             catch (Exception ex)
             {
@@ -610,7 +684,10 @@ namespace SHN_Gear.Controllers
                 {
                     ProductName = oi.ProductVariant.Product.Name,
                     ProductDescription = oi.ProductVariant.Product.Description,
-                    ProductImage = oi.ProductVariant.Product.Images.FirstOrDefault(img => img.IsPrimary)?.ImageUrl,
+                    ProductImage = oi.ProductVariant.Product.Images
+                                .OrderByDescending(img => img.IsPrimary)
+                                .ThenBy(img => img.Id)
+                                .FirstOrDefault()?.ImageUrl ?? "/images/default-product.png",
                     VariantColor = oi.ProductVariant.Color,
                     VariantStorage = oi.ProductVariant.Storage,
                     Quantity = oi.Quantity,
@@ -722,8 +799,12 @@ namespace SHN_Gear.Controllers
         public async Task<IActionResult> GetOrderDetails(int id)
         {
             var order = await _context.Orders
-                .Include(o => o.OrderItems) // Chỉ cần Include OrderItems
-                .Include(o => o.Address)    // Giữ Include Address để lấy thông tin địa chỉ
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.ProductVariant)
+                        .ThenInclude(pv => pv.Product) // Thêm ThenInclude để lấy Product
+                                        .ThenInclude(p => p.Images) // QUAN TRỌNG: Include cả Images
+
+                .Include(o => o.Address)
                 .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null)
@@ -731,7 +812,7 @@ namespace SHN_Gear.Controllers
                 return NotFound("Đơn hàng không tồn tại.");
             }
 
-            Console.WriteLine($"Order {id} has {order.OrderItems.Count} items"); // Log số lượng items
+            Console.WriteLine($"Order {id} has {order.OrderItems.Count} items");
 
             var orderDetails = new
             {
@@ -756,9 +837,15 @@ namespace SHN_Gear.Controllers
                 PaymentMethodId = order.PaymentMethodId,
                 Items = order.OrderItems.Select(oi => new
                 {
-                    VariantId = oi.ProductVariantId, // Chỉ lấy VariantId
+                    VariantId = oi.ProductVariantId,
                     Quantity = oi.Quantity,
-                    Price = oi.Price
+                    Price = oi.Price,
+                    // ProductImage = oi.ProductVariant?.Product?.Images, // Lấy ảnh từ Product
+                    ProductImage = oi.ProductVariant.Product.Images
+                                .OrderByDescending(img => img.IsPrimary)
+                                .ThenBy(img => img.Id)
+                                .FirstOrDefault()?.ImageUrl ?? "/images/default-product.png",
+                    ProductName = oi.ProductVariant?.Product?.Name // Có thể thêm tên sản phẩm nếu cần
                 }).ToList()
             };
 
@@ -1057,7 +1144,77 @@ namespace SHN_Gear.Controllers
                 return StatusCode(500, $"Error exporting to template: {ex.Message}");
             }
         }
+        // Lấy địa chỉ theo đơn
+        [HttpGet("by-phone/{phoneNumber}")]
+        public async Task<IActionResult> GetOrdersByPhoneNumber(string phoneNumber)
+        {
+            try
+            {
+                // Tìm các địa chỉ có số điện thoại trùng khớp
+                var addresses = await _context.Addresses
+                    .Where(a => a.PhoneNumber == phoneNumber)
+                    .Select(a => a.Id) // Chỉ lấy ID
+                    .ToListAsync();
+
+                if (!addresses.Any())
+                {
+                    return NotFound(new { Message = "Không tìm thấy đơn hàng nào với số điện thoại này" });
+                }
+
+                // Lấy các đơn hàng
+                var orders = await _context.Orders
+                    .Where(o => addresses.Contains(o.Id))
+                    .Include(o => o.OrderItems)
+                        .ThenInclude(oi => oi.ProductVariant)
+                            .ThenInclude(pv => pv.Product)
+                    .Include(o => o.Address)
+                    .Include(o => o.PaymentMethod)
+                    .OrderByDescending(o => o.OrderDate)
+                    .ToListAsync();
+
+                var result = orders.Select(order => new
+                {
+                    OrderId = order.Id,
+                    OrderDate = order.OrderDate.ToString("dd/MM/yyyy HH:mm"),
+                    TotalAmount = order.TotalAmount,
+                    FormattedTotal = order.TotalAmount.ToString("N0") + " VNĐ",
+                    PaymentMethod = order.PaymentMethod != null ? order.PaymentMethod.Name : "Tiền mặt",
+                    OrderStatus = order.OrderStatus,
+                    ShippingInfo = new
+                    {
+                        FullName = order.Address != null ? order.Address.FullName : "N/A",
+                        Phone = order.Address != null ? order.Address.PhoneNumber : "N/A",
+                        Address = order.Address != null
+                            ? $"{order.Address.AddressLine1}, {order.Address.City}, {order.Address.State}"
+                            : "N/A",
+                        Email = order.User != null ? order.User.Email : "N/A"
+                    },
+                    Products = order.OrderItems.Select(oi => new
+                    {
+                        Id = oi.ProductVariant.Product.Id,
+                        Name = oi.ProductVariant.Product.Name,
+                        Image = oi.ProductVariant.Product.Images
+        .OrderByDescending(i => i.IsPrimary) // Ưu tiên ảnh IsPrimary
+        .ThenBy(i => i.Id)                  // Sắp xếp thứ tự
+        .FirstOrDefault()?                  // Lấy ảnh đầu tiên
+        .ImageUrl ?? "/images/default-product.png", // Fallback nếu null
+                        Variant = $"{oi.ProductVariant.Color} - {oi.ProductVariant.Storage}",
+                        Quantity = oi.Quantity,
+                        Price = oi.Price,
+                        Total = oi.Price * oi.Quantity
+                    }),
+                    EstimatedDelivery = order.OrderDate.AddDays(3).ToString("dd/MM/yyyy")
+                });
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Lỗi khi lấy thông tin đơn hàng", Error = ex.Message });
+            }
+        }
     }
+
 
 
     public class MoMoCallbackModel

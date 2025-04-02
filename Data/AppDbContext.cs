@@ -43,8 +43,8 @@ namespace SHN_Gear.Data
             // ✅ Seed dữ liệu mặc định cho PaymentMethod
             modelBuilder.Entity<PaymentMethod>().HasData(
                 new PaymentMethod { Id = 1, Name = "Tiền Mặt", Description = "Thanh toán bằng tiền mặt" },
-                new PaymentMethod { Id = 2, Name = "MoMo", Description = "momo" },
-                new PaymentMethod { Id = 3, Name = "VNPay", Description = "VNPay" }
+                new PaymentMethod { Id = 2, Name = "MoMo", Description = "Thanh toán bằng Momo" },
+                new PaymentMethod { Id = 3, Name = "Paypal", Description = "Thanh toán bằng ví Paypal" }
             );
             // ✅ Thiết lập quan hệ Category - Product (1-N)
             modelBuilder.Entity<Product>()

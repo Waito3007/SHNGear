@@ -4,9 +4,16 @@ import AppRoutes from "./AppRoutes";
 import AdminLayout from "./components/layouts/AdminLayout";
 import ProductPage from "./pages/ProductPage";
 import ProfilePage from "./pages/ProfilePage";
+import ProfileInfo from "./components/Profile/ProfileInfo";
+import AddressBook from "./components/Profile/AddressBook";
+import UserOrders from "./components/Profile/UserOrders";
+import LoyaltyProgram from "./components/Profile/LoyaltyProgram";
 import ProductList from "./pages/ProductList";
 import Shoppingcart from "./pages/shoppingcart";
 import Checkout from "./components/Checkout/Checkout";
+import PaymentSuccess from "./components/Order/PaymentSuccess";
+import OrderLookup from "./components/Order/OrderLookup";
+
 import Unauthorized from "./pages/Unauthorized";
 import { jwtDecode } from "jwt-decode";
 
@@ -48,7 +55,18 @@ export default class App extends Component {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/product/:id" element={<ProductPage />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
-        
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/order-lookup" element={<OrderLookup />} />
+
+
+         {/* Protected Profile routes */}
+        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}>
+          <Route index element={<ProfileInfo />} />
+          <Route path="info" element={<ProfileInfo />} />
+          <Route path="address" element={<AddressBook />} />
+          <Route path="orders" element={<UserOrders />} />
+          <Route path="loyalty" element={<LoyaltyProgram />} />
+        </Route>
         {/* Xử lý các route từ AppRoutes */}
         {AppRoutes.map((route) => {
           const isAdminRoute = route.path?.startsWith('/admin');
