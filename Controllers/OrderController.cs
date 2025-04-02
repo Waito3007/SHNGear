@@ -280,7 +280,6 @@ namespace SHN_Gear.Controllers
 
             return Ok(new { Message = "Đơn hàng đã được cập nhật thành công." });
         }
-        // Tạo đơn hàng mới (hỗ trợ cả tiền mặt và MoMo)
         [HttpPost]
         public async Task<IActionResult> CreateOrder([FromBody] OrderDto orderDto)
         {
@@ -298,12 +297,27 @@ namespace SHN_Gear.Controllers
 
                 // Validate voucher
                 Voucher? voucher = null;
+                UserVoucher? userVoucher = null;
                 if (orderDto.VoucherId.HasValue)
                 {
                     voucher = await _context.Vouchers.FindAsync(orderDto.VoucherId.Value);
                     if (voucher == null || !voucher.IsActive || voucher.ExpiryDate < DateTime.UtcNow)
                     {
-                        return BadRequest("Voucher không hợp lệ.");
+                        return BadRequest("Voucher không hợp lệ hoặc đã hết hạn.");
+                    }
+
+                    // Kiểm tra xem voucher đã được gán cho người dùng chưa
+                    userVoucher = await _context.UserVouchers
+                        .FirstOrDefaultAsync(uv => uv.VoucherId == voucher.Id && uv.UserId == orderDto.UserId.Value);
+                    if (userVoucher == null)
+                    {
+                        return BadRequest("Bạn chưa sở hữu voucher này.");
+                    }
+
+                    // Kiểm tra trạng thái IsUsed
+                    if (userVoucher.IsUsed)
+                    {
+                        return BadRequest("Voucher đã được sử dụng.");
                     }
                 }
 
@@ -354,7 +368,7 @@ namespace SHN_Gear.Controllers
                     variant.StockQuantity -= item.Quantity;
                 }
 
-                // Thanh toán với momo (cả QR và thẻ)
+                // Thanh toán với MoMo (cả QR và thẻ)
                 if (orderDto.PaymentMethodId == 2)
                 {
                     try
@@ -391,15 +405,12 @@ namespace SHN_Gear.Controllers
                     }
                 }
 
-                // Process voucher for cash payment
-                if (voucher != null && user != null)
+                // Process voucher and mark as used
+                if (voucher != null && userVoucher != null)
                 {
-                    _context.UserVouchers.Add(new UserVoucher
-                    {
-                        UserId = orderDto.UserId.Value,
-                        VoucherId = voucher.Id,
-                        UsedAt = DateTime.UtcNow
-                    });
+                    // Cập nhật IsUsed thành true khi đơn hàng hoàn tất
+                    userVoucher.IsUsed = true;
+                    _context.UserVouchers.Update(userVoucher);
                 }
 
                 await _context.SaveChangesAsync();

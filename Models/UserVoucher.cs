@@ -8,6 +8,7 @@ namespace SHN_Gear.Models
         public int VoucherId { get; set; }
         public Voucher Voucher { get; set; } = null!;
 
-        public DateTime UsedAt { get; set; } // Thời gian sử dụng voucher
+        public DateTime UsedAt { get; set; } // Thời gian nhận/gán voucher
+        public bool IsUsed { get; set; } = true; // Trạng thái sử dụng
     }
 }

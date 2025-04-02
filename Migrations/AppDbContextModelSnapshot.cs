@@ -756,6 +756,9 @@ namespace SHN_Gear.Migrations
                     b.Property<int>("VoucherId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("UsedAt")
                         .HasColumnType("datetime2");
 
