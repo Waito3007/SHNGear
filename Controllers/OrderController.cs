@@ -1251,7 +1251,8 @@ namespace SHN_Gear.Controllers
                         break;
 
                     case "year":
-                        startDate = DateTime.UtcNow.Date.AddYears(0);
+                        // Thay đổi ở đây: chỉ lấy từ đầu năm hiện tại
+                        startDate = new DateTime(DateTime.UtcNow.Year, 1, 1);
                         groupByFormat = date => date.Month.ToString();
                         formatPeriodLabel = period => $"Tháng {period}";
                         xAxisKey = "month";
