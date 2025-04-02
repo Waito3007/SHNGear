@@ -1,173 +1,225 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SHN_Gear.Models;
 using SHN_Gear.Data;
 using SHN_Gear.DTOs;
-using SHN_Gear.Models;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
-namespace SHN_Gear.Controllers
+using System;
+using System.Threading.Tasks;
+using System.Linq;
+
+[Route("api/loyalty")]
+[ApiController]
+public class LoyaltyController : ControllerBase
 {
-    [ApiController]
-    [Route("api/loyalty")]
-    [Authorize]
-    public class LoyaltyController : ControllerBase
+    private readonly AppDbContext _context;
+    private readonly Random _random = new Random();
+
+    public LoyaltyController(AppDbContext context)
     {
-        private readonly AppDbContext _context;
+        _context = context;
+    }
 
-        public LoyaltyController(AppDbContext context)
+    [HttpGet("my-status")]
+    public async Task<IActionResult> GetMyLoyaltyStatus([FromQuery] int userId)
+    {
+        if (userId <= 0)
         {
-            _context = context;
+            return BadRequest("Invalid user ID");
         }
 
-        // Lấy thông tin loyalty của người dùng hiện tại
-        [HttpGet("my-status")]
-        public async Task<IActionResult> GetMyLoyaltyStatus()
+        var user = await _context.Users
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-
-            var user = await _context.Users
-                .Include(u => u.Role)
-                .FirstOrDefaultAsync(u => u.Id == userId);
-
-            if (user == null)
-            {
-                return NotFound("User not found");
-            }
-
-            // Tính toán thông tin loyalty
-            var currentRank = user.Role.Name;
-            var currentPoints = user.Points;
-
-            // Tính điểm cần để lên rank tiếp theo
-            int pointsNeeded = CalculatePointsNeededForNextRank(currentRank, currentPoints);
-
-            // Kiểm tra xem có đủ điều kiện nhận voucher không
-            bool canClaimVoucher = CanClaimVoucher(currentRank, currentPoints);
-
-            return Ok(new
-            {
-                CurrentRank = currentRank,
-                CurrentPoints = currentPoints,
-                PointsNeededForNextRank = pointsNeeded,
-                CanClaimVoucher = canClaimVoucher,
-                VoucherValue = canClaimVoucher ? CalculateVoucherValue(currentRank) : 0
-            });
+            return NotFound("User not found");
         }
 
-        // Nhận voucher thưởng
-        [HttpPost("claim-voucher")]
-        public async Task<IActionResult> ClaimVoucher()
+        if (!user.IsActive)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            return BadRequest("User account is not active");
+        }
 
-            var user = await _context.Users
-                .Include(u => u.Role)
-                .FirstOrDefaultAsync(u => u.Id == userId);
+        string currentRank = user.Role.Name == "Admin" ? "Admin" : DetermineRank(user.Points);
 
-            if (user == null)
+        // Cập nhật Role nếu không phải Admin
+        if (user.Role.Name != "Admin" && user.Role.Name != currentRank)
+        {
+            var newRole = await _context.Roles
+                .FirstOrDefaultAsync(r => r.Name == currentRank);
+            if (newRole == null)
             {
-                return NotFound("User not found");
+                return StatusCode(500, $"Role '{currentRank}' not found in database");
             }
-
-            // Kiểm tra điều kiện nhận voucher
-            if (!CanClaimVoucher(user.Role.Name, user.Points))
-            {
-                return BadRequest("You don't meet the requirements to claim a voucher");
-            }
-
-            // Tạo voucher mới
-            var voucher = new Voucher
-            {
-                Code = GenerateRandomVoucherCode(),
-                DiscountAmount = CalculateVoucherValue(user.Role.Name),
-                ExpiryDate = DateTime.UtcNow.AddMonths(3),
-                IsActive = true
-            };
-
-            _context.Vouchers.Add(voucher);
+            user.RoleId = newRole.Id;
+            user.Role = newRole;
+            _context.Users.Update(user);
             await _context.SaveChangesAsync();
+        }
 
-            // Gán voucher cho người dùng
-            var userVoucher = new UserVoucher
+        string nextRank = currentRank == "Admin" ? null : DetermineNextRank(currentRank);
+        int pointsNeeded = currentRank == "Admin" ? 0 : CalculatePointsNeededForNextRank(user.Points, currentRank, nextRank);
+        int spinCost = CalculateSpinCost(currentRank);
+
+        return Ok(new
+        {
+            CurrentRank = currentRank,
+            CurrentPoints = user.Points,
+            PointsNeededForNextRank = pointsNeeded,
+            CanSpin = user.Points >= spinCost, // Chỉ Admin quay với 0 điểm, còn lại cần đủ điểm
+            SpinCost = spinCost
+        });
+    }
+
+    [HttpPost("spin-wheel")]
+    public async Task<IActionResult> SpinWheel([FromQuery] int userId)
+    {
+        if (userId <= 0)
+        {
+            return BadRequest("Invalid user ID");
+        }
+
+        var user = await _context.Users
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+        {
+            return NotFound("User not found");
+        }
+
+        if (!user.IsActive)
+        {
+            return BadRequest("User account is not active");
+        }
+
+        string currentRank = user.Role.Name == "Admin" ? "Admin" : DetermineRank(user.Points);
+        int spinCost = CalculateSpinCost(currentRank);
+
+        // Kiểm tra đủ điểm để quay (Admin miễn phí, các rank khác cần đủ điểm)
+        if (user.Points < spinCost)
+        {
+            return BadRequest("Not enough points to spin the wheel.");
+        }
+
+        // Trừ điểm khi quay (Admin không bị trừ, các rank khác bị trừ)
+        if (currentRank != "Admin")
+        {
+            user.Points -= spinCost;
+            _context.Users.Update(user);
+        }
+
+        var (voucherValue, prizeType) = GenerateRandomPrize(currentRank);
+        var voucher = new Voucher
+        {
+            Code = $"SPIN-{currentRank}-{Guid.NewGuid().ToString().Substring(0, 8)}",
+            DiscountAmount = voucherValue,
+            ExpiryDate = DateTime.UtcNow.AddDays(30),
+            IsActive = true
+        };
+
+        _context.Vouchers.Add(voucher);
+        await _context.SaveChangesAsync();
+
+        var userVoucher = new UserVoucher
+        {
+            UserId = user.Id,
+            VoucherId = voucher.Id,
+            UsedAt = DateTime.UtcNow,
+            IsUsed = false // Trạng thái sử dụng mặc định là false khi nhận từ vòng quay
+        };
+
+        _context.UserVouchers.Add(userVoucher);
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            PrizeType = prizeType,
+            Voucher = new VoucherDto
             {
-                UserId = userId,
-                VoucherId = voucher.Id,
-                UsedAt = DateTime.MinValue // Chưa sử dụng
-            };
-
-            _context.UserVouchers.Add(userVoucher);
-            await _context.SaveChangesAsync();
-
-            return Ok(new
-            {
-                Message = "Voucher claimed successfully",
-                VoucherCode = voucher.Code,
+                Id = voucher.Id,
+                Code = voucher.Code,
                 DiscountAmount = voucher.DiscountAmount,
-                ExpiryDate = voucher.ExpiryDate
-            });
-        }
+                ExpiryDate = voucher.ExpiryDate,
+                IsActive = voucher.IsActive
+            },
+            RemainingPoints = user.Points
+        });
+    }
 
-        // Các hàm hỗ trợ
-        private int CalculatePointsNeededForNextRank(string currentRank, int currentPoints)
-        {
-            // Logic tính điểm cần để lên rank tiếp theo
-            switch (currentRank)
-            {
-                case "VIP 1":
-                    return Math.Max(0, 50000 - currentPoints);
-                case "VIP 2":
-                    return Math.Max(0, 125000 - currentPoints); // 50k + 75k
-                case "VIP 3":
-                    return Math.Max(0, 225000 - currentPoints); // 50k + 75k + 100k
-                case "VIP 4":
-                    return Math.Max(0, 350000 - currentPoints); // 50k + 75k + 100k + 125k
-                default: // Đã là rank cao nhất
-                    return 0;
-            }
-        }
+    private string DetermineRank(int points)
+    {
+        if (points >= 225000) return "VIP 3";
+        if (points >= 125000) return "VIP 2";
+        if (points >= 50000) return "VIP 1";
+        return "VIP 0";
+    }
 
-        private bool CanClaimVoucher(string currentRank, int currentPoints)
+    private string DetermineNextRank(string currentRank)
+    {
+        return currentRank switch
         {
-            // Kiểm tra xem người dùng đã đạt đủ điểm để nhận voucher chưa
-            switch (currentRank)
-            {
-                case "VIP 1":
-                    return currentPoints >= 50000;
-                case "VIP 2":
-                    return currentPoints >= 125000;
-                case "VIP 3":
-                    return currentPoints >= 225000;
-                case "VIP 4":
-                    return currentPoints >= 350000;
-                default:
-                    return false;
-            }
-        }
+            "VIP 0" => "VIP 1",
+            "VIP 1" => "VIP 2",
+            "VIP 2" => "VIP 3",
+            "VIP 3" => null,
+            _ => "VIP 1"
+        };
+    }
 
-        private decimal CalculateVoucherValue(string currentRank)
+    private int CalculatePointsNeededForNextRank(int currentPoints, string currentRank, string nextRank)
+    {
+        if (nextRank == null) return 0;
+        return nextRank switch
         {
-            // Giá trị voucher tăng theo rank
-            switch (currentRank)
-            {
-                case "VIP 1":
-                    return 100000;
-                case "VIP 2":
-                    return 200000;
-                case "VIP 3":
-                    return 350000;
-                case "VIP 4":
-                    return 500000;
-                default:
-                    return 0;
-            }
-        }
+            "VIP 1" => 50000 - currentPoints,
+            "VIP 2" => 125000 - currentPoints,
+            "VIP 3" => 225000 - currentPoints,
+            _ => 50000 - currentPoints
+        };
+    }
 
-        private string GenerateRandomVoucherCode()
+    private int CalculateSpinCost(string currentRank)
+    {
+        return currentRank switch
         {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            var random = new Random();
-            return new string(Enumerable.Repeat(chars, 8)
-                .Select(s => s[random.Next(s.Length)]).ToArray());
+            "Admin" => 0,     // Chỉ Admin quay miễn phí
+            "VIP 0" => 10000, // Rank thấp tốn nhiều điểm
+            "VIP 1" => 5000,
+            "VIP 2" => 2000,
+            "VIP 3" => 1000,  // VIP 3 vẫn cần điểm, ví dụ 1000
+            _ => 10000
+        };
+    }
+
+    private (decimal voucherValue, string prizeType) GenerateRandomPrize(string currentRank)
+    {
+        int chance = _random.Next(1, 101);
+        switch (currentRank)
+        {
+            case "Admin":
+                if (chance <= 50) return (500000, "Voucher"); // 50% nhận 500k
+                else if (chance <= 80) return (350000, "Voucher"); // 30% nhận 350k
+                else return (200000, "Voucher"); // 20% nhận 200k
+            case "VIP 0":
+                if (chance <= 50) return (50000, "Voucher"); // 50% nhận 50k
+                else if (chance <= 80) return (20000, "Voucher"); // 30% nhận 20k
+                else return (0, "No Prize"); // 20% không trúng
+            case "VIP 1":
+                if (chance <= 40) return (100000, "Voucher"); // 40% nhận 100k
+                else if (chance <= 70) return (50000, "Voucher"); // 30% nhận 50k
+                else return (20000, "Voucher"); // 30% nhận 20k
+            case "VIP 2":
+                if (chance <= 30) return (200000, "Voucher"); // 30% nhận 200k
+                else if (chance <= 60) return (100000, "Voucher"); // 30% nhận 100k
+                else return (50000, "Voucher"); // 40% nhận 50k
+            case "VIP 3":
+                if (chance <= 20) return (350000, "Voucher"); // 20% nhận 350k
+                else if (chance <= 50) return (200000, "Voucher"); // 30% nhận 200k
+                else return (100000, "Voucher"); // 50% nhận 100k
+            default:
+                return (0, "No Prize");
         }
     }
 }

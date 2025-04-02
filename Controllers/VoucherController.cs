@@ -156,23 +156,40 @@ namespace SHN_Gear.Controllers
             return Ok(new { Message = "Voucher đã được gán cho người dùng." });
         }
 
-        // Áp dụng voucher
         [HttpPost("apply")]
         public async Task<IActionResult> ApplyVoucher([FromBody] ApplyVoucherDto dto)
         {
-            var voucher = await _context.Vouchers.FirstOrDefaultAsync(v => v.Code == dto.Code && v.IsActive && v.ExpiryDate >= DateTime.UtcNow);
+            // Kiểm tra voucher hợp lệ
+            var voucher = await _context.Vouchers
+                .FirstOrDefaultAsync(v => v.Code == dto.Code && v.IsActive && v.ExpiryDate >= DateTime.UtcNow);
             if (voucher == null)
             {
                 return BadRequest("Voucher không hợp lệ hoặc đã hết hạn.");
             }
 
-            // Kiểm tra xem người dùng đã sử dụng voucher này chưa
-            var userVoucher = await _context.UserVouchers.FirstOrDefaultAsync(uv => uv.UserId == dto.UserId && uv.VoucherId == voucher.Id);
-            if (userVoucher != null)
+            // Kiểm tra xem voucher đã được gán cho người dùng nào chưa
+            var userVoucher = await _context.UserVouchers
+                .FirstOrDefaultAsync(uv => uv.VoucherId == voucher.Id);
+
+            // Nếu voucher chưa được gán cho bất kỳ ai
+            if (userVoucher == null)
             {
-                return BadRequest("Bạn đã sử dụng voucher này.");
+                return BadRequest("Voucher này chưa được gán cho người dùng nào.");
             }
 
+            // Nếu voucher đã được gán, kiểm tra xem người dùng hiện tại có phải là chủ sở hữu không
+            if (userVoucher.UserId != dto.UserId)
+            {
+                return BadRequest("Voucher này chỉ có thể được sử dụng bởi người dùng đã được gán.");
+            }
+
+            // Kiểm tra trạng thái IsUsed
+            if (userVoucher.IsUsed)
+            {
+                return BadRequest("Voucher đã được sử dụng.");
+            }
+
+            // Nếu IsUsed = false và UserId khớp, cho phép áp dụng
             return Ok(new { discountAmount = voucher.DiscountAmount });
         }
     }

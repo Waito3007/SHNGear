@@ -319,17 +319,21 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
                       >
                         <Box sx={{ display: 'flex', width: '100%', mb: 1 }}>
                           <ListItemAvatar>
-                            <Avatar
-                              src={
-                                images.find((img) => img.isPrimary)?.imageUrl ||
-                                images[0]?.imageUrl ||
-                                'https://via.placeholder.com/80'
-                              }
-                              alt={product.name || 'Sản phẩm'}
-                              variant="square"
-                              sx={{ width: 80, height: 80, mr: 2 }}
-                            />
-                          </ListItemAvatar>
+                          <Avatar
+                            src={
+                              images.length > 0 
+                                ? `${process.env.REACT_APP_API_BASE_URL}${
+                                    images.find(img => img.isPrimary)?.imageUrl || 
+                                    images[0]?.imageUrl || 
+                                    ''
+                                  }`
+                                : 'https://via.placeholder.com/80'
+                            }
+                            alt={product.name || 'Sản phẩm'}
+                            variant="square"
+                            sx={{ width: 80, height: 80, mr: 2 }}
+                          />
+                        </ListItemAvatar>
                           <ListItemText
                             primary={
                               <Typography variant="body1" fontWeight="medium">
@@ -380,23 +384,31 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
                                 Hình ảnh sản phẩm:
                               </Typography>
                               <ImageList cols={3} gap={8}>
-                                {images.map((img) => (
-                                  <ImageListItem key={img.id}>
-                                    <Tooltip title={img.isPrimary ? 'Ảnh chính' : 'Ảnh phụ'}>
-                                      <img
-                                        src={img.imageUrl}
-                                        alt={product.name || 'Sản phẩm'}
-                                        style={{
-                                          width: '100%',
-                                          height: 'auto',
-                                          border: img.isPrimary ? '2px solid #000' : 'none',
-                                        }}
-                                        loading="lazy"
-                                      />
-                                    </Tooltip>
-                                  </ImageListItem>
-                                ))}
-                              </ImageList>
+                              {images.map((img) => (
+                                <ImageListItem key={img.id}>
+                                  <Tooltip title={img.isPrimary ? 'Ảnh chính' : 'Ảnh phụ'}>
+                                    <img
+                                      src={`${process.env.REACT_APP_API_BASE_URL}${img.imageUrl}`}
+                                      alt={product.name || 'Sản phẩm'}
+                                      style={{
+                                        width: '100%',
+                                        height: 'auto',
+                                        maxHeight: '150px',
+                                        objectFit: 'contain',
+                                        border: img.isPrimary ? '2px solid #1976d2' : '1px solid #e0e0e0',
+                                        borderRadius: '4px',
+                                        backgroundColor: '#f5f5f5'
+                                      }}
+                                      loading="lazy"
+                                      onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = 'https://via.placeholder.com/150?text=Ảnh+lỗi';
+                                      }}
+                                    />
+                                  </Tooltip>
+                                </ImageListItem>
+                              ))}
+                            </ImageList>
                             </Box>
                           ) : (
                             <Typography variant="body2" color="text.secondary">

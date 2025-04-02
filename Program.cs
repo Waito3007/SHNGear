@@ -51,7 +51,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins("https://localhost:44479") // URL frontend
-              .AllowCredentials() // ⚠️ QUAN TRỌNG: Cho phép gửi cookie/token
+              .AllowCredentials() //Cho phép gửi cookie/token
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
