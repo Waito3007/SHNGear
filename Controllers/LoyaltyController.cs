@@ -98,7 +98,7 @@ public class LoyaltyController : ControllerBase
         int spinCost = CalculateSpinCost(currentRank);
 
         // Kiểm tra đủ điểm để quay (Admin miễn phí, các rank khác cần đủ điểm)
-        if (user.Points < spinCost)
+        if (currentRank != "Admin" && user.Points < spinCost)
         {
             return BadRequest("Not enough points to spin the wheel.");
         }
@@ -107,45 +107,64 @@ public class LoyaltyController : ControllerBase
         if (currentRank != "Admin")
         {
             user.Points -= spinCost;
-            _context.Users.Update(user);
         }
 
+        // Tạo phần thưởng ngẫu nhiên
         var (voucherValue, prizeType) = GenerateRandomPrize(currentRank);
-        var voucher = new Voucher
+        object responseData;
+
+        if (prizeType == "Voucher")
         {
-            Code = $"SPIN-{currentRank}-{Guid.NewGuid().ToString().Substring(0, 8)}",
-            DiscountAmount = voucherValue,
-            ExpiryDate = DateTime.UtcNow.AddDays(30),
-            IsActive = true
-        };
-
-        _context.Vouchers.Add(voucher);
-        await _context.SaveChangesAsync();
-
-        var userVoucher = new UserVoucher
-        {
-            UserId = user.Id,
-            VoucherId = voucher.Id,
-            UsedAt = DateTime.UtcNow,
-            IsUsed = false // Trạng thái sử dụng mặc định là false khi nhận từ vòng quay
-        };
-
-        _context.UserVouchers.Add(userVoucher);
-        await _context.SaveChangesAsync();
-
-        return Ok(new
-        {
-            PrizeType = prizeType,
-            Voucher = new VoucherDto
+            var voucher = new Voucher
             {
-                Id = voucher.Id,
-                Code = voucher.Code,
-                DiscountAmount = voucher.DiscountAmount,
-                ExpiryDate = voucher.ExpiryDate,
-                IsActive = voucher.IsActive
-            },
-            RemainingPoints = user.Points
-        });
+                Code = $"SPIN-{currentRank}-{Guid.NewGuid().ToString().Substring(0, 8)}",
+                DiscountAmount = voucherValue,
+                ExpiryDate = DateTime.UtcNow.AddDays(30),
+                IsActive = true
+            };
+
+            _context.Vouchers.Add(voucher);
+            await _context.SaveChangesAsync();
+
+            var userVoucher = new UserVoucher
+            {
+                UserId = user.Id,
+                VoucherId = voucher.Id,
+                UsedAt = DateTime.UtcNow,
+                IsUsed = false // Trạng thái sử dụng mặc định là false khi nhận từ vòng quay
+            };
+
+            _context.UserVouchers.Add(userVoucher);
+
+            responseData = new
+            {
+                PrizeType = prizeType,
+                Voucher = new VoucherDto
+                {
+                    Id = voucher.Id,
+                    Code = voucher.Code,
+                    DiscountAmount = voucher.DiscountAmount,
+                    ExpiryDate = voucher.ExpiryDate,
+                    IsActive = voucher.IsActive
+                },
+                RemainingPoints = user.Points
+            };
+        }
+        else
+        {
+            responseData = new
+            {
+                PrizeType = prizeType,
+                Voucher = (object)null,
+                RemainingPoints = user.Points
+            };
+        }
+
+        // Cập nhật điểm người dùng vào cơ sở dữ liệu
+        _context.Users.Update(user);
+        await _context.SaveChangesAsync();
+
+        return Ok(responseData);
     }
 
     private string DetermineRank(int points)
@@ -184,11 +203,11 @@ public class LoyaltyController : ControllerBase
     {
         return currentRank switch
         {
-            "Admin" => 0,     // Chỉ Admin quay miễn phí
-            "VIP 0" => 10000, // Rank thấp tốn nhiều điểm
+            "Admin" => 0,     // 
+            "VIP 0" => 500, // 
             "VIP 1" => 5000,
-            "VIP 2" => 2000,
-            "VIP 3" => 1000,  // VIP 3 vẫn cần điểm, ví dụ 1000
+            "VIP 2" => 5000,
+            "VIP 3" => 5000,  // 
             _ => 10000
         };
     }
