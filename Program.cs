@@ -1,9 +1,12 @@
+using Microsoft.Extensions.FileProviders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using SHN_Gear.Data;
 using System.Text.Json.Serialization;
+using CloudinaryDotNet;
+using SHN_Gear.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +14,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// 🔹 Thêm Distributed Cache & Session
+builder.Services.AddDistributedMemoryCache(); // Bộ nhớ tạm để lưu session
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Hết hạn sau 30 phút
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+
+
+builder.Services.AddScoped<UserService>(); // Đăng ký UserService
+builder.Services.AddScoped<EmailService>(); // Đăng ký EmailService
+builder.Services.AddSingleton<PayPalService>();
 // Thêm JWT Authentication
 var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -31,15 +48,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Thêm CORS
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("https://localhost:44479") // Thay đổi URL này thành URL của frontend nếu khác
-               .AllowAnyHeader()
-               .AllowAnyMethod();
+        policy.WithOrigins("https://localhost:44479") // URL frontend
+              .AllowCredentials() //Cho phép gửi cookie/token
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
+    options.AddPolicy("AllowAll",
+        policy => policy.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
 });
 
-// Thêm Swagger ( kiểm thử api)
+
+// Thêm Swagger ( kiểm thử API)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -47,10 +70,19 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<MoMoPaymentService>();
 var app = builder.Build();
+
+
+
+app.UseRouting();
+app.UseAuthorization();
+app.MapControllers();
+app.UseStaticFiles(); // Cho phép truy cập file tĩnh từ wwwroot
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -66,10 +98,20 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+
+
+
+
+app.UseRouting();
 
 // Sử dụng CORS
-app.UseCors();
+app.UseCors("AllowFrontend");
+app.UseCors("AllowAll"); // Nếu bạn muốn cho phép tất cả các nguồn gốc
+// 🔹 Thêm Authentication & Authorization (QUAN TRỌNG)
+app.UseAuthentication();  // Xác thực JWT Token từ request
+app.UseAuthorization();   //Kiểm tra quyền truy cập của user
+// 🔹 Thêm Session Middleware
+app.UseSession();
 
 app.MapControllerRoute(
     name: "default",

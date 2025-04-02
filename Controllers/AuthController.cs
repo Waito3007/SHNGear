@@ -1,98 +1,196 @@
 using Microsoft.AspNetCore.Mvc;
-using SHN_Gear.Models;
+using Microsoft.IdentityModel.Tokens;
 using SHN_Gear.Services;
-using SHN_Gear.Models.DTOs;
+using SHN_Gear.Models;
+using SHN_Gear.DTOs;
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SHN_Gear.Controllers
 {
-    [Route("api/auth")]
+    [Route("api/[controller]")]
+    [EnableCors("AllowFrontend")]
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly EmailService _emailService;
         private readonly UserService _userService;
+        private readonly EmailService _emailService;
+        private readonly IConfiguration _config;
 
-        public AuthController(EmailService emailService, UserService userService)
+        public AuthController(UserService userService, EmailService emailService, IConfiguration config)
         {
-            _emailService = emailService;
             _userService = userService;
+            _emailService = emailService;
+            _config = config;
+        }
+
+        // Kiểm tra email có tồn tại không
+        [HttpPost("check-email")]
+        public async Task<IActionResult> CheckEmailExists([FromBody] EmailDto emailDto)
+        {
+            if (!ModelState.IsValid || string.IsNullOrEmpty(emailDto.Email))
+                return BadRequest(new { message = "Email không hợp lệ" });
+
+            bool exists = await _userService.CheckEmailExistsAsync(emailDto.Email);
+            return Ok(new { exists });
         }
 
         // Đăng ký tài khoản
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequestDTO request)
+        public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
         {
-            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.FullName))
+            if (!ModelState.IsValid)
+                return BadRequest(new { message = "Dữ liệu không hợp lệ" });
+
+            var result = await _userService.RegisterUserAsync(registerDto);
+            if (!result)
+                return BadRequest(new { message = "Email đã tồn tại" });
+
+            return Ok(new { message = "Đăng ký thành công" });
+        }
+
+        // Đăng nhập bằng Email
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new { message = "Dữ liệu không hợp lệ" });
+
+            var user = await _userService.AuthenticateUserAsync(loginDto);
+            if (user == null)
+                return Unauthorized(new { message = "Sai email hoặc mật khẩu" });
+
+            var token = GenerateJwtToken(user);
+            return Ok(new { token });
+        }
+
+        // Gửi OTP qua Email
+        [HttpPost("send-otp")]
+        public async Task<IActionResult> SendOtp([FromBody] OtpRequestDto otpDto)
+        {
+            if (!ModelState.IsValid || string.IsNullOrEmpty(otpDto.Email))
+                return BadRequest(new { message = "Email không hợp lệ" });
+
+            var success = await _emailService.SendOTPAsync(otpDto.Email);
+            if (!success)
+                return BadRequest(new { message = "Gửi OTP thất bại" });
+
+            return Ok(new { message = "OTP đã được gửi" });
+        }
+        // 🔹 API lấy thông tin người dùng đang đăng nhập
+        [HttpGet("profile")]
+        [Authorize]
+        public async Task<IActionResult> GetProfile()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
             {
-                return BadRequest("Email và họ tên không được để trống.");
+                return Unauthorized(new { message = "Không tìm thấy ID trong token" });
             }
 
-            var userExists = await _userService.UserExistsByEmailAsync(request.Email);
-            if (userExists)
+            var user = _userService.GetUserById(int.Parse(userId));
+
+            if (user == null)
             {
-                return BadRequest("Email đã tồn tại.");
+                return NotFound(new { message = "User không tồn tại" });
             }
 
-            var newUser = new User
+            return Ok(new
             {
-                FullName = request.FullName,
-                PhoneNumber = request.PhoneNumber,
-                Gender = request.Gender,
-                DateOfBirth = request.DateOfBirth,
-                Email = request.Email,
-                CreatedAt = DateTime.UtcNow,
-                Points = 0,
-                RoleId = 1 // Giả sử mặc định là User
+                user.Id,
+                user.FullName,
+                user.Email,
+                user.PhoneNumber,
+                user.Gender,
+                DateOfBirth = user.DateOfBirth?.ToString("yyyy-MM-dd")
+            });
+        }
+        // 🔹 API chỉnh sửa thông tin cá nhân
+        [HttpPut("profile")]
+        [Authorize]
+        public async Task<IActionResult> UpdateProfile([FromBody] EditProfileDto editDto)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var updatedUser = await _userService.UpdateUserProfileAsync(int.Parse(userId), editDto);
+            if (updatedUser == null)
+                return BadRequest();
+
+            return Ok(new
+            {
+                updatedUser.Id,
+                updatedUser.FullName,
+                updatedUser.Email,
+                updatedUser.PhoneNumber,
+                updatedUser.Gender,
+                DateOfBirth = updatedUser.DateOfBirth?.ToString("yyyy-MM-dd")
+            });
+        }
+
+        // 🔹 API chỉnh sửa thông tin cá nhân
+        [HttpPut("profile/{id}")]
+        [Authorize]
+        public async Task<IActionResult> EditProfile([FromBody] EditProfileDto editDto)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var updatedUser = await _userService.UpdateUserProfileAsync(int.Parse(userId), editDto);
+            if (updatedUser == null)
+                return BadRequest();
+
+            return Ok(new
+            {
+                updatedUser.Id,
+                updatedUser.FullName,
+                updatedUser.Email,
+                updatedUser.PhoneNumber,
+                updatedUser.Gender,
+                DateOfBirth = updatedUser.DateOfBirth?.ToString("yyyy-MM-dd")
+            });
+        }
+
+
+
+        // Tạo JWT Token
+        private string GenerateJwtToken(User user)
+        {
+            var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]);
+            var roleName = user.Role?.Name ?? "User";
+
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                // Chỉ dùng MỘT trong hai cách sau:
+                
+                new Claim("roleId", user.RoleId.ToString()), // Quan trọng
+                new Claim(ClaimTypes.Role, user.Role?.Name ?? "User"),
+                new Claim("http://schemas.microsoft.com/.../role", user.Role?.Name ?? "User"),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            var result = await _userService.CreateUserAsync(newUser);
-            if (result)
-            {
-                // Gửi OTP sau khi đăng ký thành công
-                await _emailService.SendOTPAsync(request.Email);
-                return Ok(new { message = "Đăng ký thành công, mã OTP đã được gửi đến email." });
-            }
+            var token = new JwtSecurityToken(
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(3),
+                signingCredentials: new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256)
+            );
 
-            return StatusCode(500, "Không thể tạo tài khoản.");
-        }
-
-        // Đăng nhập
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequestDTO request)
-        {
-            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.OtpCode))
-            {
-                return BadRequest("Email và OTP không được để trống.");
-            }
-
-            var user = await _userService.GetUserByEmailAsync(request.Email);
-            if (user == null)
-            {
-                return NotFound("Người dùng không tồn tại.");
-            }
-
-            // Kiểm tra OTP
-            if (user.OtpCode == request.OtpCode && user.OtpExpiry > DateTime.UtcNow)
-            {
-                return Ok(new { message = "Đăng nhập thành công!" });
-            }
-
-            return BadRequest("Mã OTP không hợp lệ hoặc đã hết hạn.");
-        }
-
-        // Xác thực và gửi OTP mới
-        [HttpPost("send-otp")]
-        public async Task<IActionResult> SendOtp([FromBody] string email)
-        {
-            var user = await _userService.GetUserByEmailAsync(email);
-            if (user == null)
-            {
-                return NotFound("Người dùng không tồn tại.");
-            }
-
-            await _emailService.SendOTPAsync(email);
-            return Ok(new { message = "Mã OTP đã được gửi lại." });
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }

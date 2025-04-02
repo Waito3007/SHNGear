@@ -1,5 +1,4 @@
 import React from "react";
-import "./Commitment.css"; // Import CSS
 
 const policies = [
   {
@@ -26,17 +25,30 @@ const policies = [
 
 const Commitment = () => {
   return (
-    <div className="feature-policy">
-      <div className="policy-container">
-        {policies.map((policy, index) => (
-          <div className="policy-item" key={index}>
-            <img src={policy.icon} alt={policy.title} className="policy-icon" />
-            <div className="policy-text">
-              <p className="policy-title">{policy.title}</p>
-              <p className="policy-description">{policy.description}</p>
+    <div className="bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {policies.map((policy, index) => (
+            <div 
+              key={index}
+              className="bg-white rounded-lg shadow-sm p-4 flex items-start sm:items-center space-x-3 sm:space-x-4"
+            >
+              <img 
+                src={policy.icon} 
+                alt={policy.title} 
+                className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0"
+              />
+              <div className="flex-1">
+                <h3 className="font-bold text-sm sm:text-base mb-1 text-gray-800">
+                  {policy.title}
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600">
+                  {policy.description}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

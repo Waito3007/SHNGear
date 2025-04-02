@@ -3,22 +3,28 @@ namespace SHN_Gear.Models
     public class User
     {
         public int Id { get; set; }
-        public string FullName { get; set; } = string.Empty;  // Họ và Tên
-        public string PhoneNumber { get; set; } = string.Empty;  // Số điện thoại (dùng để đăng nhập)
-        public string Gender { get; set; } = "Khác";  // Giới tính (Nam, Nữ, Khác)
-        public DateTime DateOfBirth { get; set; }  // Ngày sinh
-        public string Email { get; set; } = string.Empty;  // Email (không bắt buộc)
-        public string AvatarUrl { get; set; } = string.Empty;  // Link ảnh đại diện
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;  // Ngày tạo tài khoản
-        public int Points { get; set; } = 0;  // Điểm thành viên
-        public string Password { get; set; } = string.Empty;  // Mật khẩu
+        public string FullName { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+        public string? Gender { get; set; }  // Có thể null
+        public DateTime? DateOfBirth { get; set; }  // Có thể null
+        public string Email { get; set; } = string.Empty;
+        public string? AvatarUrl { get; set; }  // Có thể null
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public int Points { get; set; } = 0;
+        public string Password { get; set; } = string.Empty;
+
+        public bool IsActive { get; set; } = true;  // Mặc định là kích hoạt
 
         // OTP Login
-        public string OtpCode { get; set; } = string.Empty;  // Mã OTP (lưu tạm thời)
-        public DateTime OtpExpiry { get; set; }  // Thời gian hết hạn OTP
+        public string? OtpCode { get; set; }  // Có thể null
+        public DateTime? OtpExpiry { get; set; }  // Có thể null
 
-        // Quan hệ với Role 
-        public int RoleId { get; set; }  
+        // Quan hệ với Role
+        public int RoleId { get; set; }
         public Role Role { get; set; } = null!;
+
+        // Quan hệ với UserVoucher
+        public ICollection<UserVoucher> UserVouchers { get; set; } = new List<UserVoucher>();
     }
+
 }

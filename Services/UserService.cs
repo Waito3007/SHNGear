@@ -1,47 +1,110 @@
-using SHN_Gear.Models;
-using SHN_Gear.Data;
 using System;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using SHN_Gear.Data;
+using SHN_Gear.DTOs;
+using SHN_Gear.Models;
 
 namespace SHN_Gear.Services
 {
     public class UserService
     {
-        private readonly AppDbContext _dbContext;
-
-        public UserService(AppDbContext dbContext)
+        private readonly AppDbContext _context;
+        public User? GetUserById(int userId)
         {
-            _dbContext = dbContext;
+            return _context.Users
+                .Include(u => u.Role) // Nếu User có Role, ta include vào để lấy thông tin
+                .FirstOrDefault(u => u.Id == userId);
         }
 
-        // Kiểm tra xem email đã tồn tại chưa
-        public async Task<bool> UserExistsByEmailAsync(string email)
+        public UserService(AppDbContext context)
         {
-            return await _dbContext.Users.AnyAsync(u => u.Email == email);
+            _context = context;
         }
 
-        // Lấy thông tin người dùng theo email
-        public async Task<User?> GetUserByEmailAsync(string email)
+        public async Task<bool> RegisterUserAsync(RegisterDto registerDto)
         {
-            return await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email))
+            {
+                return false; // Email đã tồn tại
+            }
+
+            var role = await _context.Roles.FindAsync(2);
+            if (role == null)
+            {
+                return false;
+            }
+
+            string hashedPassword = HashPassword(registerDto.Password);
+
+            var user = new User
+            {
+                Email = registerDto.Email,
+                Password = hashedPassword,
+                CreatedAt = DateTime.UtcNow,
+                RoleId = role.Id,
+                Role = role,
+
+                // Gán giá trị từ DTO
+                FullName = !string.IsNullOrWhiteSpace(registerDto.FullName) ? registerDto.FullName : "",
+                PhoneNumber = !string.IsNullOrWhiteSpace(registerDto.PhoneNumber) ? registerDto.PhoneNumber : ""
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+            return true;
         }
 
-        // Tạo tài khoản người dùng mới
-        public async Task<bool> CreateUserAsync(User user)
+
+        public async Task<User> AuthenticateUserAsync(LoginDto loginDto)
         {
-            _dbContext.Users.Add(user);
-            var result = await _dbContext.SaveChangesAsync();
-            return result > 0;
+            // Thêm Include để load thông tin Role
+            var user = await _context.Users
+                .Include(u => u.Role) // Quan trọng
+                .FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+
+            if (user == null || !VerifyPassword(loginDto.Password, user.Password))
+                return null;
+
+            return user;
         }
 
-        // Cập nhật OTP cho người dùng
-        public async Task UpdateUserOtpAsync(User user, string otpCode)
+        public string HashPassword(string password)
         {
-            user.OtpCode = otpCode;
-            user.OtpExpiry = DateTime.UtcNow.AddMinutes(5); // OTP có hiệu lực trong 5 phút
-            _dbContext.Users.Update(user);
-            await _dbContext.SaveChangesAsync();
+            using var sha256 = SHA256.Create();
+            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+            return Convert.ToBase64String(hashedBytes);
+        }
+
+        private bool VerifyPassword(string inputPassword, string storedHash)
+        {
+            return HashPassword(inputPassword) == storedHash;
+        }
+        public async Task<bool> CheckEmailExistsAsync(string email)
+        {
+            return await _context.Users.AnyAsync(u => u.Email == email);
+        }
+
+        public async Task<User?> GetUserByIdAsync(int userId)
+        {
+            return await _context.Users.FindAsync(userId);
+        }
+        public async Task<User?> UpdateUserProfileAsync(int userId, EditProfileDto editDto)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return null;
+
+            user.FullName = editDto.FullName;
+            user.Email = editDto.Email;
+            user.PhoneNumber = editDto.PhoneNumber;
+            user.Gender = editDto.Gender;
+            user.DateOfBirth = editDto.DateOfBirth;
+
+            await _context.SaveChangesAsync();
+            return user;
         }
     }
 }

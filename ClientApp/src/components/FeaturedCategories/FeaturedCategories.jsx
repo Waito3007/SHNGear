@@ -1,79 +1,87 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper/modules";
+import { Navigation, Pagination } from "swiper/modules";
+import { useNavigate } from "react-router-dom"; // Hook điều hướng
 import "swiper/css";
 import "swiper/css/navigation";
-import "./FeaturedCategories.css";
-
+import "swiper/css/pagination";
+import "aos/dist/aos.css";
+import AOS from "aos";
 import CategoryLarge from "./CategoryLarge";
-import CategorySmallGroup from "./CategorySmallGroup";
-
-// Import hình ảnh
-import phoneImg from "../../assets/img/anhcuanghia/dienthoai_banner.png";
-import laptopImg from "../../assets/img/anhcuanghia/laptop_thumb_2_4df0fab60f.png";
-import accessoriesImg from "../../assets/img/anhcuanghia/phu_kien_thum_2_21c419aa09.png";
-import refrigeratorImg from "../../assets/img/anhcuanghia/tu_lanh_cate_thumb_77da11d0c4.png";
-import tvImg from "../../assets/img/anhcuanghia/tivi_baber.png";
-import homeApplianceImg from "../../assets/img/anhcuanghia/dien_gia_dung_thumb_2_54c5efa451.png";
-
-// Dữ liệu danh mục sản phẩm
-const categoryGroups = [
-  {
-    large: { name: "Điện thoại", image: phoneImg },
-  },
-  {
-    small: [
-      { name: "Tivi", image: tvImg },
-      { name: "Điện gia dụng", image: homeApplianceImg },
-    ],
-  },
-  {
-    large: { name: "Tủ lạnh", image: refrigeratorImg },
-  },
-  {
-    small: [
-      { name: "Laptop", image: laptopImg },
-      { name: "Phụ kiện", image: accessoriesImg },
-    ],
-  },
-  {
-    small: [
-      { name: "Laptop", image: laptopImg },
-      { name: "Phụ kiện", image: accessoriesImg },
-    ],
-  },
-  {
-    large: { name: "Điện thoại", image: phoneImg },
-  },
-  {
-    small: [
-      { name: "Laptop", image: laptopImg },
-      { name: "Phụ kiện", image: accessoriesImg },
-    ],
-  },
-];
 
 const FeaturedCategories = () => {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate(); // Hook điều hướng
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/categories`);
+        if (!response.ok) throw new Error("Không thể tải danh mục");
+        const data = await response.json();
+        console.log("Dữ liệu từ API:", data);
+
+        const categoriesArray = Array.isArray(data.$values)
+          ? data.$values
+          : Array.isArray(data)
+          ? data
+          : [];
+        setCategories(categoriesArray);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh mục:", error);
+        setError("Không thể tải danh mục: " + error.message);
+        setCategories([]);
+      } finally {
+        setLoading(false);
+      }
+
+      AOS.init({ duration: 1000 });
+    };
+
+    fetchCategories();
+  }, []);
+
+  if (loading) {
+    return <div className="text-center py-6">Đang tải danh mục...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-6 text-red-500">{error}</div>;
+  }
+
   return (
-    <div className="featured-categories">
-      <Swiper
-  modules={[Navigation]}
-  navigation
-  spaceBetween={10}
-  slidesPerView={2}
-  className="custom-swiper"
->
-
-
-        {categoryGroups.map((group, index) => (
-          <SwiperSlide key={index} className="category-slide">
-            <div className="category-container">
-              {group.large && <CategoryLarge name={group.large.name} image={group.large.image} />}
-              {group.small && <CategorySmallGroup smallCategories={group.small} />}
-            </div>
-          </SwiperSlide>
-        ))}
-      </Swiper>
+    <div className="w-full flex justify-center py-6">
+      <div className="max-w-[1200px] w-full px-4">
+        <Swiper
+          modules={[Navigation, Pagination]}
+          navigation
+          pagination={{ clickable: true }}
+          spaceBetween={20}
+          slidesPerView={1}
+          breakpoints={{
+            640: { slidesPerView: 2 },
+            768: { slidesPerView: 3 },
+            1024: { slidesPerView: 4 },
+          }}
+          className="pb-6 transition-transform duration-500 ease-in-out"
+        >
+          {categories.map((category) => (
+            <SwiperSlide
+              key={category.id}
+              className="flex justify-center transform hover:scale-105 transition-all duration-300"
+            >
+              <CategoryLarge
+                id={category.id}
+                name={category.name}
+                image={category.image}
+              />
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
     </div>
   );
 };

@@ -5,18 +5,17 @@ namespace SHN_Gear.Models
         public int Id { get; set; }
         public string Name { get; set; } = null!;
         public string Description { get; set; } = null!;
-        public decimal Price { get; set; }
-        public decimal? DiscountPrice { get; set; }  // Giá sau khi giảm, có thể null
-        public DateTime? FlashSaleStart { get; set; } // Thời gian bắt đầu flash sale
-        public DateTime? FlashSaleEnd { get; set; } // Thời gian kết thúc flash sale
         public List<ProductImage> Images { get; set; } = new();
-        public string Category { get; set; } = null!; // Điện thoại, laptop, tai nghe
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public int StockQuantity { get; set; }  // Số lượng tồn kho
+        public int CategoryId { get; set; }
+        public Category Category { get; set; } = null!;
+        public int BrandId { get; set; } // ✅ Thêm BrandId vào model
+        public Brand Brand { get; set; } = null!; // ✅ Thiết lập quan hệ với Brand
+        public List<ProductVariant> Variants { get; set; } = new();
 
         public bool IsOutOfStock()
         {
-            return StockQuantity <= 0;
+            return Variants.Sum(v => v.StockQuantity) <= 0;
         }
     }
 }
