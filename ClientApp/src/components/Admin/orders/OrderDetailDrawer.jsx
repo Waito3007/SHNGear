@@ -67,7 +67,7 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
       console.error('Failed to fetch variant details:', error);
     }
   };
-
+  
   const handleExportExcel = async () => {
     try {
       setExporting(true);
@@ -377,7 +377,7 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
                             </Typography>
                           )}
 
-                          {/* Hiển thị tất cả hình ảnh */}
+                          {/* Hiển thị tất cả hình ảnh
                           {images.length > 0 ? (
                             <Box sx={{ mt: 2 }}>
                               <Typography variant="body2" color="text.secondary" fontWeight="medium">
@@ -414,7 +414,7 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
                             <Typography variant="body2" color="text.secondary">
                               Không có hình ảnh sản phẩm.
                             </Typography>
-                          )}
+                          )} */}
                         </Box>
                       </ListItem>
                     );
