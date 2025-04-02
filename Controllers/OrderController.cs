@@ -799,8 +799,12 @@ namespace SHN_Gear.Controllers
         public async Task<IActionResult> GetOrderDetails(int id)
         {
             var order = await _context.Orders
-                .Include(o => o.OrderItems) // Chỉ cần Include OrderItems
-                .Include(o => o.Address)    // Giữ Include Address để lấy thông tin địa chỉ
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.ProductVariant)
+                        .ThenInclude(pv => pv.Product) // Thêm ThenInclude để lấy Product
+                                        .ThenInclude(p => p.Images) // QUAN TRỌNG: Include cả Images
+
+                .Include(o => o.Address)
                 .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null)
@@ -808,7 +812,7 @@ namespace SHN_Gear.Controllers
                 return NotFound("Đơn hàng không tồn tại.");
             }
 
-            Console.WriteLine($"Order {id} has {order.OrderItems.Count} items"); // Log số lượng items
+            Console.WriteLine($"Order {id} has {order.OrderItems.Count} items");
 
             var orderDetails = new
             {
@@ -833,9 +837,15 @@ namespace SHN_Gear.Controllers
                 PaymentMethodId = order.PaymentMethodId,
                 Items = order.OrderItems.Select(oi => new
                 {
-                    VariantId = oi.ProductVariantId, // Chỉ lấy VariantId
+                    VariantId = oi.ProductVariantId,
                     Quantity = oi.Quantity,
-                    Price = oi.Price
+                    Price = oi.Price,
+                    // ProductImage = oi.ProductVariant?.Product?.Images, // Lấy ảnh từ Product
+                    ProductImage = oi.ProductVariant.Product.Images
+                                .OrderByDescending(img => img.IsPrimary)
+                                .ThenBy(img => img.Id)
+                                .FirstOrDefault()?.ImageUrl ?? "/images/default-product.png",
+                    ProductName = oi.ProductVariant?.Product?.Name // Có thể thêm tên sản phẩm nếu cần
                 }).ToList()
             };
 
