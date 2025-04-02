@@ -40,7 +40,7 @@ const VoucherDrawer = ({ open, onClose }) => {
                 setIsEditing(false);
                 setSelectedVoucherId(null);
             } else {
-                await axios.post("${process.env.REACT_APP_API_BASE_URL}/api/vouchers", voucher);
+                await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/vouchers`, voucher);
             }
             fetchVouchers();
             handleCloseModal();
