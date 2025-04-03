@@ -12,7 +12,7 @@ const DailySalesTrend = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get(`/api/orders/daily-sales?days=${days}`);
+                const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/orders/daily-sales?days=${days}`);
                 setDailySalesData(response.data);
                 setLoading(false);
             } catch (err) {

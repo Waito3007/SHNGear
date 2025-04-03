@@ -1280,7 +1280,7 @@ namespace SHN_Gear.Controllers
                         break;
 
                     default: // month
-                        startDate = DateTime.UtcNow.Date.AddMonths(0);
+                        startDate = DateTime.UtcNow.Date.AddMonths(-1);
                         groupByFormat = date => date.Day.ToString();
                         formatPeriodLabel = period => $"Ngày {period}";
                         xAxisKey = "day";
