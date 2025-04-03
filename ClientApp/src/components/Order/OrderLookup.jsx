@@ -213,9 +213,9 @@ const OrderLookup = () => {
                                 <Box 
                             component="img"
                              src={
-                                    product.images?.imageUrl?.startsWith("http")
-                                        ? product.images.imageUrl // Ảnh từ API (URL đầy đủ)
-                                        : `${process.env.REACT_APP_API_BASE_URL}/${product.images?.imageUrl}` // Ảnh local trong wwwroot
+                                    product.image.startsWith("http")
+                                        ? product.image // Ảnh từ API (URL đầy đủ)
+                                        : `${process.env.REACT_APP_API_BASE_URL}/${product.image}` // Ảnh local trong wwwroot
                                 }
                             alt={product.name || 'Ảnh sản phẩm'}
                             sx={{ 

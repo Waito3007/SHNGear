@@ -20,6 +20,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 
+
 const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -105,9 +106,38 @@ const Checkout = () => {
     }
   };
 
+  const removePaidItemsFromCart = async () => {
+    if (!userId) return;
+    
+    try {
+      await axios.delete(`${process.env.REACT_APP_API_BASE_URL}/api/cart/remove-paid-items?userId=${userId}`);
+    } catch (error) {
+      console.error("Lỗi khi xóa sản phẩm đã thanh toán:", error);
+    }
+  };
+
+  const removeGuestCartItems = () => {
+    const sessionCart = sessionStorage.getItem("Cart");
+    if (!sessionCart) return;
+
+    const cartItems = JSON.parse(sessionCart) || [];
+    const paidProductVariantIds = selectedItems.map(item => item.productVariantId);
+    const remainingItems = cartItems.filter(
+      item => !paidProductVariantIds.includes(item.productVariantId)
+    );
+
+    sessionStorage.setItem("Cart", JSON.stringify(remainingItems));
+  };
   const handlePlaceOrder = async () => {
     setError(null);
 
+    // Xử lý giỏ hàng cho cả khách và người dùng đã đăng nhập
+    if (!userId) {
+      removeGuestCartItems();
+    } else {
+      await removePaidItemsFromCart();
+    }
+    
     if (userId && !selectedAddress) {
       setError("Vui lòng chọn địa chỉ giao hàng.");
       return;
@@ -173,7 +203,9 @@ const Checkout = () => {
           window.location.href = response.data.approvalUrl;
           return;
         }
-      }
+    }
+
+      
       // Handle MoMo payment
       else if (paymentMethod === "2") {
         const response = await axios.post(

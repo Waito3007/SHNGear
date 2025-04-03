@@ -1178,6 +1178,7 @@ namespace SHN_Gear.Controllers
                     .Include(o => o.OrderItems)
                         .ThenInclude(oi => oi.ProductVariant)
                             .ThenInclude(pv => pv.Product)
+                            .ThenInclude(p => p.Images) // Lấy hình ảnh sản phẩm
                     .Include(o => o.Address)
                     .Include(o => o.PaymentMethod)
                     .OrderByDescending(o => o.OrderDate)

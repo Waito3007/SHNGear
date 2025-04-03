@@ -14,7 +14,7 @@ const SIDEBAR_ITEMS = [
 	{ name: "Người Dùng", icon: Users, color: "#EC4899", href: "/admin/users" },
 	{ name: "Bán Hàng", icon: DollarSign, color: "#10B981", href: "/admin/sales" },
 	{ name: "Đơn Hàng", icon: ShoppingCart, color: "#F59E0B", href: "/admin/orders" },
-	{ name: "Phân tích", icon: TrendingUp, color: "#3B82F6", href: "/admin/analytics" },
+	// { name: "Phân tích", icon: TrendingUp, color: "#3B82F6", href: "/admin/analytics" },
 	// { name: "Settings", icon: Settings, color: "#6EE7B7", href: "/admin/settings" },
 ];
 
