@@ -88,9 +88,9 @@ const SalesOverviewChart = () => {
                     onChange={(e) => setSelectedTimeRange(e.target.value)}
                     disabled={isLoading}
                 >
-                    <option value="week">Tuần Này</option>
-                    <option value="month">Tháng Này</option>
-                    <option value="year">Năm Này</option>
+                    <option value="week">Tuần </option>
+                    <option value="month">Tháng trước </option>
+                    <option value="year">Năm </option>
                 </select>
             </div>
 
