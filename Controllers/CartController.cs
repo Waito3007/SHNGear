@@ -271,6 +271,47 @@ namespace SHN_Gear.Controllers
 
             return Ok("Giỏ hàng đã được làm trống.");
         }
+
+        [HttpDelete("remove-paid-items")]
+        public async Task<IActionResult> RemovePaidCartItems([FromQuery] int? userId)
+        {
+            if (userId == null || userId <= 0)
+            {
+                return BadRequest("UserId không hợp lệ.");
+            }
+
+            // Lấy giỏ hàng của user
+            var cart = await _context.Carts.Include(c => c.Items)
+                                           .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (cart == null || cart.Items == null || !cart.Items.Any())
+            {
+                return NotFound("Giỏ hàng trống hoặc không tồn tại.");
+            }
+
+            // Lấy danh sách các sản phẩm đã đặt hàng (có trong OrderItem)
+            var paidProductVariantIds = await _context.OrderItems
+                                                      .Select(oi => oi.ProductVariantId)
+                                                      .ToListAsync();
+
+            // Lọc các sản phẩm trong giỏ hàng đã được thanh toán
+            var paidCartItems = cart.Items
+                                    .Where(item => paidProductVariantIds.Contains(item.ProductVariantId))
+                                    .ToList();
+
+            if (!paidCartItems.Any())
+            {
+                return Ok("Không có sản phẩm nào đã thanh toán để xóa.");
+            }
+
+            // Xóa các sản phẩm đã thanh toán khỏi giỏ hàng
+            _context.CartItems.RemoveRange(paidCartItems);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Đã xóa các sản phẩm đã thanh toán khỏi giỏ hàng.", removedItems = paidCartItems.Count });
+        }
+
+
         // lấy tên và ảnh product dựa trên productVariantId
         [HttpGet("variant-info/{productVariantId}")]
         public async Task<IActionResult> GetProductVariantInfo(int productVariantId)

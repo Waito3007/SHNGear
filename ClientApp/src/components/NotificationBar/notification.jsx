@@ -23,7 +23,7 @@ const Notification = () => {
             </div>
           </li>
           <li className="pr-4">
-            <a className="flex items-center b2-medium" href="https://fptshop.com.vn/collection/gia-re-so-2-khong-ai-so-1">
+            <a className="flex items-center b2-medium" href="https://localhost:44479/ProductList?brandId=1">
               <img 
                 alt="Xả kho giá sốc, số lượng có hạn!" 
                 loading="lazy" 
