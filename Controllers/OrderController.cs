@@ -280,6 +280,7 @@ namespace SHN_Gear.Controllers
 
             return Ok(new { Message = "Đơn hàng đã được cập nhật thành công." });
         }
+        // Tạo đơn hàng
         [HttpPost]
         public async Task<IActionResult> CreateOrder([FromBody] OrderDto orderDto)
         {
@@ -408,15 +409,35 @@ namespace SHN_Gear.Controllers
                 // Process voucher and mark as used
                 if (voucher != null && userVoucher != null)
                 {
-                    // Cập nhật IsUsed thành true khi đơn hàng hoàn tất
                     userVoucher.IsUsed = true;
                     _context.UserVouchers.Update(userVoucher);
+                }
+
+                // Remove purchased items from cart
+                if (orderDto.UserId.HasValue)
+                {
+                    var productVariantIds = orderDto.OrderItems.Select(oi => oi.ProductVariantId).ToList();
+
+                    var cartItemsToRemove = await _context.CartItems
+                        .Where(ci => ci.Cart.UserId == orderDto.UserId.Value &&
+                                     productVariantIds.Contains(ci.ProductVariantId))
+                        .ToListAsync();
+
+                    if (cartItemsToRemove.Any())
+                    {
+                        _context.CartItems.RemoveRange(cartItemsToRemove);
+                    }
                 }
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                return Ok(new { Message = "Đơn hàng đã được tạo.", OrderId = order.Id });
+                return Ok(new
+                {
+                    Message = "Đơn hàng đã được tạo.",
+                    OrderId = order.Id,
+                    CartItemsRemoved = orderDto.UserId.HasValue // Indicate if cart items were removed
+                });
             }
             catch (Exception ex)
             {

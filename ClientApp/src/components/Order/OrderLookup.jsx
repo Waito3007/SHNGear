@@ -21,8 +21,6 @@ import {
   Chip
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import PrintIcon from '@mui/icons-material/Print';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 
@@ -187,7 +185,6 @@ const OrderLookup = () => {
                         <strong>{order.shippingInfo.fullName}</strong> | {order.shippingInfo.phone}
                       </Typography>
                       <Typography sx={{ mb: 1 }}>{order.shippingInfo.address}</Typography>
-                      <Typography>Email: {order.shippingInfo.email}</Typography>
                     </Box>
                   </Box>
 
@@ -210,23 +207,6 @@ const OrderLookup = () => {
                           <TableRow key={index}>
                             <TableCell>
                               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                <Box 
-                            component="img"
-                             src={
-                                    product.images?.imageUrl?.startsWith("http")
-                                        ? product.images.imageUrl // Ảnh từ API (URL đầy đủ)
-                                        : `${process.env.REACT_APP_API_BASE_URL}/${product.images?.imageUrl}` // Ảnh local trong wwwroot
-                                }
-                            alt={product.name || 'Ảnh sản phẩm'}
-                            sx={{ 
-                                width: 60, 
-                                height: 60, 
-                                objectFit: 'contain', 
-                                mr: 2, 
-                                borderRadius: 1,
-                                backgroundColor: 'grey.100'
-                            }}
-                                                    />
                                 <Typography>{product.name}</Typography>
                               </Box>
                             </TableCell>
@@ -245,24 +225,6 @@ const OrderLookup = () => {
                       </TableBody>
                     </Table>
                   </TableContainer>
-
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-                    <Button 
-                      variant="outlined"
-                      startIcon={<VisibilityIcon />}
-                      onClick={() => navigate(`/orders/${order.orderId}`)}
-                      sx={{ mr: 2 }}
-                    >
-                      Xem chi tiết
-                    </Button>
-                    <Button 
-                      variant="contained"
-                      startIcon={<PrintIcon />}
-                      onClick={() => window.print()}
-                    >
-                      In hóa đơn
-                    </Button>
-                  </Box>
                 </CardContent>
               </Card>
             ))}
