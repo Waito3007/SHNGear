@@ -4,8 +4,8 @@ import { useNavigate, NavLink } from "react-router-dom";
 import "./Navbar.css";
 import axios from 'axios';
 import { jwtDecode } from "jwt-decode"; // Import jwt-decode
-import menuIcon from "../../assets/icon/menu.svg";
-import logo from "../../assets/img/Phone/logo.png";
+import menuIcon from "..//..//Assets/icon/menu.svg";
+import logo from "..//..//Assets/img/Phone/logo.png";
 import AuthModal from "../Auth/AuthModal";
 import CartDrawer from "../shoppingcart/CartDrawer"; // Import Drawer
 

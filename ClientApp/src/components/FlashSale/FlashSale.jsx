@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import { useNavigate } from "react-router-dom";
-import Flaslsalebanner from  "../../assets/img/anhcuanghia/hot-sale-cuoi-tuan.gif"
+import Flaslsalebanner from "../../Assets/img/anhcuanghia/hot-sale-cuoi-tuan.gif"
 import "swiper/css";
 import "swiper/css/navigation";
 
@@ -18,38 +18,38 @@ const FlashSale = () => {
   const navigate = useNavigate();
 
   // Countdown timer effect
-useEffect(() => {
-  const calculateTimeLeft = () => {
-    const now = new Date();
-    const currentDay = now.getDay(); // 0 là Chủ Nhật, 1-6 là Thứ 2-Thứ 7
-    const endOfWeek = new Date(now);
-    
-    // Tính đến 23:59:59 Chủ Nhật
-    endOfWeek.setDate(now.getDate() + (7 - currentDay)); // Nhảy đến Chủ Nhật
-    endOfWeek.setHours(23, 59, 59, 0);
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const currentDay = now.getDay(); // 0 là Chủ Nhật, 1-6 là Thứ 2-Thứ 7
+      const endOfWeek = new Date(now);
 
-    const diff = endOfWeek - now;
+      // Tính đến 23:59:59 Chủ Nhật
+      endOfWeek.setDate(now.getDate() + (7 - currentDay)); // Nhảy đến Chủ Nhật
+      endOfWeek.setHours(23, 59, 59, 0);
 
-    if (diff <= 0) {
-      return { hours: 0, minutes: 0, seconds: 0 };
-    }
+      const diff = endOfWeek - now;
 
-    const hours = Math.floor((diff / (1000 * 60 * 60))) % 24;
-    const minutes = Math.floor((diff / (1000 * 60))) % 60;
-    const seconds = Math.floor((diff / 1000)) % 60;
+      if (diff <= 0) {
+        return { hours: 0, minutes: 0, seconds: 0 };
+      }
 
-    return { hours, minutes, seconds };
-  };
+      const hours = Math.floor((diff / (1000 * 60 * 60))) % 24;
+      const minutes = Math.floor((diff / (1000 * 60))) % 60;
+      const seconds = Math.floor((diff / 1000)) % 60;
 
-  // Cập nhật ngay lần đầu
-  setTimeLeft(calculateTimeLeft());
+      return { hours, minutes, seconds };
+    };
 
-  const timer = setInterval(() => {
+    // Cập nhật ngay lần đầu
     setTimeLeft(calculateTimeLeft());
-  }, 1000);
 
-  return () => clearInterval(timer);
-}, []);
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,12 +61,12 @@ useEffect(() => {
         const formattedProducts = productsData.map((product) => {
           const variant = product.variants?.[0] || {};
           const image = product.images?.[0]?.imageUrl || "/images/placeholder.jpg";
-          
+
           const oldPrice = variant.price || 0;
           const newPrice = variant.discountPrice || oldPrice;
           const discountAmount = oldPrice - newPrice;
-          const discount = oldPrice > 0 
-            ? `-${Math.round((discountAmount / oldPrice) * 100)}%` 
+          const discount = oldPrice > 0
+            ? `-${Math.round((discountAmount / oldPrice) * 100)}%`
             : "0%";
 
           return {
@@ -130,17 +130,17 @@ useEffect(() => {
             <span className="font-bold">TOP 10 GIÁ TỐT NHẤT</span>
           </div>
           {/* Thay thế phần text bằng ảnh GIF */}
-  <div className="flex justify-center">
-    <img 
-      src={Flaslsalebanner}
-      alt="Flash Sale Banner"
-      className="max-w-full h-auto"
-      style={{ 
-      maxHeight: '150px',
-      border: '2px solid #fecaca' // Thêm viền màu đỏ nhạt nếu cần
-    }} // Điều chỉnh theo nhu cầu
-    />
-  </div>
+          <div className="flex justify-center">
+            <img
+              src={Flaslsalebanner}
+              alt="Flash Sale Banner"
+              className="max-w-full h-auto"
+              style={{
+                maxHeight: '150px',
+                border: '2px solid #fecaca' // Thêm viền màu đỏ nhạt nếu cần
+              }} // Điều chỉnh theo nhu cầu
+            />
+          </div>
 
           {/* Countdown timer */}
           <div className="mt-6 flex justify-center">
@@ -170,112 +170,112 @@ useEffect(() => {
           {products.length > 0 ? (
             <>
               <Swiper
-      modules={[Navigation]}
-      navigation={{
-        nextEl: ".flash-sale-next",
-        prevEl: ".flash-sale-prev",
-      }}
-      spaceBetween={30}
-      slidesPerView={1}
-      breakpoints={{
-        640: { slidesPerView: 2 },
-        768: { slidesPerView: 3 },
-        1024: { slidesPerView: 4 },
-      }}
-      className="pb-12"
-    >
-      {products.map((product) => (
-        <SwiperSlide key={product.id}>
-          <div className="h-full flex flex-col">
-            <div
-              className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer group relative border-2 border-transparent hover:border-red-500 flex flex-col h-full"
-              onClick={() => navigate(`/product/${product.id}`)}
-            >
-              {/* Hot sale ribbon */}
-              <div className="absolute top-0 left-0 bg-red-600 text-white text-xs font-bold px-3 py-1 z-10 clip-path-ribbon">
-                HOT SALE
-              </div>
-
-              {/* Phần hình ảnh - cố định tỷ lệ khung hình */}
-              <div className="relative aspect-square bg-gray-50 flex-shrink-0">
-                <img
-                  src={
-                    product.image?.startsWith("http")
-                      ? product.image
-                      : `${process.env.REACT_APP_API_BASE_URL}/${product.image}`
-                  }
-                  alt={product.name}
-                  className="absolute top-0 left-0 w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "https://via.placeholder.com/300";
-                  }}
-                />
-                {product.discount !== "0%" && (
-                  <div className="absolute top-4 right-4 bg-red-600 text-white text-sm font-bold px-3 py-1 rounded-full shadow-lg">
-                    {product.discount}
-                  </div>
-                )}
-              </div>
-
-              {/* Phần thông tin - cố định chiều cao */}
-              <div className="p-5 flex flex-col flex-grow" style={{ minHeight: '280px' }}>
-                <div className="flex justify-between items-start mb-2">
-                  {product.oldPrice > product.newPrice ? (
-                    <span className="text-gray-500 text-sm line-through">
-                      {product.oldPrice.toLocaleString()}đ
-                    </span>
-                  ) : (
-                    <span className="text-sm invisible">0đ</span> 
-                  )}
-                  <span className="text-red-600 font-bold text-lg">
-                    {product.newPrice.toLocaleString()}đ
-                  </span>
-                </div>
-
-                <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2" style={{ height: '3.5rem' }}>
-                  {product.name}
-                </h3>
-
-                <div className="mb-3 min-h-[28px]">
-                  {product.discountAmount > 0 && (
-                    <span className="inline-block bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded">
-                      Tiết kiệm {product.discountAmount.toLocaleString()}đ
-                    </span>
-                  )}
-                </div>
-
-                <ul className="space-y-1 text-sm text-gray-600 mb-4 flex-grow">
-                  {product.features.map((feature, index) => (
-                    <li key={index} className="flex items-start h-6">
-                      <svg
-                        className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0 text-red-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
+                modules={[Navigation]}
+                navigation={{
+                  nextEl: ".flash-sale-next",
+                  prevEl: ".flash-sale-prev",
+                }}
+                spaceBetween={30}
+                slidesPerView={1}
+                breakpoints={{
+                  640: { slidesPerView: 2 },
+                  768: { slidesPerView: 3 },
+                  1024: { slidesPerView: 4 },
+                }}
+                className="pb-12"
+              >
+                {products.map((product) => (
+                  <SwiperSlide key={product.id}>
+                    <div className="h-full flex flex-col">
+                      <div
+                        className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer group relative border-2 border-transparent hover:border-red-500 flex flex-col h-full"
+                        onClick={() => navigate(`/product/${product.id}`)}
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      <span className="line-clamp-1">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+                        {/* Hot sale ribbon */}
+                        <div className="absolute top-0 left-0 bg-red-600 text-white text-xs font-bold px-3 py-1 z-10 clip-path-ribbon">
+                          HOT SALE
+                        </div>
 
-                <button className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg font-bold transition-all duration-300 transform hover:scale-105 shadow-md mt-auto">
-                  MUA NGAY
-                </button>
-              </div>
-            </div>
-          </div>
-        </SwiperSlide>
-      ))}
-    </Swiper>
+                        {/* Phần hình ảnh - cố định tỷ lệ khung hình */}
+                        <div className="relative aspect-square bg-gray-50 flex-shrink-0">
+                          <img
+                            src={
+                              product.image?.startsWith("http")
+                                ? product.image
+                                : `${process.env.REACT_APP_API_BASE_URL}/${product.image}`
+                            }
+                            alt={product.name}
+                            className="absolute top-0 left-0 w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = "https://via.placeholder.com/300";
+                            }}
+                          />
+                          {product.discount !== "0%" && (
+                            <div className="absolute top-4 right-4 bg-red-600 text-white text-sm font-bold px-3 py-1 rounded-full shadow-lg">
+                              {product.discount}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Phần thông tin - cố định chiều cao */}
+                        <div className="p-5 flex flex-col flex-grow" style={{ minHeight: '280px' }}>
+                          <div className="flex justify-between items-start mb-2">
+                            {product.oldPrice > product.newPrice ? (
+                              <span className="text-gray-500 text-sm line-through">
+                                {product.oldPrice.toLocaleString()}đ
+                              </span>
+                            ) : (
+                              <span className="text-sm invisible">0đ</span>
+                            )}
+                            <span className="text-red-600 font-bold text-lg">
+                              {product.newPrice.toLocaleString()}đ
+                            </span>
+                          </div>
+
+                          <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2" style={{ height: '3.5rem' }}>
+                            {product.name}
+                          </h3>
+
+                          <div className="mb-3 min-h-[28px]">
+                            {product.discountAmount > 0 && (
+                              <span className="inline-block bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded">
+                                Tiết kiệm {product.discountAmount.toLocaleString()}đ
+                              </span>
+                            )}
+                          </div>
+
+                          <ul className="space-y-1 text-sm text-gray-600 mb-4 flex-grow">
+                            {product.features.map((feature, index) => (
+                              <li key={index} className="flex items-start h-6">
+                                <svg
+                                  className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0 text-red-500"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                                <span className="line-clamp-1">{feature}</span>
+                              </li>
+                            ))}
+                          </ul>
+
+                          <button className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg font-bold transition-all duration-300 transform hover:scale-105 shadow-md mt-auto">
+                            MUA NGAY
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
 
               <div className="flash-sale-prev absolute left-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center cursor-pointer hover:bg-red-50 border-2 border-red-200">
                 <svg
@@ -342,7 +342,7 @@ useEffect(() => {
 
         {/* View all button */}
         <div className="text-center mt-8">
-          <button 
+          <button
             className="bg-white text-red-600 border-2 border-red-600 hover:bg-red-600 hover:text-white font-bold py-3 px-8 rounded-full transition-all duration-300 shadow-md hover:shadow-lg"
             onClick={() => navigate('/productlist')}
           >
