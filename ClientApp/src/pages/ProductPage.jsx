@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar/Navbar";
-import ProductImage from "../components/productinformationpage/ProductImage.jsx";
-import ProductInfo from "../components/productinformationpage/ProductInfo.jsx";
-import ProductVariants from "../components/productinformationpage/ProductVariants.jsx";
+import ProductImage from "../components/Productinformationpage/ProductImage";
+import ProductInfo from "../components/Productinformationpage/ProductInfo";
+import ProductVariants from "../components/Productinformationpage/ProductVariants";
 import Footer from "../components/Footer/Footer";
 import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
-import ProductReviews from "../components/productinformationpage/ProductReviews.jsx";
-import RelatedProducts from "../components/productinformationpage/RelatedProducts.jsx";
-import SpecificationDisplay from "../components/productinformationpage/ProductSpecifications.jsx";
+import ProductReviews from "../components/Productinformationpage/ProductReviews";
+import RelatedProducts from "../components/Productinformationpage/RelatedProducts";
+import SpecificationDisplay from "../components/Productinformationpage/ProductSpecifications";
 import Commitment from "../components/Commitment/Commitment";
 
 const ProductPage = () => {

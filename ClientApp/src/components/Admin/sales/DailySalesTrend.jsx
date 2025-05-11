@@ -36,15 +36,16 @@ const DailySalesTrend = () => {
             transition={{ delay: 0.4 }}
         >
             <div className="flex justify-between items-center mb-4">
-                <h2 className='text-xl font-semibold text-gray-100'>Daily Sales Trend</h2>
+                <h2 className='text-xl font-semibold text-gray-100'>Doanh số hàng ngày
+</h2>
                 <select 
                     value={days}
                     onChange={(e) => setDays(Number(e.target.value))}
                     className="bg-gray-700 text-white rounded px-3 py-1"
                 >
-                    <option value={7}>Last 7 days</option>
-                    <option value={14}>Last 14 days</option>
-                    <option value={30}>Last 30 days</option>
+                    <option value={7}>7 ngày gần đây</option>
+                    <option value={14}>14 ngày gần đây</option>
+                    <option value={30}>30 ngày gần đây</option>
                 </select>
             </div>
 
