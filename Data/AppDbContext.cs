@@ -88,6 +88,41 @@ namespace SHN_Gear.Data
                 .WithMany(v => v.UserVouchers)
                 .HasForeignKey(uv => uv.VoucherId);
 
+            modelBuilder.Entity<Review>(entity =>
+   {
+       // Review có một User, User (có thể) có nhiều Review
+       entity.HasOne(r => r.User) // Sử dụng navigation property 'User' trong Review
+             .WithMany()          // Giả định User không có navigation property trỏ về Review list (hoặc thêm vào nếu có: .WithMany(u => u.Reviews))
+             .HasForeignKey(r => r.UserId) // Chỉ định 'UserId' (kiểu string) là khóa ngoại
+             .IsRequired();       // Đánh giá luôn cần User
+
+       // Quan trọng: Kiểu dữ liệu của Review.UserId (string) phải khớp với kiểu khóa chính của User entity.
+       // Nếu khóa chính của User là int/Guid, bạn cần sửa lại kiểu UserId trong Review hoặc cấu hình khác.
+   });
+
+            modelBuilder.Entity<Delivery>(entity =>
+    {
+        // Giả định Delivery có thuộc tính ShippingCost
+        entity.Property(d => d.ShippingCost).HasColumnType("decimal(18, 2)");
+    });
+
+            modelBuilder.Entity<Order>(entity =>
+            {
+                // Giả định Order có thuộc tính TotalAmount
+                entity.Property(o => o.TotalAmount).HasColumnType("decimal(18, 2)");
+            });
+
+            modelBuilder.Entity<OrderItem>(entity =>
+            {
+                // Giả định OrderItem có thuộc tính Price (ngoài giá gốc từ ProductVariant)
+                // Nếu OrderItem không có cột Price riêng mà dùng giá từ ProductVariant thì không cần dòng này
+                entity.Property(oi => oi.Price).HasColumnType("decimal(18, 2)");
+            });
+            modelBuilder.Entity<Voucher>(entity =>
+    {
+        // Giả định Voucher có thuộc tính DiscountAmount
+        entity.Property(v => v.DiscountAmount).HasColumnType("decimal(18, 2)");
+    });
             // Thêm các quan hệ khác tương tự ở đây.
         }
     }
