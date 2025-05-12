@@ -36,7 +36,7 @@ const SalesByCategoryChart = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
         >
-            <h2 className='text-xl font-semibold text-gray-100 mb-4'>Sales by Category</h2>
+            <h2 className='text-xl font-semibold text-gray-100 mb-4'>Tỉ lệ đơn hàng theo danh mục</h2>
 
             <div style={{ width: "100%", height: 300 }}>
                 <ResponsiveContainer>
