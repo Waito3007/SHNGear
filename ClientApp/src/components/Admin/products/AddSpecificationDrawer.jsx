@@ -1,17 +1,26 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { message } from 'antd';
-import { 
-  Drawer, Button, Box, Typography, IconButton, 
+import {
+  Drawer, Button, Box, Typography, IconButton,
   TextField, FormControlLabel, Checkbox,
   CircularProgress, Alert, Dialog,
   DialogActions, DialogContent, DialogContentText, DialogTitle,
-  Skeleton, Fade
+  Skeleton, Fade, Snackbar, LinearProgress, Paper, InputAdornment // THÊM InputAdornment
 } from "@mui/material";
-import { X, Trash, Check, Plus } from "lucide-react";
+import {
+  X, Trash, Check, Plus, Scale, Smartphone, Monitor, // Monitor for general screen
+  Cpu, MemoryStick, HardDrive, Camera, BatteryFull, Nfc, // Phone
+  Laptop as LaptopIcon, Gauge, MousePointer2, // Laptop (LaptopIcon to avoid conflict)
+  Headphones, Bluetooth, Cable, Usb, // Headphones
+  Undo2, // For Cancel button
+  AlertTriangle, // For Dialog title
+  Package as PackageIcon, // For Product Info
+  LayoutGrid, // For Category Info
+  Info // For Alert message
+} from "lucide-react"; // Import các icon cần thiết
 import axios from "axios";
 
 // Constants
-const API_BASE_URL = `${process.env.REACT_APP_API_BASE_URL}/api/Specifications`;
+const API_BASE_URL_SPECS = `${process.env.REACT_APP_API_BASE_URL}/api/Specifications`;
 const CATEGORY_ENDPOINTS = {
   1: "PhoneSpecifications",
   2: "LaptopSpecifications",
@@ -24,160 +33,198 @@ const CATEGORY_NAMES = {
   3: "Tai nghe"
 };
 
+// Thêm thuộc tính 'icon' (là một component icon)
 const COMMON_FIELDS = [
-  { name: "weight", label: "Trọng lượng" }
+  { name: "weight", label: "Trọng lượng", icon: Scale, required: false, props: { placeholder: "Ví dụ: 200g hoặc 1.2kg" } }
 ];
 
 const CATEGORY_FIELDS = {
-  1: [
-    { name: "screenSize", label: "Kích thước màn hình" },
-    { name: "resolution", label: "Độ phân giải" },
-    { name: "screenType", label: "Loại màn hình" },
-    { name: "cpuModel", label: "Model CPU" },
-    { name: "cpuCores", label: "Số nhân CPU", type: "number" },
-    { name: "ram", label: "RAM" },
-    { name: "internalStorage", label: "Dung lượng lưu trữ" },
-    { name: "frontCamera", label: "Camera trước" },
-    { name: "rearCamera", label: "Camera sau" },
-    { name: "batteryCapacity", label: "Dung lượng pin" },
-    { name: "supportsNFC", label: "Hỗ trợ NFC", type: "checkbox" },
+  1: [ // Điện thoại
+    { name: "screenSize", label: "Kích thước màn hình", icon: Smartphone, required: true, props: { placeholder: "Ví dụ: 6.7 inches" } },
+    { name: "resolution", label: "Độ phân giải", icon: Monitor, required: true, props: { placeholder: "Ví dụ: 1080 x 2400 pixels" } },
+    { name: "screenType", label: "Loại màn hình", icon: Monitor, required: true, props: { placeholder: "Ví dụ: AMOLED" } },
+    { name: "cpuModel", label: "Model CPU", icon: Cpu, required: true, props: { placeholder: "Ví dụ: Snapdragon 8 Gen 2" } },
+    { name: "cpuCores", label: "Số nhân CPU", type: "number", icon: Cpu, required: true, props: { inputProps: { min: 1 }, placeholder:"Ví dụ: 8"} },
+    { name: "ram", label: "RAM", icon: MemoryStick, required: true, props: { placeholder: "Ví dụ: 8GB DDR5" } },
+    { name: "internalStorage", label: "Dung lượng lưu trữ", icon: HardDrive, required: true, props: { placeholder: "Ví dụ: 128GB UFS 3.1" } },
+    { name: "frontCamera", label: "Camera trước", icon: Camera, required: false, props: { placeholder: "Ví dụ: 12MP f/2.0" } },
+    { name: "rearCamera", label: "Camera sau", icon: Camera, required: false, props: { placeholder: "Ví dụ: Chính 50MP, Phụ 12MP" } },
+    { name: "batteryCapacity", label: "Dung lượng pin", icon: BatteryFull, required: true, props: { placeholder: "Ví dụ: 5000mAh" } },
+    { name: "supportsNFC", label: "Hỗ trợ NFC", type: "checkbox", icon: Nfc, required: false },
   ],
-  2: [
-    { name: "cpuType", label: "Loại CPU" },
-    { name: "cpuNumberOfCores", label: "Số nhân CPU", type: "number" },
-    { name: "ram", label: "RAM" },
-    { name: "maxRAMSupport", label: "Hỗ trợ RAM tối đa" },
-    { name: "ssdStorage", label: "Dung lượng SSD" },
-    { name: "screenSize", label: "Kích thước màn hình" },
-    { name: "resolution", label: "Độ phân giải" },
-    { name: "refreshRate", label: "Tần số quét" },
-    { name: "supportsTouch", label: "Hỗ trợ cảm ứng", type: "checkbox" },
+  2: [ // Laptop
+    { name: "cpuType", label: "Loại CPU", icon: Cpu, required: true, props: { placeholder: "Ví dụ: Intel Core i7-13700H" } },
+    { name: "cpuNumberOfCores", label: "Số nhân CPU", type: "number", icon: Cpu, required: true, props: { inputProps: { min: 1 }, placeholder:"Ví dụ: 14" } },
+    { name: "ram", label: "RAM", icon: MemoryStick, required: true, props: { placeholder: "Ví dụ: 16GB DDR5 5200MHz" } },
+    { name: "maxRAMSupport", label: "Hỗ trợ RAM tối đa", icon: MemoryStick, required: false, props: { placeholder: "Ví dụ: 32GB" } },
+    { name: "ssdStorage", label: "Dung lượng SSD", icon: HardDrive, required: true, props: { placeholder: "Ví dụ: 512GB PCIe NVMe Gen4" } },
+    { name: "screenSize", label: "Kích thước màn hình", icon: LaptopIcon, required: true, props: { placeholder: "Ví dụ: 15.6 inches" } },
+    { name: "resolution", label: "Độ phân giải", icon: Monitor, required: true, props: { placeholder: "Ví dụ: 1920 x 1080 (Full HD)" } },
+    { name: "refreshRate", label: "Tần số quét", icon: Gauge, required: false, props: { placeholder: "Ví dụ: 120Hz" } },
+    { name: "supportsTouch", label: "Hỗ trợ cảm ứng", type: "checkbox", icon: MousePointer2, required: false },
   ],
-  3: [
-    { name: "type", label: "Loại tai nghe" },
-    { name: "connectionType", label: "Loại kết nối" },
-    { name: "port", label: "Cổng" },
+  3: [ // Tai nghe
+    { name: "type", label: "Loại tai nghe", icon: Headphones, required: true, props: { placeholder: "Ví dụ: Over-ear, True Wireless" } },
+    { name: "connectionType", label: "Loại kết nối", icon: Bluetooth, required: true, props: { placeholder: "Ví dụ: Bluetooth 5.3, Wired" } }, // Hoặc Cable nếu có logic chọn
+    { name: "port", label: "Cổng sạc/kết nối", icon: Usb, required: false, props: { placeholder: "Ví dụ: USB-C, 3.5mm" } },
   ]
 };
 
+const getInitialFormData = (fields) => {
+  return fields.reduce((acc, field) => {
+    acc[field.name] = field.type === 'checkbox' ? false : '';
+    return acc;
+  }, {});
+};
+
+const ICON_SIZE_FIELD = 20; // Kích thước cho icon trong field
+const ICON_SIZE_BUTTON = 18;
+const ICON_SIZE_CLOSE = 22;
+
 const AddSpecificationDrawer = ({ open, onClose, product }) => {
-  // State management
   const [specification, setSpecification] = useState(null);
+  const [formData, setFormData] = useState({});
   const [loadingState, setLoadingState] = useState({
     fetch: false,
     submit: false,
     delete: false
   });
-  const [notification, setNotification] = useState({
-    error: null,
-    success: null
-  });
-  const [formData, setFormData] = useState({});
+  const [snackbarState, setSnackbarState] = useState({ open: false, message: '', severity: 'info' });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [specToDelete, setSpecToDelete] = useState(null);
 
-  // Memoized values
   const formFields = useMemo(() => {
-    if (!product?.categoryId) return COMMON_FIELDS;
-    return [...COMMON_FIELDS, ...(CATEGORY_FIELDS[product.categoryId] || [])];
-  }, [product]);
+    if (!product?.categoryId || !CATEGORY_ENDPOINTS[product.categoryId]) {
+        return COMMON_FIELDS;
+    }
+    const categorySpecificFields = CATEGORY_FIELDS[product.categoryId] || [];
+    return [...COMMON_FIELDS, ...categorySpecificFields];
+  }, [product?.categoryId]);
 
   const endpoint = useMemo(() => {
     return product?.categoryId ? CATEGORY_ENDPOINTS[product.categoryId] : null;
-  }, [product]);
+  }, [product?.categoryId]);
 
-  // API calls
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbarState({ open: true, message, severity });
+  };
+
+  const resetComponentState = useCallback(() => {
+    setSpecification(null);
+    setFormData(getInitialFormData(formFields));
+    setDeleteDialogOpen(false);
+  }, [formFields]);
+
   const fetchSpecification = useCallback(async () => {
-    if (!endpoint || !product?.id) return;
-    
+    if (!endpoint || !product?.id) {
+        setSpecification(null);
+        setFormData(getInitialFormData(formFields));
+        return;
+    }
+    setLoadingState(prev => ({ ...prev, fetch: true }));
     try {
-      setLoadingState(prev => ({ ...prev, fetch: true }));
-      setNotification({ error: null, success: null });
-
       const response = await axios.get(
-        `${API_BASE_URL}/${endpoint}/product/${product.id}`
+        `${API_BASE_URL_SPECS}/${endpoint}/product/${product.id}`
       );
-      
-      if (response.data) {
+      if (response.data && Object.keys(response.data).length > 0) {
         setSpecification(response.data);
         setFormData(response.data);
+      } else {
+        setSpecification(null);
+        setFormData(getInitialFormData(formFields));
       }
     } catch (error) {
-      if (error.response?.status !== 404) {
-        console.error("Fetch specification failed:", error);
-        setNotification(prev => ({
-          ...prev,
-          error: error.response?.data || "Không thể tải thông số kỹ thuật"
-        }));
+      if (error.response?.status === 404) {
+        setSpecification(null);
+        setFormData(getInitialFormData(formFields));
+      } else {
+        console.error("Lỗi khi tải thông số kỹ thuật:", error);
+        showSnackbar(error.response?.data?.message || error.message || "Không thể tải thông số kỹ thuật.", "error");
       }
     } finally {
       setLoadingState(prev => ({ ...prev, fetch: false }));
     }
-  }, [endpoint, product]);
+  }, [endpoint, product?.id, formFields]);
 
-
-const handleSubmit = useCallback(async () => {
-  if (!endpoint || !product?.id) return;
-
-  try {
-    setLoadingState(prev => ({ ...prev, submit: true }));
-    setNotification({ error: null, success: null });
-
-    const payload = { ...formData, productId: product.id };
-    const url = `${API_BASE_URL}/${endpoint}`;
-
-    if (specification) {
-      await axios.put(`${url}/${specification.id}`, payload);
-      message.success('Cập nhật thông số thành công!');
-    } else {
-      await axios.post(url, payload);
-      message.success('Thêm thông số thành công!');
+  const handleSubmit = useCallback(async (event) => {
+    event.preventDefault();
+    if (!endpoint || !product?.id) {
+        showSnackbar("Không thể lưu: Thiếu thông tin sản phẩm hoặc danh mục.", "error");
+        return;
     }
-
-    setTimeout(onClose, 2000);
-  } catch (error) {
-    console.error("Lưu thông số thất bại:", error);
-    message.error(error.response?.data || "Đã xảy ra lỗi khi lưu thông số");
-  } finally {
-    setLoadingState(prev => ({ ...prev, submit: false }));
-  }
-}, [endpoint, formData, specification, product, onClose]);
-  
-  const handleDelete = useCallback(async () => {
-    if (!endpoint || !specToDelete?.id) return;
-
+    setLoadingState(prev => ({ ...prev, submit: true }));
+    const payload = { ...formData, productId: product.id };
+    formFields.forEach(field => {
+      if (field.type === 'number') {
+        const val = formData[field.name];
+        if (val === '' || val === null || isNaN(parseFloat(String(val)))) {
+          payload[field.name] = null;
+        } else {
+          payload[field.name] = parseFloat(String(val));
+        }
+      }
+    });
+    const url = `${API_BASE_URL_SPECS}/${endpoint}`;
     try {
-      setLoadingState(prev => ({ ...prev, delete: true }));
-      setNotification({ error: null, success: null });
-
-      await axios.delete(`${API_BASE_URL}/${endpoint}/${specToDelete.id}`);
-      setNotification({ success: "Xóa thông số thành công!", error: null });
-      setDeleteDialogOpen(false);
-
-      setTimeout(onClose, 2000);
+      let successMessage = "";
+      if (specification?.id) {
+        await axios.put(`${url}/${specification.id}`, payload);
+        successMessage = 'Cập nhật thông số thành công!';
+        fetchSpecification();
+      } else {
+        const postResponse = await axios.post(url, payload);
+        successMessage = 'Thêm thông số thành công!';
+        if (postResponse.data && Object.keys(postResponse.data).length > 0) {
+          setSpecification(postResponse.data);
+          setFormData(postResponse.data);
+        } else {
+          fetchSpecification();
+        }
+      }
+      showSnackbar(successMessage, "success");
     } catch (error) {
-      console.error("Delete specification failed:", error);
-      setNotification(prev => ({
-        ...prev,
-        error: "Không thể xóa thông số kỹ thuật"
-      }));
+      console.error("Lỗi khi lưu thông số:", error);
+      const errorData = error.response?.data;
+      let errorMsg = "Đã xảy ra lỗi khi lưu thông số.";
+       if (typeof errorData === 'string') {
+        errorMsg = errorData;
+      } else if (errorData?.message) {
+        errorMsg = errorData.message;
+      } else if (errorData?.errors && typeof errorData.errors === 'object') {
+        errorMsg = Object.values(errorData.errors).flat().join('; ');
+      } else if (errorData?.title) {
+        errorMsg = errorData.title;
+      }
+      showSnackbar(errorMsg, "error");
+    } finally {
+      setLoadingState(prev => ({ ...prev, submit: false }));
+    }
+  }, [endpoint, product?.id, formData, specification, formFields, fetchSpecification]);
+
+  const handleDelete = useCallback(async () => {
+    if (!endpoint || !specification?.id) return;
+    setLoadingState(prev => ({ ...prev, delete: true }));
+    try {
+      await axios.delete(`${API_BASE_URL_SPECS}/${endpoint}/${specification.id}`);
+      showSnackbar("Xóa thông số thành công!");
+      setDeleteDialogOpen(false);
+      resetComponentState();
+    } catch (error) {
+      console.error("Lỗi khi xóa thông số:", error);
+      showSnackbar(error.response?.data?.message || error.message || "Không thể xóa thông số.", "error");
     } finally {
       setLoadingState(prev => ({ ...prev, delete: false }));
     }
-  }, [endpoint, specToDelete, onClose]);
+  }, [endpoint, specification?.id, resetComponentState]);
 
-  // Effects
   useEffect(() => {
     if (open && product) {
+      setFormData(getInitialFormData(formFields));
       fetchSpecification();
-    } else {
-      setSpecification(null);
-      setFormData({});
-      setNotification({ error: null, success: null });
+    } else if (!open) {
+      resetComponentState();
     }
-  }, [open, product, fetchSpecification]);
+  }, [open, product, formFields, fetchSpecification, resetComponentState]);
 
-  // Event handlers
   const handleInputChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -187,257 +234,263 @@ const handleSubmit = useCallback(async () => {
   }, []);
 
   const handleDeleteClick = useCallback(() => {
-    setSpecToDelete(specification);
-    setDeleteDialogOpen(true);
+    if (specification?.id) {
+      setDeleteDialogOpen(true);
+    }
   }, [specification]);
 
-  // Render helpers
-  const renderFormFields = useCallback(() => (
-    <Box sx={{ mt: 2 }}>
-      {formFields.map((field) => (
-        <Box key={field.name} sx={{ mb: 2 }}>
+  const handleDrawerClose = () => {
+    onClose();
+  };
+
+  const anyLoading = loadingState.fetch || loadingState.submit || loadingState.delete;
+  const canSubmit = !!(product?.id && endpoint);
+
+  const renderFormFieldsContent = useCallback(() => (
+    formFields.map((field) => {
+      const labelText = field.required ? `${field.label} *` : field.label;
+      const IconComponent = field.icon; // Icon component từ field definition
+
+      return (
+        <Box key={field.name} sx={{ mb: 2.5 }}>
           {field.type === 'checkbox' ? (
             <FormControlLabel
               control={
                 <Checkbox
                   name={field.name}
-                  checked={formData[field.name] || false}
+                  checked={!!formData[field.name]}
                   onChange={handleInputChange}
+                  disabled={anyLoading || loadingState.fetch}
+                  size="small"
                 />
               }
-              label={field.label}
+              label={
+                <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
+                  {IconComponent && <IconComponent size={ICON_SIZE_FIELD - 4} style={{ marginRight: '8px', opacity: 0.7 }} />}
+                  {labelText}
+                </Box>
+              }
             />
           ) : (
             <TextField
               fullWidth
-              label={field.label}
+              label={labelText}
               name={field.name}
               value={formData[field.name] || ''}
               onChange={handleInputChange}
               type={field.type || 'text'}
               variant="outlined"
               size="small"
+              disabled={anyLoading || loadingState.fetch}
+              required={field.required}
+              InputProps={{
+                startAdornment: IconComponent ? (
+                  <InputAdornment position="start">
+                    <IconComponent size={ICON_SIZE_FIELD} style={{ opacity: 0.7 }}/>
+                  </InputAdornment>
+                ) : null,
+                ...(field.props?.InputProps || {}) // Merge với InputProps từ field.props nếu có
+              }}
+              // InputLabelProps={{ shrink: true }} // Có thể bỏ nếu không muốn label luôn shrink
+              {...(field.props || {})} // Loại bỏ InputProps ở đây để tránh ghi đè
             />
           )}
         </Box>
-      ))}
-    </Box>
-  ), [formFields, formData, handleInputChange]);
+      );
+    })
+  ), [formFields, formData, handleInputChange, anyLoading, loadingState.fetch]);
 
   const renderProductInfo = useCallback(() => (
     product && (
-      <Box sx={{ mb: 3, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-        <Typography variant="subtitle1">
-          <b>Sản phẩm:</b> {product.name}
+      <Paper variant="outlined" sx={{ mb: 2.5, p: 1.5, bgcolor: 'action.hover' }}>
+        <Typography variant="body2" component="div" gutterBottom sx={{ fontWeight: 'medium', display: 'flex', alignItems: 'center' }}>
+          <PackageIcon size={ICON_SIZE_FIELD - 2} style={{ marginRight: '8px', opacity: 0.8 }} />
+          Sản phẩm: <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>{product.name || "Không có tên"}</Typography>
         </Typography>
-        <Typography variant="subtitle1">
-          <b>Danh mục:</b> {CATEGORY_NAMES[product.categoryId] || 'Khác'}
+        <Typography variant="body2" component="div" sx={{ display: 'flex', alignItems: 'center' }}>
+          <LayoutGrid size={ICON_SIZE_FIELD - 2} style={{ marginRight: '8px', opacity: 0.8 }} />
+          Danh mục: <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>{CATEGORY_NAMES[product.categoryId] || 'Chưa có hoặc không hợp lệ'}</Typography>
         </Typography>
-      </Box>
+      </Paper>
     )
   ), [product]);
 
-  const renderSkeletonLoader = useCallback(() => (
-    <Box sx={{ flexGrow: 1 }}>
-      {Array.from({ length: 5 }).map((_, index) => (
-        <Skeleton key={index} variant="rectangular" height={56} sx={{ mb: 2 }} />
-      ))}
-    </Box>
-  ), []);
+  const showInitialLoadSpinner = loadingState.fetch && !specification?.id;
+  const showRefetchProgressBar = loadingState.fetch && !!specification?.id;
 
   return (
-    <Drawer 
-      anchor="right" 
-      open={open} 
-      onClose={onClose}
-      sx={{
-        '& .MuiDrawer-paper': {
-          width: { xs: '100%', sm: 600 },
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={handleDrawerClose}
+      PaperProps={{
+        sx: {
+          width: { xs: '100%', sm: 480, md: 520 },
           boxSizing: 'border-box',
         }
       }}
     >
       <Box
         sx={{
-          p: 3,
+          p: { xs: 2, md: 2.5 },
           bgcolor: "background.paper",
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          overflow: 'auto'
+          position: 'relative',
         }}
       >
-        {/* Header */}
-        <Box 
-          display="flex" 
-          justifyContent="space-between" 
-          alignItems="center" 
-          mb={3}
-          sx={{
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-            pb: 2
-          }}
+        {showRefetchProgressBar && <LinearProgress sx={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, height: '3px' }} />}
+
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={2}
+          pb={1.5}
+          borderBottom={1}
+          borderColor="divider"
         >
-          <Typography variant="h5" fontWeight="bold" color="primary">
-            {specification ? "Thông số kỹ thuật" : "Thêm thông số kỹ thuật"}
+          <Typography variant="h6" fontWeight={500}>
+            {specification?.id ? "Chỉnh sửa thông số" : "Thêm thông số"}
           </Typography>
-          <IconButton 
-            onClick={onClose}
-            sx={{
-              color: 'text.secondary',
-              '&:hover': { backgroundColor: 'action.hover' }
-            }}
-          >
-            <X size={24} />
+          <IconButton onClick={handleDrawerClose} aria-label="Đóng Drawer" size="small">
+            <X size={ICON_SIZE_CLOSE} />
           </IconButton>
         </Box>
 
-        {/* Loading state */}
-        <Fade in={loadingState.fetch && !specification} unmountOnExit>
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            alignItems: 'center',
-            flexGrow: 1,
-            minHeight: '300px'
-          }}>
-            <CircularProgress color="primary" size={60} thickness={4} />
+        {renderProductInfo()}
+
+        {showInitialLoadSpinner ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexGrow: 1, minHeight: '200px' }}>
+            <CircularProgress />
           </Box>
-        </Fade>
-
-        {!loadingState.fetch && (
-          <>
-            {/* Product info */}
-            {renderProductInfo()}
-
-            {/* Notifications */}
-            <Box sx={{ my: 2 }}>
-              {notification.error && (
-                <Alert 
-                  severity="error" 
-                  onClose={() => setNotification(prev => ({ ...prev, error: null }))}
-                  sx={{ mb: 2 }}
-                >
-                  {notification.error}
+        ) : (
+          <Box
+            component="form"
+            id="specification-form"
+            onSubmit={handleSubmit}
+            sx={{ flexGrow: 1, overflowY: 'auto', pr: { xs: 0, sm: 0.5 }, pt: 0.5 }}
+          >
+            {!endpoint && product?.id && (
+              <Alert severity="warning" sx={{ mt: 1, mb:2 }} icon={<AlertTriangle size={ICON_SIZE_FIELD}/>}>
+                Sản phẩm này chưa có danh mục được hỗ trợ thông số kỹ thuật, hoặc danh mục không hợp lệ.
+              </Alert>
+            )}
+            {endpoint && formFields.length > 0 && renderFormFieldsContent()}
+             {endpoint && (!formFields.length || (formFields.length === COMMON_FIELDS.length && !COMMON_FIELDS.some(cf => formFields.find(f => f.name === cf.name && f.label !== cf.label)))) && (
+                <Typography variant="body2" color="text.secondary" sx={{mt: 2, textAlign: 'center', p:2, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    <Info size={ICON_SIZE_FIELD} style={{marginRight: '8px'}}/> Danh mục này không có thông số kỹ thuật chi tiết để thêm/sửa.
+                </Typography>
+            )}
+            {endpoint && formFields.length > 0 && !specification?.id && !loadingState.fetch && (
+                 <Alert severity="info" variant="outlined" icon={<Info size={ICON_SIZE_FIELD} />} sx={{ mt: 1, mb:2, fontSize: '0.875rem' }}>
+                    Chưa có thông số cho sản phẩm này. Điền form để thêm mới.
                 </Alert>
-              )}
+            )}
+          </Box>
+        )}
 
-              {notification.success && (
-                <Alert 
-                  severity="success" 
-                  onClose={() => setNotification(prev => ({ ...prev, success: null }))}
-                  sx={{ mb: 2 }}
-                >
-                  {notification.success}
-                </Alert>
-              )}
-            </Box>
-
-            {/* Form content */}
-            <Box sx={{ flexGrow: 1 }}>
-              {loadingState.fetch ? renderSkeletonLoader() : renderFormFields()}
-            </Box>
-
-            {/* Action buttons */}
-            <Box 
-              sx={{ 
-                mt: 4,
-                pt: 2,
-                borderTop: '1px solid',
-                borderColor: 'divider',
-                display: 'flex',
-                gap: 2,
-                justifyContent: 'flex-end'
-              }}
+        {!showInitialLoadSpinner && (
+          <Box
+            sx={{
+              mt: 'auto',
+              pt: 2,
+              borderTop: 1,
+              borderColor: 'divider',
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: 1.5,
+              justifyContent: 'flex-end',
+              bgcolor: 'background.paper',
+            }}
+          >
+            {specification?.id && endpoint && (
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<Trash size={ICON_SIZE_BUTTON}/>}
+                onClick={handleDeleteClick}
+                disabled={anyLoading}
+                sx={{ mr: { sm: 'auto' } }}
+                size="medium"
+              >
+                Xóa
+              </Button>
+            )}
+            <Button
+              variant="text"
+              startIcon={<Undo2 size={ICON_SIZE_BUTTON} />} // Thêm icon cho nút Hủy
+              onClick={handleDrawerClose}
+              disabled={anyLoading}
+              size="medium"
             >
-              {specification ? (
-                <>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    startIcon={<Trash />}
-                    onClick={handleDeleteClick}
-                    sx={{ mr: 'auto' }}
-                  >
-                    Xóa
-                  </Button>
-                  <Button
-                    variant="contained"
-                    startIcon={loadingState.submit ? 
-                      <CircularProgress size={20} color="inherit" /> : <Check />}
-                    onClick={handleSubmit}
-                    disabled={loadingState.submit}
-                    sx={{
-                      minWidth: '120px',
-                      '& .MuiCircularProgress-root': { marginRight: '8px' }
-                    }}
-                  >
-                    {loadingState.submit ? 'Đang xử lý...' : 'Cập nhật'}
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  variant="contained"
-                  startIcon={loadingState.submit ? 
-                    <CircularProgress size={20} color="inherit" /> : <Plus />}
-                  onClick={handleSubmit}
-                  disabled={loadingState.submit}
-                  fullWidth
-                  size="large"
-                  sx={{
-                    '& .MuiCircularProgress-root': { marginRight: '8px' }
-                  }}
-                >
-                  {loadingState.submit ? 'Đang thêm...' : 'Thêm thông số'}
-                </Button>
-              )}
-            </Box>
-          </>
+              Hủy
+            </Button>
+            <Button
+              type="submit"
+              form="specification-form"
+              variant="contained"
+              color="primary"
+              startIcon={loadingState.submit ? <CircularProgress size={20} color="inherit" /> : (specification?.id ? <Check size={ICON_SIZE_BUTTON}/> : <Plus size={ICON_SIZE_BUTTON}/>)}
+              disabled={anyLoading || !canSubmit || loadingState.fetch}
+              size="medium"
+              sx={{minWidth: '140px'}}
+            >
+              {loadingState.submit ? 'Đang xử lý...' : (specification?.id ? 'Lưu thay đổi' : 'Thêm mới')}
+            </Button>
+          </Box>
         )}
       </Box>
 
-      {/* Delete confirmation dialog */}
-      <Dialog 
-        open={deleteDialogOpen} 
-        onClose={() => setDeleteDialogOpen(false)}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => !loadingState.delete && setDeleteDialogOpen(false)}
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle>Xác nhận xóa</DialogTitle>
+        <DialogTitle sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+            <AlertTriangle color="orange" size={ICON_SIZE_CLOSE}/> Xác nhận xóa
+        </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Bạn có chắc chắn muốn xóa thông số kỹ thuật cho sản phẩm này không?
+            Bạn có chắc chắn muốn xóa thông số kỹ thuật cho sản phẩm này? Hành động này không thể hoàn tác.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button 
-            onClick={() => setDeleteDialogOpen(false)}
-            color="inherit"
-          >
+        <DialogActions sx={{p:2}}>
+          <Button onClick={() => setDeleteDialogOpen(false)} color="inherit" variant="outlined" disabled={loadingState.delete}>
             Hủy
           </Button>
-          <Button 
-            onClick={handleDelete} 
+          <Button
+            onClick={handleDelete}
             color="error"
             variant="contained"
             disabled={loadingState.delete}
-            sx={{
-              minWidth: '100px',
-              '& .MuiCircularProgress-root': { color: 'white' }
-            }}
+            startIcon={loadingState.delete ? <CircularProgress size={20} color="inherit" /> : <Trash size={ICON_SIZE_BUTTON}/>}
+            sx={{ minWidth: '100px' }}
           >
-            {loadingState.delete ? (
-              <>
-                <CircularProgress size={20} sx={{ mr: 1 }} />
-                Đang xóa...
-              </>
-            ) : 'Xóa'}
+            {loadingState.delete ? 'Đang xóa...' : 'Xác nhận xóa'}
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={snackbarState.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbarState(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbarState(prev => ({ ...prev, open: false }))}
+          severity={snackbarState.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbarState.message}
+        </Alert>
+      </Snackbar>
     </Drawer>
   );
 };
 
-export default AddSpecificationDrawer;
+export default React.memo(AddSpecificationDrawer);
