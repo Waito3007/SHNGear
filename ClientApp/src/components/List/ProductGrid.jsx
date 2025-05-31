@@ -1,18 +1,102 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import ProductHoverPreview from "./ProductHoverPreview";
+import { motion } from "framer-motion";
+import {
+  Box,
+  Card,
+  CardContent,
+  CardMedia,
+  Typography,
+  Rating,
+  Skeleton,
+  Stack,
+} from "@mui/material";
+import { Tag, HardDrive, Star } from "lucide-react";
+import "./ProductCard.css";
+
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.3,
+    },
+  },
+};
+
+const item = {
+  hidden: { opacity: 0, y: 20 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: [0.43, 0.13, 0.23, 0.96],
+    },
+  },
+};
 
 const ProductGrid = ({
   selectedCategory,
   selectedPriceRange,
   selectedBrand,
+  viewMode,
 }) => {
   const [products, setProducts] = useState([]);
   const [brands, setBrands] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hoveredProduct, setHoveredProduct] = useState(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [productSpecs, setProductSpecs] = useState({});
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const searchQuery = searchParams.get("search") || "";
+
+  // Handle mouse interaction
+  const handleMouseEnter = async (product, event) => {
+    setHoveredProduct(product);
+    setMousePosition({ x: event.clientX, y: event.clientY });
+
+    if (!productSpecs[product.id]) {
+      try {
+        const productType = product.category?.name
+          ?.toLowerCase()
+          .includes("phone")
+          ? "PhoneSpecifications"
+          : product.category?.name?.toLowerCase().includes("laptop")
+          ? "LaptopSpecifications"
+          : product.category?.name?.toLowerCase().includes("headphone")
+          ? "HeadphoneSpecifications"
+          : null;
+
+        if (productType) {
+          const response = await fetch(
+            `${process.env.REACT_APP_API_BASE_URL}/api/Specifications/${productType}/product/${product.id}`
+          );
+          if (response.ok) {
+            const specs = await response.json();
+            setProductSpecs((prev) => ({
+              ...prev,
+              [product.id]: {
+                ...specs,
+                type: productType.replace("Specifications", "").toLowerCase(),
+              },
+            }));
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching specifications:", err);
+      }
+    }
+  };
+
+  const handleMouseLeave = () => setHoveredProduct(null);
+  const handleMouseMove = (event) => {
+    if (hoveredProduct) {
+      setMousePosition({ x: event.clientX, y: event.clientY });
+    }
+  };
 
   useEffect(() => {
     const fetchProductsAndBrands = async () => {
@@ -23,15 +107,16 @@ const ProductGrid = ({
           fetch(`${process.env.REACT_APP_API_BASE_URL}/api/brands`),
         ]);
 
-        if (!productsRes.ok) throw new Error("Không thể tải sản phẩm");
-        if (!brandsRes.ok) throw new Error("Không thể tải thương hiệu");
+        if (!productsRes.ok || !brandsRes.ok) {
+          throw new Error("Không thể tải dữ liệu");
+        }
 
         const productsData = await productsRes.json();
         const brandsData = await brandsRes.json();
 
         const brandsMap = (brandsData.$values || brandsData || []).reduce(
           (acc, brand) => {
-            acc[brand.id] = brand.name;
+            acc[brand.id] = brand;
             return acc;
           },
           {}
@@ -39,141 +124,197 @@ const ProductGrid = ({
 
         let filteredProducts = productsData.$values || productsData || [];
 
-        if (searchQuery) {
-          filteredProducts = filteredProducts.filter((product) =>
-            product.name.toLowerCase().includes(searchQuery.toLowerCase())
-          );
-        }
-
         if (selectedCategory) {
           filteredProducts = filteredProducts.filter(
             (product) => product.categoryId === selectedCategory
           );
         }
 
-        if (selectedPriceRange && selectedPriceRange !== "all") {
-          const [minPrice, maxPrice] = selectedPriceRange
-            .split("-")
-            .map(Number);
-          filteredProducts = filteredProducts.filter((product) => {
-            const price =
-              product.variants?.[0]?.discountPrice ||
-              product.variants?.[0]?.price ||
-              0;
-            return price >= minPrice && price <= maxPrice;
-          });
-        }
-
-        if (selectedBrand && selectedBrand.length > 0) {
-          const selectedBrandsArray = selectedBrand.map(Number); // Chuyển ID thương hiệu thành số
-          filteredProducts = filteredProducts.filter((product) =>
-            selectedBrandsArray.includes(product.brandId)
+        if (selectedBrand) {
+          filteredProducts = filteredProducts.filter(
+            (product) => product.brandId === selectedBrand
           );
         }
 
         const processedProducts = filteredProducts.map((product) => {
           const variant = product.variants?.[0] || {};
           const image =
-            product.images?.[0]?.imageUrl || "/images/placeholder.jpg";
+            product.images?.[0]?.imageUrl ||
+            "https://via.placeholder.com/300?text=No+Image";
           const oldPrice = variant.price || 0;
           const newPrice = variant.discountPrice || oldPrice;
           const discountAmount = oldPrice - newPrice;
           const discount =
-            oldPrice > 0
-              ? `-${Math.round((discountAmount / oldPrice) * 100)}%`
-              : "0%";
+            oldPrice > 0 ? Math.round((discountAmount / oldPrice) * 100) : 0;
+
+          const brand = brandsMap[product.brandId];
 
           return {
             id: product.id,
             name: product.name,
-            categoryId: product.categoryId,
             oldPrice,
             newPrice,
             discount,
             discountAmount,
             image,
-            features: [
-              variant.storage || "Không xác định",
-              brandsMap[product.brandId] || "Không có thương hiệu",
-              "Hiệu suất cao",
-            ],
+            brand,
+            rating: 4.5, // Placeholder rating
+            ratingCount: Math.floor(Math.random() * 100) + 50, // Placeholder rating count
+            variant,
+            category: product.category,
           };
         });
 
         setProducts(processedProducts);
         setBrands(brandsMap);
       } catch (err) {
-        setError("Không thể tải dữ liệu: " + err.message);
-        console.error(err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProductsAndBrands();
-  }, [selectedCategory, selectedPriceRange, selectedBrand, searchQuery]);
+  }, [selectedCategory, selectedPriceRange, selectedBrand]);
 
   if (loading) {
-    return <div className="text-center py-6">Đang tải sản phẩm...</div>;
+    return (
+      <div className="products-grid">
+        {[...Array(8)].map((_, index) => (
+          <motion.div key={index} variants={item}>
+            <div className="skeleton-card">
+              <div className="skeleton-image" />
+              <div className="skeleton-content">
+                <div className="skeleton-text title" />
+                <div className="skeleton-text" />
+                <div className="skeleton-text price" />
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="text-center py-6 text-red-500">{error}</div>;
+    return <div className="text-red-500 text-center p-4">{error}</div>;
   }
 
   return (
-    <div className="w-full flex justify-center py-6">
-      <div className="max-w-[1200px] w-full px-4 bg-white rounded-lg shadow-lg p-6">
-        {products.length === 0 ? (
-          <p className="text-center text-gray-500 text-lg mt-12">
-            Không có sản phẩm phù hợp
-          </p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <div
-                key={product.id}
-                className="bg-white p-4 rounded-lg shadow-md border cursor-pointer"
-                onClick={() => navigate(`/product/${product.id}`)}
-              >
+    <motion.div variants={container} initial="hidden" animate="show">
+      <div className="products-grid">
+        {products.map((product) => (
+          <motion.div
+            key={product.id}
+            variants={item}
+            onMouseEnter={(e) => handleMouseEnter(product, e)}
+            onMouseLeave={handleMouseLeave}
+            onMouseMove={handleMouseMove}
+          >
+            <div
+              className="product-card"
+              onClick={() => navigate(`/product/${product.id}`)}
+            >
+              <div className="product-image">
                 <img
-                    src={
-                        product.image?.startsWith("http")
-                            ? product.image // Ảnh từ API (URL đầy đủ)
-                            : `${process.env.REACT_APP_API_BASE_URL}/${product.image}` // Ảnh local từ wwwroot
-                    }
-                    alt={product.name}
-                    className="w-full h-40 object-contain mb-3 hover:scale-110"
-                    onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/150"; }}
+                  src={
+                    product.image.startsWith("http")
+                      ? product.image
+                      : `${process.env.REACT_APP_API_BASE_URL}/${product.image}`
+                  }
+                  alt={product.name}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "https://via.placeholder.com/300?text=Error";
+                  }}
                 />
-                <div className="text-gray-700 text-sm space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500 line-through">
-                      {product.oldPrice.toLocaleString()} đ
-                    </span>
-                    <span className="text-red-500 text-sm">
-                      {product.discount}
-                    </span>
+              </div>
+
+              <div className="product-content">
+                {product.brand && (
+                  <div className="product-brand">
+                    {product.brand.logo && (
+                      <img
+                        src={
+                          product.brand.logo.startsWith("http")
+                            ? product.brand.logo
+                            : `${process.env.REACT_APP_API_BASE_URL}/${product.brand.logo}`
+                        }
+                        alt={product.brand.name}
+                        className="brand-logo"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.style.display = "none";
+                        }}
+                      />
+                    )}
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "text.secondary",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {product.brand.name}
+                    </Typography>
                   </div>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {product.newPrice.toLocaleString()} đ
-                  </p>
-                  <p className="text-green-600 text-sm">
-                    Giảm {product.discountAmount.toLocaleString()} đ
-                  </p>
-                  <p className="text-gray-800 text-sm">{product.name}</p>
-                  <ul className="text-xs text-gray-600 list-disc pl-4">
-                    {product.features.map((feature, index) => (
-                      <li key={index}>{feature}</li>
-                    ))}
-                  </ul>
+                )}
+
+                <h3 className="product-name">{product.name}</h3>
+
+                <div className="product-rating">
+                  <Rating
+                    value={product.rating}
+                    precision={0.5}
+                    size="small"
+                    readOnly
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    ({product.ratingCount})
+                  </Typography>
+                </div>
+
+                <div className="product-price">
+                  {product.oldPrice > product.newPrice && (
+                    <div className="old-price">
+                      {product.oldPrice.toLocaleString()}đ
+                    </div>
+                  )}
+                  <div className="current-price">
+                    {product.newPrice.toLocaleString()}
+                  </div>
+                </div>
+
+                <div className="product-features">
+                  {product.variant?.storage && (
+                    <div className="feature-chip storage">
+                      <HardDrive size={14} />
+                      {product.variant.storage}
+                    </div>
+                  )}
+                  {product.discount > 0 && (
+                    <div className="feature-chip discount">
+                      <Tag size={14} />-{product.discount}%
+                    </div>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          </motion.div>
+        ))}
       </div>
-    </div>
+
+      <ProductHoverPreview
+        product={{
+          ...hoveredProduct,
+          specifications: hoveredProduct
+            ? productSpecs[hoveredProduct.id]
+            : null,
+        }}
+        isVisible={Boolean(hoveredProduct)}
+        position={mousePosition}
+      />
+    </motion.div>
   );
 };
 

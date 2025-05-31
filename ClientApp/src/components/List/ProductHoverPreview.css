@@ -1,0 +1,149 @@
+.preview-card {
+  position: fixed;
+  z-index: 1000;
+  width: 400px;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(230, 232, 236, 0.8);
+  padding: 1.5rem;
+  pointer-events: none;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.preview-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.preview-image {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #f8f9fa;
+  padding: 0.5rem;
+  border: 1px solid rgba(230, 232, 236, 0.8);
+}
+
+.preview-title {
+  flex: 1;
+}
+
+.preview-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.preview-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.preview-brand img {
+  height: 16px;
+  width: auto;
+  object-fit: contain;
+}
+
+.preview-brand span {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.preview-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.preview-current-price {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ef4444;
+}
+
+.preview-old-price {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  text-decoration: line-through;
+}
+
+.preview-discount {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+  background: linear-gradient(45deg, #ef4444 30%, #f87171 90%);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+}
+
+.preview-specs {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(230, 232, 236, 0.8);
+}
+
+.preview-specs-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.specs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.spec-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.spec-icon {
+  color: #6366f1;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.spec-content {
+  flex: 1;
+}
+
+.spec-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+}
+
+.spec-value {
+  font-size: 0.875rem;
+  color: #1a1a1a;
+  font-weight: 500;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
