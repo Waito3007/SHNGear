@@ -6,10 +6,8 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/autoplay";
 
-const DiscountProductSlider = () => {
+const BestSellers = () => {
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -69,12 +67,9 @@ const DiscountProductSlider = () => {
                 brand?.name || "Không có thương hiệu",
                 "Hiệu suất cao",
               ],
-            };
-          });
+            };        });
 
         setProducts(phoneProducts);
-        setCategories(categoriesArray);
-        setBrands(brandsArray);
       } catch (err) {
         setError("Không thể tải dữ liệu: " + err.message);
         console.error(err);
@@ -193,4 +188,4 @@ const DiscountProductSlider = () => {
   );
 };
 
-export default DiscountProductSlider;
+export default BestSellers;

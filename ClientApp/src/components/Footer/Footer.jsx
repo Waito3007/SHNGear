@@ -1,18 +1,27 @@
 import React from "react";
 import "./Footer.css";
+import { useNavigate } from "react-router-dom";
 
 const Footer = () => {
+  const navigate = useNavigate();
+  
+  const handleOrderLookup = () => {
+    navigate("/order-lookup");
+  };
+  
   return (
     <footer className="footer-container">
-      <div class="footer-top-container">
-        <div class="footer-title">
+      <div className="footer-top-container">
+        <div className="footer-title">
           <h3>Hệ thống SHN Gear trên toàn quốc</h3>
           <p>
             Bao gồm Cửa hàng SHN Gear, Trung tâm Laptop, F.Studio, S.Studio,
             Garmin Brand Store
           </p>
         </div>
-        <button class="store-button">Xem danh sách cửa hàng</button>
+        <button className="store-button" onClick={handleOrderLookup}>
+          Tra cứu đơn hàng
+        </button>
       </div>
 
       <div className="footer-content">

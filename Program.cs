@@ -82,13 +82,6 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<MoMoPaymentService>();
 var app = builder.Build();
 
-
-
-app.UseRouting();
-app.UseAuthorization();
-app.MapControllers();
-app.UseStaticFiles(); // Cho phép truy cập file tĩnh từ wwwroot
-
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -103,20 +96,21 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-
-
+app.UseStaticFiles(); // Cho phép truy cập file tĩnh từ wwwroot
 
 app.UseRouting();
 
 // Sử dụng CORS
 app.UseCors("AllowFrontend");
-app.UseCors("AllowAll"); // Nếu bạn muốn cho phép tất cả các nguồn gốc
+
 // 🔹 Thêm Authentication & Authorization (QUAN TRỌNG)
 app.UseAuthentication();  // Xác thực JWT Token từ request
 app.UseAuthorization();   //Kiểm tra quyền truy cập của user
+
 // 🔹 Thêm Session Middleware
 app.UseSession();
+
+app.MapControllers(); // Quan trọng: Map các controllers
 
 app.MapControllerRoute(
     name: "default",

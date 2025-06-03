@@ -6,6 +6,7 @@ import SalesPage from "./pages/Admin/SalesPage";
 import OrdersPage from "./pages/Admin/OrdersPage";
 import AnalyticsPage from "./pages/Admin/AnalyticsPage";
 import SettingsPage from "./pages/Admin/SettingsPage";
+import HomePagePage from "./pages/Admin/HomePagePage";
 import ProductPage from "./pages/ProductPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProductList from "./pages/ProductList";
@@ -22,7 +23,11 @@ const AppRoutes = [
     path: "/admin/overview",
     element: <OverviewPage />,
     requiresAdmin: true 
-    
+  },
+  {
+    path: "/admin/homepage",
+    element: <HomePagePage />,
+    requiresAdmin: true 
   },
   {
     path: "/admin/products",

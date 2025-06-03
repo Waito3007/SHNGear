@@ -63,7 +63,7 @@ const styles = {
     borderRadius: "8px",
     boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
     marginBottom: "20px",
-    marginTop: "60px",
+    marginTop: "96px", // Tăng từ 60px để phù hợp với navbar height mới (80px desktop + margin)
   },
   categoryItem: {
     display: "flex",

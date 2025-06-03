@@ -242,6 +242,163 @@ namespace SHN_Gear.Migrations
                     b.ToTable("HeadphoneSpecifications");
                 });
 
+            modelBuilder.Entity("SHN_Gear.Models.HomePageSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BrandStoryCtaLink")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BrandStoryCtaText")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BrandStoryDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BrandStoryImage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("BrandStoryIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("BrandStoryStatsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BrandStorySubtitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BrandStoryTitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("FeaturedCategoriesIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("FeaturedCategoriesJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FeaturedCategoriesSubtitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FeaturedCategoriesTitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HeroBackgroundImage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HeroBadgeText")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HeroCtaLink")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HeroCtaText")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HeroDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("HeroIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("HeroSlidesJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HeroSubtitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HeroTitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MetaDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MetaKeywords")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MetaTitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NewsletterBackgroundImage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NewsletterCtaText")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("NewsletterIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("NewsletterSubtitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NewsletterTitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("ProductShowcaseIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ProductShowcaseSubtitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ProductShowcaseTitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("PromotionalBannersIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PromotionalBannersJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PromotionalBannersSubtitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PromotionalBannersTitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("ServicesIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ServicesJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("TestimonialsIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("TestimonialsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TestimonialsSubtitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TestimonialsTitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("HomePageSettings");
+                });
+
             modelBuilder.Entity("SHN_Gear.Models.LaptopSpecification", b =>
                 {
                     b.Property<int>("Id")

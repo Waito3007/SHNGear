@@ -25,9 +25,10 @@ namespace SHN_Gear.Data
         public DbSet<Address> Addresses { get; set; } // Thêm DbSet cho Address
         public DbSet<PaymentMethod> PaymentMethods { get; set; } // Thêm DbSet cho PaymentMethod
         public DbSet<Review> Reviews { get; set; } // Thêm DbSet cho Review
-        public DbSet<Delivery> Deliveries { get; set; } // Thêm DbSet cho Delivery
+        public DbSet<Delivery> Deliveries { get; set; } // Thêm DbSet cho Delivery        
         public DbSet<Voucher> Vouchers { get; set; }
         public DbSet<UserVoucher> UserVouchers { get; set; } // Thêm DbSet cho UserVoucher
+        public DbSet<HomePageSettings> HomePageSettings { get; set; } // Thêm DbSet cho HomePageSettings
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
