@@ -217,49 +217,16 @@ const ProductList = () => {
           </motion.div>
 
           <motion.div variants={item}>
-            {/* View Mode Toggle */}
+            {/* View Mode Toggle */}{" "}
             <Box
               sx={{
                 display: "flex",
-                justifyContent: "space-between",
+                justifyContent: "flex-end",
                 alignItems: "center",
                 mb: 3,
                 gap: 2,
               }}
             >
-              {/* Search Box */}
-              <Paper
-                component="form"
-                sx={{
-                  p: "2px 4px",
-                  display: "flex",
-                  alignItems: "center",
-                  width: 400,
-                  borderRadius: 2,
-                  border: "1px solid",
-                  borderColor: "divider",
-                  bgcolor: "background.paper",
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    boxShadow: "0 4px 12px -4px rgba(0,0,0,0.1)",
-                  },
-                }}
-              >
-                <InputBase
-                  sx={{ ml: 1, flex: 1 }}
-                  placeholder="Tìm kiếm sản phẩm..."
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                />
-                <IconButton
-                  type="button"
-                  sx={{ p: "10px" }}
-                  aria-label="search"
-                >
-                  <Search />
-                </IconButton>
-              </Paper>
-
               {/* View Mode Buttons */}
               <Box sx={{ display: "flex", gap: 1 }}>
                 <Button
