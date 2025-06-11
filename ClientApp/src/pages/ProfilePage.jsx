@@ -1,11 +1,11 @@
 import React from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet } from "react-router-dom";
 import Navbar from "../components/Navbar/Navbar";
 import Footer from "../components/Footer/Footer";
 
 const ProfilePage = () => {
-  const location = useLocation();
-  const activeTab = location.pathname.split("/profile/")[1] || "profile";
+  // const location = useLocation();
+  // const activeTab = location.pathname.split("/profile/")[1] || "profile";
 
   const tabs = [
     { id: "info", label: "Thông tin cá nhân", icon: "👤" },
@@ -17,12 +17,14 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
-      
+
       <div className="flex flex-1 container mx-auto px-4 py-8 gap-6">
         {/* Sidebar Navigation */}
         <div className="w-64 flex-shrink-0">
           <div className="bg-white rounded-lg shadow-sm p-4 sticky top-24">
-            <h2 className="text-xl font-bold mb-6 text-gray-800 border-b pb-2">Tài khoản của tôi</h2>
+            <h2 className="text-xl font-bold mb-6 text-gray-800 border-b pb-2">
+              Tài khoản của tôi
+            </h2>
             <nav className="space-y-1">
               {tabs.map((tab) => (
                 <NavLink

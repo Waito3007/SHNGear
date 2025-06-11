@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Smartphone,
-  Laptop,
-  Headphones,
   Monitor,
   Cpu,
   MemoryStick,
@@ -20,36 +17,21 @@ import {
   Minus
 } from 'lucide-react';
 
-const SpecificationDisplay = ({ productType, productId }) => {
+const SpecificationDisplay = ({ productId }) => {
   const [specs, setSpecs] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expanded, setExpanded] = useState(true);
   const [showAllSpecs, setShowAllSpecs] = useState(false);
-
   useEffect(() => {
     const fetchSpecifications = async () => {
       try {
         setLoading(true);
         setError(null);
         
-        let endpoint;
-        switch (productType) {
-          case 'phone':
-            endpoint = 'PhoneSpecifications';
-            break;
-          case 'laptop':
-            endpoint = 'LaptopSpecifications';
-            break;
-          case 'headphone':
-            endpoint = 'HeadphoneSpecifications';
-            break;
-          default:
-            throw new Error('Loại sản phẩm không hợp lệ');
-        }
-
+        const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'https://localhost:7107';
         const response = await fetch(
-          `${process.env.REACT_APP_API_BASE_URL}/api/Specifications/${endpoint}/product/${productId}`
+          `${apiBaseUrl}/api/ProductSpecifications/product/${productId}`
         );
         
         if (!response.ok) {
@@ -63,14 +45,11 @@ const SpecificationDisplay = ({ productType, productId }) => {
       } finally {
         setLoading(false);
       }
-    };
-
-    if (productId && productType) {
+    };    if (productId) {
       fetchSpecifications();
     }
-  }, [productId, productType]);
-
-  const SpecItem = ({ icon: Icon, label, value, isHighlight = false }) => (
+  }, [productId]);
+  const SpecItem = ({ icon: Icon, label, value, unit, isHighlight = false }) => (
     <div className={`flex items-center py-3 px-4 ${isHighlight ? 'bg-blue-50 rounded-lg' : ''}`}>
       <div className={`p-2 mr-3 rounded-full ${isHighlight ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}>
         <Icon className="w-4 h-4" />
@@ -79,102 +58,70 @@ const SpecificationDisplay = ({ productType, productId }) => {
         <div className="flex justify-between items-center">
           <span className={`text-sm ${isHighlight ? 'font-semibold text-blue-700' : 'text-gray-600'}`}>{label}</span>
           <span className={`text-right ${isHighlight ? 'font-bold text-blue-900' : 'font-medium text-gray-900'}`}>
-            {value || '--'}
+            {value || '--'} {unit && unit.trim() && `${unit}`}
             {isHighlight && <Star className="w-3 h-3 text-yellow-500 ml-1 inline" fill="currentColor" />}
           </span>
         </div>
       </div>
     </div>
   );
-
-  const renderPhoneSpecs = () => {
-    const basicSpecs = [
-      { icon: Cpu, label: "Bộ xử lý", value: `${specs.cpuModel} (${specs.cpuCores} nhân)`, highlight: true },
-      { icon: MemoryStick, label: "RAM", value: `${specs.ram}GB`, highlight: true },
-      { icon: Monitor, label: "Màn hình", value: `${specs.screenSize}" ${specs.screenType}`, highlight: true },
-      { icon: HardDrive, label: "Bộ nhớ trong", value: `${specs.internalStorage}` }
-    ];
-
-    const additionalSpecs = [
-      { icon: Battery, label: "Pin", value: `${specs.batteryCapacity}mAh`, highlight: true },
-      { icon: Camera, label: "Camera trước", value: specs.frontCamera },
-      { icon: Camera, label: "Camera sau", value: specs.rearCamera },
-      { icon: Nfc, label: "NFC", value: specs.supportsNFC ? 'Có' : 'Không' },
-      { icon: Weight, label: "Trọng lượng", value: `${specs.weight}g` },
-      { icon: Monitor, label: "Độ phân giải", value: specs.resolution },
-      { icon: Nfc, label: "Hỗ trợ 5G", value: specs.supports5G ? 'Có' : 'Không' },
-      { icon: HardDrive, label: "Khe cắm thẻ nhớ", value: specs.hasSDCardSlot ? 'Có' : 'Không' }
-    ];
-
-    return (
-      <>
-        {basicSpecs.map((spec, index) => (
-          <SpecItem key={`basic-${index}`} {...spec} />
-        ))}
-        
-        {showAllSpecs && additionalSpecs.map((spec, index) => (
-          <SpecItem key={`additional-${index}`} {...spec} />
-        ))}
-      </>
-    );
+  const getSpecIcon = (name) => {
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes('cpu') || lowerName.includes('bộ xử lý') || lowerName.includes('chip')) return Cpu;
+    if (lowerName.includes('ram') || lowerName.includes('bộ nhớ ram')) return MemoryStick;
+    if (lowerName.includes('pin') || lowerName.includes('battery') || lowerName.includes('dung lượng pin')) return Battery;
+    if (lowerName.includes('màn hình') || lowerName.includes('screen') || lowerName.includes('kích thước màn hình') || lowerName.includes('độ phân giải')) return Monitor;
+    if (lowerName.includes('camera')) return Camera;
+    if (lowerName.includes('trọng lượng') || lowerName.includes('weight')) return Weight;
+    if (lowerName.includes('storage') || lowerName.includes('bộ nhớ') || lowerName.includes('ssd') || lowerName.includes('ổ cứng')) return HardDrive;
+    if (lowerName.includes('nfc') || lowerName.includes('bluetooth') || lowerName.includes('wifi') || lowerName.includes('5g')) return Wifi;
+    if (lowerName.includes('sạc') || lowerName.includes('charge')) return Plug;
+    return Nfc; // Default icon
   };
 
-  const renderLaptopSpecs = () => {
-    const basicSpecs = [
-      { icon: Cpu, label: "CPU", value: `${specs.cpuType} (${specs.cpuNumberOfCores} nhân)`, highlight: true },
-      { icon: MemoryStick, label: "RAM", value: `${specs.ram}GB (Tối đa ${specs.maxRAMSupport}GB)`, highlight: true },
-      { icon: HardDrive, label: "Ổ cứng SSD", value: `${specs.ssdStorage}`, highlight: true },
-      { icon: Monitor, label: "Màn hình", value: `${specs.screenSize}"` }
-    ];
-
-    const additionalSpecs = [
-      { icon: Monitor, label: "Độ phân giải", value: specs.resolution },
-      { icon: Monitor, label: "Tần số quét", value: `${specs.refreshRate}Hz` },
-      { icon: Weight, label: "Trọng lượng", value: `${specs.weight}g` },
-      { icon: Nfc, label: "Card đồ họa", value: specs.graphicsCard },
-      { icon: HardDrive, label: "Ổ cứng SSD", value: specs.ssdStorage ? `${specs.ssdStorage}` : 'Không có' },
-      { icon: Battery, label: "Thời lượng pin", value: specs.batteryLife },
-      { icon: Nfc, label: "Cổng kết nối", value: specs.ports },
-      { icon: Wifi, label: "Chuẩn WiFi", value: specs.wifiStandard }
-    ];
-
-    return (
-      <>
-        {basicSpecs.map((spec, index) => (
-          <SpecItem key={`basic-${index}`} {...spec} />
-        ))}
-        
-        {showAllSpecs && additionalSpecs.map((spec, index) => (
-          <SpecItem key={`additional-${index}`} {...spec} />
-        ))}
-      </>
-    );
+  const isHighlightSpec = (name) => {
+    const lowerName = name.toLowerCase();
+    return lowerName.includes('cpu') || 
+           lowerName.includes('ram') || 
+           lowerName.includes('pin') || 
+           lowerName.includes('màn hình') ||
+           lowerName.includes('kích thước màn hình') ||
+           lowerName.includes('bộ xử lý') ||
+           lowerName.includes('camera sau');
   };
 
-  const renderHeadphoneSpecs = () => {
-    const basicSpecs = [
-      { icon: Headphones, label: "Loại tai nghe", value: specs.type, highlight: true },
-      { icon: Wifi, label: "Kết nối", value: specs.connectionType, highlight: true },
-      { icon: Weight, label: "Trọng lượng", value: `${specs.weight}g` }
-    ];
+  const renderSpecs = () => {
+    if (!specs || !Array.isArray(specs)) return null;
 
-    const additionalSpecs = [
-      { icon: Plug, label: "Cổng kết nối", value: specs.port },
-      { icon: Battery, label: "Thời lượng pin", value: specs.batteryLife || 'Không có' },
-      { icon: Nfc, label: "Kháng nước", value: specs.waterResistant ? 'Có' : 'Không' },
-      { icon: Nfc, label: "Microphone", value: specs.hasMicrophone ? 'Có' : 'Không' },
-      { icon: Nfc, label: "Điều khiển cảm ứng", value: specs.hasTouchControl ? 'Có' : 'Không' },
-      { icon: Nfc, label: "Chống ồn", value: specs.noiseCancelling ? 'Có' : 'Không' }
-    ];
+    // Sort specs by displayOrder
+    const sortedSpecs = [...specs].sort((a, b) => a.displayOrder - b.displayOrder);
+    
+    // Separate basic specs (first 6) and additional specs
+    const basicSpecs = sortedSpecs.slice(0, 6);
+    const additionalSpecs = sortedSpecs.slice(6);
 
     return (
       <>
-        {basicSpecs.map((spec, index) => (
-          <SpecItem key={`basic-${index}`} {...spec} />
+        {basicSpecs.map((spec) => (
+          <SpecItem 
+            key={spec.id}
+            icon={getSpecIcon(spec.name)}
+            label={spec.name}
+            value={spec.value}
+            unit={spec.unit}
+            isHighlight={isHighlightSpec(spec.name)}
+          />
         ))}
         
-        {showAllSpecs && additionalSpecs.map((spec, index) => (
-          <SpecItem key={`additional-${index}`} {...spec} />
+        {showAllSpecs && additionalSpecs.map((spec) => (
+          <SpecItem 
+            key={spec.id}
+            icon={getSpecIcon(spec.name)}
+            label={spec.name}
+            value={spec.value}
+            unit={spec.unit}
+            isHighlight={false}
+          />
         ))}
       </>
     );
@@ -205,12 +152,9 @@ const SpecificationDisplay = ({ productType, productId }) => {
       <button 
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center justify-between p-5 hover:bg-gray-50 transition-colors"
-      >
-        <div className="flex items-center space-x-4">
+      >        <div className="flex items-center space-x-4">
           <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
-            {productType === 'phone' && <Smartphone className="w-5 h-5" />}
-            {productType === 'laptop' && <Laptop className="w-5 h-5" />}
-            {productType === 'headphone' && <Headphones className="w-5 h-5" />}
+            <Cpu className="w-5 h-5" />
           </div>
           <h3 className="text-lg font-semibold text-gray-800">Thông số kỹ thuật</h3>
         </div>
@@ -219,31 +163,30 @@ const SpecificationDisplay = ({ productType, productId }) => {
           <ChevronDown className="w-5 h-5 text-gray-500" />
         }
       </button>
-      
-      {expanded && (
+        {expanded && (
         <div className="divide-y divide-gray-100">
-          {productType === 'phone' && renderPhoneSpecs()}
-          {productType === 'laptop' && renderLaptopSpecs()}
-          {productType === 'headphone' && renderHeadphoneSpecs()}
+          {renderSpecs()}
           
-          <div className="p-4 text-center">
-            <button 
-              onClick={() => setShowAllSpecs(!showAllSpecs)}
-              className="flex items-center justify-center space-x-2 text-blue-600 hover:text-blue-800 font-medium text-sm mx-auto"
-            >
-              {showAllSpecs ? (
-                <>
-                  <Minus className="w-4 h-4" />
-                  <span>Thu gọn thông số</span>
-                </>
-              ) : (
-                <>
-                  <Plus className="w-4 h-4" />
-                  <span>Xem thêm thông số chi tiết</span>
-                </>
-              )}
-            </button>
-          </div>
+          {specs && specs.length > 6 && (
+            <div className="p-4 text-center">
+              <button 
+                onClick={() => setShowAllSpecs(!showAllSpecs)}
+                className="flex items-center justify-center space-x-2 text-blue-600 hover:text-blue-800 font-medium text-sm mx-auto"
+              >
+                {showAllSpecs ? (
+                  <>
+                    <Minus className="w-4 h-4" />
+                    <span>Thu gọn thông số</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4" />
+                    <span>Xem thêm thông số chi tiết</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

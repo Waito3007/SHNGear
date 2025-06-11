@@ -11,9 +11,7 @@ namespace SHN_Gear.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<Product> Products { get; set; }
-        public DbSet<PhoneSpecification> PhoneSpecifications { get; set; }
-        public DbSet<LaptopSpecification> LaptopSpecifications { get; set; }
-        public DbSet<HeadphoneSpecification> HeadphoneSpecifications { get; set; }
+        public DbSet<ProductSpecification> ProductSpecifications { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartItem> CartItems { get; set; }

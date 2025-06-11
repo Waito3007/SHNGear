@@ -1,68 +1,64 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { message } from 'antd';
 import { 
   Drawer, Button, Box, Typography, IconButton, 
-  TextField, FormControlLabel, Checkbox,
-  CircularProgress, Alert, Dialog,
+  TextField, CircularProgress, Alert, Dialog,
   DialogActions, DialogContent, DialogContentText, DialogTitle,
   Skeleton, Fade
 } from "@mui/material";
-import { X, Trash, Check, Plus } from "lucide-react";
+import { X, Trash, Plus } from "lucide-react";
 import axios from "axios";
 
 // Constants
-const API_BASE_URL = `${process.env.REACT_APP_API_BASE_URL}/api/Specifications`;
-const CATEGORY_ENDPOINTS = {
-  1: "PhoneSpecifications",
-  2: "LaptopSpecifications",
-  3: "HeadphoneSpecifications"
-};
+const API_BASE_URL = `${process.env.REACT_APP_API_BASE_URL || 'https://localhost:7107'}/api/ProductSpecifications`;
 
 const CATEGORY_NAMES = {
   1: "Điện thoại",
-  2: "Laptop",
+  2: "Laptop", 
   3: "Tai nghe"
 };
 
-const COMMON_FIELDS = [
-  { name: "weight", label: "Trọng lượng" }
-];
-
-const CATEGORY_FIELDS = {
-  1: [
-    { name: "screenSize", label: "Kích thước màn hình" },
-    { name: "resolution", label: "Độ phân giải" },
-    { name: "screenType", label: "Loại màn hình" },
-    { name: "cpuModel", label: "Model CPU" },
-    { name: "cpuCores", label: "Số nhân CPU", type: "number" },
-    { name: "ram", label: "RAM" },
-    { name: "internalStorage", label: "Dung lượng lưu trữ" },
-    { name: "frontCamera", label: "Camera trước" },
-    { name: "rearCamera", label: "Camera sau" },
-    { name: "batteryCapacity", label: "Dung lượng pin" },
-    { name: "supportsNFC", label: "Hỗ trợ NFC", type: "checkbox" },
+// Predefined specification templates for different categories
+const SPECIFICATION_TEMPLATES = {
+  1: [ // Phone
+    { name: "Kích thước màn hình", unit: "inch", displayOrder: 1 },
+    { name: "Độ phân giải", unit: "", displayOrder: 2 },
+    { name: "Loại màn hình", unit: "", displayOrder: 3 },
+    { name: "CPU", unit: "", displayOrder: 4 },
+    { name: "Số nhân CPU", unit: "nhân", displayOrder: 5 },
+    { name: "RAM", unit: "GB", displayOrder: 6 },
+    { name: "Bộ nhớ trong", unit: "GB", displayOrder: 7 },
+    { name: "Camera trước", unit: "MP", displayOrder: 8 },
+    { name: "Camera sau", unit: "MP", displayOrder: 9 },
+    { name: "Dung lượng pin", unit: "mAh", displayOrder: 10 },
+    { name: "Hỗ trợ NFC", unit: "", displayOrder: 11 },
+    { name: "Trọng lượng", unit: "g", displayOrder: 12 }
   ],
-  2: [
-    { name: "cpuType", label: "Loại CPU" },
-    { name: "cpuNumberOfCores", label: "Số nhân CPU", type: "number" },
-    { name: "ram", label: "RAM" },
-    { name: "maxRAMSupport", label: "Hỗ trợ RAM tối đa" },
-    { name: "ssdStorage", label: "Dung lượng SSD" },
-    { name: "screenSize", label: "Kích thước màn hình" },
-    { name: "resolution", label: "Độ phân giải" },
-    { name: "refreshRate", label: "Tần số quét" },
-    { name: "supportsTouch", label: "Hỗ trợ cảm ứng", type: "checkbox" },
+  2: [ // Laptop
+    { name: "CPU", unit: "", displayOrder: 1 },
+    { name: "Số nhân CPU", unit: "nhân", displayOrder: 2 },
+    { name: "RAM", unit: "GB", displayOrder: 3 },
+    { name: "Hỗ trợ RAM tối đa", unit: "GB", displayOrder: 4 },
+    { name: "Dung lượng SSD", unit: "GB", displayOrder: 5 },
+    { name: "Kích thước màn hình", unit: "inch", displayOrder: 6 },
+    { name: "Độ phân giải", unit: "", displayOrder: 7 },
+    { name: "Tần số quét", unit: "Hz", displayOrder: 8 },
+    { name: "Card đồ họa", unit: "", displayOrder: 9 },
+    { name: "Trọng lượng", unit: "g", displayOrder: 10 }
   ],
-  3: [
-    { name: "type", label: "Loại tai nghe" },
-    { name: "connectionType", label: "Loại kết nối" },
-    { name: "port", label: "Cổng" },
+  3: [ // Headphone
+    { name: "Loại tai nghe", unit: "", displayOrder: 1 },
+    { name: "Loại kết nối", unit: "", displayOrder: 2 },
+    { name: "Cổng kết nối", unit: "", displayOrder: 3 },
+    { name: "Thời lượng pin", unit: "giờ", displayOrder: 4 },
+    { name: "Trọng lượng", unit: "g", displayOrder: 5 },
+    { name: "Chống ồn", unit: "", displayOrder: 6 }
   ]
 };
 
 const AddSpecificationDrawer = ({ open, onClose, product }) => {
   // State management
-  const [specification, setSpecification] = useState(null);
+  const [specifications, setSpecifications] = useState([]);
   const [loadingState, setLoadingState] = useState({
     fetch: false,
     submit: false,
@@ -72,39 +68,31 @@ const AddSpecificationDrawer = ({ open, onClose, product }) => {
     error: null,
     success: null
   });
-  const [formData, setFormData] = useState({});
+  const [newSpec, setNewSpec] = useState({
+    name: '',
+    value: '',
+    unit: '',
+    displayOrder: 0
+  });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [specToDelete, setSpecToDelete] = useState(null);
 
-  // Memoized values
-  const formFields = useMemo(() => {
-    if (!product?.categoryId) return COMMON_FIELDS;
-    return [...COMMON_FIELDS, ...(CATEGORY_FIELDS[product.categoryId] || [])];
-  }, [product]);
-
-  const endpoint = useMemo(() => {
-    return product?.categoryId ? CATEGORY_ENDPOINTS[product.categoryId] : null;
-  }, [product]);
-
   // API calls
-  const fetchSpecification = useCallback(async () => {
-    if (!endpoint || !product?.id) return;
+  const fetchSpecifications = useCallback(async () => {
+    if (!product?.id) return;
     
     try {
       setLoadingState(prev => ({ ...prev, fetch: true }));
       setNotification({ error: null, success: null });
 
-      const response = await axios.get(
-        `${API_BASE_URL}/${endpoint}/product/${product.id}`
-      );
+      const response = await axios.get(`${API_BASE_URL}/product/${product.id}`);
       
       if (response.data) {
-        setSpecification(response.data);
-        setFormData(response.data);
+        setSpecifications(response.data);
       }
     } catch (error) {
       if (error.response?.status !== 404) {
-        console.error("Fetch specification failed:", error);
+        console.error("Fetch specifications failed:", error);
         setNotification(prev => ({
           ...prev,
           error: error.response?.data || "Không thể tải thông số kỹ thuật"
@@ -113,116 +101,256 @@ const AddSpecificationDrawer = ({ open, onClose, product }) => {
     } finally {
       setLoadingState(prev => ({ ...prev, fetch: false }));
     }
-  }, [endpoint, product]);
+  }, [product]);
 
-
-const handleSubmit = useCallback(async () => {
-  if (!endpoint || !product?.id) return;
-
-  try {
-    setLoadingState(prev => ({ ...prev, submit: true }));
-    setNotification({ error: null, success: null });
-
-    const payload = { ...formData, productId: product.id };
-    const url = `${API_BASE_URL}/${endpoint}`;
-
-    if (specification) {
-      await axios.put(`${url}/${specification.id}`, payload);
-      message.success('Cập nhật thông số thành công!');
-    } else {
-      await axios.post(url, payload);
-      message.success('Thêm thông số thành công!');
+  const handleAddSpecification = useCallback(async () => {
+    if (!product?.id || !newSpec.name.trim() || !newSpec.value.trim()) {
+      message.error('Vui lòng nhập đầy đủ tên và giá trị thông số');
+      return;
     }
 
-    setTimeout(onClose, 2000);
-  } catch (error) {
-    console.error("Lưu thông số thất bại:", error);
-    message.error(error.response?.data || "Đã xảy ra lỗi khi lưu thông số");
-  } finally {
-    setLoadingState(prev => ({ ...prev, submit: false }));
-  }
-}, [endpoint, formData, specification, product, onClose]);
-  
-  const handleDelete = useCallback(async () => {
-    if (!endpoint || !specToDelete?.id) return;
+    try {
+      setLoadingState(prev => ({ ...prev, submit: true }));
+      setNotification({ error: null, success: null });
+
+      const payload = {
+        productId: product.id,
+        name: newSpec.name.trim(),
+        value: newSpec.value.trim(),
+        unit: newSpec.unit?.trim() || '',
+        displayOrder: newSpec.displayOrder || specifications.length + 1
+      };
+
+      await axios.post(API_BASE_URL, payload);
+      message.success('Thêm thông số thành công!');
+      
+      // Reset form
+      setNewSpec({
+        name: '',
+        value: '',
+        unit: '',
+        displayOrder: 0
+      });
+      
+      // Refresh specifications
+      fetchSpecifications();
+    } catch (error) {
+      console.error("Add specification failed:", error);
+      message.error(error.response?.data || "Đã xảy ra lỗi khi thêm thông số");
+    } finally {
+      setLoadingState(prev => ({ ...prev, submit: false }));
+    }
+  }, [newSpec, product, specifications.length, fetchSpecifications]);
+
+  const handleUpdateSpecification = useCallback(async (spec) => {
+    try {
+      setLoadingState(prev => ({ ...prev, submit: true }));
+      
+      await axios.put(`${API_BASE_URL}/${spec.id}`, {
+        name: spec.name,
+        value: spec.value,
+        unit: spec.unit || '',
+        displayOrder: spec.displayOrder
+      });
+      
+      message.success('Cập nhật thông số thành công!');
+      fetchSpecifications();
+    } catch (error) {
+      console.error("Update specification failed:", error);
+      message.error(error.response?.data || "Đã xảy ra lỗi khi cập nhật thông số");
+    } finally {
+      setLoadingState(prev => ({ ...prev, submit: false }));
+    }
+  }, [fetchSpecifications]);
+
+  const handleDeleteSpecification = useCallback(async () => {
+    if (!specToDelete?.id) return;
 
     try {
       setLoadingState(prev => ({ ...prev, delete: true }));
       setNotification({ error: null, success: null });
 
-      await axios.delete(`${API_BASE_URL}/${endpoint}/${specToDelete.id}`);
-      setNotification({ success: "Xóa thông số thành công!", error: null });
+      await axios.delete(`${API_BASE_URL}/${specToDelete.id}`);
+      message.success('Xóa thông số thành công!');
       setDeleteDialogOpen(false);
-
-      setTimeout(onClose, 2000);
+      setSpecToDelete(null);
+      fetchSpecifications();
     } catch (error) {
       console.error("Delete specification failed:", error);
-      setNotification(prev => ({
-        ...prev,
-        error: "Không thể xóa thông số kỹ thuật"
-      }));
+      message.error("Không thể xóa thông số kỹ thuật");
     } finally {
       setLoadingState(prev => ({ ...prev, delete: false }));
     }
-  }, [endpoint, specToDelete, onClose]);
+  }, [specToDelete, fetchSpecifications]);
 
+  const handleQuickAdd = useCallback((template) => {
+    setNewSpec(prev => ({
+      ...prev,
+      name: template.name,
+      unit: template.unit,
+      displayOrder: template.displayOrder
+    }));
+  }, []);
   // Effects
   useEffect(() => {
     if (open && product) {
-      fetchSpecification();
+      fetchSpecifications();
     } else {
-      setSpecification(null);
-      setFormData({});
+      setSpecifications([]);
+      setNewSpec({
+        name: '',
+        value: '',
+        unit: '',
+        displayOrder: 0
+      });
       setNotification({ error: null, success: null });
     }
-  }, [open, product, fetchSpecification]);
+  }, [open, product, fetchSpecifications]);
 
   // Event handlers
-  const handleInputChange = useCallback((e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+  const handleInputChange = useCallback((field, value) => {
+    setNewSpec(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [field]: value
     }));
   }, []);
 
-  const handleDeleteClick = useCallback(() => {
-    setSpecToDelete(specification);
-    setDeleteDialogOpen(true);
-  }, [specification]);
+  const handleSpecificationChange = useCallback((id, field, value) => {
+    setSpecifications(prev => 
+      prev.map(spec => 
+        spec.id === id ? { ...spec, [field]: value } : spec
+      )
+    );
+  }, []);
 
+  const handleDeleteClick = useCallback((spec) => {
+    setSpecToDelete(spec);
+    setDeleteDialogOpen(true);
+  }, []);
   // Render helpers
-  const renderFormFields = useCallback(() => (
-    <Box sx={{ mt: 2 }}>
-      {formFields.map((field) => (
-        <Box key={field.name} sx={{ mb: 2 }}>
-          {field.type === 'checkbox' ? (
-            <FormControlLabel
-              control={
-                <Checkbox
-                  name={field.name}
-                  checked={formData[field.name] || false}
-                  onChange={handleInputChange}
-                />
-              }
-              label={field.label}
-            />
-          ) : (
-            <TextField
-              fullWidth
-              label={field.label}
-              name={field.name}
-              value={formData[field.name] || ''}
-              onChange={handleInputChange}
-              type={field.type || 'text'}
-              variant="outlined"
-              size="small"
-            />
-          )}
+  const renderAddSpecificationForm = useCallback(() => (
+    <Box sx={{ mb: 4, p: 3, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+      <Typography variant="h6" sx={{ mb: 2 }}>Thêm thông số mới</Typography>
+      
+      {/* Quick templates */}
+      {product?.categoryId && SPECIFICATION_TEMPLATES[product.categoryId] && (
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
+            Mẫu thông số nhanh:
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {SPECIFICATION_TEMPLATES[product.categoryId].map((template, index) => (
+              <Button
+                key={index}
+                size="small"
+                variant="outlined"
+                onClick={() => handleQuickAdd(template)}
+                sx={{ fontSize: '0.75rem' }}
+              >
+                {template.name}
+              </Button>
+            ))}
+          </Box>
         </Box>
-      ))}
+      )}
+
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <TextField
+          fullWidth
+          label="Tên thông số"
+          value={newSpec.name}
+          onChange={(e) => handleInputChange('name', e.target.value)}
+          size="small"
+          required
+        />
+        <TextField
+          fullWidth
+          label="Giá trị"
+          value={newSpec.value}
+          onChange={(e) => handleInputChange('value', e.target.value)}
+          size="small"
+          required
+        />
+        <TextField
+          fullWidth
+          label="Đơn vị (tùy chọn)"
+          value={newSpec.unit}
+          onChange={(e) => handleInputChange('unit', e.target.value)}
+          size="small"
+          placeholder="VD: GB, inch, mAh"
+        />
+        <TextField
+          fullWidth
+          label="Thứ tự hiển thị"
+          type="number"
+          value={newSpec.displayOrder}
+          onChange={(e) => handleInputChange('displayOrder', parseInt(e.target.value) || 0)}
+          size="small"
+        />
+        <Button
+          variant="contained"
+          startIcon={loadingState.submit ? 
+            <CircularProgress size={20} color="inherit" /> : <Plus />}
+          onClick={handleAddSpecification}
+          disabled={loadingState.submit || !newSpec.name.trim() || !newSpec.value.trim()}
+        >
+          {loadingState.submit ? 'Đang thêm...' : 'Thêm thông số'}
+        </Button>
+      </Box>
     </Box>
-  ), [formFields, formData, handleInputChange]);
+  ), [newSpec, loadingState.submit, product, handleInputChange, handleQuickAdd, handleAddSpecification]);
+
+  const renderSpecificationsList = useCallback(() => (
+    <Box>
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        Thông số hiện tại ({specifications.length})
+      </Typography>
+      
+      {specifications.length === 0 ? (
+        <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
+          <Typography>Chưa có thông số kỹ thuật nào</Typography>
+        </Box>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {specifications
+            .sort((a, b) => a.displayOrder - b.displayOrder)
+            .map((spec) => (
+            <Box 
+              key={spec.id} 
+              sx={{ 
+                p: 2, 
+                border: '1px solid', 
+                borderColor: 'divider', 
+                borderRadius: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2
+              }}
+            >
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body1" fontWeight="medium">
+                  {spec.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {spec.value} {spec.unit && `(${spec.unit})`}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Thứ tự: {spec.displayOrder}
+                </Typography>
+              </Box>
+              <IconButton
+                color="error"
+                onClick={() => handleDeleteClick(spec)}
+                size="small"
+              >
+                <Trash size={16} />
+              </IconButton>
+            </Box>
+          ))}
+        </Box>
+      )}
+    </Box>
+  ), [specifications, handleDeleteClick]);
 
   const renderProductInfo = useCallback(() => (
     product && (
@@ -278,9 +406,8 @@ const handleSubmit = useCallback(async () => {
             borderColor: 'divider',
             pb: 2
           }}
-        >
-          <Typography variant="h5" fontWeight="bold" color="primary">
-            {specification ? "Thông số kỹ thuật" : "Thêm thông số kỹ thuật"}
+        >          <Typography variant="h5" fontWeight="bold" color="primary">
+            Quản lý thông số kỹ thuật
           </Typography>
           <IconButton 
             onClick={onClose}
@@ -291,10 +418,8 @@ const handleSubmit = useCallback(async () => {
           >
             <X size={24} />
           </IconButton>
-        </Box>
-
-        {/* Loading state */}
-        <Fade in={loadingState.fetch && !specification} unmountOnExit>
+        </Box>        {/* Loading state */}
+        <Fade in={loadingState.fetch && specifications.length === 0} unmountOnExit>
           <Box sx={{ 
             display: 'flex', 
             justifyContent: 'center', 
@@ -332,11 +457,14 @@ const handleSubmit = useCallback(async () => {
                   {notification.success}
                 </Alert>
               )}
-            </Box>
-
-            {/* Form content */}
+            </Box>            {/* Form content */}
             <Box sx={{ flexGrow: 1 }}>
-              {loadingState.fetch ? renderSkeletonLoader() : renderFormFields()}
+              {loadingState.fetch ? renderSkeletonLoader() : (
+                <>
+                  {renderAddSpecificationForm()}
+                  {renderSpecificationsList()}
+                </>
+              )}
             </Box>
 
             {/* Action buttons */}
@@ -351,47 +479,13 @@ const handleSubmit = useCallback(async () => {
                 justifyContent: 'flex-end'
               }}
             >
-              {specification ? (
-                <>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    startIcon={<Trash />}
-                    onClick={handleDeleteClick}
-                    sx={{ mr: 'auto' }}
-                  >
-                    Xóa
-                  </Button>
-                  <Button
-                    variant="contained"
-                    startIcon={loadingState.submit ? 
-                      <CircularProgress size={20} color="inherit" /> : <Check />}
-                    onClick={handleSubmit}
-                    disabled={loadingState.submit}
-                    sx={{
-                      minWidth: '120px',
-                      '& .MuiCircularProgress-root': { marginRight: '8px' }
-                    }}
-                  >
-                    {loadingState.submit ? 'Đang xử lý...' : 'Cập nhật'}
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  variant="contained"
-                  startIcon={loadingState.submit ? 
-                    <CircularProgress size={20} color="inherit" /> : <Plus />}
-                  onClick={handleSubmit}
-                  disabled={loadingState.submit}
-                  fullWidth
-                  size="large"
-                  sx={{
-                    '& .MuiCircularProgress-root': { marginRight: '8px' }
-                  }}
-                >
-                  {loadingState.submit ? 'Đang thêm...' : 'Thêm thông số'}
-                </Button>
-              )}
+              <Button
+                variant="outlined"
+                onClick={onClose}
+                size="large"
+              >
+                Đóng
+              </Button>
             </Box>
           </>
         )}
@@ -416,9 +510,8 @@ const handleSubmit = useCallback(async () => {
             color="inherit"
           >
             Hủy
-          </Button>
-          <Button 
-            onClick={handleDelete} 
+          </Button>          <Button 
+            onClick={handleDeleteSpecification} 
             color="error"
             variant="contained"
             disabled={loadingState.delete}
