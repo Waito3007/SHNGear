@@ -16,6 +16,8 @@ const ProductList = () => {
   const [selectedPriceRange, setSelectedPriceRange] = useState("all");
   const [selectedBrand, setSelectedBrand] = useState(null);
 
+ 
+
   return (
     <div style={styles.productListPage}>
       <Navbar />
@@ -25,6 +27,7 @@ const ProductList = () => {
           onPriceChange={setSelectedPriceRange}
           onBrandChange={setSelectedBrand}
         />
+
         <ProductGrid
           selectedCategory={categoryId ? parseInt(categoryId) : null}
           selectedPriceRange={selectedPriceRange}
