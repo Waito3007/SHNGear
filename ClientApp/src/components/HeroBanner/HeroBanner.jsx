@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import Banner1 from "../../Assets/img/anhcuanghia/banner1.png";
-import Banner2 from "../../Assets/img/anhcuanghia/bannervip.png";
-import Banner3 from "../../Assets/img/anhcuanghia/hieuthuhai.png";
+import Banner1 from "../../assets/img/anhcuanghia/banner1.png";
+import Banner2 from "../../assets/img/anhcuanghia/bannervip.png";
+import Banner3 from "../../assets/img/anhcuanghia/hieuthuhai.png";
 
 const Slider = () => {
   const slides = [

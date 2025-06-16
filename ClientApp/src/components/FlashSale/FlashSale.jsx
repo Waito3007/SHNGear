@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import { useNavigate } from "react-router-dom";
-import Flaslsalebanner from "../../Assets/img/anhcuanghia/hot-sale-cuoi-tuan.gif"
+import Flaslsalebanner from "../../assets/img/anhcuanghia/hot-sale-cuoi-tuan.gif"
 import "swiper/css";
 import "swiper/css/navigation";
 

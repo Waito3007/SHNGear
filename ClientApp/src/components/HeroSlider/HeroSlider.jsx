@@ -4,9 +4,9 @@ import { Navigation, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-import slider1 from "..//..//Assets/img/HeadPhone/banner_headphone.jpg";
-import slider2 from "..//..//Assets/img/Laptop/banner_laptop.jpg";
-import slider3 from "..//..//Assets/img/Phone/banner_iphone.jpg";
+import slider1 from "..//..//assets/img/HeadPhone/banner_headphone.jpg";
+import slider2 from "..//..//assets/img/Laptop/banner_laptop.jpg";
+import slider3 from "..//..//assets/img/Phone/banner_iphone.jpg";
 import "./HeroSlider.css";
 
 const HeroSlider = () => {
