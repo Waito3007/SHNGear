@@ -91,16 +91,12 @@ const ProductPage = () => {
           </div>
         </div>
 
-       {productType && (
-        <SpecificationDisplay 
-          productType={productType} 
-          productId={product.id} 
-        />
-      )}
-
-        <div className="md:col-span-2 mt-16">
-          <ProductReviews reviews={product.reviews || []} />
-        </div>
+        {productType && (
+          <SpecificationDisplay 
+            productType={productType} 
+            productId={product.id} 
+          />
+        )}
 
         <div className="md:col-span-2 mt-16">
           <RelatedProducts 
