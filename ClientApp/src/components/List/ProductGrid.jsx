@@ -167,6 +167,21 @@ const ProductGrid = ({
                       <li key={index}>{feature}</li>
                     ))}
                   </ul>
+                  <button
+                        className="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                        onClick={(e) => {
+                        e.stopPropagation();
+                        const compareList = JSON.parse(localStorage.getItem("compareList") || "[]");
+                        // Thêm productId nếu chưa có
+                        if (!compareList.includes(product.id)) {
+                          compareList.push(product.id);
+                          localStorage.setItem("compareList", JSON.stringify(compareList));
+                        }
+                        alert(`Đã chọn sản phẩm "${product.name}" để so sánh!`);
+                      }}
+                    >
+                    So sánh
+                  </button>
                 </div>
               </div>
             ))}

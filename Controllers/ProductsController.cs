@@ -341,4 +341,51 @@ public class ProductsController : ControllerBase
 
         return Ok(result);
     }
+
+    [HttpPost("compare")]
+    public async Task<IActionResult> CompareProducts([FromBody] List<int> productIds)
+    {
+        if (productIds == null || productIds.Count < 2)
+        {
+            return BadRequest("Vui lòng thêm sản phẩm để so sánh.");
+        }
+
+        var products = await _context.Products
+            .Where(p => productIds.Contains(p.Id))
+            .Include(p => p.Images)
+            .Include(p => p.Brand)
+            .Include(p => p.Category)
+            .Include(p => p.Variants)
+            .ToListAsync();
+
+        if (products.Count < 2)
+        {
+            return NotFound("Chưa đủ sản phẩm để so sánh.");
+        }
+
+        var result = products.Select(p => new
+        {
+            p.Id,
+            p.Name,
+            p.Description,
+            Brand = p.Brand?.Name,
+            Category = p.Category?.Name,
+            Images = p.Images.Select(img => new
+            {
+                img.Id,
+                img.ImageUrl,
+                img.IsPrimary
+            }).ToList(),
+            Variants = p.Variants.Select(v => new
+            {
+                v.Color,
+                v.Storage,
+                v.Price,
+                v.DiscountPrice,
+                v.StockQuantity
+            }).ToList()
+        });
+
+        return Ok(result);
+    }
 }
