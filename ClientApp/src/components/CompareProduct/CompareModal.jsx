@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { X, ShoppingCart, Eye, Star, Zap, CheckCircle2, AlertCircle } from "lucide-react";
+import SpecificationComparison from "./SpecificationComparison";
+import "./CompareModal.css";
 
 const CompareModal = ({ isOpen, onClose }) => {
   const [products, setProducts] = useState([]);
@@ -350,6 +352,9 @@ const CompareModal = ({ isOpen, onClose }) => {
                   </div>
                 ))}
               </div>
+
+              {/* Specification Comparison Table */}
+              <SpecificationComparison products={products} />
             </div>
           )}
         </div>
