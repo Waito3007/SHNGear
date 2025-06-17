@@ -143,3 +143,30 @@
     padding: 0.25rem 0.5rem;
   }
 }
+
+/* Compare products responsive layout */
+@media (max-width: 640px) {
+  .compare-modal-container {
+    margin: 0.5rem;
+  }
+  
+  .compare-product-grid {
+    gap: 1rem;
+  }
+  
+  .compare-product-card {
+    min-height: auto;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .compare-product-card {
+    min-height: 600px;
+  }
+}
+
+@media (min-width: 1025px) {
+  .compare-product-card {
+    min-height: 650px;
+  }
+}

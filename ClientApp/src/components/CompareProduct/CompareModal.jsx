@@ -126,14 +126,16 @@ const CompareModal = ({ isOpen, onClose }) => {
   );
 
   if (!isOpen) return null;
-  return (
-    <div 
-      className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 transition-all duration-300 ${
+  return (    <div 
+      className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 transition-all duration-300 compare-modal-container ${
         isOpen ? 'animate-fadeIn' : 'opacity-0 pointer-events-none'
       }`}
       onClick={handleBackgroundClick}
-    >
-      <div className={`bg-white rounded-2xl shadow-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden transform transition-all duration-300 ${
+    ><div className={`bg-white rounded-2xl shadow-2xl w-full max-h-[95vh] overflow-hidden transform transition-all duration-300 ${
+        products.length <= 2 ? 'max-w-5xl' : 
+        products.length === 3 ? 'max-w-6xl' : 
+        'max-w-7xl'
+      } ${
         isOpen ? 'animate-scaleIn' : 'scale-95 opacity-0'
       }`}>
         {/* Enhanced Modern Header */}
@@ -186,14 +188,16 @@ const CompareModal = ({ isOpen, onClose }) => {
           ) : error ? (
             <ErrorDisplay />
           ) : products.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <div className="overflow-x-auto">
-              <div className="flex gap-6 min-w-max pb-4">
-                {products.map((product, index) => (
-                  <div 
+            <EmptyState />          ) : (            <div className="overflow-x-auto">
+              <div className={`grid gap-6 pb-4 compare-product-grid ${
+                products.length === 1 ? 'grid-cols-1 max-w-md mx-auto' :
+                products.length === 2 ? 'grid-cols-1 lg:grid-cols-2' :
+                products.length === 3 ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3' :
+                'grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4'
+              }`}>
+                {products.map((product, index) => (                  <div 
                     key={product.id}
-                    className="min-w-[320px] bg-white border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 relative overflow-hidden group hover:-translate-y-1"
+                    className="bg-white border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 relative overflow-hidden group hover:-translate-y-1 compare-product-card"
                   >
                     {/* Product Badge */}
                     <div className="absolute top-4 left-4 z-20">
@@ -210,10 +214,8 @@ const CompareModal = ({ isOpen, onClose }) => {
                       aria-label="Xóa khỏi so sánh"
                     >
                       <X className="w-4 h-4 group-hover/btn:rotate-90 transition-transform" />
-                    </button>
-
-                    {/* Product Image */}
-                    <div className="relative h-56 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+                    </button>                    {/* Product Image */}
+                    <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
                       <img
                         src={
                           product.images && product.images.length > 0
@@ -223,7 +225,7 @@ const CompareModal = ({ isOpen, onClose }) => {
                             : "https://via.placeholder.com/300"
                         }
                         alt={product.name}
-                        className="w-full h-full object-contain p-6 group-hover:scale-110 transition-transform duration-500"
+                        className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-500"
                         loading="lazy"
                         onError={(e) => {
                           e.target.onerror = null;
@@ -231,80 +233,73 @@ const CompareModal = ({ isOpen, onClose }) => {
                         }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    </div>
-
-                    {/* Product Info */}
-                    <div className="p-6">
-                      <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-indigo-600 transition-colors">
+                    </div>                    {/* Product Info */}
+                    <div className="p-4">
+                      <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-indigo-600 transition-colors">
                         {product.name}
                       </h3>
                       
                       {/* Brand and Category */}
-                      <div className="flex gap-2 mb-4">
-                        <div className="flex-1 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-3 border border-indigo-100">
+                      <div className="flex gap-2 mb-3">
+                        <div className="flex-1 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-2 border border-indigo-100">
                           <p className="text-xs text-gray-600 mb-1">Thương hiệu</p>
-                          <p className="font-semibold text-indigo-700">{product.brand}</p>
+                          <p className="font-semibold text-indigo-700 text-sm">{product.brand}</p>
                         </div>
-                        <div className="flex-1 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-3 border border-purple-100">
+                        <div className="flex-1 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-2 border border-purple-100">
                           <p className="text-xs text-gray-600 mb-1">Danh mục</p>
-                          <p className="font-semibold text-purple-700">{product.category}</p>
+                          <p className="font-semibold text-purple-700 text-sm">{product.category}</p>
                         </div>
                       </div>
 
                       {/* Description */}
                       {product.description && (
-                        <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                          <p className="text-sm text-gray-700 line-clamp-2">{product.description}</p>
+                        <div className="mb-3 p-2 bg-gray-50 rounded-lg border border-gray-100">
+                          <p className="text-xs text-gray-700 line-clamp-2">{product.description}</p>
                         </div>
-                      )}
-
-                      {/* Variants */}
+                      )}{/* Variants */}
                       <div className="border-t border-gray-200 pt-4">
                         <h4 className="font-bold text-gray-900 mb-3 flex items-center">
                           <div className="w-2 h-2 bg-indigo-500 rounded-full mr-2"></div>
                           Biến thể ({product.variants.length})
                         </h4>
-                        <div className="space-y-3 max-h-40 overflow-y-auto">
-                          {product.variants.slice(0, 3).map((variant, i) => (
-                            <div key={i} className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200 hover:shadow-md transition-shadow">
-                              <div className="flex justify-between items-start mb-3">
+                        <div className="space-y-2 max-h-32 overflow-y-auto">
+                          {product.variants.slice(0, 2).map((variant, i) => (
+                            <div key={i} className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-3 border border-gray-200 hover:shadow-sm transition-shadow">
+                              <div className="flex justify-between items-start mb-2">
                                 <div className="flex-1">
                                   <p className="font-semibold text-gray-900 text-sm">
                                     {variant.color} - {variant.storage}
                                   </p>
                                 </div>
-                                <div className="flex items-center">
+                                <div className="flex items-center ml-2">
                                   {variant.stockQuantity > 0 ? (
-                                    <CheckCircle2 className="w-4 h-4 text-green-500 mr-1" />
+                                    <CheckCircle2 className="w-3 h-3 text-green-500 mr-1" />
                                   ) : (
-                                    <AlertCircle className="w-4 h-4 text-red-500 mr-1" />
+                                    <AlertCircle className="w-3 h-3 text-red-500 mr-1" />
                                   )}
-                                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                                     variant.stockQuantity > 10 
                                       ? 'bg-green-100 text-green-800' 
                                       : variant.stockQuantity > 0 
                                       ? 'bg-yellow-100 text-yellow-800'
                                       : 'bg-red-100 text-red-800'
                                   }`}>
-                                    {variant.stockQuantity > 0 ? `Còn ${variant.stockQuantity}` : 'Hết hàng'}
+                                    {variant.stockQuantity > 0 ? `${variant.stockQuantity}` : 'Hết'}
                                   </span>
                                 </div>
                               </div>
-                                <div className="flex items-center justify-between">
+                              <div className="flex items-center justify-between">
                                 {variant.discountPrice ? (
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-lg font-bold text-red-600">
+                                  <div className="flex items-center gap-1 flex-1">
+                                    <span className="text-sm font-bold text-red-600">
                                       {variant.discountPrice.toLocaleString()}đ
                                     </span>
-                                    <span className="text-sm text-gray-500 line-through">
+                                    <span className="text-xs text-gray-500 line-through">
                                       {variant.price.toLocaleString()}đ
-                                    </span>
-                                    <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full font-medium">
-                                      -{Math.round((1 - variant.discountPrice / variant.price) * 100)}%
                                     </span>
                                   </div>
                                 ) : (
-                                  <span className="text-lg font-bold text-gray-900">
+                                  <span className="text-sm font-bold text-gray-900 flex-1">
                                     {variant.price.toLocaleString()}đ
                                   </span>
                                 )}
@@ -313,10 +308,9 @@ const CompareModal = ({ isOpen, onClose }) => {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    // Add to cart logic here
                                     alert(`Đã thêm "${product.name} - ${variant.color} ${variant.storage}" vào giỏ hàng!`);
                                   }}
-                                  className="ml-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                  className="ml-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-2 py-1 rounded-md text-xs font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                   disabled={variant.stockQuantity === 0}
                                   title={variant.stockQuantity === 0 ? "Hết hàng" : "Thêm vào giỏ hàng"}
                                 >
@@ -325,21 +319,19 @@ const CompareModal = ({ isOpen, onClose }) => {
                               </div>
                             </div>
                           ))}
-                          {product.variants.length > 3 && (
-                            <div className="text-center py-2">
-                              <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                                +{product.variants.length - 3} biến thể khác
+                          {product.variants.length > 2 && (
+                            <div className="text-center py-1">
+                              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                +{product.variants.length - 2} biến thể khác
                               </span>
                             </div>
                           )}
                         </div>
-                      </div>
-
-                      {/* Action buttons */}
-                      <div className="mt-6 pt-4 border-t border-gray-200 flex gap-3">
+                      </div>                      {/* Action buttons */}
+                      <div className="mt-4 pt-3 border-t border-gray-200">
                         <button
                           onClick={() => window.location.href = `/product/${product.id}`}
-                          className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 px-4 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 hover:shadow-lg flex items-center justify-center group"
+                          className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-2.5 px-4 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 hover:shadow-lg flex items-center justify-center group"
                         >
                           <Eye className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
                           Xem chi tiết
