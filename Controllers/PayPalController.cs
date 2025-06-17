@@ -30,7 +30,7 @@ namespace SHN_Gear.Controllers
             _payPalService = payPalService;
             _logger = logger;
         }
-
+        // tạo đơn hàng PayPal
         [HttpPost("create-order")]
         public async Task<ActionResult<PayPalOrderResponse>> CreatePayPalOrder([FromBody] OrderDto orderDto)
         {
@@ -49,7 +49,7 @@ namespace SHN_Gear.Controllers
                     return BadRequest(new { Message = "Could not create order. Please check your request." });
                 }
 
-                // Convert VND to USD (tối thiểu $0.01 USD)
+                // Convert VND to USD (minimum $0.01 USD)
                 decimal amountInUSD = Math.Max(order.TotalAmount / VND_TO_USD_RATE, 0.01m);
                 amountInUSD = Math.Round(amountInUSD, 2);
 
@@ -72,6 +72,23 @@ namespace SHN_Gear.Controllers
                 order.PayPalPaymentUrl = $"https://www.sandbox.paypal.com/checkoutnow?token={payPalOrderId}";
                 await _context.SaveChangesAsync();
 
+                // Remove purchased items from cart (if user is authenticated)
+                if (orderDto.UserId.HasValue)
+                {
+                    var productVariantIds = orderDto.OrderItems.Select(oi => oi.ProductVariantId).ToList();
+
+                    var cartItemsToRemove = await _context.CartItems
+                        .Where(ci => ci.Cart.UserId == orderDto.UserId.Value &&
+                                    productVariantIds.Contains(ci.ProductVariantId))
+                        .ToListAsync();
+
+                    if (cartItemsToRemove.Any())
+                    {
+                        _context.CartItems.RemoveRange(cartItemsToRemove);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
                 await transaction.CommitAsync();
 
                 return Ok(new PayPalOrderResponse
@@ -80,7 +97,8 @@ namespace SHN_Gear.Controllers
                     PayPalOrderId = payPalOrderId,
                     ApprovalUrl = order.PayPalPaymentUrl,
                     TotalAmount = amountInUSD,
-                    Currency = "USD"
+                    Currency = "USD",
+                    CartItemsRemoved = orderDto.UserId.HasValue
                 });
             }
             catch (Exception ex)
@@ -210,5 +228,6 @@ namespace SHN_Gear.Controllers
         public string ApprovalUrl { get; set; } = null!;
         public decimal TotalAmount { get; set; }
         public string Currency { get; set; } = null!;
+        public bool CartItemsRemoved { get; set; }
     }
 }

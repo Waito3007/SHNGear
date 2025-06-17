@@ -1,7 +1,11 @@
 import React from "react";
 import "./Footer.css";
-
+import { useNavigate } from "react-router-dom";
 const Footer = () => {
+  const navigate = useNavigate();
+  const handleOrderLookup = () => {
+    navigate("/order-lookup");
+  };
   return (
     <footer className="footer-container">
       <div class="footer-top-container">
@@ -12,7 +16,7 @@ const Footer = () => {
             Garmin Brand Store
           </p>
         </div>
-        <button class="store-button">Xem danh sách cửa hàng</button>
+        <button class="store-button"onClick={handleOrderLookup}>Tra cứu đơn </button>
       </div>
 
       <div className="footer-content">

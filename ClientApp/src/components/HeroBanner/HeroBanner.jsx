@@ -63,7 +63,7 @@ const Slider = () => {
                   loading="lazy"
                 />
                 {/* Gradient overlay để tạo hiệu ứng trong suốt dần về phía dưới */}
-                <div 
+                <div
                   className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-black/20 pointer-events-none"
                   style={{
                     maskImage: "linear-gradient(to bottom, black 50%, transparent 100%)",
@@ -77,41 +77,40 @@ const Slider = () => {
       </div>
 
       {/* Navigation buttons */}
-      <button 
+      <button
         className="absolute top-1/2 left-5 -translate-y-1/2 w-12 h-12 bg-white/70 rounded-full flex items-center justify-center z-10 transition-all hover:bg-white/90 hover:scale-105 shadow-md"
         onClick={prevSlide}
       >
         <svg className="w-6 h-6 text-gray-800" viewBox="0 0 24 24">
-          <path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/>
+          <path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z" />
         </svg>
       </button>
-      <button 
+      <button
         className="absolute top-1/2 right-5 -translate-y-1/2 w-12 h-12 bg-white/70 rounded-full flex items-center justify-center z-10 transition-all hover:bg-white/90 hover:scale-105 shadow-md"
         onClick={nextSlide}
       >
         <svg className="w-6 h-6 text-gray-800" viewBox="0 0 24 24">
-          <path fill="currentColor" d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+          <path fill="currentColor" d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
         </svg>
       </button>
 
       {/* Indicators - Phiên bản cao cấp gọn nhẹ */}
-<div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-1.5 z-20">
-  {slides.map((_, index) => (
-    <button
-      key={index}
-      onClick={() => goToSlide(index)}
-      className={`relative w-2 h-2 rounded-full transition-all duration-300 ease-out ${
-        index === currentIndex 
-          ? "bg-white scale-[1.8] shadow-[0_0_8px_rgba(255,255,255,0.8)]" 
-          : "bg-white/40 hover:bg-white/60 scale-100"
-      }`}
-    >
-      {index === currentIndex && (
-        <span className="absolute inset-0 rounded-full bg-white/20 animate-ping" />
-      )}
-    </button>
-  ))}
-</div>
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-1.5 z-20">
+        {slides.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => goToSlide(index)}
+            className={`relative w-2 h-2 rounded-full transition-all duration-300 ease-out ${index === currentIndex
+                ? "bg-white scale-[1.8] shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                : "bg-white/40 hover:bg-white/60 scale-100"
+              }`}
+          >
+            {index === currentIndex && (
+              <span className="absolute inset-0 rounded-full bg-white/20 animate-ping" />
+            )}
+          </button>
+        ))}
+      </div>
     </div>
   );
 };

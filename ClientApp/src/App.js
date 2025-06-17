@@ -13,7 +13,7 @@ import Shoppingcart from "./pages/shoppingcart";
 import Checkout from "./components/Checkout/Checkout";
 import PaymentSuccess from "./components/Order/PaymentSuccess";
 import OrderLookup from "./components/Order/OrderLookup";
-
+import ComparePage from "components/CompareProduct/ComparePage";
 import Unauthorized from "./pages/Unauthorized";
 import { jwtDecode } from "jwt-decode";
 
@@ -57,7 +57,7 @@ export default class App extends Component {
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/order-lookup" element={<OrderLookup />} />
-
+        <Route path="/compare" element={<ComparePage />} />
 
          {/* Protected Profile routes */}
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}>
