@@ -120,9 +120,7 @@ const ProductPage = () => {
                 onAddToCart={() => {}}
               />
             </Box>
-          </Grid>
-
-          {/* Phần thông số kỹ thuật */}
+          </Grid>          {/* Phần thông số kỹ thuật */}
           {productType && (
             <Grid item xs={12}>
               <Box
@@ -151,7 +149,7 @@ const ProductPage = () => {
                 boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
               }}
             >
-              <ProductReviews reviews={product.reviews || []} />
+              <ProductReviews productId={product.id} />
             </Box>
           </Grid>
 

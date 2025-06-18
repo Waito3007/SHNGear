@@ -69,7 +69,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Addresses", (string)null);
+                    b.ToTable("Addresses");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Brand", b =>
@@ -94,7 +94,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Brands", (string)null);
+                    b.ToTable("Brands");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Cart", b =>
@@ -116,7 +116,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Carts", (string)null);
+                    b.ToTable("Carts");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.CartItem", b =>
@@ -148,7 +148,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasIndex("ProductVariantId");
 
-                    b.ToTable("CartItems", (string)null);
+                    b.ToTable("CartItems");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Category", b =>
@@ -173,7 +173,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Delivery", b =>
@@ -205,7 +205,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("Deliveries", (string)null);
+                    b.ToTable("Deliveries");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.HeadphoneSpecification", b =>
@@ -239,7 +239,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("HeadphoneSpecifications", (string)null);
+                    b.ToTable("HeadphoneSpecifications");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.LaptopSpecification", b =>
@@ -299,7 +299,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("LaptopSpecifications", (string)null);
+                    b.ToTable("LaptopSpecifications");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Order", b =>
@@ -369,7 +369,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasIndex("VoucherId");
 
-                    b.ToTable("Orders", (string)null);
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.OrderItem", b =>
@@ -398,7 +398,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasIndex("ProductVariantId");
 
-                    b.ToTable("OrderItems", (string)null);
+                    b.ToTable("OrderItems");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.PaymentMethod", b =>
@@ -419,7 +419,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PaymentMethods", (string)null);
+                    b.ToTable("PaymentMethods");
 
                     b.HasData(
                         new
@@ -507,7 +507,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("PhoneSpecifications", (string)null);
+                    b.ToTable("PhoneSpecifications");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Product", b =>
@@ -541,7 +541,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.ProductImage", b =>
@@ -566,7 +566,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductImages", (string)null);
+                    b.ToTable("ProductImages");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.ProductVariant", b =>
@@ -608,7 +608,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductVariants", (string)null);
+                    b.ToTable("ProductVariants");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Review", b =>
@@ -626,7 +626,10 @@ namespace SHN_Gear.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("ProductVariantId")
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ProductId")
                         .HasColumnType("int");
 
                     b.Property<int>("Rating")
@@ -637,11 +640,11 @@ namespace SHN_Gear.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductVariantId");
+                    b.HasIndex("ProductId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Reviews", (string)null);
+                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Role", b =>
@@ -658,7 +661,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles", (string)null);
+                    b.ToTable("Roles");
 
                     b.HasData(
                         new
@@ -741,7 +744,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.UserVoucher", b =>
@@ -762,7 +765,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasIndex("VoucherId");
 
-                    b.ToTable("UserVouchers", (string)null);
+                    b.ToTable("UserVouchers");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Voucher", b =>
@@ -788,7 +791,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Vouchers", (string)null);
+                    b.ToTable("Vouchers");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Address", b =>
@@ -954,19 +957,19 @@ namespace SHN_Gear.Migrations
 
             modelBuilder.Entity("SHN_Gear.Models.Review", b =>
                 {
-                    b.HasOne("SHN_Gear.Models.ProductVariant", "ProductVariant")
+                    b.HasOne("SHN_Gear.Models.Product", "Product")
                         .WithMany()
-                        .HasForeignKey("ProductVariantId")
+                        .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("SHN_Gear.Models.User", "User")
-                        .WithMany()
+                        .WithMany("Reviews")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("ProductVariant");
+                    b.Navigation("Product");
 
                     b.Navigation("User");
                 });
@@ -1035,6 +1038,8 @@ namespace SHN_Gear.Migrations
 
             modelBuilder.Entity("SHN_Gear.Models.User", b =>
                 {
+                    b.Navigation("Reviews");
+
                     b.Navigation("UserVouchers");
                 });
 
