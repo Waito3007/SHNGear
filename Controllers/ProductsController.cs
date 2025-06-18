@@ -340,8 +340,7 @@ public class ProductsController : ControllerBase
         };
 
         return Ok(result);
-    }
-    [HttpPost("compare")]
+    }    [HttpPost("compare")]
     public async Task<IActionResult> CompareProducts([FromBody] List<int> productIds)
     {
         if (productIds == null || productIds.Count < 1)
@@ -365,94 +364,10 @@ public class ProductsController : ControllerBase
         var result = new List<object>();
 
         foreach (var product in products)
-        {
-            object specifications = null;
-
-            // Fetch specifications based on category
-            var categoryName = product.Category?.Name?.ToLower();
-
-            // Debug logging
-            System.Console.WriteLine($"Product: {product.Name}, Category: {categoryName}");
-
-            if (!string.IsNullOrEmpty(categoryName))
-            {
-                if (categoryName.Contains("phone") || categoryName.Contains("điện thoại"))
-                {
-                    var phoneSpec = await _context.PhoneSpecifications
-                        .Where(s => s.ProductId == product.Id)
-                        .FirstOrDefaultAsync();
-
-                    System.Console.WriteLine($"Phone spec found: {phoneSpec != null}");
-
-                    if (phoneSpec != null)
-                    {
-                        specifications = new
-                        {
-                            Type = "phone",
-                            ScreenSize = phoneSpec.ScreenSize,
-                            Resolution = phoneSpec.Resolution,
-                            ScreenType = phoneSpec.ScreenType,
-                            Weight = phoneSpec.Weight,
-                            Material = phoneSpec.Material,
-                            CPUModel = phoneSpec.CPUModel,
-                            CPUCores = phoneSpec.CPUCores,
-                            RAM = phoneSpec.RAM,
-                            InternalStorage = phoneSpec.InternalStorage,
-                            FrontCamera = phoneSpec.FrontCamera,
-                            RearCamera = phoneSpec.RearCamera,
-                            BatteryCapacity = phoneSpec.BatteryCapacity,
-                            SupportsNFC = phoneSpec.SupportsNFC
-                        };
-                    }
-                }
-                else if (categoryName.Contains("laptop") || categoryName.Contains("máy tính"))
-                {
-                    var laptopSpec = await _context.LaptopSpecifications
-                        .Where(s => s.ProductId == product.Id)
-                        .FirstOrDefaultAsync();
-
-                    System.Console.WriteLine($"Laptop spec found: {laptopSpec != null}");
-
-                    if (laptopSpec != null)
-                    {
-                        specifications = new
-                        {
-                            Type = "laptop",
-                            Weight = laptopSpec.Weight,
-                            Material = laptopSpec.Material,
-                            CPUType = laptopSpec.CPUType,
-                            CPUNumberOfCores = laptopSpec.CPUNumberOfCores,
-                            RAM = laptopSpec.RAM,
-                            MaxRAMSupport = laptopSpec.MaxRAMSupport,
-                            SSDStorage = laptopSpec.SSDStorage,
-                            ScreenSize = laptopSpec.ScreenSize,
-                            Resolution = laptopSpec.Resolution,
-                            RefreshRate = laptopSpec.RefreshRate,
-                            SupportsTouch = laptopSpec.SupportsTouch
-                        };
-                    }
-                }
-                else if (categoryName.Contains("headphone") || categoryName.Contains("tai nghe"))
-                {
-                    var headphoneSpec = await _context.HeadphoneSpecifications
-                        .Where(s => s.ProductId == product.Id)
-                        .FirstOrDefaultAsync();
-
-                    System.Console.WriteLine($"Headphone spec found: {headphoneSpec != null}");
-
-                    if (headphoneSpec != null)
-                    {
-                        specifications = new
-                        {
-                            Type = "headphone",
-                            Weight = headphoneSpec.Weight,
-                            HeadphoneType = headphoneSpec.Type,
-                            ConnectionType = headphoneSpec.ConnectionType,
-                            Port = headphoneSpec.Port
-                        };
-                    }
-                }
-            }
+        {            // Fetch specifications using unified ProductSpecification table
+            var specifications = await _context.ProductSpecifications
+                .Where(s => s.ProductId == product.Id)
+                .ToDictionaryAsync(s => s.Name, s => s.Value);
 
             result.Add(new
             {
