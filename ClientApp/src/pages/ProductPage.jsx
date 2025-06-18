@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { Container, Grid, Box, Alert, CircularProgress } from "@mui/material";
 import Navbar from "../components/Navbar/Navbar";
-import ProductImage from "../components/productinformationpage/ProductImage";
-import ProductInfo from "../components/productinformationpage/ProductInfo";
-import ProductVariants from "../components/productinformationpage/ProductVariants";
+import ProductImage from "../components/ProductInfoPage/ProductImage";
+import ProductInfo from "../components/ProductInfoPage/ProductInfo";
+import ProductVariants from "../components/ProductInfoPage/ProductVariants";
 import Footer from "../components/Footer/Footer";
-import CircularProgress from "@mui/material/CircularProgress";
-import Alert from "@mui/material/Alert";
-import ProductReviews from "../components/productinformationpage/ProductReviews";
-import RelatedProducts from "../components/productinformationpage/RelatedProducts";
-import SpecificationDisplay from "../components/productinformationpage/ProductSpecifications";
+import ProductReviews from "../components/ProductInfoPage/ProductReviews";
+import RelatedProducts from "../components/ProductInfoPage/RelatedProducts";
+import SpecificationDisplay from "../components/ProductInfoPage/ProductSpecifications";
 import Commitment from "../components/Commitment/Commitment";
 
 const ProductPage = () => {
@@ -22,7 +21,9 @@ const ProductPage = () => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/Products/${id}`);
+        const response = await fetch(
+          `${process.env.REACT_APP_API_BASE_URL}/api/Products/${id}`
+        );
         if (!response.ok) {
           throw new Error("Không thể tải dữ liệu sản phẩm.");
         }
@@ -40,79 +41,136 @@ const ProductPage = () => {
 
   const getProductType = () => {
     if (!product?.category?.name) return null;
-    
+
     const categoryName = product.category.name.toLowerCase();
-    if (categoryName.includes('phone') || categoryName.includes('điện thoại')) {
-      return 'phone';
-    } else if (categoryName.includes('laptop') || categoryName.includes('máy tính')) {
-      return 'laptop';
-    } else if (categoryName.includes('headphone') || categoryName.includes('tai nghe')) {
-      return 'headphone';
+    if (categoryName.includes("phone") || categoryName.includes("điện thoại")) {
+      return "phone";
+    } else if (
+      categoryName.includes("laptop") ||
+      categoryName.includes("máy tính")
+    ) {
+      return "laptop";
+    } else if (
+      categoryName.includes("headphone") ||
+      categoryName.includes("tai nghe")
+    ) {
+      return "headphone";
     }
     return null;
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <CircularProgress />
-      </div>
+      <Box className="min-h-screen flex items-center justify-center">
+        <CircularProgress size={60} thickness={4} />
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Alert severity="error">{error}</Alert>
-      </div>
+      <Box className="min-h-screen flex items-center justify-center p-4">
+        <Alert severity="error" variant="filled">
+          {error}
+        </Alert>
+      </Box>
     );
   }
 
   if (!product) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Alert severity="warning">Không tìm thấy sản phẩm</Alert>
-      </div>
+      <Box className="min-h-screen flex items-center justify-center p-4">
+        <Alert severity="warning" variant="filled">
+          Không tìm thấy sản phẩm
+        </Alert>
+      </Box>
     );
   }
 
   const productType = getProductType();
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <Box className="min-h-screen bg-gray-50">
       <Navbar />
 
-      <div className="container mx-auto px-4 py-8 pt-40 flex flex-col gap-10">
-        <div className="grid md:grid-cols-2 gap-8">
-          <ProductImage images={product.images || []} name={product.name} />
-          <div className="flex flex-col gap-6">
-            <ProductInfo product={product} />
-            <ProductVariants variants={product.variants || []} />
-          </div>
-        </div>
+      <Container maxWidth="xl" sx={{ pt: { xs: 8, sm: 12 }, pb: 8 }}>
+        <Grid container spacing={4}>
+          {/* Phần hình ảnh sản phẩm */}
+          <Grid item xs={12} md={6} lg={5}>
+            <Box
+              sx={{
+                position: "sticky",
+                top: 100,
+                backgroundColor: "white",
+                borderRadius: 2,
+                overflow: "hidden",
+                boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
+              }}
+            >
+              <ProductImage images={product.images || []} name={product.name} />
+            </Box>
+          </Grid>
 
-       {productType && (
-        <SpecificationDisplay 
-          productType={productType} 
-          productId={product.id} 
-        />
-      )}
+          {/* Phần thông tin sản phẩm */}
+          <Grid item xs={12} md={6} lg={7}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              <ProductInfo product={product} />
+              <ProductVariants
+                variants={product.variants || []}
+                onAddToCart={() => {}}
+              />
+            </Box>
+          </Grid>          {/* Phần thông số kỹ thuật */}
+          {productType && (
+            <Grid item xs={12}>
+              <Box
+                sx={{
+                  backgroundColor: "white",
+                  borderRadius: 2,
+                  overflow: "hidden",
+                  boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
+                }}
+              >
+                <SpecificationDisplay
+                  productType={productType}
+                  productId={product.id}
+                />
+              </Box>
+            </Grid>
+          )}
 
-        <div className="md:col-span-2 mt-16">
-          <ProductReviews reviews={product.reviews || []} />
-        </div>
+          {/* Phần đánh giá sản phẩm */}
+          <Grid item xs={12}>
+            <Box
+              sx={{
+                backgroundColor: "white",
+                borderRadius: 2,
+                p: 3,
+                boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
+              }}
+            >
+              <ProductReviews productId={product.id} />
+            </Box>
+          </Grid>
 
-        <div className="md:col-span-2 mt-16">
-          <RelatedProducts 
-            brandId={product.brand?.id} 
-            currentProductId={id} 
-          />
-        </div>
-      </div>
-      
-      <Commitment />
+          {/* Phần sản phẩm liên quan */}
+          <Grid item xs={12}>
+            <Box sx={{ mt: 4 }}>
+              <RelatedProducts
+                productId={product.id}
+                brandId={product.brandId}
+                categoryId={product.categoryId}
+              />
+            </Box>
+          </Grid>
+        </Grid>
+      </Container>
+
+      <Box sx={{ mt: 8 }}>
+        <Commitment />
+      </Box>
       <Footer />
-    </div>
+    </Box>
   );
 };
 

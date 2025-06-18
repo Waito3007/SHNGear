@@ -217,7 +217,7 @@ const UserOrders = () => {
                           </Table>
                           <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
                             <Typography variant="body2">
-                              Phương thức thanh toán: {order.paymentMethodId === 1 ? "Tiền mặt" : "MoMo"}
+                              Phương thức thanh toán: {order.paymentMethodId === 1 ? "Tiền mặt" : "Thanh toán online"}
                             </Typography>
                             <Box sx={{ textAlign: 'right' }}>
                               <Typography variant="body1">

@@ -86,6 +86,47 @@ namespace SHN_Gear.Data
                 .WithMany(v => v.UserVouchers)
                 .HasForeignKey(uv => uv.VoucherId);
 
+            modelBuilder.Entity<Review>(entity =>
+            {
+                entity.HasKey(r => r.Id);
+
+                entity.Property(r => r.Comment).IsRequired();
+                entity.Property(r => r.Rating);
+                entity.Property(r => r.CreatedAt);
+                entity.Property(r => r.IsApproved);
+
+                entity.HasOne(r => r.User)
+                    .WithMany(u => u.Reviews) 
+                    .HasForeignKey(r => r.UserId);
+
+                entity.HasOne(r => r.Product) // ✅ mới
+                    .WithMany()
+                    .HasForeignKey(r => r.ProductId); // ✅ mới
+            });
+
+            modelBuilder.Entity<Delivery>(entity =>
+    {
+        // Giả định Delivery có thuộc tính ShippingCost
+        entity.Property(d => d.ShippingCost).HasColumnType("decimal(18, 2)");
+    });
+
+            modelBuilder.Entity<Order>(entity =>
+            {
+                // Giả định Order có thuộc tính TotalAmount
+                entity.Property(o => o.TotalAmount).HasColumnType("decimal(18, 2)");
+            });
+
+            modelBuilder.Entity<OrderItem>(entity =>
+            {
+                // Giả định OrderItem có thuộc tính Price (ngoài giá gốc từ ProductVariant)
+                // Nếu OrderItem không có cột Price riêng mà dùng giá từ ProductVariant thì không cần dòng này
+                entity.Property(oi => oi.Price).HasColumnType("decimal(18, 2)");
+            });
+            modelBuilder.Entity<Voucher>(entity =>
+    {
+        // Giả định Voucher có thuộc tính DiscountAmount
+        entity.Property(v => v.DiscountAmount).HasColumnType("decimal(18, 2)");
+    });
             // Thêm các quan hệ khác tương tự ở đây.
         }
     }

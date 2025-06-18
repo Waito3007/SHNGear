@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ShoppingCart, User, Search, Star, MapPin, LogOut, ShoppingBag, Settings } from "lucide-react";
+import { ShoppingCart, User, Search, Scale, Star, MapPin, LogOut, ShoppingBag, Settings } from "lucide-react";
 import { useNavigate, NavLink } from "react-router-dom";
 import "./Navbar.css";
 import axios from 'axios';
 import { jwtDecode } from "jwt-decode"; // Import jwt-decode
-import menuIcon from "../../assets/icon/menu.svg";
-import logo from "../../assets/img/Phone/logo.png";
+import menuIcon from "..//..//assets/icon/menu.svg";
+import logo from "..//..//assets/img/Phone/logo.png";
 import AuthModal from "../Auth/AuthModal";
 import CartDrawer from "../shoppingcart/CartDrawer"; // Import Drawer
 
@@ -515,6 +515,15 @@ const handleSearchSubmit = (e) => {
           >
             <ShoppingBag className="w-4 h-4 mr-3" />
             Đơn hàng của tôi
+          </NavLink>
+
+          <NavLink
+            to="/compare"
+            className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
+            activeClassName="bg-blue-50 text-blue-600"
+          >
+              <Scale className="w-4 h-4 mr-3" /> 
+              So sánh sản phẩm
           </NavLink>
           
           <NavLink 

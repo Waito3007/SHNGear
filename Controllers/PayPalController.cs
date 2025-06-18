@@ -19,6 +19,7 @@ namespace SHN_Gear.Controllers
         private readonly PayPalService _payPalService;
         private readonly ILogger<PayPalController> _logger;
         private const decimal VND_TO_USD_RATE = 25000m;
+        private const string CLIENT_URL = "https://localhost:44479";
 
         public PayPalController(
             AppDbContext context,
@@ -29,7 +30,7 @@ namespace SHN_Gear.Controllers
             _payPalService = payPalService;
             _logger = logger;
         }
-
+        // tạo đơn hàng PayPal
         [HttpPost("create-order")]
         public async Task<ActionResult<PayPalOrderResponse>> CreatePayPalOrder([FromBody] OrderDto orderDto)
         {
@@ -48,7 +49,7 @@ namespace SHN_Gear.Controllers
                     return BadRequest(new { Message = "Could not create order. Please check your request." });
                 }
 
-                // Convert VND to USD (tối thiểu $0.01 USD)
+                // Convert VND to USD (minimum $0.01 USD)
                 decimal amountInUSD = Math.Max(order.TotalAmount / VND_TO_USD_RATE, 0.01m);
                 amountInUSD = Math.Round(amountInUSD, 2);
 
@@ -57,8 +58,8 @@ namespace SHN_Gear.Controllers
                     amountInUSD,
                     "USD",
                     $"SHN{order.Id}",
-                    $"{Request.Scheme}://{Request.Host}/api/paypal/capture-order?orderId={order.Id}",
-                    $"{Request.Scheme}://{Request.Host}/payment-canceled?orderId={order.Id}"
+                    $"https://localhost:7107/api/paypal/capture-order?orderId={order.Id}",
+                    $"{CLIENT_URL}/payment-canceled?orderId={order.Id}"
                 );
 
                 if (string.IsNullOrEmpty(payPalOrderId))
@@ -71,6 +72,23 @@ namespace SHN_Gear.Controllers
                 order.PayPalPaymentUrl = $"https://www.sandbox.paypal.com/checkoutnow?token={payPalOrderId}";
                 await _context.SaveChangesAsync();
 
+                // Remove purchased items from cart (if user is authenticated)
+                if (orderDto.UserId.HasValue)
+                {
+                    var productVariantIds = orderDto.OrderItems.Select(oi => oi.ProductVariantId).ToList();
+
+                    var cartItemsToRemove = await _context.CartItems
+                        .Where(ci => ci.Cart.UserId == orderDto.UserId.Value &&
+                                    productVariantIds.Contains(ci.ProductVariantId))
+                        .ToListAsync();
+
+                    if (cartItemsToRemove.Any())
+                    {
+                        _context.CartItems.RemoveRange(cartItemsToRemove);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
                 await transaction.CommitAsync();
 
                 return Ok(new PayPalOrderResponse
@@ -79,7 +97,8 @@ namespace SHN_Gear.Controllers
                     PayPalOrderId = payPalOrderId,
                     ApprovalUrl = order.PayPalPaymentUrl,
                     TotalAmount = amountInUSD,
-                    Currency = "USD"
+                    Currency = "USD",
+                    CartItemsRemoved = orderDto.UserId.HasValue
                 });
             }
             catch (Exception ex)
@@ -168,7 +187,7 @@ namespace SHN_Gear.Controllers
                 var order = await _context.Orders.FindAsync(orderId);
                 if (order is null || order.PayPalOrderId != token)
                 {
-                    return NotFound(new { Message = "Order not found or invalid PayPal token" });
+                    return BadRequest(new { Message = "Order not found or invalid PayPal token" });
                 }
 
                 var captureResult = await _payPalService.CaptureOrder(token);
@@ -177,7 +196,8 @@ namespace SHN_Gear.Controllers
                 {
                     order.OrderStatus = "PaymentFailed";
                     await _context.SaveChangesAsync();
-                    return Redirect($"{Request.Scheme}://{Request.Host}/payment-failed?orderId={order.Id}");
+                    await transaction.CommitAsync();
+                    return new RedirectResult($"{CLIENT_URL}/payment-failed?orderId={order.Id}", true);
                 }
 
                 // Update order status
@@ -188,13 +208,15 @@ namespace SHN_Gear.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                return Redirect($"{Request.Scheme}://{Request.Host}/payment-success?orderId={order.Id}");
+                // Redirect to payment success page
+                var redirectUrl = $"{CLIENT_URL}/payment-success?orderId={order.Id}";
+                return new RedirectResult(redirectUrl, true);
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
                 _logger.LogError(ex, $"Failed to capture PayPal payment for order {orderId}");
-                return Redirect($"{Request.Scheme}://{Request.Host}/payment-error?message={Uri.EscapeDataString(ex.Message)}");
+                return Redirect($"{CLIENT_URL}/payment-error?message={Uri.EscapeDataString(ex.Message)}");
             }
         }
     }
@@ -206,5 +228,6 @@ namespace SHN_Gear.Controllers
         public string ApprovalUrl { get; set; } = null!;
         public decimal TotalAmount { get; set; }
         public string Currency { get; set; } = null!;
+        public bool CartItemsRemoved { get; set; }
     }
 }
