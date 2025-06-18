@@ -64,6 +64,23 @@ const ProductList = () => {
   const [selectedBrand, setSelectedBrand] = useState(null);
   const [viewMode, setViewMode] = useState("grid");
   const [searchValue, setSearchValue] = useState(searchQuery || "");
+  const [currentPage, setCurrentPage] = useState(1); // Thêm state cho current page
+
+  // Reset trang khi filter thay đổi
+  const handleFilterChange = (filterType, value) => {
+    setCurrentPage(1); // Reset về trang 1
+
+    switch (filterType) {
+      case "priceRange":
+        setSelectedPriceRange(value);
+        break;
+      case "brand":
+        setSelectedBrand(value);
+        break;
+      default:
+        break;
+    }
+  };
 
   const trigger = useScrollTrigger({
     disableHysteresis: true,
@@ -299,9 +316,14 @@ const ProductList = () => {
                     },
                   }}
                 >
+                  {" "}
                   <FilterSection
-                    onPriceChange={setSelectedPriceRange}
-                    onBrandChange={setSelectedBrand}
+                    onPriceChange={(value) =>
+                      handleFilterChange("priceRange", value)
+                    }
+                    onBrandChange={(value) =>
+                      handleFilterChange("brand", value)
+                    }
                     viewMode={viewMode}
                     onViewModeChange={setViewMode}
                   />
@@ -315,6 +337,8 @@ const ProductList = () => {
                   selectedPriceRange={selectedPriceRange}
                   selectedBrand={selectedBrand}
                   viewMode={viewMode}
+                  currentPage={currentPage} // Truyền currentPage vào đây
+                  onPageChange={setCurrentPage} // Hàm để thay đổi trang
                 />
               </motion.div>
             </Box>

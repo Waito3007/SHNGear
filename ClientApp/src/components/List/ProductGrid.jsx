@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ProductHoverPreview from "./ProductHoverPreview";
+import ProductPagination from "./ProductPagination";
 import { motion } from "framer-motion";
 import { Typography, Rating } from "@mui/material";
 import CompareModal from "../CompareProduct/CompareModal";
@@ -35,7 +36,10 @@ const ProductGrid = ({
   selectedPriceRange,
   selectedBrand,
   viewMode,
-}) => {  const [products, setProducts] = useState([]);
+}) => {
+  const [products, setProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]); // Lưu tất cả sản phẩm
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [hoveredProduct, setHoveredProduct] = useState(null);
@@ -46,6 +50,8 @@ const ProductGrid = ({
   const [toastNotification, setToastNotification] = useState(null);
   const [loadingStates, setLoadingStates] = useState({});
   const navigate = useNavigate();
+
+  const PRODUCTS_PER_PAGE = 9;
 
   // Handle mouse interaction
   const handleMouseEnter = async (product, event) => {
@@ -92,19 +98,18 @@ const ProductGrid = ({
   };
 
   // Toast notification functions
-  const showToast = (message, type = 'success', title = '') => {
+  const showToast = (message, type = "success", title = "") => {
     setToastNotification({ message, type, title });
     setTimeout(() => setToastNotification(null), 3000);
   };
 
   // Set loading state for specific button
   const setButtonLoading = (productId, buttonType, isLoading) => {
-    setLoadingStates(prev => ({
+    setLoadingStates((prev) => ({
       ...prev,
-      [`${productId}-${buttonType}`]: isLoading
+      [`${productId}-${buttonType}`]: isLoading,
     }));
   };
-
   useEffect(() => {
     const fetchProductsAndBrands = async () => {
       setLoading(true);
@@ -144,20 +149,28 @@ const ProductGrid = ({
         }
 
         if (selectedPriceRange && selectedPriceRange !== "all") {
-          const [minPrice, maxPrice] = selectedPriceRange.split("-").map(Number);
+          const [minPrice, maxPrice] = selectedPriceRange
+            .split("-")
+            .map(Number);
           filteredProducts = filteredProducts.filter((product) => {
-            const price = product.variants?.[0]?.discountPrice || product.variants?.[0]?.price || 0;
+            const price =
+              product.variants?.[0]?.discountPrice ||
+              product.variants?.[0]?.price ||
+              0;
             return price >= minPrice && price <= maxPrice;
           });
         }
 
         const processedProducts = filteredProducts.map((product) => {
           const variant = product.variants?.[0] || {};
-          const image = product.images?.[0]?.imageUrl || "https://via.placeholder.com/300?text=No+Image";
+          const image =
+            product.images?.[0]?.imageUrl ||
+            "https://via.placeholder.com/300?text=No+Image";
           const oldPrice = variant.price || 0;
           const newPrice = variant.discountPrice || oldPrice;
           const discountAmount = oldPrice - newPrice;
-          const discount = oldPrice > 0 ? Math.round((discountAmount / oldPrice) * 100) : 0;
+          const discount =
+            oldPrice > 0 ? Math.round((discountAmount / oldPrice) * 100) : 0;
 
           const brand = brandsMap[product.brandId];
 
@@ -177,7 +190,8 @@ const ProductGrid = ({
           };
         });
 
-        setProducts(processedProducts);
+        setAllProducts(processedProducts);
+        setCurrentPage(1); // Reset về trang đầu khi filter thay đổi
       } catch (err) {
         setError(err.message);
       } finally {
@@ -188,18 +202,40 @@ const ProductGrid = ({
     fetchProductsAndBrands();
   }, [selectedCategory, selectedPriceRange, selectedBrand]);
 
+  // Effect để cập nhật sản phẩm hiển thị dựa trên trang hiện tại
+  useEffect(() => {
+    const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
+    const endIndex = startIndex + PRODUCTS_PER_PAGE;
+    setProducts(allProducts.slice(startIndex, endIndex));
+  }, [allProducts, currentPage]);
+
+  // Hàm xử lý thay đổi trang
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    // Scroll to top when page changes
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  // Tính tổng số trang
+  const totalPages = Math.ceil(allProducts.length / PRODUCTS_PER_PAGE);
+
   // Theo dõi số lượng sản phẩm trong compareList
   useEffect(() => {
     const updateCompareCount = () => {
-      const compareList = JSON.parse(localStorage.getItem("compareList") || "[]");
+      const compareList = JSON.parse(
+        localStorage.getItem("compareList") || "[]"
+      );
       setCompareCount(compareList.length);
     };
 
     updateCompareCount();
-    
+
     window.addEventListener("storage", updateCompareCount);
     window.addEventListener("compareListChanged", updateCompareCount);
-    
+
     return () => {
       window.removeEventListener("storage", updateCompareCount);
       window.removeEventListener("compareListChanged", updateCompareCount);
@@ -207,56 +243,77 @@ const ProductGrid = ({
   }, []);
   // Function để thêm/xóa sản phẩm khỏi compare list
   const toggleCompare = async (productId, productName) => {
-    setButtonLoading(productId, 'compare', true);
-    
+    setButtonLoading(productId, "compare", true);
+
     try {
       // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const compareList = JSON.parse(localStorage.getItem("compareList") || "[]");
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const compareList = JSON.parse(
+        localStorage.getItem("compareList") || "[]"
+      );
+
       if (compareList.includes(productId)) {
-        const updatedList = compareList.filter(id => id !== productId);
+        const updatedList = compareList.filter((id) => id !== productId);
         localStorage.setItem("compareList", JSON.stringify(updatedList));
         setCompareCount(updatedList.length);
-        window.dispatchEvent(new Event('compareListChanged'));
-        showToast(`Đã xóa "${productName}" khỏi danh sách so sánh!`, 'success', 'Xóa thành công');
+        window.dispatchEvent(new Event("compareListChanged"));
+        showToast(
+          `Đã xóa "${productName}" khỏi danh sách so sánh!`,
+          "success",
+          "Xóa thành công"
+        );
       } else {
         if (compareList.length >= 4) {
-          showToast("Chỉ có thể so sánh tối đa 4 sản phẩm cùng lúc!", 'warning', 'Giới hạn so sánh');
+          showToast(
+            "Chỉ có thể so sánh tối đa 4 sản phẩm cùng lúc!",
+            "warning",
+            "Giới hạn so sánh"
+          );
           return;
         }
-        
+
         compareList.push(productId);
         localStorage.setItem("compareList", JSON.stringify(compareList));
         setCompareCount(compareList.length);
-        window.dispatchEvent(new Event('compareListChanged'));
-        showToast(`Đã thêm "${productName}" vào danh sách so sánh!`, 'success', 'Thêm thành công');
+        window.dispatchEvent(new Event("compareListChanged"));
+        showToast(
+          `Đã thêm "${productName}" vào danh sách so sánh!`,
+          "success",
+          "Thêm thành công"
+        );
       }
-      
-      setProducts(prevProducts => [...prevProducts]);
+
+      setProducts((prevProducts) => [...prevProducts]);
     } finally {
-      setButtonLoading(productId, 'compare', false);    }
+      setButtonLoading(productId, "compare", false);
+    }
   };
 
   // Function để thêm sản phẩm vào giỏ hàng
   const addToCart = async (product) => {
-    setButtonLoading(product.id, 'cart', true);
-    
+    setButtonLoading(product.id, "cart", true);
+
     try {
       // Simulate API call to add to cart
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
       // Get existing cart from localStorage or create new one
       const existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
-      
+
       // Check if product already exists in cart
-      const existingItemIndex = existingCart.findIndex(item => item.id === product.id);
-      
+      const existingItemIndex = existingCart.findIndex(
+        (item) => item.id === product.id
+      );
+
       if (existingItemIndex > -1) {
         // Update quantity if product already exists
         existingCart[existingItemIndex].quantity += 1;
-        showToast(`Đã cập nhật số lượng "${product.name}" trong giỏ hàng!`, 'success', 'Cập nhật giỏ hàng');
+        showToast(
+          `Đã cập nhật số lượng "${product.name}" trong giỏ hàng!`,
+          "success",
+          "Cập nhật giỏ hàng"
+        );
       } else {
         // Add new product to cart
         const cartItem = {
@@ -264,46 +321,51 @@ const ProductGrid = ({
           name: product.name,
           price: product.newPrice,
           image: product.image,
-          brand: product.brand?.name || '',
+          brand: product.brand?.name || "",
           quantity: 1,
-          variant: product.variant
+          variant: product.variant,
         };
         existingCart.push(cartItem);
-        showToast(`Đã thêm "${product.name}" vào giỏ hàng!`, 'success', 'Thêm thành công');
+        showToast(
+          `Đã thêm "${product.name}" vào giỏ hàng!`,
+          "success",
+          "Thêm thành công"
+        );
       }
-      
+
       // Save updated cart to localStorage
       localStorage.setItem("cart", JSON.stringify(existingCart));
-      
+
       // Dispatch event to update cart count in other components
-      window.dispatchEvent(new Event('cartChanged'));
-      
+      window.dispatchEvent(new Event("cartChanged"));
+
       // Temporarily add success class to button
-      const buttonElement = document.querySelector(`[data-product-id="${product.id}"] .add-to-cart-btn`);
+      const buttonElement = document.querySelector(
+        `[data-product-id="${product.id}"] .add-to-cart-btn`
+      );
       if (buttonElement) {
-        buttonElement.classList.add('btn-success');
+        buttonElement.classList.add("btn-success");
         setTimeout(() => {
-          buttonElement.classList.remove('btn-success');
+          buttonElement.classList.remove("btn-success");
         }, 600);
       }
-      
     } catch (error) {
-      console.error('Error adding to cart:', error);
-      showToast('Có lỗi xảy ra khi thêm vào giỏ hàng!', 'error', 'Lỗi');
+      console.error("Error adding to cart:", error);
+      showToast("Có lỗi xảy ra khi thêm vào giỏ hàng!", "error", "Lỗi");
     } finally {
-      setButtonLoading(product.id, 'cart', false);
+      setButtonLoading(product.id, "cart", false);
     }
   };
 
   // Function để mở modal so sánh
   const openCompareModal = () => {
     const compareList = JSON.parse(localStorage.getItem("compareList") || "[]");
-    
+
     if (compareList.length < 1) {
       alert("Cần ít nhất 1 sản phẩm để so sánh!");
       return;
     }
-    
+
     setCompareModalOpen(true);
   };
 
@@ -333,18 +395,25 @@ const ProductGrid = ({
   return (
     <div className="w-full py-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
       <div className="max-w-7xl mx-auto px-4">
-
-        {products.length === 0 ? (
+        {" "}
+        {allProducts.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">📱</div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">Không có sản phẩm phù hợp</h3>
-            <p className="text-gray-500">Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
-          </div>        ) : (
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">
+              Không có sản phẩm phù hợp
+            </h3>
+            <p className="text-gray-500">
+              Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm
+            </p>
+          </div>
+        ) : (
           <motion.div variants={container} initial="hidden" animate="show">
             <div className="products-grid">
               {products.map((product) => {
-                const isInCompare = JSON.parse(localStorage.getItem("compareList") || "[]").includes(product.id);
-                
+                const isInCompare = JSON.parse(
+                  localStorage.getItem("compareList") || "[]"
+                ).includes(product.id);
+
                 return (
                   <motion.div
                     key={product.id}
@@ -386,7 +455,8 @@ const ProductGrid = ({
                           alt={product.name}
                           onError={(e) => {
                             e.target.onerror = null;
-                            e.target.src = "https://via.placeholder.com/300?text=Error";
+                            e.target.src =
+                              "https://via.placeholder.com/300?text=Error";
                           }}
                         />
                       </div>
@@ -422,10 +492,8 @@ const ProductGrid = ({
                             </Typography>
                           </div>
                         )}
-
                         {/* Product Name */}
                         <h3 className="product-name">{product.name}</h3>
-
                         {/* Rating */}
                         <div className="product-rating">
                           <Rating
@@ -438,7 +506,6 @@ const ProductGrid = ({
                             ({product.ratingCount})
                           </Typography>
                         </div>
-
                         {/* Price */}
                         <div className="product-price">
                           {product.oldPrice > product.newPrice && (
@@ -449,11 +516,19 @@ const ProductGrid = ({
                           <div className="current-price">
                             {product.newPrice.toLocaleString()}đ
                           </div>
-                        </div>                        {/* Action Buttons */}
-                        <div className="product-actions" data-product-id={product.id}>
+                        </div>{" "}
+                        {/* Action Buttons */}
+                        <div
+                          className="product-actions"
+                          data-product-id={product.id}
+                        >
                           <button
-                            className={`compare-btn ${isInCompare ? 'active' : ''} ${
-                              loadingStates[`${product.id}-compare`] ? 'btn-loading' : ''
+                            className={`compare-btn ${
+                              isInCompare ? "active" : ""
+                            } ${
+                              loadingStates[`${product.id}-compare`]
+                                ? "btn-loading"
+                                : ""
                             }`}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -461,13 +536,18 @@ const ProductGrid = ({
                             }}
                             disabled={loadingStates[`${product.id}-compare`]}
                           >
-                            {loadingStates[`${product.id}-compare`] ? '' : 
-                             isInCompare ? '✓ Đã chọn' : 'So sánh'}
+                            {loadingStates[`${product.id}-compare`]
+                              ? ""
+                              : isInCompare
+                              ? "✓ Đã chọn"
+                              : "So sánh"}
                           </button>
-                          
+
                           <button
                             className={`add-to-cart-btn ${
-                              loadingStates[`${product.id}-cart`] ? 'btn-loading' : ''
+                              loadingStates[`${product.id}-cart`]
+                                ? "btn-loading"
+                                : ""
                             }`}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -475,7 +555,9 @@ const ProductGrid = ({
                             }}
                             disabled={loadingStates[`${product.id}-cart`]}
                           >
-                            {loadingStates[`${product.id}-cart`] ? '' : 'Thêm vào giỏ'}
+                            {loadingStates[`${product.id}-cart`]
+                              ? ""
+                              : "Thêm vào giỏ"}
                           </button>
                         </div>
                       </div>
@@ -484,8 +566,19 @@ const ProductGrid = ({
                 );
               })}
             </div>
+
+            {/* Pagination */}
+            <ProductPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              totalProducts={allProducts.length}
+              productsPerPage={PRODUCTS_PER_PAGE}
+              loading={loading}
+            />
           </motion.div>
-        )}{/* Floating Compare Button */}
+        )}
+        {/* Floating Compare Button */}
         {compareCount > 0 && (
           <div className="fixed bottom-8 left-8 z-[9998]">
             <button
@@ -493,8 +586,18 @@ const ProductGrid = ({
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-full shadow-2xl transition-all duration-300 flex items-center space-x-3 transform hover:scale-105"
             >
               <div className="relative">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
                 </svg>
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                   {compareCount}
@@ -504,28 +607,33 @@ const ProductGrid = ({
             </button>
           </div>
         )}
-
         {/* Product Hover Preview */}
         <ProductHoverPreview
           product={{
             ...hoveredProduct,
-            specifications: hoveredProduct ? productSpecs[hoveredProduct.id] : null,
+            specifications: hoveredProduct
+              ? productSpecs[hoveredProduct.id]
+              : null,
           }}
           isVisible={Boolean(hoveredProduct)}
           position={mousePosition}
-        />        {/* Compare Modal */}
-        <CompareModal 
-          isOpen={compareModalOpen} 
+        />{" "}
+        {/* Compare Modal */}
+        <CompareModal
+          isOpen={compareModalOpen}
           onClose={() => setCompareModalOpen(false)}
         />
-
         {/* Toast Notification */}
         {toastNotification && (
           <div className={`toast-notification ${toastNotification.type}`}>
             <div className={`toast-icon ${toastNotification.type}`}>
-              {toastNotification.type === 'success' ? '✓' : 
-               toastNotification.type === 'error' ? '✗' : 
-               toastNotification.type === 'warning' ? '⚠' : 'ℹ'}
+              {toastNotification.type === "success"
+                ? "✓"
+                : toastNotification.type === "error"
+                ? "✗"
+                : toastNotification.type === "warning"
+                ? "⚠"
+                : "ℹ"}
             </div>
             <div className="toast-content">
               {toastNotification.title && (
