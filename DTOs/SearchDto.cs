@@ -14,21 +14,21 @@ namespace SHN_Gear.Models.DTOs
     public class SearchProductDto
     {
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string ImageUrl { get; set; }
+        public string Name { get; set; } = null!;
+        public string ImageUrl { get; set; } = null!;
         public decimal Price { get; set; }
     }
 
     public class SearchCategoryDto
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
     }
 
     public class SearchBrandDto
     {
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string LogoUrl { get; set; }
+        public string Name { get; set; } = null!;
+        public string LogoUrl { get; set; } = null!;
     }
 }

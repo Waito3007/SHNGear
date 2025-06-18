@@ -1,39 +1,31 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
 import {
   Drawer, Button, Box, Typography, IconButton,
   TextField, FormControlLabel, Checkbox,
   CircularProgress, Alert, Dialog,
   DialogActions, DialogContent, DialogContentText, DialogTitle,
-  Skeleton, Fade, Snackbar, LinearProgress, Paper, InputAdornment // THÊM InputAdornment
+  Fade, Snackbar, LinearProgress, Paper, InputAdornment
 } from "@mui/material";
 import {
-  X, Trash, Check, Plus, Scale, Smartphone, Monitor, // Monitor for general screen
-  Cpu, MemoryStick, HardDrive, Camera, BatteryFull, Nfc, // Phone
-  Laptop as LaptopIcon, Gauge, MousePointer2, // Laptop (LaptopIcon to avoid conflict)
-  Headphones, Bluetooth, Cable, Usb, // Headphones
-  Undo2, // For Cancel button
-  AlertTriangle, // For Dialog title
-  Package as PackageIcon, // For Product Info
-  LayoutGrid, // For Category Info
-  Info // For Alert message
-} from "lucide-react"; // Import các icon cần thiết
-import axios from "axios";
+  X, Trash, Check, Plus, Scale, Smartphone, Monitor,
+  Cpu, MemoryStick, HardDrive, Camera, BatteryFull, Nfc,
+  Laptop as LaptopIcon, Gauge, MousePointer2,
+  Headphones, Bluetooth, Cable, Usb,
+  Undo2,
+  AlertTriangle,
+  Package as PackageIcon,
+  LayoutGrid,
+  Info
+} from "lucide-react";
+import { useSpecificationForm } from "../../../hook/products/useSpecificationManager"; // Đường dẫn tới hook
 
-// Constants
-const API_BASE_URL_SPECS = `${process.env.REACT_APP_API_BASE_URL}/api/Specifications`;
-const CATEGORY_ENDPOINTS = {
-  1: "PhoneSpecifications",
-  2: "LaptopSpecifications",
-  3: "HeadphoneSpecifications"
-};
-
+// Constants cho UI (nếu không dùng ở hook thì để đây)
 const CATEGORY_NAMES = {
   1: "Điện thoại",
   2: "Laptop",
   3: "Tai nghe"
 };
 
-// Thêm thuộc tính 'icon' (là một component icon)
 const COMMON_FIELDS = [
   { name: "weight", label: "Trọng lượng", icon: Scale, required: false, props: { placeholder: "Ví dụ: 200g hoặc 1.2kg" } }
 ];
@@ -65,191 +57,49 @@ const CATEGORY_FIELDS = {
   ],
   3: [ // Tai nghe
     { name: "type", label: "Loại tai nghe", icon: Headphones, required: true, props: { placeholder: "Ví dụ: Over-ear, True Wireless" } },
-    { name: "connectionType", label: "Loại kết nối", icon: Bluetooth, required: true, props: { placeholder: "Ví dụ: Bluetooth 5.3, Wired" } }, // Hoặc Cable nếu có logic chọn
+    { name: "connectionType", label: "Loại kết nối", icon: Bluetooth, required: true, props: { placeholder: "Ví dụ: Bluetooth 5.3, Wired" } },
     { name: "port", label: "Cổng sạc/kết nối", icon: Usb, required: false, props: { placeholder: "Ví dụ: USB-C, 3.5mm" } },
   ]
 };
 
-const getInitialFormData = (fields) => {
-  return fields.reduce((acc, field) => {
-    acc[field.name] = field.type === 'checkbox' ? false : '';
-    return acc;
-  }, {});
-};
-
-const ICON_SIZE_FIELD = 20; // Kích thước cho icon trong field
+const ICON_SIZE_FIELD = 20;
 const ICON_SIZE_BUTTON = 18;
 const ICON_SIZE_CLOSE = 22;
 
-const AddSpecificationDrawer = ({ open, onClose, product }) => {
-  const [specification, setSpecification] = useState(null);
-  const [formData, setFormData] = useState({});
-  const [loadingState, setLoadingState] = useState({
-    fetch: false,
-    submit: false,
-    delete: false
-  });
-  const [snackbarState, setSnackbarState] = useState({ open: false, message: '', severity: 'info' });
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
+const AddSpecificationDrawer = ({ open, onClose, product }) => {
   const formFields = useMemo(() => {
-    if (!product?.categoryId || !CATEGORY_ENDPOINTS[product.categoryId]) {
+    if (!product?.categoryId || !CATEGORY_FIELDS[product.categoryId]) { // Sử dụng CATEGORY_FIELDS thay vì CATEGORY_ENDPOINTS để check
         return COMMON_FIELDS;
     }
     const categorySpecificFields = CATEGORY_FIELDS[product.categoryId] || [];
     return [...COMMON_FIELDS, ...categorySpecificFields];
   }, [product?.categoryId]);
 
-  const endpoint = useMemo(() => {
-    return product?.categoryId ? CATEGORY_ENDPOINTS[product.categoryId] : null;
-  }, [product?.categoryId]);
-
-  const showSnackbar = (message, severity = 'success') => {
-    setSnackbarState({ open: true, message, severity });
-  };
-
-  const resetComponentState = useCallback(() => {
-    setSpecification(null);
-    setFormData(getInitialFormData(formFields));
-    setDeleteDialogOpen(false);
-  }, [formFields]);
-
-  const fetchSpecification = useCallback(async () => {
-    if (!endpoint || !product?.id) {
-        setSpecification(null);
-        setFormData(getInitialFormData(formFields));
-        return;
-    }
-    setLoadingState(prev => ({ ...prev, fetch: true }));
-    try {
-      const response = await axios.get(
-        `${API_BASE_URL_SPECS}/${endpoint}/product/${product.id}`
-      );
-      if (response.data && Object.keys(response.data).length > 0) {
-        setSpecification(response.data);
-        setFormData(response.data);
-      } else {
-        setSpecification(null);
-        setFormData(getInitialFormData(formFields));
-      }
-    } catch (error) {
-      if (error.response?.status === 404) {
-        setSpecification(null);
-        setFormData(getInitialFormData(formFields));
-      } else {
-        console.error("Lỗi khi tải thông số kỹ thuật:", error);
-        showSnackbar(error.response?.data?.message || error.message || "Không thể tải thông số kỹ thuật.", "error");
-      }
-    } finally {
-      setLoadingState(prev => ({ ...prev, fetch: false }));
-    }
-  }, [endpoint, product?.id, formFields]);
-
-  const handleSubmit = useCallback(async (event) => {
-    event.preventDefault();
-    if (!endpoint || !product?.id) {
-        showSnackbar("Không thể lưu: Thiếu thông tin sản phẩm hoặc danh mục.", "error");
-        return;
-    }
-    setLoadingState(prev => ({ ...prev, submit: true }));
-    const payload = { ...formData, productId: product.id };
-    formFields.forEach(field => {
-      if (field.type === 'number') {
-        const val = formData[field.name];
-        if (val === '' || val === null || isNaN(parseFloat(String(val)))) {
-          payload[field.name] = null;
-        } else {
-          payload[field.name] = parseFloat(String(val));
-        }
-      }
-    });
-    const url = `${API_BASE_URL_SPECS}/${endpoint}`;
-    try {
-      let successMessage = "";
-      if (specification?.id) {
-        await axios.put(`${url}/${specification.id}`, payload);
-        successMessage = 'Cập nhật thông số thành công!';
-        fetchSpecification();
-      } else {
-        const postResponse = await axios.post(url, payload);
-        successMessage = 'Thêm thông số thành công!';
-        if (postResponse.data && Object.keys(postResponse.data).length > 0) {
-          setSpecification(postResponse.data);
-          setFormData(postResponse.data);
-        } else {
-          fetchSpecification();
-        }
-      }
-      showSnackbar(successMessage, "success");
-    } catch (error) {
-      console.error("Lỗi khi lưu thông số:", error);
-      const errorData = error.response?.data;
-      let errorMsg = "Đã xảy ra lỗi khi lưu thông số.";
-       if (typeof errorData === 'string') {
-        errorMsg = errorData;
-      } else if (errorData?.message) {
-        errorMsg = errorData.message;
-      } else if (errorData?.errors && typeof errorData.errors === 'object') {
-        errorMsg = Object.values(errorData.errors).flat().join('; ');
-      } else if (errorData?.title) {
-        errorMsg = errorData.title;
-      }
-      showSnackbar(errorMsg, "error");
-    } finally {
-      setLoadingState(prev => ({ ...prev, submit: false }));
-    }
-  }, [endpoint, product?.id, formData, specification, formFields, fetchSpecification]);
-
-  const handleDelete = useCallback(async () => {
-    if (!endpoint || !specification?.id) return;
-    setLoadingState(prev => ({ ...prev, delete: true }));
-    try {
-      await axios.delete(`${API_BASE_URL_SPECS}/${endpoint}/${specification.id}`);
-      showSnackbar("Xóa thông số thành công!");
-      setDeleteDialogOpen(false);
-      resetComponentState();
-    } catch (error) {
-      console.error("Lỗi khi xóa thông số:", error);
-      showSnackbar(error.response?.data?.message || error.message || "Không thể xóa thông số.", "error");
-    } finally {
-      setLoadingState(prev => ({ ...prev, delete: false }));
-    }
-  }, [endpoint, specification?.id, resetComponentState]);
-
-  useEffect(() => {
-    if (open && product) {
-      setFormData(getInitialFormData(formFields));
-      fetchSpecification();
-    } else if (!open) {
-      resetComponentState();
-    }
-  }, [open, product, formFields, fetchSpecification, resetComponentState]);
-
-  const handleInputChange = useCallback((e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  }, []);
-
-  const handleDeleteClick = useCallback(() => {
-    if (specification?.id) {
-      setDeleteDialogOpen(true);
-    }
-  }, [specification]);
+  const {
+    specification,
+    formData,
+    loadingState,
+    snackbarState,
+    deleteDialogOpen,
+    endpoint,
+    anyLoading,
+    canSubmit,
+    showInitialLoadSpinner,
+    showRefetchProgressBar,
+    actions
+  } = useSpecificationForm(product, open, formFields, onClose); // Truyền onClose vào hook nếu cần gọi từ đó
 
   const handleDrawerClose = () => {
+    // onClose có thể nhận 1 tham số boolean để báo hiệu có sự thay đổi cần refresh list bên ngoài
     onClose();
   };
 
-  const anyLoading = loadingState.fetch || loadingState.submit || loadingState.delete;
-  const canSubmit = !!(product?.id && endpoint);
 
   const renderFormFieldsContent = useCallback(() => (
     formFields.map((field) => {
       const labelText = field.required ? `${field.label} *` : field.label;
-      const IconComponent = field.icon; // Icon component từ field definition
+      const IconComponent = field.icon;
 
       return (
         <Box key={field.name} sx={{ mb: 2.5 }}>
@@ -259,7 +109,7 @@ const AddSpecificationDrawer = ({ open, onClose, product }) => {
                 <Checkbox
                   name={field.name}
                   checked={!!formData[field.name]}
-                  onChange={handleInputChange}
+                  onChange={actions.handleInputChange}
                   disabled={anyLoading || loadingState.fetch}
                   size="small"
                 />
@@ -277,7 +127,7 @@ const AddSpecificationDrawer = ({ open, onClose, product }) => {
               label={labelText}
               name={field.name}
               value={formData[field.name] || ''}
-              onChange={handleInputChange}
+              onChange={actions.handleInputChange}
               type={field.type || 'text'}
               variant="outlined"
               size="small"
@@ -289,16 +139,15 @@ const AddSpecificationDrawer = ({ open, onClose, product }) => {
                     <IconComponent size={ICON_SIZE_FIELD} style={{ opacity: 0.7 }}/>
                   </InputAdornment>
                 ) : null,
-                ...(field.props?.InputProps || {}) // Merge với InputProps từ field.props nếu có
+                ...(field.props?.InputProps || {})
               }}
-              // InputLabelProps={{ shrink: true }} // Có thể bỏ nếu không muốn label luôn shrink
-              {...(field.props || {})} // Loại bỏ InputProps ở đây để tránh ghi đè
+              {...(field.props || {})}
             />
           )}
         </Box>
       );
     })
-  ), [formFields, formData, handleInputChange, anyLoading, loadingState.fetch]);
+  ), [formFields, formData, actions.handleInputChange, anyLoading, loadingState.fetch]);
 
   const renderProductInfo = useCallback(() => (
     product && (
@@ -315,14 +164,12 @@ const AddSpecificationDrawer = ({ open, onClose, product }) => {
     )
   ), [product]);
 
-  const showInitialLoadSpinner = loadingState.fetch && !specification?.id;
-  const showRefetchProgressBar = loadingState.fetch && !!specification?.id;
 
   return (
     <Drawer
       anchor="right"
       open={open}
-      onClose={handleDrawerClose}
+      onClose={handleDrawerClose} // Sử dụng handleDrawerClose đã định nghĩa
       PaperProps={{
         sx: {
           width: { xs: '100%', sm: 480, md: 520 },
@@ -369,7 +216,7 @@ const AddSpecificationDrawer = ({ open, onClose, product }) => {
           <Box
             component="form"
             id="specification-form"
-            onSubmit={handleSubmit}
+            onSubmit={actions.handleSubmit}
             sx={{ flexGrow: 1, overflowY: 'auto', pr: { xs: 0, sm: 0.5 }, pt: 0.5 }}
           >
             {!endpoint && product?.id && (
@@ -378,12 +225,12 @@ const AddSpecificationDrawer = ({ open, onClose, product }) => {
               </Alert>
             )}
             {endpoint && formFields.length > 0 && renderFormFieldsContent()}
-             {endpoint && (!formFields.length || (formFields.length === COMMON_FIELDS.length && !COMMON_FIELDS.some(cf => formFields.find(f => f.name === cf.name && f.label !== cf.label)))) && (
+            {endpoint && (!formFields.length || (formFields.length === COMMON_FIELDS.length && !COMMON_FIELDS.some(cf => formFields.find(f => f.name === cf.name && f.label !== cf.label)))) && (
                 <Typography variant="body2" color="text.secondary" sx={{mt: 2, textAlign: 'center', p:2, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                     <Info size={ICON_SIZE_FIELD} style={{marginRight: '8px'}}/> Danh mục này không có thông số kỹ thuật chi tiết để thêm/sửa.
                 </Typography>
             )}
-            {endpoint && formFields.length > 0 && !specification?.id && !loadingState.fetch && (
+            {endpoint && formFields.length > 0 && !specification?.id && !loadingState.fetch && open && ( // Thêm open để chỉ hiển thị khi drawer mở
                  <Alert severity="info" variant="outlined" icon={<Info size={ICON_SIZE_FIELD} />} sx={{ mt: 1, mb:2, fontSize: '0.875rem' }}>
                     Chưa có thông số cho sản phẩm này. Điền form để thêm mới.
                 </Alert>
@@ -410,7 +257,7 @@ const AddSpecificationDrawer = ({ open, onClose, product }) => {
                 variant="outlined"
                 color="error"
                 startIcon={<Trash size={ICON_SIZE_BUTTON}/>}
-                onClick={handleDeleteClick}
+                onClick={actions.handleDeleteClick}
                 disabled={anyLoading}
                 sx={{ mr: { sm: 'auto' } }}
                 size="medium"
@@ -420,7 +267,7 @@ const AddSpecificationDrawer = ({ open, onClose, product }) => {
             )}
             <Button
               variant="text"
-              startIcon={<Undo2 size={ICON_SIZE_BUTTON} />} // Thêm icon cho nút Hủy
+              startIcon={<Undo2 size={ICON_SIZE_BUTTON} />}
               onClick={handleDrawerClose}
               disabled={anyLoading}
               size="medium"
@@ -445,7 +292,7 @@ const AddSpecificationDrawer = ({ open, onClose, product }) => {
 
       <Dialog
         open={deleteDialogOpen}
-        onClose={() => !loadingState.delete && setDeleteDialogOpen(false)}
+        onClose={actions.handleCloseDeleteDialog}
         maxWidth="xs"
         fullWidth
       >
@@ -458,11 +305,11 @@ const AddSpecificationDrawer = ({ open, onClose, product }) => {
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{p:2}}>
-          <Button onClick={() => setDeleteDialogOpen(false)} color="inherit" variant="outlined" disabled={loadingState.delete}>
+          <Button onClick={actions.handleCloseDeleteDialog} color="inherit" variant="outlined" disabled={loadingState.delete}>
             Hủy
           </Button>
           <Button
-            onClick={handleDelete}
+            onClick={actions.handleDelete}
             color="error"
             variant="contained"
             disabled={loadingState.delete}
@@ -477,11 +324,11 @@ const AddSpecificationDrawer = ({ open, onClose, product }) => {
       <Snackbar
         open={snackbarState.open}
         autoHideDuration={4000}
-        onClose={() => setSnackbarState(prev => ({ ...prev, open: false }))}
+        onClose={actions.handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <Alert
-          onClose={() => setSnackbarState(prev => ({ ...prev, open: false }))}
+          onClose={actions.handleCloseSnackbar}
           severity={snackbarState.severity}
           variant="filled"
           sx={{ width: '100%' }}

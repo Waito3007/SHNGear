@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, FormControl, InputLabel, Select, MenuItem, TextField, Button } from '@mui/material';
+import { Box, FormControl, InputLabel, Select, TextField, Button } from '@mui/material';
 
 // Sử dụng React.memo để tránh render lại không cần thiết khi props không đổi
 const OrderItem = React.memo(({ item, index, productVariantOptions, onChange, onRemove }) => {

@@ -185,12 +185,12 @@ const OrdersTable = () => {
     // nhưng nếu muốn giữ lại để áp dụng đồng thời các filter ngày/giá thì có thể dùng.
     // Hiện tại, logic filter đã được useMemo xử lý khi state thay đổi.
     // Tôi sẽ để lại hàm handleDateFilter trống hoặc bạn có thể bỏ nút này.
-    const handleApplyAdvancedFilters = useCallback(() => {
-        // Các state đã được cập nhật, useMemo sẽ tự tính toán lại filteredOrders
-        // Chỉ cần reset lại trang nếu cần
-        setCurrentPage(1);
-        console.log("Applying advanced filters (filters already applied by state changes)");
-    }, []);
+    // const handleApplyAdvancedFilters = useCallback(() => {
+    //     // Các state đã được cập nhật, useMemo sẽ tự tính toán lại filteredOrders
+    //     // Chỉ cần reset lại trang nếu cần
+    //     setCurrentPage(1);
+    //     console.log("Applying advanced filters (filters already applied by state changes)");
+    // }, []);
 
 
     const handlePageChange = useCallback((pageNumber) => {

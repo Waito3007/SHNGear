@@ -35,82 +35,156 @@ namespace SHN_Gear.Controllers
         {
             try
             {
+                _logger.LogInformation("Search endpoint called with query: {Query}, limit: {Limit}", query, limit);
+
                 if (string.IsNullOrWhiteSpace(query))
                 {
+                    _logger.LogInformation("Empty query provided, returning empty result");
                     return Ok(new SearchResultDto()); // Trả về kết quả rỗng nếu query trống
                 }
 
                 var normalizedQuery = query.Trim().ToLower();
                 var result = new SearchResultDto();
 
+                _logger.LogInformation("Searching for products with normalized query: {NormalizedQuery}", normalizedQuery);
+
                 // Tìm kiếm sản phẩm
-                result.Products = await SearchProducts(normalizedQuery, limit);
+                try
+                {
+                    result.Products = await SearchProducts(normalizedQuery, limit);
+                    _logger.LogInformation("Found {Count} products", result.Products.Count);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error searching products");
+                    result.Products = new List<SearchProductDto>();
+                }
 
                 // Tìm kiếm danh mục
-                result.Categories = await SearchCategories(normalizedQuery, limit);
+                try
+                {
+                    result.Categories = await SearchCategories(normalizedQuery, limit);
+                    _logger.LogInformation("Found {Count} categories", result.Categories.Count);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error searching categories");
+                    result.Categories = new List<SearchCategoryDto>();
+                }
 
                 // Tìm kiếm thương hiệu
-                result.Brands = await SearchBrands(normalizedQuery, limit);
+                try
+                {
+                    result.Brands = await SearchBrands(normalizedQuery, limit);
+                    _logger.LogInformation("Found {Count} brands", result.Brands.Count);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error searching brands");
+                    result.Brands = new List<SearchBrandDto>();
+                }
 
                 result.TotalResults = result.Products.Count + result.Categories.Count + result.Brands.Count;
 
+                _logger.LogInformation("Search completed with {TotalResults} total results", result.TotalResults);
                 return Ok(result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi thực hiện tìm kiếm");
-                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi tìm kiếm" });
+                return StatusCode(500, new { Message = "Đã xảy ra lỗi khi tìm kiếm", Error = ex.Message });
             }
         }
 
         private async Task<List<SearchProductDto>> SearchProducts(string query, int limit)
         {
-            return await _context.Products
-                .Include(p => p.Images)
-                .Include(p => p.Variants)
-                .Where(p => p.Name.ToLower().Contains(query) ||
-                           p.Description.ToLower().Contains(query))
-                .OrderBy(p => p.Name)
-                .Take(limit)
-                .Select(p => new SearchProductDto
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    ImageUrl = p.Images.FirstOrDefault(i => i.IsPrimary).ImageUrl
-                             ?? p.Images.FirstOrDefault().ImageUrl
-                             ?? "/images/default-product.png",
-                    Price = p.Variants.Min(v => v.Price)
-                })
-                .ToListAsync();
+            try
+            {
+                _logger.LogInformation("Starting product search with query: {Query}, limit: {Limit}", query, limit);
+                
+                var products = await _context.Products
+                    .Include(p => p.Images)
+                    .Include(p => p.Variants)
+                    .Where(p => p.Name.ToLower().Contains(query) ||
+                               (p.Description != null && p.Description.ToLower().Contains(query)))
+                    .OrderBy(p => p.Name)
+                    .Take(limit)
+                    .Select(p => new SearchProductDto
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        ImageUrl = p.Images.Any(i => i.IsPrimary) 
+                                 ? p.Images.FirstOrDefault(i => i.IsPrimary).ImageUrl
+                                 : p.Images.Any() 
+                                   ? p.Images.FirstOrDefault().ImageUrl
+                                   : "/images/default-product.png",
+                        Price = p.Variants.Any() ? p.Variants.Min(v => v.Price) : 0
+                    })
+                    .ToListAsync();
+
+                _logger.LogInformation("Product search completed, found {Count} products", products.Count);
+                return products;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in SearchProducts method");
+                throw;
+            }
         }
 
         private async Task<List<SearchCategoryDto>> SearchCategories(string query, int limit)
         {
-            return await _context.Categories
-                .Where(c => c.Name.ToLower().Contains(query))
-                .OrderBy(c => c.Name)
-                .Take(limit)
-                .Select(c => new SearchCategoryDto
-                {
-                    Id = c.Id,
-                    Name = c.Name
-                })
-                .ToListAsync();
+            try
+            {
+                _logger.LogInformation("Starting category search with query: {Query}, limit: {Limit}", query, limit);
+                
+                var categories = await _context.Categories
+                    .Where(c => c.Name.ToLower().Contains(query))
+                    .OrderBy(c => c.Name)
+                    .Take(limit)
+                    .Select(c => new SearchCategoryDto
+                    {
+                        Id = c.Id,
+                        Name = c.Name
+                    })
+                    .ToListAsync();
+
+                _logger.LogInformation("Category search completed, found {Count} categories", categories.Count);
+                return categories;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in SearchCategories method");
+                throw;
+            }
         }
 
         private async Task<List<SearchBrandDto>> SearchBrands(string query, int limit)
         {
-            return await _context.Brands
-                .Where(b => b.Name.ToLower().Contains(query))
-                .OrderBy(b => b.Name)
-                .Take(limit)
-                .Select(b => new SearchBrandDto
-                {
-                    Id = b.Id,
-                    Name = b.Name,
-                    LogoUrl = b.Logo ?? "/images/default-brand.png"
-                })
-                .ToListAsync();
+            try
+            {
+                _logger.LogInformation("Starting brand search with query: {Query}, limit: {Limit}", query, limit);
+                
+                var brands = await _context.Brands
+                    .Where(b => b.Name.ToLower().Contains(query))
+                    .OrderBy(b => b.Name)
+                    .Take(limit)
+                    .Select(b => new SearchBrandDto
+                    {
+                        Id = b.Id,
+                        Name = b.Name,
+                        LogoUrl = b.Logo ?? "/images/default-brand.png"
+                    })
+                    .ToListAsync();
+
+                _logger.LogInformation("Brand search completed, found {Count} brands", brands.Count);
+                return brands;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in SearchBrands method");
+                throw;
+            }
         }
 
         /// <summary>
@@ -139,8 +213,9 @@ namespace SHN_Gear.Controllers
                 // Tìm kiếm sản phẩm với phân trang
                 var productQuery = _context.Products
                     .Include(p => p.Images)
+                    .Include(p => p.Variants)
                     .Where(p => p.Name.ToLower().Contains(normalizedQuery) ||
-                               p.Description.ToLower().Contains(normalizedQuery));
+                               (p.Description != null && p.Description.ToLower().Contains(normalizedQuery)));
 
                 result.Products = await productQuery
                     .OrderBy(p => p.Name)
@@ -150,8 +225,10 @@ namespace SHN_Gear.Controllers
                     {
                         Id = p.Id,
                         Name = p.Name,
-                        ImageUrl = p.Images.FirstOrDefault().ImageUrl,
-                        Price = p.Variants.Min(v => v.Price)
+                        ImageUrl = p.Images.Any() 
+                                 ? p.Images.FirstOrDefault().ImageUrl 
+                                 : "/images/default-product.png",
+                        Price = p.Variants.Any() ? p.Variants.Min(v => v.Price) : 0
                     })
                     .ToListAsync();
 
@@ -165,6 +242,39 @@ namespace SHN_Gear.Controllers
             {
                 _logger.LogError(ex, "Lỗi khi thực hiện tìm kiếm nâng cao");
                 return StatusCode(500, new { Message = "Đã xảy ra lỗi khi tìm kiếm" });
+            }
+        }
+
+        /// <summary>
+        /// Health check endpoint to test database connectivity
+        /// </summary>
+        [HttpGet("health")]
+        public async Task<ActionResult> HealthCheck()
+        {
+            try
+            {
+                var productCount = await _context.Products.CountAsync();
+                var categoryCount = await _context.Categories.CountAsync();
+                var brandCount = await _context.Brands.CountAsync();
+
+                return Ok(new
+                {
+                    Status = "Healthy",
+                    ProductCount = productCount,
+                    CategoryCount = categoryCount,
+                    BrandCount = brandCount,
+                    Timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Health check failed");
+                return StatusCode(500, new
+                {
+                    Status = "Unhealthy",
+                    Error = ex.Message,
+                    Timestamp = DateTime.UtcNow
+                });
             }
         }
     }

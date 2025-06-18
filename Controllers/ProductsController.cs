@@ -341,11 +341,10 @@ public class ProductsController : ControllerBase
 
         return Ok(result);
     }
-
     [HttpPost("compare")]
     public async Task<IActionResult> CompareProducts([FromBody] List<int> productIds)
     {
-        if (productIds == null || productIds.Count < 2)
+        if (productIds == null || productIds.Count < 1)
         {
             return BadRequest("Vui lòng thêm sản phẩm để so sánh.");
         }
@@ -358,33 +357,127 @@ public class ProductsController : ControllerBase
             .Include(p => p.Variants)
             .ToListAsync();
 
-        if (products.Count < 2)
+        if (products.Count < 1)
         {
-            return NotFound("Chưa đủ sản phẩm để so sánh.");
+            return NotFound("Không tìm thấy sản phẩm để so sánh.");
         }
 
-        var result = products.Select(p => new
+        var result = new List<object>();
+
+        foreach (var product in products)
         {
-            p.Id,
-            p.Name,
-            p.Description,
-            Brand = p.Brand?.Name,
-            Category = p.Category?.Name,
-            Images = p.Images.Select(img => new
+            object specifications = null;
+
+            // Fetch specifications based on category
+            var categoryName = product.Category?.Name?.ToLower();
+
+            // Debug logging
+            System.Console.WriteLine($"Product: {product.Name}, Category: {categoryName}");
+
+            if (!string.IsNullOrEmpty(categoryName))
             {
-                img.Id,
-                img.ImageUrl,
-                img.IsPrimary
-            }).ToList(),
-            Variants = p.Variants.Select(v => new
+                if (categoryName.Contains("phone") || categoryName.Contains("điện thoại"))
+                {
+                    var phoneSpec = await _context.PhoneSpecifications
+                        .Where(s => s.ProductId == product.Id)
+                        .FirstOrDefaultAsync();
+
+                    System.Console.WriteLine($"Phone spec found: {phoneSpec != null}");
+
+                    if (phoneSpec != null)
+                    {
+                        specifications = new
+                        {
+                            Type = "phone",
+                            ScreenSize = phoneSpec.ScreenSize,
+                            Resolution = phoneSpec.Resolution,
+                            ScreenType = phoneSpec.ScreenType,
+                            Weight = phoneSpec.Weight,
+                            Material = phoneSpec.Material,
+                            CPUModel = phoneSpec.CPUModel,
+                            CPUCores = phoneSpec.CPUCores,
+                            RAM = phoneSpec.RAM,
+                            InternalStorage = phoneSpec.InternalStorage,
+                            FrontCamera = phoneSpec.FrontCamera,
+                            RearCamera = phoneSpec.RearCamera,
+                            BatteryCapacity = phoneSpec.BatteryCapacity,
+                            SupportsNFC = phoneSpec.SupportsNFC
+                        };
+                    }
+                }
+                else if (categoryName.Contains("laptop") || categoryName.Contains("máy tính"))
+                {
+                    var laptopSpec = await _context.LaptopSpecifications
+                        .Where(s => s.ProductId == product.Id)
+                        .FirstOrDefaultAsync();
+
+                    System.Console.WriteLine($"Laptop spec found: {laptopSpec != null}");
+
+                    if (laptopSpec != null)
+                    {
+                        specifications = new
+                        {
+                            Type = "laptop",
+                            Weight = laptopSpec.Weight,
+                            Material = laptopSpec.Material,
+                            CPUType = laptopSpec.CPUType,
+                            CPUNumberOfCores = laptopSpec.CPUNumberOfCores,
+                            RAM = laptopSpec.RAM,
+                            MaxRAMSupport = laptopSpec.MaxRAMSupport,
+                            SSDStorage = laptopSpec.SSDStorage,
+                            ScreenSize = laptopSpec.ScreenSize,
+                            Resolution = laptopSpec.Resolution,
+                            RefreshRate = laptopSpec.RefreshRate,
+                            SupportsTouch = laptopSpec.SupportsTouch
+                        };
+                    }
+                }
+                else if (categoryName.Contains("headphone") || categoryName.Contains("tai nghe"))
+                {
+                    var headphoneSpec = await _context.HeadphoneSpecifications
+                        .Where(s => s.ProductId == product.Id)
+                        .FirstOrDefaultAsync();
+
+                    System.Console.WriteLine($"Headphone spec found: {headphoneSpec != null}");
+
+                    if (headphoneSpec != null)
+                    {
+                        specifications = new
+                        {
+                            Type = "headphone",
+                            Weight = headphoneSpec.Weight,
+                            HeadphoneType = headphoneSpec.Type,
+                            ConnectionType = headphoneSpec.ConnectionType,
+                            Port = headphoneSpec.Port
+                        };
+                    }
+                }
+            }
+
+            result.Add(new
             {
-                v.Color,
-                v.Storage,
-                v.Price,
-                v.DiscountPrice,
-                v.StockQuantity
-            }).ToList()
-        });
+                product.Id,
+                product.Name,
+                product.Description,
+                Brand = product.Brand?.Name,
+                Category = product.Category?.Name,
+                Images = product.Images.Select(img => new
+                {
+                    img.Id,
+                    img.ImageUrl,
+                    img.IsPrimary
+                }).ToList(),
+                Variants = product.Variants.Select(v => new
+                {
+                    v.Color,
+                    v.Storage,
+                    v.Price,
+                    v.DiscountPrice,
+                    v.StockQuantity
+                }).ToList(),
+                Specifications = specifications
+            });
+        }
 
         return Ok(result);
     }

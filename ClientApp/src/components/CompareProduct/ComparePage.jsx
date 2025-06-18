@@ -69,7 +69,7 @@ const ComparePage = () => {
                 </button>
 
                 <h3 className="text-lg font-semibold mb-2">{product.name}</h3>
-                <img
+                {/* <img
                   src={
                       product.image?.startsWith("http")
                       ? product.image // Ảnh từ API (URL đầy đủ)
@@ -78,7 +78,13 @@ const ComparePage = () => {
                   alt={product.name}
                   className="w-full h-40 object-contain mb-3 hover:scale-110"
                   onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/150"; }}
-                />
+                /> */}
+                <img
+                  src={product.images?.[0]?.imageUrl?.startsWith("http") ? product.images[0].imageUrl : `${process.env.REACT_APP_API_BASE_URL}/${product.images?.[0]?.imageUrl}`}
+                  alt={product.name || "product image"}
+                  className="w-12 h-12 rounded-md object-cover border border-gray-600"
+                  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/100?text=Error"; }}
+                  />
                 
                 <p><strong>Thương hiệu:</strong> {product.brand}</p>
                 <p><strong>Danh mục:</strong> {product.category}</p>

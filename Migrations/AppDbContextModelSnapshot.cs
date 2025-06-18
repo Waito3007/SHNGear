@@ -626,7 +626,10 @@ namespace SHN_Gear.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("ProductVariantId")
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ProductId")
                         .HasColumnType("int");
 
                     b.Property<int>("Rating")
@@ -637,7 +640,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductVariantId");
+                    b.HasIndex("ProductId");
 
                     b.HasIndex("UserId");
 
@@ -954,19 +957,19 @@ namespace SHN_Gear.Migrations
 
             modelBuilder.Entity("SHN_Gear.Models.Review", b =>
                 {
-                    b.HasOne("SHN_Gear.Models.ProductVariant", "ProductVariant")
+                    b.HasOne("SHN_Gear.Models.Product", "Product")
                         .WithMany()
-                        .HasForeignKey("ProductVariantId")
+                        .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("SHN_Gear.Models.User", "User")
-                        .WithMany()
+                        .WithMany("Reviews")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("ProductVariant");
+                    b.Navigation("Product");
 
                     b.Navigation("User");
                 });
@@ -1035,6 +1038,8 @@ namespace SHN_Gear.Migrations
 
             modelBuilder.Entity("SHN_Gear.Models.User", b =>
                 {
+                    b.Navigation("Reviews");
+
                     b.Navigation("UserVouchers");
                 });
 

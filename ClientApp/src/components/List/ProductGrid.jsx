@@ -1,19 +1,115 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import ProductHoverPreview from "./ProductHoverPreview";
+import ProductPagination from "./ProductPagination";
+import { motion } from "framer-motion";
+import { Typography, Rating } from "@mui/material";
+import CompareModal from "../CompareProduct/CompareModal";
+import "./ProductCard.css";
+import "./ProductActions.css";
+
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.3,
+    },
+  },
+};
+
+const item = {
+  hidden: { opacity: 0, y: 20 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: [0.43, 0.13, 0.23, 0.96],
+    },
+  },
+};
 
 const ProductGrid = ({
   selectedCategory,
   selectedPriceRange,
   selectedBrand,
+  viewMode,
 }) => {
   const [products, setProducts] = useState([]);
-  const [brands, setBrands] = useState({});
+  const [allProducts, setAllProducts] = useState([]); // Lưu tất cả sản phẩm
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hoveredProduct, setHoveredProduct] = useState(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [productSpecs, setProductSpecs] = useState({});
+  const [compareModalOpen, setCompareModalOpen] = useState(false);
+  const [compareCount, setCompareCount] = useState(0);
+  const [toastNotification, setToastNotification] = useState(null);
+  const [loadingStates, setLoadingStates] = useState({});
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const searchQuery = searchParams.get("search") || "";
 
+  const PRODUCTS_PER_PAGE = 9;
+
+  // Handle mouse interaction
+  const handleMouseEnter = async (product, event) => {
+    setHoveredProduct(product);
+    setMousePosition({ x: event.clientX, y: event.clientY });
+
+    if (!productSpecs[product.id]) {
+      try {
+        const productType = product.category?.name
+          ?.toLowerCase()
+          .includes("phone")
+          ? "PhoneSpecifications"
+          : product.category?.name?.toLowerCase().includes("laptop")
+          ? "LaptopSpecifications"
+          : product.category?.name?.toLowerCase().includes("headphone")
+          ? "HeadphoneSpecifications"
+          : null;
+
+        if (productType) {
+          const response = await fetch(
+            `${process.env.REACT_APP_API_BASE_URL}/api/Specifications/${productType}/product/${product.id}`
+          );
+          if (response.ok) {
+            const specs = await response.json();
+            setProductSpecs((prev) => ({
+              ...prev,
+              [product.id]: {
+                ...specs,
+                type: productType.replace("Specifications", "").toLowerCase(),
+              },
+            }));
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching specifications:", err);
+      }
+    }
+  };
+  const handleMouseLeave = () => setHoveredProduct(null);
+  const handleMouseMove = (event) => {
+    if (hoveredProduct) {
+      setMousePosition({ x: event.clientX, y: event.clientY });
+    }
+  };
+
+  // Toast notification functions
+  const showToast = (message, type = "success", title = "") => {
+    setToastNotification({ message, type, title });
+    setTimeout(() => setToastNotification(null), 3000);
+  };
+
+  // Set loading state for specific button
+  const setButtonLoading = (productId, buttonType, isLoading) => {
+    setLoadingStates((prev) => ({
+      ...prev,
+      [`${productId}-${buttonType}`]: isLoading,
+    }));
+  };
   useEffect(() => {
     const fetchProductsAndBrands = async () => {
       setLoading(true);
@@ -23,15 +119,16 @@ const ProductGrid = ({
           fetch(`${process.env.REACT_APP_API_BASE_URL}/api/brands`),
         ]);
 
-        if (!productsRes.ok) throw new Error("Không thể tải sản phẩm");
-        if (!brandsRes.ok) throw new Error("Không thể tải thương hiệu");
+        if (!productsRes.ok || !brandsRes.ok) {
+          throw new Error("Không thể tải dữ liệu");
+        }
 
         const productsData = await productsRes.json();
         const brandsData = await brandsRes.json();
 
         const brandsMap = (brandsData.$values || brandsData || []).reduce(
           (acc, brand) => {
-            acc[brand.id] = brand.name;
+            acc[brand.id] = brand;
             return acc;
           },
           {}
@@ -39,15 +136,15 @@ const ProductGrid = ({
 
         let filteredProducts = productsData.$values || productsData || [];
 
-        if (searchQuery) {
-          filteredProducts = filteredProducts.filter((product) =>
-            product.name.toLowerCase().includes(searchQuery.toLowerCase())
-          );
-        }
-
         if (selectedCategory) {
           filteredProducts = filteredProducts.filter(
             (product) => product.categoryId === selectedCategory
+          );
+        }
+
+        if (selectedBrand) {
+          filteredProducts = filteredProducts.filter(
+            (product) => product.brandId === selectedBrand
           );
         }
 
@@ -64,127 +161,486 @@ const ProductGrid = ({
           });
         }
 
-        if (selectedBrand && selectedBrand.length > 0) {
-          const selectedBrandsArray = selectedBrand.map(Number); // Chuyển ID thương hiệu thành số
-          filteredProducts = filteredProducts.filter((product) =>
-            selectedBrandsArray.includes(product.brandId)
-          );
-        }
-
         const processedProducts = filteredProducts.map((product) => {
           const variant = product.variants?.[0] || {};
           const image =
-            product.images?.[0]?.imageUrl || "/images/placeholder.jpg";
+            product.images?.[0]?.imageUrl ||
+            "https://via.placeholder.com/300?text=No+Image";
           const oldPrice = variant.price || 0;
           const newPrice = variant.discountPrice || oldPrice;
           const discountAmount = oldPrice - newPrice;
           const discount =
-            oldPrice > 0
-              ? `-${Math.round((discountAmount / oldPrice) * 100)}%`
-              : "0%";
+            oldPrice > 0 ? Math.round((discountAmount / oldPrice) * 100) : 0;
+
+          const brand = brandsMap[product.brandId];
 
           return {
             id: product.id,
             name: product.name,
-            categoryId: product.categoryId,
             oldPrice,
             newPrice,
             discount,
             discountAmount,
             image,
-            features: [
-              variant.storage || "Không xác định",
-              brandsMap[product.brandId] || "Không có thương hiệu",
-              "Hiệu suất cao",
-            ],
+            brand,
+            rating: 4.5,
+            ratingCount: Math.floor(Math.random() * 100) + 50,
+            variant,
+            category: product.category,
           };
         });
 
-        setProducts(processedProducts);
-        setBrands(brandsMap);
+        setAllProducts(processedProducts);
+        setCurrentPage(1); // Reset về trang đầu khi filter thay đổi
       } catch (err) {
-        setError("Không thể tải dữ liệu: " + err.message);
-        console.error(err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProductsAndBrands();
-  }, [selectedCategory, selectedPriceRange, selectedBrand, searchQuery]);
+  }, [selectedCategory, selectedPriceRange, selectedBrand]);
+
+  // Effect để cập nhật sản phẩm hiển thị dựa trên trang hiện tại
+  useEffect(() => {
+    const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
+    const endIndex = startIndex + PRODUCTS_PER_PAGE;
+    setProducts(allProducts.slice(startIndex, endIndex));
+  }, [allProducts, currentPage]);
+
+  // Hàm xử lý thay đổi trang
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    // Scroll to top when page changes
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  // Tính tổng số trang
+  const totalPages = Math.ceil(allProducts.length / PRODUCTS_PER_PAGE);
+
+  // Theo dõi số lượng sản phẩm trong compareList
+  useEffect(() => {
+    const updateCompareCount = () => {
+      const compareList = JSON.parse(
+        localStorage.getItem("compareList") || "[]"
+      );
+      setCompareCount(compareList.length);
+    };
+
+    updateCompareCount();
+
+    window.addEventListener("storage", updateCompareCount);
+    window.addEventListener("compareListChanged", updateCompareCount);
+
+    return () => {
+      window.removeEventListener("storage", updateCompareCount);
+      window.removeEventListener("compareListChanged", updateCompareCount);
+    };
+  }, []);
+  // Function để thêm/xóa sản phẩm khỏi compare list
+  const toggleCompare = async (productId, productName) => {
+    setButtonLoading(productId, "compare", true);
+
+    try {
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const compareList = JSON.parse(
+        localStorage.getItem("compareList") || "[]"
+      );
+
+      if (compareList.includes(productId)) {
+        const updatedList = compareList.filter((id) => id !== productId);
+        localStorage.setItem("compareList", JSON.stringify(updatedList));
+        setCompareCount(updatedList.length);
+        window.dispatchEvent(new Event("compareListChanged"));
+        showToast(
+          `Đã xóa "${productName}" khỏi danh sách so sánh!`,
+          "success",
+          "Xóa thành công"
+        );
+      } else {
+        if (compareList.length >= 4) {
+          showToast(
+            "Chỉ có thể so sánh tối đa 4 sản phẩm cùng lúc!",
+            "warning",
+            "Giới hạn so sánh"
+          );
+          return;
+        }
+
+        compareList.push(productId);
+        localStorage.setItem("compareList", JSON.stringify(compareList));
+        setCompareCount(compareList.length);
+        window.dispatchEvent(new Event("compareListChanged"));
+        showToast(
+          `Đã thêm "${productName}" vào danh sách so sánh!`,
+          "success",
+          "Thêm thành công"
+        );
+      }
+
+      setProducts((prevProducts) => [...prevProducts]);
+    } finally {
+      setButtonLoading(productId, "compare", false);
+    }
+  };
+
+  // Function để thêm sản phẩm vào giỏ hàng
+  const addToCart = async (product) => {
+    setButtonLoading(product.id, "cart", true);
+
+    try {
+      // Simulate API call to add to cart
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      // Get existing cart from localStorage or create new one
+      const existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+      // Check if product already exists in cart
+      const existingItemIndex = existingCart.findIndex(
+        (item) => item.id === product.id
+      );
+
+      if (existingItemIndex > -1) {
+        // Update quantity if product already exists
+        existingCart[existingItemIndex].quantity += 1;
+        showToast(
+          `Đã cập nhật số lượng "${product.name}" trong giỏ hàng!`,
+          "success",
+          "Cập nhật giỏ hàng"
+        );
+      } else {
+        // Add new product to cart
+        const cartItem = {
+          id: product.id,
+          name: product.name,
+          price: product.newPrice,
+          image: product.image,
+          brand: product.brand?.name || "",
+          quantity: 1,
+          variant: product.variant,
+        };
+        existingCart.push(cartItem);
+        showToast(
+          `Đã thêm "${product.name}" vào giỏ hàng!`,
+          "success",
+          "Thêm thành công"
+        );
+      }
+
+      // Save updated cart to localStorage
+      localStorage.setItem("cart", JSON.stringify(existingCart));
+
+      // Dispatch event to update cart count in other components
+      window.dispatchEvent(new Event("cartChanged"));
+
+      // Temporarily add success class to button
+      const buttonElement = document.querySelector(
+        `[data-product-id="${product.id}"] .add-to-cart-btn`
+      );
+      if (buttonElement) {
+        buttonElement.classList.add("btn-success");
+        setTimeout(() => {
+          buttonElement.classList.remove("btn-success");
+        }, 600);
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      showToast("Có lỗi xảy ra khi thêm vào giỏ hàng!", "error", "Lỗi");
+    } finally {
+      setButtonLoading(product.id, "cart", false);
+    }
+  };
+
+  // Function để mở modal so sánh
+  const openCompareModal = () => {
+    const compareList = JSON.parse(localStorage.getItem("compareList") || "[]");
+
+    if (compareList.length < 1) {
+      alert("Cần ít nhất 1 sản phẩm để so sánh!");
+      return;
+    }
+
+    setCompareModalOpen(true);
+  };
 
   if (loading) {
-    return <div className="text-center py-6">Đang tải sản phẩm...</div>;
+    return (
+      <div className="products-grid">
+        {[...Array(8)].map((_, index) => (
+          <motion.div key={index} variants={item}>
+            <div className="skeleton-card">
+              <div className="skeleton-image" />
+              <div className="skeleton-content">
+                <div className="skeleton-text title" />
+                <div className="skeleton-text" />
+                <div className="skeleton-text price" />
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="text-center py-6 text-red-500">{error}</div>;
+    return <div className="text-red-500 text-center p-4">{error}</div>;
   }
 
   return (
-    <div className="w-full flex justify-center py-6">
-      <div className="max-w-[1200px] w-full px-4 bg-white rounded-lg shadow-lg p-6">
-        {products.length === 0 ? (
-          <p className="text-center text-gray-500 text-lg mt-12">
-            Không có sản phẩm phù hợp
-          </p>
+    <div className="w-full py-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <div className="max-w-7xl mx-auto px-4">
+        {" "}
+        {allProducts.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="text-6xl mb-4">📱</div>
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">
+              Không có sản phẩm phù hợp
+            </h3>
+            <p className="text-gray-500">
+              Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm
+            </p>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <div
-                key={product.id}
-                className="bg-white p-4 rounded-lg shadow-md border cursor-pointer"
-                onClick={() => navigate(`/product/${product.id}`)}
-              >
-                <img
-                    src={
-                        product.image?.startsWith("http")
-                            ? product.image // Ảnh từ API (URL đầy đủ)
-                            : `${process.env.REACT_APP_API_BASE_URL}/${product.image}` // Ảnh local từ wwwroot
-                    }
-                    alt={product.name}
-                    className="w-full h-40 object-contain mb-3 hover:scale-110"
-                    onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/150"; }}
-                />
-                <div className="text-gray-700 text-sm space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500 line-through">
-                      {product.oldPrice.toLocaleString()} đ
-                    </span>
-                    <span className="text-red-500 text-sm">
-                      {product.discount}
-                    </span>
-                  </div>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {product.newPrice.toLocaleString()} đ
-                  </p>
-                  <p className="text-green-600 text-sm">
-                    Giảm {product.discountAmount.toLocaleString()} đ
-                  </p>
-                  <p className="text-gray-800 text-sm">{product.name}</p>
-                  <ul className="text-xs text-gray-600 list-disc pl-4">
-                    {product.features.map((feature, index) => (
-                      <li key={index}>{feature}</li>
-                    ))}
-                  </ul>
-                  <button
-                        className="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                        onClick={(e) => {
-                        e.stopPropagation();
-                        const compareList = JSON.parse(localStorage.getItem("compareList") || "[]");
-                        // Thêm productId nếu chưa có
-                        if (!compareList.includes(product.id)) {
-                          compareList.push(product.id);
-                          localStorage.setItem("compareList", JSON.stringify(compareList));
-                        }
-                        alert(`Đã chọn sản phẩm "${product.name}" để so sánh!`);
-                      }}
+          <motion.div variants={container} initial="hidden" animate="show">
+            <div className="products-grid">
+              {products.map((product) => {
+                const isInCompare = JSON.parse(
+                  localStorage.getItem("compareList") || "[]"
+                ).includes(product.id);
+
+                return (
+                  <motion.div
+                    key={product.id}
+                    variants={item}
+                    onMouseEnter={(e) => handleMouseEnter(product, e)}
+                    onMouseLeave={handleMouseLeave}
+                    onMouseMove={handleMouseMove}
+                  >
+                    <div
+                      className="product-card"
+                      onClick={() => navigate(`/product/${product.id}`)}
                     >
-                    So sánh
-                  </button>
-                </div>
+                      {/* Product Image */}
+                      <div className="product-image">
+                        {/* Discount Badge */}
+                        {product.discount > 0 && (
+                          <div className="absolute top-2 left-2 z-10">
+                            <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                              -{product.discount}%
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Compare Badge */}
+                        {isInCompare && (
+                          <div className="absolute top-2 right-2 z-10">
+                            <span className="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                              ✓ Đã chọn
+                            </span>
+                          </div>
+                        )}
+
+                        <img
+                          src={
+                            product.image.startsWith("http")
+                              ? product.image
+                              : `${process.env.REACT_APP_API_BASE_URL}/${product.image}`
+                          }
+                          alt={product.name}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src =
+                              "https://via.placeholder.com/300?text=Error";
+                          }}
+                        />
+                      </div>
+
+                      {/* Product Content */}
+                      <div className="product-content">
+                        {/* Brand */}
+                        {product.brand && (
+                          <div className="product-brand">
+                            {product.brand.logo && (
+                              <img
+                                src={
+                                  product.brand.logo.startsWith("http")
+                                    ? product.brand.logo
+                                    : `${process.env.REACT_APP_API_BASE_URL}/${product.brand.logo}`
+                                }
+                                alt={product.brand.name}
+                                className="brand-logo"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.style.display = "none";
+                                }}
+                              />
+                            )}
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: "text.secondary",
+                                fontWeight: 500,
+                              }}
+                            >
+                              {product.brand.name}
+                            </Typography>
+                          </div>
+                        )}
+                        {/* Product Name */}
+                        <h3 className="product-name">{product.name}</h3>
+                        {/* Rating */}
+                        <div className="product-rating">
+                          <Rating
+                            value={product.rating}
+                            precision={0.5}
+                            size="small"
+                            readOnly
+                          />
+                          <Typography variant="body2" color="text.secondary">
+                            ({product.ratingCount})
+                          </Typography>
+                        </div>
+                        {/* Price */}
+                        <div className="product-price">
+                          {product.oldPrice > product.newPrice && (
+                            <div className="old-price">
+                              {product.oldPrice.toLocaleString()}đ
+                            </div>
+                          )}
+                          <div className="current-price">
+                            {product.newPrice.toLocaleString()}đ
+                          </div>
+                        </div>{" "}
+                        {/* Action Buttons */}
+                        <div
+                          className="product-actions"
+                          data-product-id={product.id}
+                        >
+                          <button
+                            className={`compare-btn ${
+                              isInCompare ? "active" : ""
+                            } ${
+                              loadingStates[`${product.id}-compare`]
+                                ? "btn-loading"
+                                : ""
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleCompare(product.id, product.name);
+                            }}
+                            disabled={loadingStates[`${product.id}-compare`]}
+                          >
+                            {loadingStates[`${product.id}-compare`]
+                              ? ""
+                              : isInCompare
+                              ? "✓ Đã chọn"
+                              : "So sánh"}
+                          </button>
+
+                          <button
+                            className={`add-to-cart-btn ${
+                              loadingStates[`${product.id}-cart`]
+                                ? "btn-loading"
+                                : ""
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addToCart(product);
+                            }}
+                            disabled={loadingStates[`${product.id}-cart`]}
+                          >
+                            {loadingStates[`${product.id}-cart`]
+                              ? ""
+                              : "Thêm vào giỏ"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {/* Pagination */}
+            <ProductPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              totalProducts={allProducts.length}
+              productsPerPage={PRODUCTS_PER_PAGE}
+              loading={loading}
+            />
+          </motion.div>
+        )}
+        {/* Floating Compare Button */}
+        {compareCount > 0 && (
+          <div className="fixed bottom-8 left-8 z-[9998]">
+            <button
+              onClick={openCompareModal}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-full shadow-2xl transition-all duration-300 flex items-center space-x-3 transform hover:scale-105"
+            >
+              <div className="relative">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
+                </svg>
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {compareCount}
+                </span>
               </div>
-            ))}
+              <span className="font-semibold">So sánh</span>
+            </button>
+          </div>
+        )}
+        {/* Product Hover Preview */}
+        <ProductHoverPreview
+          product={{
+            ...hoveredProduct,
+            specifications: hoveredProduct
+              ? productSpecs[hoveredProduct.id]
+              : null,
+          }}
+          isVisible={Boolean(hoveredProduct)}
+          position={mousePosition}
+        />{" "}
+        {/* Compare Modal */}
+        <CompareModal
+          isOpen={compareModalOpen}
+          onClose={() => setCompareModalOpen(false)}
+        />
+        {/* Toast Notification */}
+        {toastNotification && (
+          <div className={`toast-notification ${toastNotification.type}`}>
+            <div className={`toast-icon ${toastNotification.type}`}>
+              {toastNotification.type === "success"
+                ? "✓"
+                : toastNotification.type === "error"
+                ? "✗"
+                : toastNotification.type === "warning"
+                ? "⚠"
+                : "ℹ"}
+            </div>
+            <div className="toast-content">
+              {toastNotification.title && (
+                <div className="toast-title">{toastNotification.title}</div>
+              )}
+              <div className="toast-message">{toastNotification.message}</div>
+            </div>
           </div>
         )}
       </div>
