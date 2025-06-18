@@ -89,16 +89,22 @@ namespace SHN_Gear.Data
                 .HasForeignKey(uv => uv.VoucherId);
 
             modelBuilder.Entity<Review>(entity =>
-   {
-       // Review có một User, User (có thể) có nhiều Review
-       entity.HasOne(r => r.User) // Sử dụng navigation property 'User' trong Review
-             .WithMany()          // Giả định User không có navigation property trỏ về Review list (hoặc thêm vào nếu có: .WithMany(u => u.Reviews))
-             .HasForeignKey(r => r.UserId) // Chỉ định 'UserId' (kiểu string) là khóa ngoại
-             .IsRequired();       // Đánh giá luôn cần User
+            {
+                entity.HasKey(r => r.Id);
 
-       // Quan trọng: Kiểu dữ liệu của Review.UserId (string) phải khớp với kiểu khóa chính của User entity.
-       // Nếu khóa chính của User là int/Guid, bạn cần sửa lại kiểu UserId trong Review hoặc cấu hình khác.
-   });
+                entity.Property(r => r.Comment).IsRequired();
+                entity.Property(r => r.Rating);
+                entity.Property(r => r.CreatedAt);
+                entity.Property(r => r.IsApproved);
+
+                entity.HasOne(r => r.User)
+                    .WithMany(u => u.Reviews) 
+                    .HasForeignKey(r => r.UserId);
+
+                entity.HasOne(r => r.Product) // ✅ mới
+                    .WithMany()
+                    .HasForeignKey(r => r.ProductId); // ✅ mới
+            });
 
             modelBuilder.Entity<Delivery>(entity =>
     {

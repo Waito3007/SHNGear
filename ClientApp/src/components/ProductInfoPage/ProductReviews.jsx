@@ -1,140 +1,194 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { Snackbar, Alert, CircularProgress } from "@mui/material";
+import { jwtDecode } from "jwt-decode";
 
-const ProductReviews = ({ productVariantId }) => {
+const ProductReviews = ({ productId }) => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
-  const [userId] = useState(1); // 🔹 ID người dùng (có thể lấy từ Auth)
+  const [averageRating, setAverageRating] = useState(0);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+
+  const token = localStorage.getItem("token");
+  let currentUserId = null;
+
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      currentUserId = decoded.nameid || decoded.sub || decoded.UserId || null;
+    } catch (err) {
+      console.error("Token decode error:", err);
+    }
+  }
+
+  const fetchReviews = useCallback(async (signal) => {
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_API_BASE_URL}/api/review/product/${productId}`,
+        { signal }
+      );
+
+      if (!response.ok) throw new Error("Không thể tải đánh giá");
+
+      const data = await response.json();
+      setReviews(data);
+    } catch (err) {
+      console.error("Lỗi fetch review:", err);
+      setError(`Không thể tải đánh giá: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  }, [productId]);
+
+  const fetchAverageRating = useCallback(async () => {
+    try {
+      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/review/product/${productId}/average-rating`);
+      const avg = await res.json();
+      setAverageRating(avg);
+    } catch (err) {
+      console.error("Lỗi fetch rating:", err);
+    }
+  }, [productId]);
 
   useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.REACT_APP_API_BASE_URL}/api/review/product/${productVariantId}`
-        );
-        if (!response.ok) {
-          throw new Error("Chưa có đánh giá.");
-        }
-        const data = await response.json();
-        setReviews(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000); // Giảm thời gian tải xuống còn 3 giây
 
-    fetchReviews();
-  }, [productVariantId]);
+    if (productId) {
+      fetchReviews(controller.signal);
+      fetchAverageRating();
+    }
 
-  // 📌 Gửi đánh giá mới
+    return () => clearTimeout(timeout); // Dọn timeout
+  }, [productId, fetchReviews, fetchAverageRating]);
+
   const handleSubmitReview = async (e) => {
     e.preventDefault();
-    if (comment.trim() === "" || rating < 1 || rating > 5) {
-      alert("Vui lòng nhập nội dung và chọn số sao từ 1-5.");
+
+    if (!token || !currentUserId) {
+      setSnackbar({ open: true, message: "Vui lòng đăng nhập để đánh giá", severity: "warning" });
       return;
     }
 
-    const newReview = {
-      productVariantId,
-      userId,
-      rating,
-      comment,
-    };
+    if (!comment.trim() || rating < 1 || rating > 5) {
+      setSnackbar({ open: true, message: "Vui lòng nhập đầy đủ thông tin đánh giá", severity: "warning" });
+      return;
+    }
 
     try {
       const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/review`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newReview),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId, rating, comment }),
       });
 
-      if (!response.ok) throw new Error("Gửi đánh giá thất bại.");
+      if (!response.ok) throw new Error(await response.text());
 
-      const addedReview = await response.json();
-      setReviews([addedReview, ...reviews]); // Thêm đánh giá mới vào đầu danh sách
+      await fetchReviews(); // Cập nhật lại đánh giá
+      fetchAverageRating();
+
       setShowForm(false);
       setComment("");
       setRating(5);
+      setSnackbar({ open: true, message: "Gửi đánh giá thành công", severity: "success" });
     } catch (err) {
-      alert(err.message);
+      setSnackbar({ open: true, message: `Lỗi gửi đánh giá: ${err.message}`, severity: "error" });
     }
   };
 
+  const hasReviewed = reviews.some((r) => r.userId === Number(currentUserId));
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
-      <h3 className="text-xl font-semibold mb-4">Đánh giá & Bình luận</h3>
+      <h3 className="text-xl font-semibold mb-2 text-center">Đánh giá & Bình luận</h3>
+      <p className="text-yellow-600 font-medium text-center">⭐ Trung bình: {averageRating.toFixed(1)} / 5</p>
 
-      {/* Hiển thị trạng thái tải hoặc lỗi */}
-      {loading && <p className="text-gray-500 text-center">Đang tải...</p>}
-      {error && <p className="text-red-500 text-center">{error}</p>}
-
-      {/* Hiển thị danh sách đánh giá */}
-      {!loading && !error && (
-        <div className="space-y-4">
-          {reviews.length > 0 ? (
-            reviews.map((review, index) => (
-              <div key={index} className="border-b pb-3">
-                <p className="font-bold text-red-500">
-                  {review.user?.username || "Người dùng ẩn danh"}
-                </p>
-                <p className="text-gray-700">{review.comment}</p>
-                <p className="text-yellow-500">⭐ {review.rating} / 5</p>
-              </div>
-            ))
-          ) : (
-            <p className="text-center text-gray-500">Chưa có đánh giá nào.</p>
-          )}
+      {loading && (
+        <div className="flex justify-center items-center gap-2 text-gray-500 mt-4">
+          <CircularProgress size={20} />
+          <span>Đang tải đánh giá...</span>
         </div>
       )}
 
-      {/* Nút Đánh giá sản phẩm */}
-      <button
-        className="mt-4 w-1/4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition mx-auto block"
-        onClick={() => setShowForm(!showForm)}
-      >
-        {showForm ? "Đóng" : "Đánh giá sản phẩm"}
-      </button>
+      {error && (
+        <p className="text-red-500 text-center mt-4">
+          ❌ {error || "Không thể tải đánh giá, thử lại sau."}
+        </p>
+      )}
 
-      {/* Form nhập đánh giá */}
-      {showForm && (
-        <form
-          onSubmit={handleSubmitReview}
-          className="mt-4 p-4 border rounded-lg"
+      {!loading && !error && (
+        <>
+          {reviews.length > 0 ? (
+            <div className="space-y-4 mt-4">
+              {reviews.map((review) => (
+                <div key={review.id} className="border-b pb-3">
+                  <p className="font-bold text-red-500">{review.userName}</p>
+                  <p className="text-gray-700">{review.comment}</p>
+                  <p className="text-yellow-500">⭐ {review.rating} / 5</p>
+                  <p className="text-sm text-gray-400">{new Date(review.createdAt).toLocaleString()}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center mt-4">Chưa có đánh giá nào.</p>
+          )}
+        </>
+      )}
+
+      {!hasReviewed && (
+        <button
+          className="mt-4 w-full py-2 bg-red-500 text-white rounded hover:bg-red-600"
+          onClick={() => setShowForm(!showForm)}
         >
-          <label className="block mb-2">Số sao:</label>
-          <select
-            value={rating}
-            onChange={(e) => setRating(Number(e.target.value))}
-            className="border p-2 rounded w-full"
-          >
-            {[5, 4, 3, 2, 1].map((star) => (
-              <option key={star} value={star}>
-                {star} ⭐
-              </option>
-            ))}
-          </select>
+          {showForm ? "Đóng" : "Đánh giá sản phẩm"}
+        </button>
+      )}
 
-          <label className="block mt-2">Nhận xét:</label>
-          <textarea
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            className="border p-2 rounded w-full"
-            rows="3"
-            placeholder="Nhập đánh giá..."
-          ></textarea>
+      {showForm && (
+        <form onSubmit={handleSubmitReview} className="mt-4 p-4 border rounded space-y-3">
+          <div>
+            <label className="font-medium">Số sao:</label>
+            <select
+              value={rating}
+              onChange={(e) => setRating(+e.target.value)}
+              className="border p-2 w-full rounded"
+            >
+              {[5, 4, 3, 2, 1].map((s) => (
+                <option key={s} value={s}>{s} ⭐</option>
+              ))}
+            </select>
+          </div>
 
-          <button
-            type="submit"
-            className="mt-2 w-full py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition"
-          >
+          <div>
+            <label className="font-medium">Nhận xét:</label>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="border p-2 w-full rounded"
+              rows="3"
+              placeholder="Nhập nhận xét của bạn..."
+            ></textarea>
+          </div>
+
+          <button type="submit" className="w-full py-2 bg-green-500 text-white rounded hover:bg-green-600">
             Gửi đánh giá
           </button>
         </form>
       )}
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
+      </Snackbar>
     </div>
   );
 };
