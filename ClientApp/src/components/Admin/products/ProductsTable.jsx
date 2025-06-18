@@ -67,14 +67,31 @@ const ProductsTable = () => {
 
                 if (!productsRes.ok || !brandsRes.ok || !categoriesRes.ok) {
                     throw new Error('Network response was not ok for one or more resources.');
-                }
-
-                const productsData = await productsRes.json();
+                }                const productsData = await productsRes.json();
                 const brandsData = await brandsRes.json();
                 const categoriesData = await categoriesRes.json();
 
-                setMasterProducts(productsData);
-                setFilteredProducts(productsData); // Ban đầu hiển thị tất cả sản phẩm
+                // Handle new paginated API response structure
+                let products;
+                if (productsData.Data) {
+                    // New paginated API response (uppercase Data property)
+                    products = productsData.Data || [];
+                } else if (productsData.data) {
+                    // Alternative lowercase data property
+                    products = productsData.data || [];
+                } else {
+                    // Fallback for old API or direct array response
+                    products = productsData.$values || productsData || [];
+                }
+
+                // Ensure products is an array
+                if (!Array.isArray(products)) {
+                    console.error('Expected products to be an array, got:', typeof products, products);
+                    products = [];
+                }
+
+                setMasterProducts(products);
+                setFilteredProducts(products); // Ban đầu hiển thị tất cả sản phẩm
                 setBrands(brandsData.$values || brandsData || []);
                 setCategories(categoriesData.$values || categoriesData || []);
             } catch (error) {
@@ -134,9 +151,7 @@ const ProductsTable = () => {
                 }
                 setPage(1);
                 return;
-            }
-
-            setIsLoading(true); // Loading cho tìm kiếm
+            }            setIsLoading(true); // Loading cho tìm kiếm
             try {
                 const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/Products/search?keyword=${encodeURIComponent(debouncedSearchTerm)}`);
                 if (!response.ok) {
@@ -144,7 +159,27 @@ const ProductsTable = () => {
                     throw new Error(errorData || "Không tìm thấy sản phẩm nào khớp.");
                 }
                 const data = await response.json();
-                setFilteredProducts(data);
+                
+                // Handle new paginated API response structure for search
+                let searchResults;
+                if (data.Data) {
+                    // New paginated API response (uppercase Data property)
+                    searchResults = data.Data || [];
+                } else if (data.data) {
+                    // Alternative lowercase data property
+                    searchResults = data.data || [];
+                } else {
+                    // Fallback for old API or direct array response
+                    searchResults = data.$values || data || [];
+                }
+
+                // Ensure searchResults is an array
+                if (!Array.isArray(searchResults)) {
+                    console.error('Expected search results to be an array, got:', typeof searchResults, searchResults);
+                    searchResults = [];
+                }
+
+                setFilteredProducts(searchResults);
                 setPage(1);
             } catch (error) {
                 console.error("Lỗi khi tìm kiếm sản phẩm:", error);
@@ -166,18 +201,25 @@ const ProductsTable = () => {
     const handleSearchInputChange = useCallback((e) => {
         setSearchInput(e.target.value);
     }, []);
-
-
     // Hàm áp dụng bộ lọc (client-side, hoạt động trên masterProducts)
     const applyClientFilters = useCallback(() => {
         setIsLoading(true); // Báo hiệu loading khi áp dụng filter
+        
+        // Ensure masterProducts is an array
+        if (!Array.isArray(masterProducts)) {
+            console.error('masterProducts is not an array:', typeof masterProducts, masterProducts);
+            setFilteredProducts([]);
+            setIsLoading(false);
+            return;
+        }
+        
         let filtered = [...masterProducts]; // Luôn lọc từ danh sách gốc
         
         if (filters.brandId) {
-            filtered = filtered.filter(product => product.brandId == filters.brandId);
+            filtered = filtered.filter(product => product.brandId === Number(filters.brandId));
         }
         if (filters.categoryId) {
-            filtered = filtered.filter(product => product.categoryId == filters.categoryId);
+            filtered = filtered.filter(product => product.categoryId === Number(filters.categoryId));
         }
         if (filters.minPrice) {
             filtered = filtered.filter(product => product.variants?.[0]?.price >= Number(filters.minPrice));
@@ -218,10 +260,14 @@ const ProductsTable = () => {
         const { name, value } = e.target;
         setFilters(prev => ({ ...prev, [name]: value }));
     }, []);
-
-
     // CRUD operations
     const handleAddProduct = useCallback((newProduct) => {
+        // Ensure masterProducts is an array
+        if (!Array.isArray(masterProducts)) {
+            console.error('masterProducts is not an array in handleAddProduct');
+            return;
+        }
+        
         const newMasterProducts = [newProduct, ...masterProducts];
         setMasterProducts(newMasterProducts);
         // Sau khi thêm, nên reset các filter và search để user thấy sản phẩm mới
@@ -231,22 +277,28 @@ const ProductsTable = () => {
         setFilters({ brandId: '', categoryId: '', minPrice: '', maxPrice: '' });
         setFilteredProducts(newMasterProducts); 
         setPage(1);
-    }, [masterProducts]);
-
-    const handleUpdateProduct = useCallback((updatedProduct) => {
+    }, [masterProducts]);const handleUpdateProduct = useCallback((updatedProduct) => {
+        // Ensure masterProducts is an array
+        if (!Array.isArray(masterProducts)) {
+            console.error('masterProducts is not an array in handleUpdateProduct');
+            return;
+        }
+        
         const updatedMasterProducts = masterProducts.map((product) =>
             product.id === updatedProduct.id ? { ...product, ...updatedProduct } : product
         );
         setMasterProducts(updatedMasterProducts);
 
         // Cập nhật filteredProducts nếu item đó đang hiển thị
-        setFilteredProducts(prevFiltered => 
-            prevFiltered.map(p => p.id === updatedProduct.id ? {...p, ...updatedProduct} : p)
-        );
+        setFilteredProducts(prevFiltered => {
+            if (!Array.isArray(prevFiltered)) {
+                console.error('filteredProducts is not an array in handleUpdateProduct');
+                return [];
+            }
+            return prevFiltered.map(p => p.id === updatedProduct.id ? {...p, ...updatedProduct} : p);
+        });
         // Không reset page ở đây để user thấy item vừa sửa
-    }, [masterProducts]);
-
-    const confirmDeleteProduct = useCallback(async () => {
+    }, [masterProducts]);    const confirmDeleteProduct = useCallback(async () => {
         // ... (giữ nguyên logic confirmDeleteProduct, nhưng cập nhật masterProducts)
         if (!productToDelete) return;
         setIsLoading(true);
@@ -255,15 +307,32 @@ const ProductsTable = () => {
                 method: "DELETE",
             });
             if (response.ok) {
+                // Ensure masterProducts is an array
+                if (!Array.isArray(masterProducts)) {
+                    console.error('masterProducts is not an array in confirmDeleteProduct');
+                    setIsLoading(false);
+                    return;
+                }
+                
                 const updatedMaster = masterProducts.filter((p) => p.id !== productToDelete.id);
                 setMasterProducts(updatedMaster);
                 // Nếu sản phẩm bị xóa nằm trong filteredProducts, cũng xóa nó đi
-                setFilteredProducts(prevFiltered => prevFiltered.filter(p => p.id !== productToDelete.id));
+                setFilteredProducts(prevFiltered => {
+                    if (!Array.isArray(prevFiltered)) {
+                        console.error('filteredProducts is not an array in confirmDeleteProduct');
+                        return [];
+                    }
+                    return prevFiltered.filter(p => p.id !== productToDelete.id);
+                });
                 toast.success("Sản phẩm đã được xóa thành công!");
             } else {
-                // ... xử lý lỗi
+                const errorText = await response.text();
+                toast.error("Lỗi khi xóa sản phẩm: " + errorText);
             }
-        } catch (error) { /* ... */ } finally {
+        } catch (error) { 
+            console.error("Error deleting product:", error);
+            toast.error("Lỗi khi xóa sản phẩm: " + error.message);
+        } finally {
             setIsLoading(false);
             setIsDeleteDialogOpen(false);
             setProductToDelete(null);
@@ -274,16 +343,26 @@ const ProductsTable = () => {
     const handleEditProduct = useCallback((product) => { setSelectedProduct(product); setIsEditDrawerOpen(true); }, []);
     const handleDeleteProduct = useCallback((product) => { setProductToDelete(product); setIsDeleteDialogOpen(true); }, []);
     const handleAddSpecification = useCallback((product) => { setSelectedProductForSpec(product); setIsSpecDrawerOpen(true); }, []);
-
-
     // Pagination logic
     const currentProducts = useMemo(() => {
+        // Ensure filteredProducts is an array before using slice
+        if (!Array.isArray(filteredProducts)) {
+            console.error('filteredProducts is not an array:', typeof filteredProducts, filteredProducts);
+            return [];
+        }
+        
         const indexOfLastProduct = page * productsPerPage;
         const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
         return filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
     }, [filteredProducts, page, productsPerPage]);
 
-    const totalPages = useMemo(() => Math.ceil(filteredProducts.length / productsPerPage), [filteredProducts.length, productsPerPage]);
+    const totalPages = useMemo(() => {
+        // Ensure filteredProducts is an array before getting length
+        if (!Array.isArray(filteredProducts)) {
+            return 0;
+        }
+        return Math.ceil(filteredProducts.length / productsPerPage);
+    }, [filteredProducts, productsPerPage]);
 
     // Handlers cho các Drawer
     const toggleDrawer = useCallback((setter, value) => setter(value), []);
@@ -438,7 +517,7 @@ const ProductsTable = () => {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
                                     <button onClick={() => handleEditProduct(product)} className="text-sky-400 hover:text-sky-300 p-1.5 rounded-full hover:bg-gray-600/50" title="Sửa sản phẩm"><Edit size={18} /></button>
                                     <button onClick={() => handleAddSpecification(product)} className="text-teal-400 hover:text-teal-300 p-1.5 ml-1.5 rounded-full hover:bg-gray-600/50" title="Quản lý thông số"><Settings size={18} /></button>
-                                    <button onClick={() => handleDeleteProduct(product)} className="text-rose-400 hover:text-rose-300 p-1.5 ml-1.5 rounded-full hover:bg-gray-600/50" title="Xóa sản phẩm"><Trash2 size={18} /></button>
+                                    {/* <button onClick={() => handleDeleteProduct(product)} className="text-rose-400 hover:text-rose-300 p-1.5 ml-1.5 rounded-full hover:bg-gray-600/50" title="Xóa sản phẩm"><Trash2 size={18} /></button> */}
                                 </td>
                             </motion.tr>
                         ))}

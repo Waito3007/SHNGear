@@ -16,15 +16,14 @@ const DiscountProductSlider = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        // Giữ nguyên phần fetch data như cũ
+      try {        // Use optimized featured products API
         const [productsResponse, categoriesResponse, brandsResponse] = await Promise.all([
-          fetch(`${process.env.REACT_APP_API_BASE_URL}/api/Products`),
+          fetch(`${process.env.REACT_APP_API_BASE_URL}/api/Products/featured?count=20`),
           fetch(`${process.env.REACT_APP_API_BASE_URL}/api/categories`),
           fetch(`${process.env.REACT_APP_API_BASE_URL}/api/brands`)
         ]);
 
-        if (!productsResponse.ok) throw new Error("Không thể tải sản phẩm");
+        if (!productsResponse.ok) throw new Error("Không thể tải sản phẩm nổi bật");
         if (!categoriesResponse.ok) throw new Error("Không thể tải danh mục");
         if (!brandsResponse.ok) throw new Error("Không thể tải thương hiệu");
 
@@ -32,29 +31,64 @@ const DiscountProductSlider = () => {
           productsResponse.json(),
           categoriesResponse.json(),
           brandsResponse.json()
-        ]);
-
-        // Xử lý dữ liệu như cũ
+        ]);        // Xử lý dữ liệu với cấu trúc API mới
         const categoriesArray = categoriesData.$values || categoriesData || [];
         const brandsArray = brandsData.$values || brandsData || [];
-        const productsArray = productsData.$values || productsData || [];
+        
+        // Handle new paginated API response structure
+        let productsArray = [];        if (productsData.Data) {
+          // New paginated API response (uppercase Data property)
+          productsArray = productsData.Data || [];
+        } else if (productsData.data) {
+          // Alternative lowercase data property
+          productsArray = productsData.data || [];
+        } else {
+          // Fallback for old API or direct array response
+          productsArray = productsData.$values || productsData || [];
+        }        // Add safety check to ensure productsArray is actually an array
+        if (!Array.isArray(productsArray)) {
+          console.error('Expected productsArray to be an array, got:', typeof productsArray, productsArray);
+          productsArray = [];
+        }
 
+        // Since we're using featured products API, we can work with all featured products
+        // or optionally filter by phone category if needed
         const phoneCategory = categoriesArray.find(cat => cat.name === "Điện Thoại");
-        if (!phoneCategory) throw new Error("Không tìm thấy danh mục 'Điện Thoại'");
+        
+        // Use all featured products, or filter by phone category if phoneCategory exists
+        const featuredProducts = phoneCategory 
+          ? productsArray.filter(product => 
+              product.categoryId === phoneCategory.id || 
+              product.categoryName === "Điện Thoại"
+            )
+          : productsArray; // Use all featured products if no phone category found
 
-        const phoneProducts = productsArray
-          .filter(product => product.categoryId === phoneCategory.id)
+        const phoneProducts = featuredProducts
           .map((product) => {
-            const variant = product.variants?.[0] || {};
-            const image = product.images?.[0]?.imageUrl || "/images/placeholder.jpg";
-            const oldPrice = variant.price || 0;
-            const newPrice = variant.discountPrice || oldPrice;
+            // Handle both old and new API response structures
+            const variants = product.variants || [];
+            const variant = variants[0] || {};
+            
+            // For new API structure, use direct properties with fallbacks
+            const oldPrice = variant.price || product.minPrice || product.maxPrice || 0;
+            const newPrice = variant.discountPrice || product.minDiscountPrice || oldPrice;
+            
+            // Handle image from new optimized API structure
+            let image = "/images/placeholder.jpg";
+            if (product.primaryImage?.imageUrl) {
+              image = product.primaryImage.imageUrl;
+            } else if (product.images?.[0]?.imageUrl) {
+              image = product.images[0].imageUrl;
+            }
+            
             const discountAmount = oldPrice - newPrice;
-            const discount = oldPrice > 0
+            const discount = oldPrice > 0 && newPrice < oldPrice
               ? `-${Math.round((discountAmount / oldPrice) * 100)}%`
               : "0%";
 
-            const brand = brandsArray.find(b => b.id === product.brandId);
+            // Handle brand information from new API
+            const brand = brandsArray.find(b => b.id === product.brandId) || 
+                         { name: product.brandName || "Unknown" };
 
             return {
               id: product.id,
@@ -66,7 +100,7 @@ const DiscountProductSlider = () => {
               image,
               features: [
                 variant.storage || "Không xác định",
-                brand?.name || "Không có thương hiệu",
+                product.brandName || brand?.name || "Không có thương hiệu",
                 "Hiệu suất cao",
               ],
             };
@@ -149,11 +183,10 @@ const DiscountProductSlider = () => {
                   <img
                     src={product.image?.startsWith("http") ? product.image : `${process.env.REACT_APP_API_BASE_URL}/${product.image}`}
                     alt={product.name}
-                    className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
-                    onError={(e) => { 
-                      e.target.onerror = null; 
-                      e.target.src = "https://via.placeholder.com/150"; 
-                    }}
+                    className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='12' fill='%23999'%3EImage Error%3C/text%3E%3C/svg%3E";
+                      }}
                   />
                 </div>
 

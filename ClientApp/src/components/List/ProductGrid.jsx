@@ -116,9 +116,7 @@ const ProductGrid = ({
 
         if (!productsRes.ok || !brandsRes.ok) {
           throw new Error("Không thể tải dữ liệu");
-        }
-
-        const productsData = await productsRes.json();
+        }        const productsData = await productsRes.json();
         const brandsData = await brandsRes.json();
 
         const brandsMap = (brandsData.$values || brandsData || []).reduce(
@@ -127,33 +125,63 @@ const ProductGrid = ({
             return acc;
           },
           {}
-        );
+        );        // Handle new paginated API response structure
+        let filteredProducts = [];
+        
+        try {
+          if (productsData.Data) {
+            // New paginated API response (uppercase Data property)
+            filteredProducts = productsData.Data || [];
+          } else if (productsData.data) {
+            // Alternative lowercase data property
+            filteredProducts = productsData.data || [];
+          } else {
+            // Fallback for old API or direct array response
+            filteredProducts = productsData.$values || productsData || [];
+          }
 
-        let filteredProducts = productsData.$values || productsData || [];
-
-        if (selectedCategory) {
-          filteredProducts = filteredProducts.filter(
-            (product) => product.categoryId === selectedCategory
-          );
+          // Add safety check to ensure filteredProducts is actually an array
+          if (!Array.isArray(filteredProducts)) {
+            console.error('Expected filteredProducts to be an array, got:', typeof filteredProducts, filteredProducts);
+            filteredProducts = [];
+          }
+        } catch (error) {
+          console.error('Error processing products data:', error);
+          filteredProducts = [];
         }
 
-        if (selectedBrand) {
-          filteredProducts = filteredProducts.filter(
-            (product) => product.brandId === selectedBrand
-          );
-        }
+        // Apply filters with additional safety checks
+        try {
+          if (selectedCategory && Array.isArray(filteredProducts)) {
+            filteredProducts = filteredProducts.filter(
+              (product) => product && product.categoryId === selectedCategory
+            );
+          }
 
-        if (selectedPriceRange && selectedPriceRange !== "all") {
-          const [minPrice, maxPrice] = selectedPriceRange.split("-").map(Number);
-          filteredProducts = filteredProducts.filter((product) => {
-            const price = product.variants?.[0]?.discountPrice || product.variants?.[0]?.price || 0;
-            return price >= minPrice && price <= maxPrice;
-          });
-        }
+          if (selectedBrand && Array.isArray(filteredProducts)) {
+            filteredProducts = filteredProducts.filter(
+              (product) => product && product.brandId === selectedBrand
+            );
+          }
 
-        const processedProducts = filteredProducts.map((product) => {
+          if (selectedPriceRange && selectedPriceRange !== "all" && Array.isArray(filteredProducts)) {
+            const [minPrice, maxPrice] = selectedPriceRange.split("-").map(Number);
+            filteredProducts = filteredProducts.filter((product) => {
+              if (!product || !product.variants) return false;
+              const price = product.variants?.[0]?.discountPrice || product.variants?.[0]?.price || 0;
+              return price >= minPrice && price <= maxPrice;
+            });
+          }
+        } catch (filterError) {
+          console.error('Error applying filters:', filterError);
+          // Reset to original array if filtering fails
+          filteredProducts = productsData.Data || productsData.data || productsData.$values || productsData || [];
+          if (!Array.isArray(filteredProducts)) {
+            filteredProducts = [];
+          }
+        }        const processedProducts = filteredProducts.map((product) => {
           const variant = product.variants?.[0] || {};
-          const image = product.images?.[0]?.imageUrl || "https://via.placeholder.com/300?text=No+Image";
+          const image = product.images?.[0]?.imageUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='16' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E";
           const oldPrice = variant.price || 0;
           const newPrice = variant.discountPrice || oldPrice;
           const discountAmount = oldPrice - newPrice;
@@ -383,10 +411,9 @@ const ProductGrid = ({
                               ? product.image
                               : `${process.env.REACT_APP_API_BASE_URL}/${product.image}`
                           }
-                          alt={product.name}
-                          onError={(e) => {
+                          alt={product.name}                          onError={(e) => {
                             e.target.onerror = null;
-                            e.target.src = "https://via.placeholder.com/300?text=Error";
+                            e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='16' fill='%23999'%3EImage Error%3C/text%3E%3C/svg%3E";
                           }}
                         />
                       </div>

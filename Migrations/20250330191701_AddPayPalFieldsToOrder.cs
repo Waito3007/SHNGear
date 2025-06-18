@@ -6,33 +6,40 @@ namespace SHN_Gear.Migrations
 {
     /// <inheritdoc />
     public partial class AddPayPalFieldsToOrder : Migration
-    {
-        /// <inheritdoc />
+    {        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "PayPalOrderId",
-                table: "Orders",
-                type: "nvarchar(max)",
-                nullable: true);
+            // Check and add PayPalOrderId column if it doesn't exist
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS(SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'PayPalOrderId')
+                BEGIN
+                    ALTER TABLE [Orders] ADD [PayPalOrderId] nvarchar(max) NULL;
+                END
+            ");
 
-            migrationBuilder.AddColumn<string>(
-                name: "PayPalPaymentUrl",
-                table: "Orders",
-                type: "nvarchar(max)",
-                nullable: true);
+            // Check and add PayPalPaymentUrl column if it doesn't exist
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS(SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'PayPalPaymentUrl')
+                BEGIN
+                    ALTER TABLE [Orders] ADD [PayPalPaymentUrl] nvarchar(max) NULL;
+                END
+            ");
 
-            migrationBuilder.AddColumn<string>(
-                name: "PayPalResponse",
-                table: "Orders",
-                type: "nvarchar(max)",
-                nullable: true);
+            // Check and add PayPalResponse column if it doesn't exist
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS(SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'PayPalResponse')
+                BEGIN
+                    ALTER TABLE [Orders] ADD [PayPalResponse] nvarchar(max) NULL;
+                END
+            ");
 
-            migrationBuilder.AddColumn<string>(
-                name: "PayPalTransactionId",
-                table: "Orders",
-                type: "nvarchar(max)",
-                nullable: true);
+            // Check and add PayPalTransactionId column if it doesn't exist
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS(SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Orders') AND name = 'PayPalTransactionId')
+                BEGIN
+                    ALTER TABLE [Orders] ADD [PayPalTransactionId] nvarchar(max) NULL;
+                END
+            ");
         }
 
         /// <inheritdoc />

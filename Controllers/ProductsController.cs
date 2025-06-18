@@ -5,35 +5,100 @@ using SHN_Gear.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
 
 [Route("api/[controller]")]
 [ApiController]
 public class ProductsController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IMemoryCache _cache;
+    private readonly TimeSpan _cacheExpiration = TimeSpan.FromMinutes(15);
 
-    public ProductsController(AppDbContext context)
+    public ProductsController(AppDbContext context, IMemoryCache cache)
     {
         _context = context;
-    }
-
-    // Lấy danh sách sản phẩm (có hỗ trợ lọc theo danh mục)
+        _cache = cache;
+    }    // Lấy danh sách sản phẩm (có hỗ trợ lọc theo danh mục) - Optimized
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Product>>> GetProducts([FromQuery] int? categoryId = null)
+    public async Task<ActionResult<IEnumerable<object>>> GetProducts(
+        [FromQuery] int? categoryId = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] bool includeVariants = false)
     {
-        var query = _context.Products
-            .Include(p => p.Images)
-            .Include(p => p.Variants)
-            .Include(p => p.Category)
-            .Include(p => p.Brand)
-            .AsQueryable();
+        var query = _context.Products.AsQueryable();
 
+        // Apply category filter
         if (categoryId.HasValue)
         {
             query = query.Where(p => p.CategoryId == categoryId.Value);
         }
 
-        return await query.ToListAsync();
+        // Calculate pagination
+        var skip = (page - 1) * pageSize;        // Load products with necessary data for frontend compatibility
+        var products = await query
+            .Include(p => p.Images)
+            .Include(p => p.Variants)
+            .Include(p => p.Category)
+            .Include(p => p.Brand)
+            .AsNoTracking() // Improve performance for read-only queries
+            .OrderBy(p => p.Id) // Required for pagination with Skip/Take
+            .Skip(skip)
+            .Take(pageSize)
+            .Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Description,
+                p.CreatedAt,
+                p.CategoryId,
+                CategoryName = p.Category.Name,
+                p.BrandId,
+                BrandName = p.Brand.Name,
+                // Include all images for frontend compatibility
+                Images = p.Images.Select(img => new
+                {
+                    img.Id,
+                    img.ImageUrl,
+                    img.IsPrimary
+                }).ToList(),
+                // Include essential variant information for price calculation
+                Variants = p.Variants.Select(v => new
+                {
+                    v.Id,
+                    v.Color,
+                    v.Storage,
+                    v.Price,
+                    v.DiscountPrice,
+                    v.StockQuantity,
+                    v.FlashSaleStart,
+                    v.FlashSaleEnd
+                }).ToList(),
+                // Keep backward compatibility fields
+                MinPrice = p.Variants.Any() ? p.Variants.Min(v => v.Price) : 0,
+                MaxPrice = p.Variants.Any() ? p.Variants.Max(v => v.Price) : 0,
+                TotalStock = p.Variants.Sum(v => v.StockQuantity),
+                HasDiscount = p.Variants.Any(v => v.DiscountPrice.HasValue)
+            })
+            .ToListAsync();
+
+        // Get total count for pagination
+        var totalCount = await query.CountAsync();
+
+        var response = new
+        {
+            Data = products,
+            Pagination = new
+            {
+                Page = page,
+                PageSize = pageSize,
+                TotalItems = totalCount,
+                TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+            }
+        };
+
+        return Ok(response);
     }
 
     //Lấy thông tin chi tiết sản phẩm theo ID
@@ -155,15 +220,53 @@ public class ProductsController : ControllerBase
         await _context.SaveChangesAsync();
 
         return NoContent();
-    }
-
-    // Lấy danh sách sản phẩm liên quan theo thương hiệu (brand)
+    }    // Lấy danh sách sản phẩm liên quan theo thương hiệu (brand) - Optimized
     [HttpGet("related-by-brand/{brandId}/{currentProductId}")]
-    public async Task<ActionResult<IEnumerable<Product>>> GetRelatedProductsByBrand(int brandId, int currentProductId)
+    public async Task<ActionResult<IEnumerable<object>>> GetRelatedProductsByBrand(
+        int brandId,
+        int currentProductId,
+        [FromQuery] int count = 6)
     {
         var relatedProducts = await _context.Products
-            .Where(p => p.BrandId == brandId && p.Id != currentProductId)
             .Include(p => p.Images)
+            .Include(p => p.Variants)
+            .Include(p => p.Category)
+            .Include(p => p.Brand)
+            .AsNoTracking() // Improve performance for read-only queries
+            .Where(p => p.BrandId == brandId && p.Id != currentProductId)
+            .Take(count)
+            .Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Description,
+                p.CategoryId,
+                BrandName = p.Brand.Name,
+                p.BrandId,
+                CategoryName = p.Category.Name,
+                // Include all images for frontend compatibility
+                Images = p.Images.Select(img => new
+                {
+                    img.Id,
+                    img.ImageUrl,
+                    img.IsPrimary
+                }).ToList(),
+                // Include full variant information
+                Variants = p.Variants.Select(v => new
+                {
+                    v.Id,
+                    v.Color,
+                    v.Storage,
+                    v.Price,
+                    v.DiscountPrice,
+                    v.StockQuantity,
+                    v.FlashSaleStart,
+                    v.FlashSaleEnd
+                }).ToList(),
+                // Keep backward compatibility fields
+                MinPrice = p.Variants.Any() ? p.Variants.Min(v => v.Price) : 0,
+                TotalStock = p.Variants.Sum(v => v.StockQuantity)
+            })
             .ToListAsync();
 
         return Ok(relatedProducts);
@@ -191,41 +294,106 @@ public class ProductsController : ControllerBase
             .ToList();
 
         return Ok(variants);
-    }
-    // Lấy tổng số sản phẩm
+    }    // Lấy tổng số sản phẩm - With Caching
     [HttpGet("count")]
     public async Task<ActionResult<int>> GetProductCount()
     {
+        string cacheKey = "total_product_count";
+
+        if (_cache.TryGetValue(cacheKey, out int cachedCount))
+        {
+            return Ok(cachedCount);
+        }
+
         int totalProducts = await _context.Products.CountAsync();
+
+        // Cache for 30 minutes
+        _cache.Set(cacheKey, totalProducts, TimeSpan.FromMinutes(30));
+
         return Ok(totalProducts);
     }
-
     [HttpGet("search")]
-    public async Task<ActionResult<IEnumerable<Product>>> SearchProducts([FromQuery] string keyword)
+    public async Task<ActionResult<IEnumerable<object>>> SearchProducts(
+        [FromQuery] string keyword,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         if (string.IsNullOrWhiteSpace(keyword))
         {
             return BadRequest("Vui lòng nhập từ khóa tìm kiếm.");
         }
 
-        var products = await _context.Products
+        // Use Contains for faster search, consider implementing full-text search for production
+        var query = _context.Products
+            .Where(p =>
+                EF.Functions.Like(p.Name, $"%{keyword}%") ||
+                EF.Functions.Like(p.Description, $"%{keyword}%") ||
+                EF.Functions.Like(p.Category.Name, $"%{keyword}%") ||
+                EF.Functions.Like(p.Brand.Name, $"%{keyword}%")
+            ); var skip = (page - 1) * pageSize;
+        var products = await query
             .Include(p => p.Images)
+            .Include(p => p.Variants)
             .Include(p => p.Category)
             .Include(p => p.Brand)
-            .Where(p =>
-                p.Name.Contains(keyword) ||
-                p.Description.Contains(keyword) ||
-                (p.Category != null && p.Category.Name.Contains(keyword)) ||
-                (p.Brand != null && p.Brand.Name.Contains(keyword))
-            )
+            .AsNoTracking() // Improve performance for read-only queries
+            .Skip(skip)
+            .Take(pageSize)
+            .Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Description,
+                p.CategoryId,
+                CategoryName = p.Category.Name,
+                p.BrandId,
+                BrandName = p.Brand.Name,
+                // Include all images for frontend compatibility
+                Images = p.Images.Select(img => new
+                {
+                    img.Id,
+                    img.ImageUrl,
+                    img.IsPrimary
+                }).ToList(),
+                // Include full variant information
+                Variants = p.Variants.Select(v => new
+                {
+                    v.Id,
+                    v.Color,
+                    v.Storage,
+                    v.Price,
+                    v.DiscountPrice,
+                    v.StockQuantity,
+                    v.FlashSaleStart,
+                    v.FlashSaleEnd
+                }).ToList(),
+                // Keep backward compatibility fields
+                MinPrice = p.Variants.Any() ? p.Variants.Min(v => v.Price) : 0,
+                TotalStock = p.Variants.Sum(v => v.StockQuantity),
+                HasDiscount = p.Variants.Any(v => v.DiscountPrice.HasValue)
+            })
             .ToListAsync();
+
+        var totalCount = await query.CountAsync();
 
         if (products.Count == 0)
         {
             return NotFound("Không tìm thấy sản phẩm nào phù hợp.");
         }
 
-        return Ok(products);
+        var response = new
+        {
+            Data = products,
+            Pagination = new
+            {
+                Page = page,
+                PageSize = pageSize,
+                TotalItems = totalCount,
+                TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+            }
+        };
+
+        return Ok(response);
     }
 
     [HttpGet("low-stock")]
@@ -340,7 +508,8 @@ public class ProductsController : ControllerBase
         };
 
         return Ok(result);
-    }    [HttpPost("compare")]
+    }
+    [HttpPost("compare")]
     public async Task<IActionResult> CompareProducts([FromBody] List<int> productIds)
     {
         if (productIds == null || productIds.Count < 1)
@@ -395,5 +564,86 @@ public class ProductsController : ControllerBase
         }
 
         return Ok(result);
+    }
+
+    // Lấy danh sách sản phẩm với đầy đủ thông tin (cho admin hoặc khi cần thiết)
+    [HttpGet("full-details")]
+    public async Task<ActionResult<IEnumerable<Product>>> GetProductsFullDetails([FromQuery] int? categoryId = null)
+    {
+        var query = _context.Products
+            .Include(p => p.Images)
+            .Include(p => p.Variants)
+            .Include(p => p.Category)
+            .Include(p => p.Brand)
+            .AsQueryable();
+
+        if (categoryId.HasValue)
+        {
+            query = query.Where(p => p.CategoryId == categoryId.Value);
+        }
+
+        return await query.ToListAsync();
+    }    // Lấy danh sách sản phẩm nổi bật (có khuyến mãi hoặc bán chạy) - With Caching
+    [HttpGet("featured")]
+    public async Task<ActionResult<IEnumerable<object>>> GetFeaturedProducts([FromQuery] int count = 10)
+    {
+        string cacheKey = $"featured_products_{count}";
+
+        if (_cache.TryGetValue(cacheKey, out var cachedProducts))
+        {
+            return Ok(cachedProducts);
+        }
+        var now = DateTime.UtcNow;
+        var featuredProducts = await _context.Products
+            .Include(p => p.Images)
+            .Include(p => p.Variants)
+            .Include(p => p.Category)
+            .Include(p => p.Brand)
+            .AsNoTracking() // Improve performance for read-only queries
+            .Where(p => p.Variants.Any(v =>
+                (v.FlashSaleStart <= now && now <= v.FlashSaleEnd) ||
+                v.DiscountPrice.HasValue))
+            .Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Description,
+                p.CategoryId,
+                CategoryName = p.Category.Name,
+                p.BrandId,
+                BrandName = p.Brand.Name,
+                // Include all images for frontend compatibility
+                Images = p.Images.Select(img => new
+                {
+                    img.Id,
+                    img.ImageUrl,
+                    img.IsPrimary
+                }).ToList(),
+                // Include full variant information
+                Variants = p.Variants.Select(v => new
+                {
+                    v.Id,
+                    v.Color,
+                    v.Storage,
+                    v.Price,
+                    v.DiscountPrice,
+                    v.StockQuantity,
+                    v.FlashSaleStart,
+                    v.FlashSaleEnd
+                }).ToList(),
+                // Keep backward compatibility fields
+                MinPrice = p.Variants.Min(v => v.Price),
+                MinDiscountPrice = p.Variants
+                    .Where(v => v.DiscountPrice.HasValue)
+                    .Min(v => v.DiscountPrice),
+                TotalStock = p.Variants.Sum(v => v.StockQuantity)
+            })
+            .Take(count)
+            .ToListAsync();
+
+        // Cache for 15 minutes
+        _cache.Set(cacheKey, featuredProducts, _cacheExpiration);
+
+        return Ok(featuredProducts);
     }
 }

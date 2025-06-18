@@ -18,6 +18,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // 🔹 Session
 builder.Services.AddDistributedMemoryCache();
+builder.Services.AddMemoryCache(); // Add memory cache for performance optimization
+
+// 🔹 Response Compression for API performance
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+});
+
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -64,6 +72,13 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
+});
+
+// 🔹 Response Compression for better API performance
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
 });
 
 // 🔹 Swagger + JWT Support
@@ -119,6 +134,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseResponseCompression(); // Enable response compression for better API performance
 
 app.UseCors("AllowFrontend");
 app.UseCors("AllowAll");

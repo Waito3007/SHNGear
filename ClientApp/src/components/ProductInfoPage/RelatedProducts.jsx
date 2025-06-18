@@ -109,7 +109,10 @@ const RelatedProducts = ({ productId, brandId, categoryId }) => {
                   }
                   alt={product.name}
                   className="w-full h-40 object-contain mb-3 hover:scale-110"
-                  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/150"; }}
+                  onError={(e) => { 
+                    e.target.onerror = null; 
+                    e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='12' fill='%23999'%3EImage Error%3C/text%3E%3C/svg%3E"; 
+                  }}
               />
 
                 <div className="text-gray-700 text-sm space-y-2">

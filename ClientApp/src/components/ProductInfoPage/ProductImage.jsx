@@ -89,11 +89,10 @@ const ProductImage = ({ images, name }) => {
                       "&:hover": {
                         transform: "scale(1.05)",
                       },
-                    }}
-                    onError={(e) => {
+                    }}                    onError={(e) => {
                       e.target.onerror = null;
                       e.target.src =
-                        "https://via.placeholder.com/400?text=No+Image";
+                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='16' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E";
                     }}
                     onClick={handleFullscreen}
                   />
@@ -234,11 +233,10 @@ const ProductImage = ({ images, name }) => {
                     height: "100%",
                     objectFit: "contain",
                     p: 1,
-                  }}
-                  onError={(e) => {
+                  }}                  onError={(e) => {
                     e.target.onerror = null;
                     e.target.src =
-                      "https://via.placeholder.com/100?text=No+Image";
+                      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='12' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E";
                   }}
                 />
               </Paper>
@@ -330,11 +328,10 @@ const ProductImage = ({ images, name }) => {
                         maxHeight: "90vh",
                         maxWidth: "90vw",
                         objectFit: "contain",
-                      }}
-                      onError={(e) => {
+                      }}                      onError={(e) => {
                         e.target.onerror = null;
                         e.target.src =
-                          "https://via.placeholder.com/800?text=No+Image";
+                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800' viewBox='0 0 800 800'%3E%3Crect width='800' height='800' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='24' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E";
                       }}
                     />
                   </Box>

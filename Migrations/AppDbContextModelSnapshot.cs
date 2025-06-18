@@ -423,7 +423,7 @@ namespace SHN_Gear.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
@@ -437,14 +437,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductId")
-                        .HasDatabaseName("IX_ProductSpecifications_ProductId");
-
-                    b.HasIndex("ProductId", "DisplayOrder")
-                        .HasDatabaseName("IX_ProductSpecifications_ProductId_DisplayOrder");
-
-                    b.HasIndex("ProductId", "Name")
-                        .HasDatabaseName("IX_ProductSpecifications_ProductId_Name");
+                    b.HasIndex("ProductId");
 
                     b.ToTable("ProductSpecifications");
                 });

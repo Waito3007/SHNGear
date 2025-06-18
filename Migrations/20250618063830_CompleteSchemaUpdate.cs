@@ -6,65 +6,114 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SHN_Gear.Migrations
 {
     /// <inheritdoc />
-    public partial class AddProductSpecificationIndexes : Migration
-    {
-        /// <inheritdoc />
+    public partial class CompleteSchemaUpdate : Migration
+    {        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "HeadphoneSpecifications");
+            // Check and drop foreign key if it exists
+            migrationBuilder.Sql(@"
+                IF EXISTS(SELECT * FROM sys.foreign_keys WHERE name = 'FK_Reviews_ProductVariants_ProductVariantId')
+                BEGIN
+                    ALTER TABLE [Reviews] DROP CONSTRAINT [FK_Reviews_ProductVariants_ProductVariantId];
+                END
+            ");
 
-            migrationBuilder.DropTable(
-                name: "LaptopSpecifications");
+            // Check and drop tables if they exist
+            migrationBuilder.Sql(@"
+                IF EXISTS(SELECT * FROM sys.tables WHERE name = 'HeadphoneSpecifications')
+                BEGIN
+                    DROP TABLE [HeadphoneSpecifications];
+                END
+            ");
 
-            migrationBuilder.DropTable(
-                name: "PhoneSpecifications");
+            migrationBuilder.Sql(@"
+                IF EXISTS(SELECT * FROM sys.tables WHERE name = 'LaptopSpecifications')
+                BEGIN
+                    DROP TABLE [LaptopSpecifications];
+                END
+            ");
 
-            migrationBuilder.CreateTable(
-                name: "ProductSpecifications",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ProductId = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Value = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Unit = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ProductSpecifications", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ProductSpecifications_Products_ProductId",
-                        column: x => x.ProductId,
-                        principalTable: "Products",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+            migrationBuilder.Sql(@"
+                IF EXISTS(SELECT * FROM sys.tables WHERE name = 'PhoneSpecifications')
+                BEGIN
+                    DROP TABLE [PhoneSpecifications];
+                END
+            ");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_ProductSpecifications_ProductId",
-                table: "ProductSpecifications",
-                column: "ProductId");
+            // Check and rename column if it exists
+            migrationBuilder.Sql(@"
+                IF EXISTS(SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Reviews') AND name = 'ProductVariantId')
+                BEGIN
+                    EXEC sp_rename 'Reviews.ProductVariantId', 'ProductId', 'COLUMN';
+                END
+            ");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_ProductSpecifications_ProductId_DisplayOrder",
-                table: "ProductSpecifications",
-                columns: new[] { "ProductId", "DisplayOrder" });
+            // Check and rename index if it exists
+            migrationBuilder.Sql(@"
+                IF EXISTS(SELECT * FROM sys.indexes WHERE name = 'IX_Reviews_ProductVariantId')
+                BEGIN
+                    EXEC sp_rename 'Reviews.IX_Reviews_ProductVariantId', 'IX_Reviews_ProductId', 'INDEX';
+                END
+            ");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_ProductSpecifications_ProductId_Name",
-                table: "ProductSpecifications",
-                columns: new[] { "ProductId", "Name" });
+            // Check and add IsApproved column if it doesn't exist
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS(SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Reviews') AND name = 'IsApproved')
+                BEGIN
+                    ALTER TABLE [Reviews] ADD [IsApproved] bit NOT NULL DEFAULT 0;
+                END            ");
+
+            // Check and create ProductSpecifications table if it doesn't exist
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS(SELECT * FROM sys.tables WHERE name = 'ProductSpecifications')
+                BEGIN
+                    CREATE TABLE [ProductSpecifications] (
+                        [Id] int NOT NULL IDENTITY,
+                        [ProductId] int NOT NULL,
+                        [Name] nvarchar(max) NOT NULL,
+                        [Value] nvarchar(max) NOT NULL,
+                        [Unit] nvarchar(max) NULL,
+                        [DisplayOrder] int NOT NULL,
+                        [CreatedAt] datetime2 NOT NULL,
+                        CONSTRAINT [PK_ProductSpecifications] PRIMARY KEY ([Id]),
+                        CONSTRAINT [FK_ProductSpecifications_Products_ProductId] FOREIGN KEY ([ProductId]) REFERENCES [Products] ([Id]) ON DELETE CASCADE
+                    );
+                    
+                    CREATE INDEX [IX_ProductSpecifications_ProductId] ON [ProductSpecifications] ([ProductId]);
+                END            ");
+
+            // Check and add foreign key if it doesn't exist
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS(SELECT * FROM sys.foreign_keys WHERE name = 'FK_Reviews_Products_ProductId')
+                BEGIN
+                    ALTER TABLE [Reviews] ADD CONSTRAINT [FK_Reviews_Products_ProductId] FOREIGN KEY ([ProductId]) REFERENCES [Products] ([Id]) ON DELETE CASCADE;
+                END
+            ");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Reviews_Products_ProductId",
+                table: "Reviews");
+
             migrationBuilder.DropTable(
                 name: "ProductSpecifications");
+
+            migrationBuilder.DropColumn(
+                name: "IsApproved",
+                table: "Reviews");
+
+            migrationBuilder.RenameColumn(
+                name: "ProductId",
+                table: "Reviews",
+                newName: "ProductVariantId");
+
+            migrationBuilder.RenameIndex(
+                name: "IX_Reviews_ProductId",
+                table: "Reviews",
+                newName: "IX_Reviews_ProductVariantId");
 
             migrationBuilder.CreateTable(
                 name: "HeadphoneSpecifications",
@@ -165,6 +214,14 @@ namespace SHN_Gear.Migrations
                 name: "IX_PhoneSpecifications_ProductId",
                 table: "PhoneSpecifications",
                 column: "ProductId");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Reviews_ProductVariants_ProductVariantId",
+                table: "Reviews",
+                column: "ProductVariantId",
+                principalTable: "ProductVariants",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
         }
     }
 }
