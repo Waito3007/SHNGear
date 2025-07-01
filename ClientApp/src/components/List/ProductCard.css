@@ -326,7 +326,12 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.2), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(99, 102, 241, 0.2),
+    transparent
+  );
   transition: left 0.5s;
 }
 
@@ -350,7 +355,12 @@
 }
 
 .compare-btn.active::before {
-  background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.2), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(16, 185, 129, 0.2),
+    transparent
+  );
 }
 
 .compare-btn:active {
@@ -384,7 +394,12 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
   transition: left 0.5s;
 }
 
@@ -424,8 +439,12 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Success Animation */
@@ -435,22 +454,67 @@
 }
 
 @keyframes successPulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
-/* Mobile Responsive */
-@media (max-width: 768px) {
-  .product-actions {
+/* Pagination Styling */
+.product-pagination {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  border: 1px solid rgba(230, 232, 236, 0.8);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.pagination-info {
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.pagination-info strong {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+/* Animation for pagination changes */
+.products-grid {
+  transition: all 0.3s ease-in-out;
+}
+
+.products-grid.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Responsive pagination */
+@media (max-width: 640px) {
+  .pagination-container {
     flex-direction: column;
-    gap: 6px;
+    text-align: center;
+    gap: 1rem;
   }
-  
-  .compare-btn,
-  .add-to-cart-btn {
-    flex: 1;
-    padding: 8px 12px;
-    font-size: 11px;
+
+  .pagination-info {
+    order: 2;
   }
 }
