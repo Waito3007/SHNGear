@@ -31,8 +31,25 @@ builder.Services.AddScoped<EmailService>();
 builder.Services.AddSingleton<PayPalService>();
 builder.Services.AddScoped<MoMoPaymentService>();
 
+// 🔹 Chat & AI Services
+builder.Services.AddScoped<ContextManager>();
+builder.Services.AddScoped<GeminiService>();
+builder.Services.AddScoped<AIService>();
+builder.Services.AddScoped<ChatService>();
+builder.Services.AddScoped<DatabaseSeeder>();
+
+// 🔹 HttpClient for external API calls
+builder.Services.AddHttpClient<GeminiService>();
+
+// 🔹 SignalR for real-time chat
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+});
+
 // 🔹 JWT Authentication
-var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
+var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured");
+var key = Encoding.UTF8.GetBytes(jwtKey);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -46,6 +63,24 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(key)
         };
+
+        // Configure for SignalR
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+
+                // If the request is for our hub and there's a token, use it
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chatHub"))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
     });
 
 // 🔹 CORS
@@ -53,10 +88,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("https://localhost:44479")
+        policy.WithOrigins("https://localhost:44479", "http://localhost:3000", "https://localhost:3001")
               .AllowCredentials()
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .SetIsOriginAllowed(origin => true); // Allow SignalR
     });
     options.AddPolicy("AllowAll", policy =>
     {
@@ -103,6 +139,9 @@ builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        // Ensure UTC DateTimes are serialized with 'Z' suffix for proper timezone handling
+        options.JsonSerializerOptions.WriteIndented = false;
+        // Default converter will serialize DateTime as ISO 8601 with 'Z' for UTC
     });
 
 builder.Services.AddHttpContextAccessor();
@@ -139,6 +178,21 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller}/{action=Index}/{id?}");
 
+// 🔹 Map SignalR Hub
+app.MapHub<SHN_Gear.Hubs.ChatHub>("/chatHub");
+
 app.MapFallbackToFile("index.html");
+
+// 🔹 Seed database on startup if requested
+if (args.Contains("--seed-data"))
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+        await seeder.SeedAsync();
+        Console.WriteLine("Database seeding completed!");
+        return;
+    }
+}
 
 app.Run();

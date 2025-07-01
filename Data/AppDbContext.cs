@@ -29,6 +29,11 @@ namespace SHN_Gear.Data
         public DbSet<Voucher> Vouchers { get; set; }
         public DbSet<UserVoucher> UserVouchers { get; set; } // Thêm DbSet cho UserVoucher
 
+        // Chat System DbSets
+        public DbSet<ChatSession> ChatSessions { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<AIKnowledgeBase> AIKnowledgeBases { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -98,7 +103,7 @@ namespace SHN_Gear.Data
                 entity.Property(r => r.IsApproved);
 
                 entity.HasOne(r => r.User)
-                    .WithMany(u => u.Reviews) 
+                    .WithMany(u => u.Reviews)
                     .HasForeignKey(r => r.UserId);
 
                 entity.HasOne(r => r.Product) // ✅ mới
@@ -129,6 +134,30 @@ namespace SHN_Gear.Data
         // Giả định Voucher có thuộc tính DiscountAmount
         entity.Property(v => v.DiscountAmount).HasColumnType("decimal(18, 2)");
     });
+
+            // ✅ Chat System decimal configurations
+            modelBuilder.Entity<AIKnowledgeBase>(entity =>
+            {
+                entity.Property(a => a.EscalationThreshold).HasPrecision(5, 3); // 0.000 to 99.999
+                entity.Property(a => a.MinConfidenceScore).HasPrecision(5, 3); // 0.000 to 99.999
+            });
+
+            modelBuilder.Entity<ChatMessage>(entity =>
+            {
+                entity.Property(cm => cm.AIConfidenceScore).HasPrecision(5, 3); // 0.000 to 99.999
+
+                // Configure relationship with SenderUser
+                entity.HasOne(cm => cm.SenderUser)
+                      .WithMany()
+                      .HasForeignKey(cm => cm.SenderId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<ChatSession>(entity =>
+            {
+                entity.Property(cs => cs.ConfidenceScore).HasPrecision(5, 3); // 0.000 to 99.999
+            });
+
             // Thêm các quan hệ khác tương tự ở đây.
         }
     }
