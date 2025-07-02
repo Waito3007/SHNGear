@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Route, Routes, Navigate } from "react-router-dom";
+import { Route, Routes, Navigate, useLocation } from "react-router-dom";
 import AppRoutes from "./AppRoutes";
 import AdminLayout from "./components/layouts/AdminLayout";
 import ProductPage from "./pages/ProductPage";
@@ -16,6 +16,10 @@ import OrderLookup from "./components/Order/OrderLookup";
 import ComparePage from "components/CompareProduct/ComparePage";
 import Unauthorized from "./pages/Unauthorized";
 import { jwtDecode } from "jwt-decode";
+
+// Import Chat Components
+import ChatWidget from "./components/Chat/ChatWidget";
+import AdminChatDashboard from "./components/Chat/AdminChatDashboard";
 
 // Protected Route Component - Phiên bản tối ưu
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -42,59 +46,89 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   }
 };
 
+// Component to conditionally render ChatWidget
+const ConditionalChatWidget = () => {
+  const location = useLocation();
+  const isAdminPage = location.pathname.startsWith("/admin");
+
+  // Don't show ChatWidget on admin pages
+  if (isAdminPage) {
+    return null;
+  }
+
+  return <ChatWidget />;
+};
+
 export default class App extends Component {
   static displayName = App.name;
 
   render() {
     return (
-      <Routes>
-        {/* Các route đặc biệt không cần bảo vệ */}
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/shoppingcart" element={<Shoppingcart />} />
-        <Route path="/productlist" element={<ProductList />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/product/:id" element={<ProductPage />} />
-        <Route path="/unauthorized" element={<Unauthorized />} />
-        <Route path="/payment-success" element={<PaymentSuccess />} />
-        <Route path="/order-lookup" element={<OrderLookup />} />
-        <Route path="/compare" element={<ComparePage />} />
+      <>
+        <Routes>
+          {/* Các route đặc biệt không cần bảo vệ */}
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/shoppingcart" element={<Shoppingcart />} />
+          <Route path="/productlist" element={<ProductList />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/product/:id" element={<ProductPage />} />
+          <Route path="/unauthorized" element={<Unauthorized />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/order-lookup" element={<OrderLookup />} />
+          <Route path="/compare" element={<ComparePage />} />
 
-        {/* Protected Profile routes */}
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<ProfileInfo />} />
-          <Route path="info" element={<ProfileInfo />} />
-          <Route path="address" element={<AddressBook />} />
-          <Route path="orders" element={<UserOrders />} />
-          <Route path="loyalty" element={<LoyaltyProgram />} />
-        </Route>
-        {/* Xử lý các route từ AppRoutes */}
-        {AppRoutes.map((route) => {
-          const isAdminRoute = route.path?.startsWith("/admin");
+          {/* Admin Chat Dashboard Route */}
+          <Route
+            path="/admin/chat"
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <AdminLayout>
+                  <AdminChatDashboard />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
 
-          return (
-            <Route
-              key={route.path}
-              path={route.path}
-              element={
-                isAdminRoute ? (
-                  <ProtectedRoute adminOnly={true}>
-                    <AdminLayout>{route.element}</AdminLayout>
-                  </ProtectedRoute>
-                ) : (
-                  route.element
-                )
-              }
-            />
-          );
-        })}
-      </Routes>
+          {/* Protected Profile routes */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<ProfileInfo />} />
+            <Route path="info" element={<ProfileInfo />} />
+            <Route path="address" element={<AddressBook />} />
+            <Route path="orders" element={<UserOrders />} />
+            <Route path="loyalty" element={<LoyaltyProgram />} />
+          </Route>
+          {/* Xử lý các route từ AppRoutes */}
+          {AppRoutes.map((route) => {
+            const isAdminRoute = route.path?.startsWith("/admin");
+
+            return (
+              <Route
+                key={route.path}
+                path={route.path}
+                element={
+                  isAdminRoute ? (
+                    <ProtectedRoute adminOnly={true}>
+                      <AdminLayout>{route.element}</AdminLayout>
+                    </ProtectedRoute>
+                  ) : (
+                    route.element
+                  )
+                }
+              />
+            );
+          })}
+        </Routes>
+
+        {/* Chat Widget - ẩn trên các trang admin */}
+        <ConditionalChatWidget />
+      </>
     );
   }
 }
