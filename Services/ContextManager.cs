@@ -84,7 +84,7 @@ namespace SHN_Gear.Services
             return context;
         }
 
-        public void UpdateContextAsync(string sessionId, string message, string intent,
+        public Task UpdateContextAsync(string sessionId, string message, string intent,
             Dictionary<string, object>? entities = null, string? response = null)
         {
             lock (_lock)
@@ -131,6 +131,7 @@ namespace SHN_Gear.Services
                     context.LastActivity = DateTime.UtcNow;
                 }
             }
+            return Task.CompletedTask;
         }
 
         public string BuildContextualPrompt(ConversationContext context, string currentMessage)

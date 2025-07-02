@@ -1,3 +1,4 @@
+// ...existing code...
 using Microsoft.Extensions.FileProviders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -8,8 +9,12 @@ using System.Text.Json.Serialization;
 using CloudinaryDotNet;
 using SHN_Gear.Services;
 using Microsoft.OpenApi.Models;
+using SHN_Gear.Middleware;
+// using SHN_Gear.Export; // KnowledgeExportService nằm trong SHN_Gear.Services, không cần dòng này
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddMemoryCache();
 
 // 🔹 Kết nối SQL Server
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -33,13 +38,19 @@ builder.Services.AddScoped<MoMoPaymentService>();
 
 // 🔹 Chat & AI Services
 builder.Services.AddScoped<ContextManager>();
-builder.Services.AddScoped<GeminiService>();
 builder.Services.AddScoped<AIService>();
+
+// Đăng ký KnowledgeExportService để export tri thức từ DB
+// Ensure KnowledgeExportService exists in your project and the correct namespace is used above.
+// If it does not exist, comment out or remove the following line:
+// builder.Services.AddScoped<KnowledgeExportService>();
+builder.Services.AddScoped<KnowledgeExportService>();
 builder.Services.AddScoped<ChatService>();
 builder.Services.AddScoped<DatabaseSeeder>();
 
 // 🔹 HttpClient for external API calls
 builder.Services.AddHttpClient<GeminiService>();
+builder.Services.AddMemoryCache();
 
 // 🔹 SignalR for real-time chat
 builder.Services.AddSignalR(options =>
@@ -147,6 +158,8 @@ builder.Services.AddControllersWithViews()
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
+// Thêm middleware rate limit đơn giản cho API Gemini/chat
+app.UseMiddleware<SimpleRateLimitMiddleware>();
 
 // 🔹 Middlewares (đúng thứ tự)
 if (!app.Environment.IsDevelopment())
@@ -171,6 +184,35 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+
+
+
+// Tự động export tri thức website ra file JSON khi khởi động (đồng bộ, đảm bảo chắc chắn export xong trước khi app chạy)
+try
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var exportService = scope.ServiceProvider.GetService<KnowledgeExportService>();
+        if (exportService != null)
+        {
+            // Đảm bảo export ra đúng thư mục Data ở gốc project
+            var projectRoot = AppContext.BaseDirectory;
+            while (!string.IsNullOrEmpty(projectRoot) && !File.Exists(Path.Combine(projectRoot, "SHNGear.sln")))
+            {
+                projectRoot = Directory.GetParent(projectRoot)?.FullName ?? "";
+            }
+            var dataDir = Path.Combine(projectRoot, "Data");
+            if (!Directory.Exists(dataDir)) Directory.CreateDirectory(dataDir);
+            var knowledgePath = Path.Combine(dataDir, "WebsiteKnowledgeBase.json");
+            exportService.ExportWebsiteKnowledgeBaseAsync(knowledgePath).GetAwaiter().GetResult();
+            Console.WriteLine($"[KnowledgeExport] Exported tri thức website ra {knowledgePath}");
+        }
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"[KnowledgeExport] Export failed: {ex.Message}");
 }
 
 app.MapControllers();

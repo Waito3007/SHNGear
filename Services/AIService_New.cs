@@ -7,13 +7,14 @@ using System.Text.RegularExpressions;
 
 namespace SHN_Gear.Services
 {
-    public class AIService
+    // Đổi tên class để tránh trùng lặp
+    public class AIService_New
     {
         private readonly AppDbContext _context;
         private readonly ILogger<AIService> _logger;
         private readonly ContextManager _contextManager;
 
-        public AIService(AppDbContext context, ILogger<AIService> logger, ContextManager contextManager)
+        public AIService_New(AppDbContext context, ILogger<AIService> logger, ContextManager contextManager)
         {
             _context = context;
             _logger = logger;
@@ -51,13 +52,13 @@ namespace SHN_Gear.Services
                 {
                     "product_search" => await HandleProductSearchWithContext(userMessage, keywords, context),
                     "product_compare" => await HandleProductSearch(userMessage, keywords),
-                    "price_inquiry" => HandlePriceInquiry(userMessage, keywords),
+                    "price_inquiry" => await HandlePriceInquiry(userMessage, keywords),
                     "order_status" => await HandleOrderStatus(userMessage, userId),
-                    "shipping_info" => HandleShippingInfo(userMessage),
-                    "return_policy" => HandleReturnPolicy(userMessage),
-                    "technical_support" => HandleTechnicalSupport(userMessage, keywords),
-                    "greeting" => HandleGreetingWithContext(context),
-                    "thanks" => HandleThanks(),
+                    "shipping_info" => await HandleShippingInfo(userMessage),
+                    "return_policy" => await HandleReturnPolicy(userMessage),
+                    "technical_support" => await HandleTechnicalSupport(userMessage, keywords),
+                    "greeting" => await HandleGreetingWithContext(context),
+                    "thanks" => await HandleThanks(),
                     _ => await HandleGeneralQuery(userMessage, knowledgeMatches)
                 };
 
@@ -146,7 +147,7 @@ namespace SHN_Gear.Services
         private List<string> ExtractKeywords(string message)
         {
             var keywords = new List<string>();
-            var words = message.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var words = message.ToLower().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
             var productKeywords = new[] { "điện thoại", "phone", "smartphone", "laptop", "máy tính", "tai nghe", "headphone" };
             var brandKeywords = new[] { "iphone", "samsung", "xiaomi", "oppo", "vivo", "macbook", "dell", "hp", "asus" };
@@ -195,7 +196,7 @@ namespace SHN_Gear.Services
         {
             var score = 0.0;
             var lowerMessage = message.ToLower();
-            var keywords = knowledgeItem.Keywords?.Split(',') ?? Array.Empty<string>();
+            var keywords = knowledgeItem.Keywords ?? Array.Empty<string>();
 
             foreach (var keyword in keywords)
             {
@@ -361,7 +362,7 @@ namespace SHN_Gear.Services
             return response;
         }
 
-        private AIResponseDto HandleGreetingWithContext(ConversationContext context)
+        private Task<AIResponseDto> HandleGreetingWithContext(ConversationContext context)
         {
             string greeting;
 
@@ -381,7 +382,7 @@ namespace SHN_Gear.Services
                 greeting = "Xin chào! Tôi là SHN Assistant, trợ lý AI của SHN-Gear. Tôi có thể hỗ trợ bạn tìm sản phẩm, kiểm tra đơn hàng, hoặc giải đáp thắc mắc. Bạn cần tôi giúp gì? 🤖";
             }
 
-            return new AIResponseDto
+            return Task.FromResult(new AIResponseDto
             {
                 Response = greeting,
                 Intent = "greeting",
@@ -393,7 +394,7 @@ namespace SHN_Gear.Services
                     new SuggestedActionDto { Text = "Hỏi về chính sách", Action = "policies" },
                     new SuggestedActionDto { Text = "Hỗ trợ kỹ thuật", Action = "technical_support" }
                 }
-            };
+            });
         }
 
         private List<SuggestedActionDto> GenerateSuggestedActionsWithContext(string intent, AIResponseDto response, ConversationContext context)
@@ -458,15 +459,15 @@ namespace SHN_Gear.Services
             };
         }
 
-        private AIResponseDto HandlePriceInquiry(string message, List<string> keywords)
+        private Task<AIResponseDto> HandlePriceInquiry(string message, List<string> keywords)
         {
-            return new AIResponseDto
+            return Task.FromResult(new AIResponseDto
             {
                 Response = "Để biết giá chính xác nhất và các chương trình khuyến mãi hiện tại, vui lòng liên hệ với nhân viên tư vấn hoặc xem trực tiếp trên website.",
                 Intent = "price_inquiry",
                 ConfidenceScore = 0.7m,
                 RequiresEscalation = true
-            };
+            });
         }
 
         private async Task<AIResponseDto> HandleOrderStatus(string message, int? userId)
@@ -505,9 +506,9 @@ namespace SHN_Gear.Services
             };
         }
 
-        private AIResponseDto HandleShippingInfo(string message)
+        private Task<AIResponseDto> HandleShippingInfo(string message)
         {
-            return new AIResponseDto
+            return Task.FromResult(new AIResponseDto
             {
                 Response = "SHN-Gear hỗ trợ giao hàng toàn quốc với nhiều hình thức:\n" +
                           "• Giao hàng tiêu chuẩn: 2-3 ngày làm việc\n" +
@@ -517,12 +518,12 @@ namespace SHN_Gear.Services
                 ConfidenceScore = 0.95m,
                 Intent = "shipping_info",
                 RequiresEscalation = false
-            };
+            });
         }
 
-        private AIResponseDto HandleReturnPolicy(string message)
+        private Task<AIResponseDto> HandleReturnPolicy(string message)
         {
-            return new AIResponseDto
+            return Task.FromResult(new AIResponseDto
             {
                 Response = "Chính sách đổi trả của SHN-Gear:\n" +
                           "• Đổi trả trong 7 ngày kể từ ngày mua\n" +
@@ -533,28 +534,28 @@ namespace SHN_Gear.Services
                 ConfidenceScore = 0.95m,
                 Intent = "return_policy",
                 RequiresEscalation = false
-            };
+            });
         }
 
-        private AIResponseDto HandleTechnicalSupport(string message, List<string> keywords)
+        private Task<AIResponseDto> HandleTechnicalSupport(string message, List<string> keywords)
         {
-            return new AIResponseDto
+            return Task.FromResult(new AIResponseDto
             {
                 Response = "Tôi hiểu bạn đang gặp vấn đề kỹ thuật. Để được hỗ trợ tốt nhất, tôi sẽ kết nối bạn với team kỹ thuật chuyên nghiệp của chúng tôi.",
                 ConfidenceScore = 0.7m,
                 Intent = "technical_support",
                 RequiresEscalation = true
-            };
+            });
         }
 
-        private AIResponseDto HandleThanks()
+        private Task<AIResponseDto> HandleThanks()
         {
-            return new AIResponseDto
+            return Task.FromResult(new AIResponseDto
             {
                 Response = "Cảm ơn bạn! Tôi luôn sẵn sàng hỗ trợ bạn. Chúc bạn có trải nghiệm tuyệt vời tại SHN-Gear! 😊",
                 Intent = "thanks",
                 ConfidenceScore = 1.0m
-            };
+            });
         }
 
         private async Task<AIResponseDto> HandleGeneralQuery(string message, List<AIKnowledgeBase> knowledgeMatches)
