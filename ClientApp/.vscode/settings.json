@@ -1,0 +1,19 @@
+{
+  "typescript.preferences.includePackageJsonAutoImports": "auto",
+  "typescript.suggest.autoImports": true,
+  "typescript.suggest.paths": true,
+  "javascript.suggest.autoImports": true,
+  "javascript.suggest.paths": true,
+  "path-intellisense.mappings": {
+    "@": "${workspaceRoot}/src",
+    "@/components": "${workspaceRoot}/src/components",
+    "@/pages": "${workspaceRoot}/src/pages",
+    "@/utils": "${workspaceRoot}/src/utils",
+    "@/services": "${workspaceRoot}/src/services",
+    "@/assets": "${workspaceRoot}/src/assets",
+    "@/styles": "${workspaceRoot}/src/assets/styles",
+    "@/contexts": "${workspaceRoot}/src/contexts",
+    "@/hooks": "${workspaceRoot}/src/hook",
+    "@/config": "${workspaceRoot}/src/config"
+  }
+}

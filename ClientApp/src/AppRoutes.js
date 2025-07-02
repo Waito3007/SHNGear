@@ -1,16 +1,16 @@
-import Home from "./pages/Home/Home";
-import OverviewPage from "./pages/Admin/OverviewPage";
-import ProductsPage from "./pages/Admin/ProductsPage";
-import UsersPage from "./pages/Admin/UsersPage";
-import SalesPage from "./pages/Admin/SalesPage";
-import OrdersPage from "./pages/Admin/OrdersPage";
-import AnalyticsPage from "./pages/Admin/AnalyticsPage";
-import SettingsPage from "./pages/Admin/SettingsPage";
-import ProductPage from "./pages/ProductPage";
-import ProfilePage from "./pages/ProfilePage";
-import ProductList from "./pages/ProductList";
-import Shoppingcart from "./pages/shoppingcart";
-import Unauthorized from "./pages/Unauthorized";
+import Home from "@/pages/Home/Home";
+import OverviewPage from "@/pages/Admin/OverviewPage";
+import ProductsPage from "@/pages/Admin/ProductsPage";
+import UsersPage from "@/pages/Admin/UsersPage";
+import SalesPage from "@/pages/Admin/SalesPage";
+import OrdersPage from "@/pages/Admin/OrdersPage";
+import AnalyticsPage from "@/pages/Admin/AnalyticsPage";
+import SettingsPage from "@/pages/Admin/SettingsPage";
+import ProductPage from "@/pages/ProductPage";
+import ProfilePage from "@/pages/ProfilePage";
+import ProductList from "@/pages/ProductList";
+import Shoppingcart from "@/pages/shoppingcart";
+import Unauthorized from "@/pages/Unauthorized";
 
 const AppRoutes = [
   {
@@ -21,38 +21,37 @@ const AppRoutes = [
   {
     path: "/admin/overview",
     element: <OverviewPage />,
-    requiresAdmin: true 
-    
+    requiresAdmin: true,
   },
   {
     path: "/admin/products",
     element: <ProductsPage />,
-    requiresAdmin: true 
+    requiresAdmin: true,
   },
   {
     path: "/admin/users",
     element: <UsersPage />,
-    requiresAdmin: true 
+    requiresAdmin: true,
   },
   {
     path: "/admin/sales",
     element: <SalesPage />,
-    requiresAdmin: true 
+    requiresAdmin: true,
   },
   {
     path: "/admin/orders",
     element: <OrdersPage />,
-    requiresAdmin: true 
+    requiresAdmin: true,
   },
   {
     path: "/admin/analytics",
     element: <AnalyticsPage />,
-    requiresAdmin: true 
+    requiresAdmin: true,
   },
   {
     path: "/admin/settings",
     element: <SettingsPage />,
-    requiresAdmin: true 
+    requiresAdmin: true,
   },
   // Public routes
   {
