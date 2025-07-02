@@ -14,10 +14,10 @@ import { useNavigate, NavLink } from "react-router-dom";
 import "./Navbar.css";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode"; // Import jwt-decode
-import menuIcon from "..//..//assets/icon/menu.svg";
-import logo from "..//..//assets/img/Phone/logo.png";
-import AuthModal from "../Auth/AuthModal";
-import CartDrawer from "../shoppingcart/CartDrawer"; // Import Drawer
+import menuIcon from "@/assets/icon/menu.svg";
+import logo from "@/assets/img/Phone/logo.png";
+import AuthModal from "@/components/Auth/AuthModal";
+import CartDrawer from "@/components/shoppingcart/CartDrawer"; // Import Drawer
 
 const Navbar = () => {
   const [searchTerm, setSearchTerm] = useState("");

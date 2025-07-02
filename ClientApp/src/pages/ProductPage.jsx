@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Container, Grid, Box, Alert, CircularProgress } from "@mui/material";
-import Navbar from "../components/Navbar/Navbar";
-import ProductImage from "../components/ProductInfoPage/ProductImage";
-import ProductInfo from "../components/ProductInfoPage/ProductInfo";
-import ProductVariants from "../components/ProductInfoPage/ProductVariants";
-import Footer from "../components/Footer/Footer";
-import ProductReviews from "../components/ProductInfoPage/ProductReviews";
-import RelatedProducts from "../components/ProductInfoPage/RelatedProducts";
-import SpecificationDisplay from "../components/ProductInfoPage/ProductSpecifications";
-import Commitment from "../components/Commitment/Commitment";
+import Navbar from "@/components/Navbar/Navbar";
+import ProductImage from "@/components/ProductInfoPage/ProductImage";
+import ProductInfo from "@/components/ProductInfoPage/ProductInfo";
+import ProductVariants from "@/components/ProductInfoPage/ProductVariants";
+import Footer from "@/components/Footer/Footer";
+import ProductReviews from "@/components/ProductInfoPage/ProductReviews";
+import RelatedProducts from "@/components/ProductInfoPage/RelatedProducts";
+import SpecificationDisplay from "@/components/ProductInfoPage/ProductSpecifications";
+import Commitment from "@/components/Commitment/Commitment";
 
 const ProductPage = () => {
   const { id } = useParams();
@@ -110,7 +110,6 @@ const ProductPage = () => {
               <ProductImage images={product.images || []} name={product.name} />
             </Box>
           </Grid>
-
           {/* Phần thông tin sản phẩm */}
           <Grid item xs={12} md={6} lg={7}>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -120,7 +119,8 @@ const ProductPage = () => {
                 onAddToCart={() => {}}
               />
             </Box>
-          </Grid>          {/* Phần thông số kỹ thuật */}
+          </Grid>{" "}
+          {/* Phần thông số kỹ thuật */}
           {productType && (
             <Grid item xs={12}>
               <Box
@@ -138,7 +138,6 @@ const ProductPage = () => {
               </Box>
             </Grid>
           )}
-
           {/* Phần đánh giá sản phẩm */}
           <Grid item xs={12}>
             <Box
@@ -152,7 +151,6 @@ const ProductPage = () => {
               <ProductReviews productId={product.id} />
             </Box>
           </Grid>
-
           {/* Phần sản phẩm liên quan */}
           <Grid item xs={12}>
             <Box sx={{ mt: 4 }}>

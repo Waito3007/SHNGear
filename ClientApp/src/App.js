@@ -1,25 +1,25 @@
 import React, { Component } from "react";
 import { Route, Routes, Navigate, useLocation } from "react-router-dom";
 import AppRoutes from "./AppRoutes";
-import AdminLayout from "./components/layouts/AdminLayout";
-import ProductPage from "./pages/ProductPage";
-import ProfilePage from "./pages/ProfilePage";
-import ProfileInfo from "./components/Profile/ProfileInfo";
-import AddressBook from "./components/Profile/AddressBook";
-import UserOrders from "./components/Profile/UserOrders";
-import LoyaltyProgram from "./components/Profile/LoyaltyProgram";
-import ProductList from "./pages/ProductList";
-import Shoppingcart from "./pages/shoppingcart";
-import Checkout from "./components/Checkout/Checkout";
-import PaymentSuccess from "./components/PaymentSuccess/PaymentSuccess";
-import OrderLookup from "./components/Order/OrderLookup";
-import ComparePage from "components/CompareProduct/ComparePage";
-import Unauthorized from "./pages/Unauthorized";
+import AdminLayout from "@/components/layouts/AdminLayout";
+import ProductPage from "@/pages/ProductPage";
+import ProfilePage from "@/pages/ProfilePage";
+import ProfileInfo from "@/components/Profile/ProfileInfo";
+import AddressBook from "@/components/Profile/AddressBook";
+import UserOrders from "@/components/Profile/UserOrders";
+import LoyaltyProgram from "@/components/Profile/LoyaltyProgram";
+import ProductList from "@/pages/ProductList";
+import Shoppingcart from "@/pages/shoppingcart";
+import Checkout from "@/components/Checkout/Checkout";
+import PaymentSuccess from "@/components/PaymentSuccess/PaymentSuccess";
+import OrderLookup from "@/components/Order/OrderLookup";
+import ComparePage from "@/components/CompareProduct/ComparePage";
+import Unauthorized from "@/pages/Unauthorized";
 import { jwtDecode } from "jwt-decode";
 
 // Import Chat Components
-import ChatWidget from "./components/Chat/ChatWidget";
-import AdminChatDashboard from "./components/Chat/AdminChatDashboard";
+import ChatWidget from "@/components/Chat/ChatWidget";
+import AdminChatDashboard from "@/components/Chat/AdminChatDashboard";
 
 // Protected Route Component - Phiên bản tối ưu
 const ProtectedRoute = ({ children, adminOnly = false }) => {
