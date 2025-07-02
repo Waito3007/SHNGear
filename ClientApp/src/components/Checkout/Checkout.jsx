@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { 
-  Box, 
-  Typography, 
-  TextField, 
-  Button, 
-  List, 
-  ListItem, 
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  List,
+  ListItem,
   ListItemText,
   ListItemAvatar,
   Avatar,
@@ -14,23 +14,22 @@ import {
   FormControlLabel,
   CircularProgress,
   Divider,
-  Alert
+  Alert,
 } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 
-
 const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { 
-    selectedItems = [], 
-    totalAmount = 0, 
-    voucherCode = "", 
-    discountAmount = 0
+  const {
+    selectedItems = [],
+    totalAmount = 0,
+    voucherCode = "",
+    discountAmount = 0,
   } = location.state || {};
-  
+
   const [userId, setUserId] = useState(null);
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -75,7 +74,9 @@ const Checkout = () => {
 
   const fetchAddresses = async (userId) => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/address/user/${userId}`);
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_BASE_URL}/api/address/user/${userId}`
+      );
       setAddresses(response.data);
       if (response.data.length > 0) {
         setSelectedAddress(response.data[0]);
@@ -88,7 +89,9 @@ const Checkout = () => {
 
   const fetchVoucherId = async (code) => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/vouchers/code/${code}`);
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_BASE_URL}/api/vouchers/code/${code}`
+      );
       setVoucherId(response.data.id);
     } catch (error) {
       console.error("Lỗi khi lấy voucher:", error);
@@ -98,7 +101,9 @@ const Checkout = () => {
 
   const fetchPaymentMethods = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/PaymentMethod`);
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_BASE_URL}/api/PaymentMethod`
+      );
       setPaymentMethods(response.data);
     } catch (error) {
       console.error("Lỗi khi lấy phương thức thanh toán:", error);
@@ -108,9 +113,11 @@ const Checkout = () => {
 
   const removePaidItemsFromCart = async () => {
     if (!userId) return;
-    
+
     try {
-      await axios.delete(`${process.env.REACT_APP_API_BASE_URL}/api/cart/remove-paid-items?userId=${userId}`);
+      await axios.delete(
+        `${process.env.REACT_APP_API_BASE_URL}/api/cart/remove-paid-items?userId=${userId}`
+      );
     } catch (error) {
       console.error("Lỗi khi xóa sản phẩm đã thanh toán:", error);
     }
@@ -121,9 +128,11 @@ const Checkout = () => {
     if (!sessionCart) return;
 
     const cartItems = JSON.parse(sessionCart) || [];
-    const paidProductVariantIds = selectedItems.map(item => item.productVariantId);
+    const paidProductVariantIds = selectedItems.map(
+      (item) => item.productVariantId
+    );
     const remainingItems = cartItems.filter(
-      item => !paidProductVariantIds.includes(item.productVariantId)
+      (item) => !paidProductVariantIds.includes(item.productVariantId)
     );
 
     sessionStorage.setItem("Cart", JSON.stringify(remainingItems));
@@ -137,7 +146,7 @@ const Checkout = () => {
     } else {
       await removePaidItemsFromCart();
     }
-    
+
     if (userId && !selectedAddress) {
       setError("Vui lòng chọn địa chỉ giao hàng.");
       return;
@@ -146,18 +155,27 @@ const Checkout = () => {
     let addressId = selectedAddress ? selectedAddress.id : null;
 
     if (!userId && !addressId) {
-      if (!guestAddress.fullName || !guestAddress.phoneNumber || !guestAddress.addressLine1 || 
-          !guestAddress.city || !guestAddress.state || !guestAddress.country) {
+      if (
+        !guestAddress.fullName ||
+        !guestAddress.phoneNumber ||
+        !guestAddress.addressLine1 ||
+        !guestAddress.city ||
+        !guestAddress.state ||
+        !guestAddress.country
+      ) {
         setError("Vui lòng điền đầy đủ thông tin địa chỉ giao hàng.");
         return;
       }
 
       try {
         setIsLoading(true);
-        const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/address/add`, {
-          userId: null,
-          ...guestAddress
-        });
+        const response = await axios.post(
+          `${process.env.REACT_APP_API_BASE_URL}/api/address/add`,
+          {
+            userId: null,
+            ...guestAddress,
+          }
+        );
         addressId = response.data.addressId;
       } catch (error) {
         console.error("Lỗi khi thêm địa chỉ:", error);
@@ -184,11 +202,11 @@ const Checkout = () => {
 
     try {
       setIsLoading(true);
-      
-      const headers = { 'Content-Type': 'application/json' };
-      
+
+      const headers = { "Content-Type": "application/json" };
+
       if (paymentMethod === "2" && momoPaymentType === "card") {
-        headers['Payment-Method'] = 'card';
+        headers["Payment-Method"] = "card";
       }
 
       // Handle PayPal payment
@@ -198,28 +216,53 @@ const Checkout = () => {
           orderDto,
           { headers }
         );
-        
+
         if (response.data.approvalUrl) {
+          // Lưu thông tin đơn hàng để sử dụng sau khi thanh toán thành công
+          localStorage.setItem(
+            "currentOrder",
+            JSON.stringify({
+              orderId: response.data.orderId,
+              paymentMethod: paymentMethod,
+              orderItems: selectedItems,
+              totalAmount: totalAmount,
+              discountAmount: discountAmount,
+              voucherCode: voucherCode,
+              finalAmount: finalAmount,
+              paymentMethodName: "PayPal",
+            })
+          );
           window.location.href = response.data.approvalUrl;
           return;
         }
-    }
+      }
 
-      
       // Handle MoMo payment
       else if (paymentMethod === "2") {
         const response = await axios.post(
-          `${process.env.REACT_APP_API_BASE_URL}/api/orders`, 
-          orderDto, 
+          `${process.env.REACT_APP_API_BASE_URL}/api/orders`,
+          orderDto,
           { headers }
         );
-        
+
         if (response.data.paymentUrl) {
-          localStorage.setItem("currentOrder", JSON.stringify({
-            orderId: response.data.orderId,
-            paymentMethod: paymentMethod
-          }));
-          
+          localStorage.setItem(
+            "currentOrder",
+            JSON.stringify({
+              orderId: response.data.orderId,
+              paymentMethod: paymentMethod,
+              orderItems: selectedItems,
+              totalAmount: totalAmount,
+              discountAmount: discountAmount,
+              voucherCode: voucherCode,
+              finalAmount: finalAmount,
+              paymentMethodName:
+                momoPaymentType === "card"
+                  ? "MoMo - Thẻ Visa/MasterCard"
+                  : "MoMo - QR Code",
+            })
+          );
+
           window.location.href = response.data.paymentUrl;
           return;
         }
@@ -227,23 +270,38 @@ const Checkout = () => {
       // Handle cash payment
       else {
         const response = await axios.post(
-          `${process.env.REACT_APP_API_BASE_URL}/api/orders`, 
-          orderDto, 
+          `${process.env.REACT_APP_API_BASE_URL}/api/orders`,
+          orderDto,
           { headers }
         );
-        navigate("/payment-success", { state: { orderId: response.data.orderId } });
+        navigate("/payment-success", {
+          state: {
+            orderId: response.data.orderId,
+            orderItems: selectedItems,
+            totalAmount: totalAmount,
+            discountAmount: discountAmount,
+            voucherCode: voucherCode,
+            finalAmount: finalAmount,
+            paymentMethodName:
+              paymentMethods.find((pm) => pm.id.toString() === paymentMethod)
+                ?.name || "Tiền mặt",
+          },
+        });
       }
     } catch (error) {
       console.error("Lỗi khi tạo đơn hàng:", error);
-      setError(error.response?.data?.message || "Lỗi khi tạo đơn hàng, vui lòng thử lại.");
+      setError(
+        error.response?.data?.message ||
+          "Lỗi khi tạo đơn hàng, vui lòng thử lại."
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Box sx={{ p: 4, maxWidth: 1200, margin: '0 auto' }}>
-      <Typography variant="h4" mb={4} sx={{ fontWeight: 'bold' }}>
+    <Box sx={{ p: 4, maxWidth: 1200, margin: "0 auto" }}>
+      <Typography variant="h4" mb={4} sx={{ fontWeight: "bold" }}>
         Thanh toán
       </Typography>
 
@@ -253,13 +311,15 @@ const Checkout = () => {
         </Alert>
       )}
 
-      <Box sx={{ display: 'flex', gap: 4 }}>
+      <Box sx={{ display: "flex", gap: 4 }}>
         <Box sx={{ flex: 2 }}>
-          <Box sx={{ mb: 4, p: 3, border: '1px solid #e0e0e0', borderRadius: 2 }}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+          <Box
+            sx={{ mb: 4, p: 3, border: "1px solid #e0e0e0", borderRadius: 2 }}
+          >
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold" }}>
               Thông tin giao hàng
             </Typography>
-            
+
             {userId ? (
               <>
                 <Typography variant="subtitle1" sx={{ mb: 2 }}>
@@ -268,20 +328,35 @@ const Checkout = () => {
                 <RadioGroup
                   value={selectedAddress?.id || ""}
                   onChange={(e) => {
-                    const address = addresses.find(a => a.id === parseInt(e.target.value));
+                    const address = addresses.find(
+                      (a) => a.id === parseInt(e.target.value)
+                    );
                     setSelectedAddress(address);
                   }}
                 >
                   {addresses.map((address) => (
-                    <Box key={address.id} sx={{ mb: 2, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                    <Box
+                      key={address.id}
+                      sx={{
+                        mb: 2,
+                        p: 2,
+                        border: "1px solid #e0e0e0",
+                        borderRadius: 1,
+                      }}
+                    >
                       <FormControlLabel
                         value={address.id.toString()}
                         control={<Radio />}
                         label={
                           <Box>
-                            <Typography><strong>{address.fullName}</strong> - {address.phoneNumber}</Typography>
+                            <Typography>
+                              <strong>{address.fullName}</strong> -{" "}
+                              {address.phoneNumber}
+                            </Typography>
                             <Typography variant="body2">
-                              {address.addressLine1}, {address.addressLine2 && `${address.addressLine2}, `}
+                              {address.addressLine1},{" "}
+                              {address.addressLine2 &&
+                                `${address.addressLine2}, `}
                               {address.city}, {address.state}, {address.country}
                             </Typography>
                           </Box>
@@ -300,7 +375,10 @@ const Checkout = () => {
                   required
                   value={guestAddress.fullName}
                   onChange={(e) =>
-                    setGuestAddress({ ...guestAddress, fullName: e.target.value })
+                    setGuestAddress({
+                      ...guestAddress,
+                      fullName: e.target.value,
+                    })
                   }
                   sx={{ mb: 2 }}
                 />
@@ -311,7 +389,10 @@ const Checkout = () => {
                   required
                   value={guestAddress.phoneNumber}
                   onChange={(e) =>
-                    setGuestAddress({ ...guestAddress, phoneNumber: e.target.value })
+                    setGuestAddress({
+                      ...guestAddress,
+                      phoneNumber: e.target.value,
+                    })
                   }
                   sx={{ mb: 2 }}
                 />
@@ -322,7 +403,10 @@ const Checkout = () => {
                   required
                   value={guestAddress.addressLine1}
                   onChange={(e) =>
-                    setGuestAddress({ ...guestAddress, addressLine1: e.target.value })
+                    setGuestAddress({
+                      ...guestAddress,
+                      addressLine1: e.target.value,
+                    })
                   }
                   sx={{ mb: 2 }}
                 />
@@ -332,11 +416,14 @@ const Checkout = () => {
                   fullWidth
                   value={guestAddress.addressLine2}
                   onChange={(e) =>
-                    setGuestAddress({ ...guestAddress, addressLine2: e.target.value })
+                    setGuestAddress({
+                      ...guestAddress,
+                      addressLine2: e.target.value,
+                    })
                   }
                   sx={{ mb: 2 }}
                 />
-                <Box sx={{ display: 'flex', gap: 2 }}>
+                <Box sx={{ display: "flex", gap: 2 }}>
                   <TextField
                     label="Thành phố"
                     variant="outlined"
@@ -355,19 +442,25 @@ const Checkout = () => {
                     required
                     value={guestAddress.state}
                     onChange={(e) =>
-                      setGuestAddress({ ...guestAddress, state: e.target.value })
+                      setGuestAddress({
+                        ...guestAddress,
+                        state: e.target.value,
+                      })
                     }
                     sx={{ mb: 2 }}
                   />
                 </Box>
-                <Box sx={{ display: 'flex', gap: 2 }}>
+                <Box sx={{ display: "flex", gap: 2 }}>
                   <TextField
                     label="Mã bưu điện"
                     variant="outlined"
                     fullWidth
                     value={guestAddress.zipCode}
                     onChange={(e) =>
-                      setGuestAddress({ ...guestAddress, zipCode: e.target.value })
+                      setGuestAddress({
+                        ...guestAddress,
+                        zipCode: e.target.value,
+                      })
                     }
                     sx={{ mb: 2 }}
                   />
@@ -378,7 +471,10 @@ const Checkout = () => {
                     required
                     value={guestAddress.country}
                     onChange={(e) =>
-                      setGuestAddress({ ...guestAddress, country: e.target.value })
+                      setGuestAddress({
+                        ...guestAddress,
+                        country: e.target.value,
+                      })
                     }
                     sx={{ mb: 2 }}
                   />
@@ -387,8 +483,10 @@ const Checkout = () => {
             )}
           </Box>
 
-          <Box sx={{ mb: 4, p: 3, border: '1px solid #e0e0e0', borderRadius: 2 }}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+          <Box
+            sx={{ mb: 4, p: 3, border: "1px solid #e0e0e0", borderRadius: 2 }}
+          >
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold" }}>
               Phương thức thanh toán
             </Typography>
             <RadioGroup
@@ -396,14 +494,22 @@ const Checkout = () => {
               onChange={(e) => setPaymentMethod(e.target.value)}
             >
               {paymentMethods.map((method) => (
-                <Box key={method.id} sx={{ mb: 1, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                <Box
+                  key={method.id}
+                  sx={{
+                    mb: 1,
+                    p: 2,
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 1,
+                  }}
+                >
                   <FormControlLabel
                     value={method.id.toString()}
                     control={<Radio />}
                     label={<Typography>{method.name}</Typography>}
                     sx={{ marginLeft: 0 }}
                   />
-                  
+
                   {method.id === 2 && paymentMethod === "2" && (
                     <Box sx={{ mt: 1, pl: 4 }}>
                       <RadioGroup
@@ -430,8 +536,8 @@ const Checkout = () => {
 
             {paymentMethod === "2" && (
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                {momoPaymentType === "card" 
-                  ? "Bạn sẽ được chuyển hướng đến trang thanh toán bằng thẻ Visa/MasterCard" 
+                {momoPaymentType === "card"
+                  ? "Bạn sẽ được chuyển hướng đến trang thanh toán bằng thẻ Visa/MasterCard"
                   : "Bạn sẽ được chuyển hướng đến trang thanh toán QR MoMo"}
               </Typography>
             )}
@@ -445,11 +551,11 @@ const Checkout = () => {
         </Box>
 
         <Box sx={{ flex: 1 }}>
-          <Box sx={{ p: 3, border: '1px solid #e0e0e0', borderRadius: 2 }}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+          <Box sx={{ p: 3, border: "1px solid #e0e0e0", borderRadius: 2 }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold" }}>
               Đơn hàng của bạn
             </Typography>
-            
+
             <List sx={{ mb: 2 }}>
               {selectedItems.map((item) => (
                 <ListItem key={item.productVariantId} sx={{ px: 0 }}>
@@ -462,7 +568,10 @@ const Checkout = () => {
                       }
                       alt="Product img"
                       className="size-10"
-                      onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/50"; }}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "https://via.placeholder.com/50";
+                      }}
                     />
                   </ListItemAvatar>
                   <ListItemText
@@ -470,7 +579,11 @@ const Checkout = () => {
                     secondary={`${item.variantColor} - ${item.variantStorage}`}
                   />
                   <Typography variant="body2">
-                    {item.quantity} × {(item.productDiscountPrice || item.productPrice).toLocaleString()}₫
+                    {item.quantity} ×{" "}
+                    {(
+                      item.productDiscountPrice || item.productPrice
+                    ).toLocaleString()}
+                    ₫
                   </Typography>
                 </ListItem>
               ))}
@@ -490,18 +603,32 @@ const Checkout = () => {
             )}
 
             <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+              <Box
+                sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
+              >
                 <Typography>Tạm tính:</Typography>
-                <Typography>{(totalAmount + discountAmount).toLocaleString()}₫</Typography>
+                <Typography>
+                  {(totalAmount + discountAmount).toLocaleString()}₫
+                </Typography>
               </Box>
               {discountAmount > 0 && (
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 1,
+                  }}
+                >
                   <Typography>Giảm giá:</Typography>
-                  <Typography color="success.main">-{discountAmount.toLocaleString()}₫</Typography>
+                  <Typography color="success.main">
+                    -{discountAmount.toLocaleString()}₫
+                  </Typography>
                 </Box>
               )}
               <Divider sx={{ my: 1 }} />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+              <Box
+                sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
+              >
                 <Typography variant="h6">Tổng cộng:</Typography>
                 <Typography variant="h6" color="error">
                   {totalAmount.toLocaleString()}₫
@@ -521,7 +648,11 @@ const Checkout = () => {
               {isLoading ? (
                 <CircularProgress size={24} color="inherit" />
               ) : paymentMethod === "2" ? (
-                momoPaymentType === "card" ? "Thanh toán bằng thẻ Visa/MasterCard" : "Thanh toán bằng QR MoMo"
+                momoPaymentType === "card" ? (
+                  "Thanh toán bằng thẻ Visa/MasterCard"
+                ) : (
+                  "Thanh toán bằng QR MoMo"
+                )
               ) : paymentMethod === "3" ? (
                 "Thanh toán bằng PayPal"
               ) : (

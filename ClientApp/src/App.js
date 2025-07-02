@@ -11,7 +11,7 @@ import LoyaltyProgram from "./components/Profile/LoyaltyProgram";
 import ProductList from "./pages/ProductList";
 import Shoppingcart from "./pages/shoppingcart";
 import Checkout from "./components/Checkout/Checkout";
-import PaymentSuccess from "./components/Order/PaymentSuccess";
+import PaymentSuccess from "./components/PaymentSuccess/PaymentSuccess";
 import OrderLookup from "./components/Order/OrderLookup";
 import ComparePage from "components/CompareProduct/ComparePage";
 import Unauthorized from "./pages/Unauthorized";
@@ -20,7 +20,7 @@ import { jwtDecode } from "jwt-decode";
 // Protected Route Component - Phiên bản tối ưu
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const token = localStorage.getItem("token");
-  
+
   if (!token) {
     return <Navigate to="/" replace />;
   }
@@ -28,12 +28,12 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   try {
     const decoded = jwtDecode(token);
     const isAdmin = decoded.roleId === "1"; // So sánh trực tiếp với string "1"
-    
+
     // Nếu route yêu cầu admin mà user không phải admin
     if (adminOnly && !isAdmin) {
       return <Navigate to="/unauthorized" replace />;
     }
-    
+
     return children;
   } catch (error) {
     console.error("Token error:", error);
@@ -59,8 +59,15 @@ export default class App extends Component {
         <Route path="/order-lookup" element={<OrderLookup />} />
         <Route path="/compare" element={<ComparePage />} />
 
-         {/* Protected Profile routes */}
-        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}>
+        {/* Protected Profile routes */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<ProfileInfo />} />
           <Route path="info" element={<ProfileInfo />} />
           <Route path="address" element={<AddressBook />} />
@@ -69,8 +76,8 @@ export default class App extends Component {
         </Route>
         {/* Xử lý các route từ AppRoutes */}
         {AppRoutes.map((route) => {
-          const isAdminRoute = route.path?.startsWith('/admin');
-          
+          const isAdminRoute = route.path?.startsWith("/admin");
+
           return (
             <Route
               key={route.path}
