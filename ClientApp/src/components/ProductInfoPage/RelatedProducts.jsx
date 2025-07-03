@@ -4,77 +4,61 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
+import { useProducts } from "@/hooks/api/useProducts";
+import { useBrands } from "@/hooks/api/useBrands";
 
 const RelatedProducts = ({ productId, brandId, categoryId }) => {
+  const { products: productsArray, loading: loadingProducts, error: errorProducts } = useProducts();
+  const { brands: brandsArray, loading: loadingBrands, error: errorBrands } = useBrands(true);
   const [relatedProducts, setRelatedProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
+    if (loadingProducts || loadingBrands) return;
+    if (errorProducts || errorBrands) {
+      setError(errorProducts || errorBrands);
+      return;
+    }
+    if (!productsArray.length || !brandsArray.length) return;
 
-        const productsRes = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/Products`);
-        if (!productsRes.ok) throw new Error("Không thể tải sản phẩm.");
-        const productsData = await productsRes.json();
+    const filteredProducts = productsArray
+      .filter(
+        (product) =>
+          product.id !== productId &&
+          (product.brandId === brandId || product.categoryId === categoryId)
+      )
+      .map((product) => {
+        const variant = product.variants?.[0] || {};
+        const image = product.images?.[0]?.imageUrl || "/images/placeholder.jpg";
+        const oldPrice = variant.price || 0;
+        const newPrice = variant.discountPrice || oldPrice;
+        const discountAmount = oldPrice - newPrice;
+        const discount =
+          oldPrice > 0
+            ? `-${Math.round((discountAmount / oldPrice) * 100)}%`
+            : "0%";
 
-        const brandsRes = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/brands`);
-        if (!brandsRes.ok) throw new Error("Không thể tải thương hiệu.");
-        const brandsData = await brandsRes.json();
+        const brand = brandsArray.find((b) => b.id === product.brandId);
 
-        const productsArray = productsData.$values || productsData || [];
-        const brandsArray = brandsData.$values || brandsData || [];
+        return {
+          id: product.id,
+          name: product.name,
+          oldPrice,
+          newPrice,
+          discount,
+          discountAmount,
+          image,
+          features: [
+            variant.storage || "Không xác định",
+            brand?.name || "Không có thương hiệu",
+          ],
+        };
+      });
+    setRelatedProducts(filteredProducts);
+  }, [productsArray, brandsArray, loadingProducts, loadingBrands, errorProducts, errorBrands, productId, brandId, categoryId]);
 
-        const filteredProducts = productsArray
-          .filter(
-            (product) =>
-              product.id !== productId &&
-              (product.brandId === brandId || product.categoryId === categoryId)
-          )
-          .map((product) => {
-            const variant = product.variants?.[0] || {};
-            const image =
-              product.images?.[0]?.imageUrl || "/images/placeholder.jpg";
-            const oldPrice = variant.price || 0;
-            const newPrice = variant.discountPrice || oldPrice;
-            const discountAmount = oldPrice - newPrice;
-            const discount =
-              oldPrice > 0
-                ? `-${Math.round((discountAmount / oldPrice) * 100)}%`
-                : "0%";
-
-            const brand = brandsArray.find((b) => b.id === product.brandId);
-
-            return {
-              id: product.id,
-              name: product.name,
-              oldPrice,
-              newPrice,
-              discount,
-              discountAmount,
-              image,
-              features: [
-                variant.storage || "Không xác định",
-                brand?.name || "Không có thương hiệu",
-                "Hiệu suất cao",
-              ],
-            };
-          });
-
-        setRelatedProducts(filteredProducts);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [productId, brandId, categoryId]);
-
-  if (loading) return <p>Đang tải sản phẩm liên quan...</p>;
+  if (loadingProducts || loadingBrands) return <p>Đang tải sản phẩm liên quan...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
 
   return (

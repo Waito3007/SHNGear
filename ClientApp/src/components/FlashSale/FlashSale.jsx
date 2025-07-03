@@ -5,11 +5,10 @@ import { useNavigate } from "react-router-dom";
 import Flaslsalebanner from "../../assets/img/anhcuanghia/hot-sale-cuoi-tuan.gif"
 import "swiper/css";
 import "swiper/css/navigation";
+import { useFlashSaleProducts } from "@/hooks/api/useFlashSaleProducts";
 
 const FlashSale = () => {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { products, loading, error } = useFlashSaleProducts();
   const [timeLeft, setTimeLeft] = useState({
     hours: 12,
     minutes: 0,
@@ -49,52 +48,6 @@ const FlashSale = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/Products/lowest-price`);
-        if (!response.ok) throw new Error("Không thể tải sản phẩm");
-        const productsData = await response.json();
-
-        const formattedProducts = productsData.map((product) => {
-          const variant = product.variants?.[0] || {};
-          const image = product.images?.[0]?.imageUrl || "/images/placeholder.jpg";
-
-          const oldPrice = variant.price || 0;
-          const newPrice = variant.discountPrice || oldPrice;
-          const discountAmount = oldPrice - newPrice;
-          const discount = oldPrice > 0
-            ? `-${Math.round((discountAmount / oldPrice) * 100)}%`
-            : "0%";
-
-          return {
-            id: product.id,
-            name: product.name,
-            oldPrice,
-            newPrice,
-            discount,
-            discountAmount,
-            image,
-            features: [
-              variant.storage || "Không xác định",
-              product.brand?.name || "Không có thương hiệu",
-              "Hiệu suất cao"
-            ],
-          };
-        });
-
-        setProducts(formattedProducts);
-      } catch (err) {
-        setError("Không thể tải dữ liệu: " + err.message);
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
   }, []);
 
   if (loading) {
@@ -221,7 +174,7 @@ const FlashSale = () => {
                         {/* Phần thông tin - cố định chiều cao */}
                         <div className="p-5 flex flex-col flex-grow" style={{ minHeight: '280px' }}>
                           <div className="flex justify-between items-start mb-2">
-                            {product.oldPrice > product.newPrice ? (
+                            {typeof product.oldPrice === "number" && product.oldPrice > product.newPrice ? (
                               <span className="text-gray-500 text-sm line-through">
                                 {product.oldPrice.toLocaleString()}đ
                               </span>
@@ -229,7 +182,7 @@ const FlashSale = () => {
                               <span className="text-sm invisible">0đ</span>
                             )}
                             <span className="text-red-600 font-bold text-lg">
-                              {product.newPrice.toLocaleString()}đ
+                              {typeof product.newPrice === "number" ? product.newPrice.toLocaleString() : 0}đ
                             </span>
                           </div>
 
@@ -238,7 +191,7 @@ const FlashSale = () => {
                           </h3>
 
                           <div className="mb-3 min-h-[28px]">
-                            {product.discountAmount > 0 && (
+                            {typeof product.discountAmount === "number" && product.discountAmount > 0 && (
                               <span className="inline-block bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded">
                                 Tiết kiệm {product.discountAmount.toLocaleString()}đ
                               </span>
@@ -246,7 +199,7 @@ const FlashSale = () => {
                           </div>
 
                           <ul className="space-y-1 text-sm text-gray-600 mb-4 flex-grow">
-                            {product.features.map((feature, index) => (
+                            {Array.isArray(product.features) && product.features.map((feature, index) => (
                               <li key={index} className="flex items-start h-6">
                                 <svg
                                   className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0 text-red-500"

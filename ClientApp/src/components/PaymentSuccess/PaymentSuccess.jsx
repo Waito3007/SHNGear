@@ -66,7 +66,7 @@ const PaymentSuccess = () => {
         <CheckCircle sx={{ fontSize: 80, color: "success.main", mb: 2 }} />
 
         <Typography variant="h4" sx={{ fontWeight: "bold", mb: 2 }}>
-          Thanh toán thành công!
+          Đặt Hàng thành công!
         </Typography>
 
         <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>

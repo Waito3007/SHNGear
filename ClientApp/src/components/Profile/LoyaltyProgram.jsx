@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
+import React, { useState } from 'react';
+import { useLoyaltyStatus, useSpinWheel } from "@/hooks/api/useLoyalty";
 import { motion } from 'framer-motion';
 import {
   Box,
@@ -23,9 +22,9 @@ import {
 } from '@mui/material';
 import { Casino, EmojiEvents, Celebration, InfoOutlined } from '@mui/icons-material';
 
+
 const SpinWheel = ({ onSpin, spinning, disabled, spinCost }) => {
   const [rotation, setRotation] = useState(0);
-
   const rewards = [
     'Giải nhất',
     'Giải nhì',
@@ -35,17 +34,11 @@ const SpinWheel = ({ onSpin, spinning, disabled, spinCost }) => {
     'Giải ba',
   ];
 
-  const spinVariants = {
-    idle: { rotate: 0 },
-    spinning: {
-      rotate: 360 * 5 + Math.random() * 360,
-      transition: { duration: 3, ease: 'easeOut' },
-    },
-  };
-
   const handleSpin = () => {
     if (!spinning && !disabled) {
-      setRotation((prev) => prev + 360 * 5 + Math.random() * 360);
+      // Quay 5 vòng + random góc
+      const nextRotation = rotation + 360 * 5 + Math.floor(Math.random() * 360);
+      setRotation(nextRotation);
       onSpin();
     }
   };
@@ -53,8 +46,8 @@ const SpinWheel = ({ onSpin, spinning, disabled, spinCost }) => {
   return (
     <Box sx={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <motion.div
-        variants={spinVariants}
-        animate={spinning ? 'spinning' : 'idle'}
+        animate={{ rotate: rotation }}
+        transition={{ duration: spinning ? 3 : 0.5, ease: 'easeOut' }}
         style={{
           width: 450,
           height: 450,
@@ -158,92 +151,32 @@ const SpinWheel = ({ onSpin, spinning, disabled, spinCost }) => {
   );
 };
 
+
+
+
+
 const LoyaltyProgram = () => {
-  const [loyaltyData, setLoyaltyData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
-  const [spinResult, setSpinResult] = useState(null);
-  const [spinning, setSpinning] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
     severity: 'success',
   });
-  const [userId, setUserId] = useState(null);
-  const [openRulesDialog, setOpenRulesDialog] = useState(false); // State cho modal thể lệ
+  const [openRulesDialog, setOpenRulesDialog] = useState(false);
 
-  useEffect(() => {
-    const fetchLoyaltyData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setError('Vui lòng đăng nhập để xem trạng thái thành viên');
-          return;
-        }
+  // Custom hook lấy loyalty
+  const { loyaltyData, loading, error, userId, refetch } = useLoyaltyStatus();
+  // Custom hook quay vòng quay
+  const { spin, spinning, spinResult } = useSpinWheel(userId, () => {
+    setTimeout(() => {
+      setOpenDialog(true);
+      setSnackbar({ open: true, message: 'Quay thành công!', severity: 'success' });
+      refetch();
+    }, 3000);
+  });
 
-        const decoded = jwtDecode(token);
-        const id = parseInt(decoded.sub, 10);
-        if (!Number.isInteger(id)) {
-          setError('Token không hợp lệ');
-          return;
-        }
-        setUserId(id);
-
-        const currentTime = Date.now() / 1000;
-        if (decoded.exp < currentTime) {
-          setError('Token đã hết hạn, vui lòng đăng nhập lại');
-          return;
-        }
-
-        const response = await axios.get(
-          `${process.env.REACT_APP_API_BASE_URL}/api/loyalty/my-status?userId=${id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        setLoyaltyData(response.data);
-      } catch (err) {
-        setError('Không thể tải thông tin chương trình khách hàng thân thiết');
-        showSnackbar('Không thể tải thông tin thành viên', 'error');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLoyaltyData();
-  }, []);
-
-  const handleSpinWheel = async () => {
-    try {
-      setSpinning(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_BASE_URL}/api/loyalty/spin-wheel?userId=${userId}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      setSpinResult(response.data);
-      setTimeout(() => {
-        setOpenDialog(true);
-        setSpinning(false);
-        showSnackbar('Quay thành công!', 'success');
-      }, 3000);
-
-      const updatedResponse = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/api/loyalty/my-status?userId=${userId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setLoyaltyData(updatedResponse.data);
-    } catch (err) {
-      setError('Không thể quay vòng quay may mắn');
-      showSnackbar(err.response?.data || 'Không thể quay vòng quay', 'error');
-      setSpinning(false);
-    }
-  };
-
-  const showSnackbar = (message, severity) => {
-    setSnackbar({ open: true, message, severity });
+  const handleSpinWheel = () => {
+    spin();
   };
 
   const handleCloseSnackbar = () => {

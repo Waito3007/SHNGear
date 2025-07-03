@@ -29,19 +29,16 @@ export const useAddresses = () => {
 
   const fetchAddresses = useCallback(async () => {
     if (!userId) return;
-
     try {
       setLoading(true);
       setError(null);
-
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/api/addresses/user/${userId}`,
+        `${process.env.REACT_APP_API_BASE_URL}/api/address/user/${userId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       const addressData = response.data.$values || response.data || [];
       setAddresses(addressData);
     } catch (err) {
@@ -55,14 +52,12 @@ export const useAddresses = () => {
   const addAddress = useCallback(
     async (addressData) => {
       if (!userId) throw new Error("User not authenticated");
-
       try {
         setLoading(true);
         setError(null);
-
         const token = localStorage.getItem("token");
         const response = await axios.post(
-          `${process.env.REACT_APP_API_BASE_URL}/api/addresses`,
+          `${process.env.REACT_APP_API_BASE_URL}/api/address/add`,
           {
             ...addressData,
             userId,
@@ -71,7 +66,6 @@ export const useAddresses = () => {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-
         const newAddress = response.data;
         setAddresses((prev) => [...prev, newAddress]);
         return newAddress;
@@ -91,16 +85,14 @@ export const useAddresses = () => {
     try {
       setLoading(true);
       setError(null);
-
       const token = localStorage.getItem("token");
       const response = await axios.put(
-        `${process.env.REACT_APP_API_BASE_URL}/api/addresses/${addressId}`,
+        `${process.env.REACT_APP_API_BASE_URL}/api/address/update/${addressId}`,
         addressData,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       const updatedAddress = response.data;
       setAddresses((prev) =>
         prev.map((addr) => (addr.id === addressId ? updatedAddress : addr))
@@ -120,15 +112,13 @@ export const useAddresses = () => {
     try {
       setLoading(true);
       setError(null);
-
       const token = localStorage.getItem("token");
       await axios.delete(
-        `${process.env.REACT_APP_API_BASE_URL}/api/addresses/${addressId}`,
+        `${process.env.REACT_APP_API_BASE_URL}/api/address/delete/${addressId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       setAddresses((prev) => prev.filter((addr) => addr.id !== addressId));
       return true;
     } catch (err) {
@@ -148,7 +138,7 @@ export const useAddresses = () => {
 
       const token = localStorage.getItem("token");
       await axios.put(
-        `${process.env.REACT_APP_API_BASE_URL}/api/addresses/${addressId}/set-default`,
+        `${process.env.REACT_APP_API_BASE_URL}/api/address/${addressId}/set-default`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -192,7 +182,7 @@ export const useAddresses = () => {
     updateAddress,
     deleteAddress,
     setDefaultAddress,
-    refetch: fetchAddresses,
+    fetchAddresses,
   };
 };
 

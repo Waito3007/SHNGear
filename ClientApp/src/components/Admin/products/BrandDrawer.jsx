@@ -7,7 +7,7 @@ import {
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import { X, Edit, Trash, AlertTriangle } from "lucide-react"; // Thêm AlertTriangle
 import BrandModal from "./BrandModal"; // Đảm bảo BrandModal nhận và sử dụng `onClose(shouldRefresh)`
-import { useBrands } from "../../../hook/products/useBrands"; // Đường dẫn tới hook
+import { useBrands } from "@/hooks/api/useBrands"; // Đường dẫn tới hook
 
 const BrandDrawer = ({ open, onClose }) => {
   const {

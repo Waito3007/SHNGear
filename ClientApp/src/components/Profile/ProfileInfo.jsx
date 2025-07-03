@@ -15,11 +15,11 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import EditIcon from "@mui/icons-material/Edit";
-import axios from "axios";
-import { jwtDecode } from "jwt-decode";
+import { useUserProfile } from "@/hooks/api/useUserProfile";
 
 const ProfileInfo = () => {
-  const [user, setUser] = useState({
+  // Đã khai báo openModal ở dưới, xóa dòng này để tránh trùng lặp
+  const [updatedUser, setUpdatedUser] = useState({
     fullName: "",
     email: "",
     role: "",
@@ -27,11 +27,23 @@ const ProfileInfo = () => {
     gender: "",
     dateOfBirth: "",
   });
+  // Đã khai báo birthDate ở dưới, xóa dòng này để tránh trùng lặp
+  // Đã khai báo snackbar ở dưới, xóa dòng này để tránh trùng lặp
 
-  const [loading, setLoading] = useState(true);
+  const {
+    user,
+    setUser,
+    loading,
+    error,
+    userId,
+    setUserId,
+    initUserId,
+    fetchUserProfile,
+    updateUserProfile,
+  } = useUserProfile();
   const [openModal, setOpenModal] = useState(false);
-  const [updatedUser, setUpdatedUser] = useState({ ...user });
-  const [userId, setUserId] = useState(null);
+  // Đã khai báo updatedUser ở dưới, xóa dòng này để tránh trùng lặp
+  // Đã khai báo userId ở dưới, xóa dòng này để tránh trùng lặp
   const [birthDate, setBirthDate] = useState(null);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -60,41 +72,18 @@ const ProfileInfo = () => {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        const id = parseInt(decoded.sub, 10);
-        if (!Number.isInteger(id)) return;
-        setUserId(id);
-        fetchUserProfile(id);
-      } catch (error) {
-        console.error("Lỗi khi giải mã token:", error);
-      }
+    const id = initUserId();
+    if (id) {
+      setUserId(id);
+      fetchUserProfile(id).then((data) => {
+        setUpdatedUser(data);
+        if (data?.dateOfBirth) setBirthDate(new Date(data.dateOfBirth));
+      });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchUserProfile = async (id) => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/api/users/${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      setUser(response.data);
-      setUpdatedUser(response.data);
-      if (response.data.dateOfBirth) {
-        setBirthDate(new Date(response.data.dateOfBirth));
-      }
-    } catch (error) {
-      console.error("Lỗi khi lấy thông tin user:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // fetchUserProfile đã được chuyển vào hook
 
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
@@ -114,20 +103,13 @@ const ProfileInfo = () => {
 
   const handleSaveProfile = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.put(
-        `${process.env.REACT_APP_API_BASE_URL}/api/users/profile`,
-        updatedUser,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      setUser(response.data.user);
+      await updateUserProfile(updatedUser);
       showSnackbar("Cập nhật thông tin thành công", "success");
       handleCloseModal();
     } catch (error) {
       console.error("Failed to update profile:", error);
       showSnackbar(
-        error.response?.data?.message || "Cập nhật thất bại",
+        error?.response?.data?.message || "Cập nhật thất bại",
         "error"
       );
     }
@@ -344,7 +326,7 @@ const ProfileInfo = () => {
                 fullWidth
                 label="Họ và tên"
                 name="fullName"
-                value={updatedUser.fullName}
+                value={updatedUser?.fullName || ""}
                 onChange={handleInputChange}
                 variant="outlined"
                 size="small"
@@ -364,7 +346,7 @@ const ProfileInfo = () => {
                 fullWidth
                 label="Email"
                 name="email"
-                value={updatedUser.email}
+                value={updatedUser?.email || ""}
                 onChange={handleInputChange}
                 variant="outlined"
                 size="small"
@@ -384,7 +366,7 @@ const ProfileInfo = () => {
                 fullWidth
                 label="Số điện thoại"
                 name="phoneNumber"
-                value={updatedUser.phoneNumber}
+                value={updatedUser?.phoneNumber || ""}
                 onChange={handleInputChange}
                 variant="outlined"
                 size="small"
@@ -404,7 +386,7 @@ const ProfileInfo = () => {
                 fullWidth
                 label="Giới tính"
                 name="gender"
-                value={updatedUser.gender}
+                value={updatedUser?.gender || ""}
                 onChange={handleInputChange}
                 variant="outlined"
                 size="small"

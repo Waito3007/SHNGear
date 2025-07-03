@@ -1,26 +1,10 @@
 import React, { useState } from "react";
 import { FaTrash } from "react-icons/fa";
+import { useCart } from "@/hooks/api/useCart";
 
 const CartItem = ({ item }) => {
   const [quantity, setQuantity] = useState(item.quantity || 1);
-
-  const addToCart = async (productVariantId, quantity) => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/cart/add`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ productVariantId, quantity }),
-        credentials: "include",
-      });
-
-      const data = await response.json();
-      console.log("Thêm vào giỏ hàng:", data);
-    } catch (error) {
-      console.error("Lỗi khi thêm vào giỏ hàng:", error);
-    }
-  };
+  const { addToCart } = useCart();
 
   const handleIncrease = async () => {
     const newQuantity = quantity + 1;

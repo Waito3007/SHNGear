@@ -5,61 +5,62 @@ import { jwtDecode } from "jwt-decode";
 /**
  * Hook for managing orders
  */
-export const useOrders = (userId = null) => {
+export const useOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [userId, setUserId] = useState(null);
+
+  // Lấy userId từ token khi khởi tạo
+  const initUserId = useCallback(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        const id = decoded.sub;
+        if (id) {
+          setUserId(id);
+          return id;
+        }
+      } catch (err) {
+        setError("Lỗi khi giải mã token");
+      }
+    }
+    return null;
+  }, []);
 
   const fetchOrders = useCallback(
-    async (filters = {}) => {
+    async (id, page = 1, pageSize = 10) => {
+      setLoading(true);
+      setError(null);
       try {
-        setLoading(true);
-        setError(null);
-
         const token = localStorage.getItem("token");
-        let url = `${process.env.REACT_APP_API_BASE_URL}/api/orders`;
-
-        if (userId) {
-          url += `/user/${userId}`;
-        }
-
-        // Add filters as query parameters
-        const params = new URLSearchParams();
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== null && value !== undefined && value !== "") {
-            params.append(key, value);
+        const response = await axios.get(
+          `${process.env.REACT_APP_API_BASE_URL}/api/orders/user/${id}/paged`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { page, pageSize },
           }
-        });
-
-        if (params.toString()) {
-          url += `?${params.toString()}`;
-        }
-
-        const response = await axios.get(url, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-
-        const ordersData = response.data.$values || response.data || [];
-        setOrders(ordersData);
+        );
+        setOrders(response.data.orders);
+        return response.data.orders;
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to fetch orders");
-        console.error("Error fetching orders:", err);
+        setError(err.response?.data?.message || "Không thể tải danh sách đơn hàng.");
       } finally {
         setLoading(false);
       }
     },
-    [userId]
+    []
   );
-
-  useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
 
   return {
     orders,
     loading,
     error,
-    refetch: fetchOrders,
+    userId,
+    setUserId,
+    initUserId,
+    fetchOrders,
   };
 };
 

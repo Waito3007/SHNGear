@@ -23,49 +23,16 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import PrintIcon from "@mui/icons-material/Print";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import axios from "axios";
+import { useOrderLookup } from "@/hooks/api/useOrderLookup";
 import { motion } from "framer-motion";
 
 const OrderLookup = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const { orders, loading, error, searchOrdersByPhone } = useOrderLookup();
   const navigate = useNavigate();
 
-  const handleSearch = async () => {
-    if (!phoneNumber.trim()) {
-      setError("Vui lòng nhập số điện thoại");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      setOrders([]);
-
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/api/orders/by-phone/${phoneNumber}`
-      );
-
-      if (response.data && Array.isArray(response.data)) {
-        if (response.data.length > 0) {
-          setOrders(response.data);
-        } else {
-          setError("Không tìm thấy đơn hàng nào với số điện thoại này");
-        }
-      } else {
-        setError("Dữ liệu trả về không hợp lệ");
-      }
-    } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Lỗi khi tra cứu đơn hàng. Vui lòng thử lại sau."
-      );
-      console.error("Error fetching orders:", err);
-    } finally {
-      setLoading(false);
-    }
+  const handleSearch = () => {
+    searchOrdersByPhone(phoneNumber);
   };
 
   const getStatusLabel = (status) => {

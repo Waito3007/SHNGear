@@ -12,8 +12,10 @@ import {
 } from "lucide-react";
 import { useNavigate, NavLink } from "react-router-dom";
 import "./Navbar.css";
-import axios from "axios";
-import { jwtDecode } from "jwt-decode"; // Import jwt-decode
+import { useUserProfile } from "@/hooks/api/useUserProfile";
+import { useCategories } from "@/hooks/api/useCategories";
+import { useBrands } from "@/hooks/api/useBrands";
+import { useSearch } from "@/hooks/api/useSearch";
 import menuIcon from "@/assets/icon/menu.svg";
 import logo from "@/assets/img/Phone/logo.png";
 import AuthModal from "@/components/Auth/AuthModal";
@@ -21,94 +23,58 @@ import CartDrawer from "@/components/shoppingcart/CartDrawer"; // Import Drawer
 
 const Navbar = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const searchRef = useRef(null);
   const [isDropdownProfileOpen, setIsDropdownProfileOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
   const [anchorEl, setAnchorEl] = useState(null);
+  const searchRef = useRef(null);
   const dropdownRef = useRef(null);
-  const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  const [userId, setUserId] = useState(null);
+  // Custom hooks
+  const { user, initUserId, fetchUserProfile } = useUserProfile();
+  const { categories } = useCategories();
+  const { brands } = useBrands();
+  const { results: searchResults, loading: searchLoading, search } = useSearch();
 
+  // Khởi tạo user profile
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        const id = parseInt(decoded.sub, 10); // Lấy `sub` từ token và chuyển thành số nguyên
-        if (!Number.isInteger(id)) return;
-        setUserId(id);
-        fetchUserProfile(id); // Gọi API với `userId`
-      } catch (error) {
-        console.error("Lỗi khi giải mã token:", error);
-      }
-    }
+    const id = initUserId();
+    if (id) fetchUserProfile(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 📌 Lấy thông tin user từ API
-  const fetchUserProfile = async (id) => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/api/users/${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setUser(response.data);
-    } catch (error) {
-      console.error("Lỗi khi lấy thông tin user:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Debounce search
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.REACT_APP_API_BASE_URL}/api/categories`
-        );
-        if (!response.ok) throw new Error("Không thể tải danh mục");
-        const data = await response.json();
-        setCategories(data.$values || data || []);
-      } catch (error) {
-        console.error("Lỗi tải danh mục:", error);
+    const timer = setTimeout(() => {
+      if (searchTerm.trim().length > 0) {
+        search(searchTerm);
       }
-    };
-    fetchCategories();
-  }, []);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm, search]);
 
-  useEffect(() => {
-    const fetchBrands = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.REACT_APP_API_BASE_URL}/api/brands`
-        );
-        if (!response.ok) throw new Error("Không thể tải danh mục");
-        const data = await response.json();
-        setBrands(data.$values || data || []);
-      } catch (error) {
-        console.error("Lỗi tải danh mục:", error);
-      }
-    };
-    fetchBrands();
-  }, []);
-
+  // Đóng dropdown khi click bên ngoài
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
       }
     };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Đóng dropdown khi click bên ngoài
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        // setSearchResults(null); // Đã loại bỏ state này, không cần làm gì
+      }
+    };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -124,58 +90,16 @@ const Navbar = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (searchTerm.trim().length > 0) {
-        fetchSearchResults();
-      } else {
-        setSearchResults(null);
+        search(searchTerm);
       }
     }, 300);
-
     return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  // Đóng dropdown khi click bên ngoài
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setSearchResults(null);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const fetchSearchResults = async () => {
-    try {
-      setIsLoading(true);
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/api/search`,
-        {
-          params: {
-            query: searchTerm, // Thay đổi từ 'keyword' thành 'query'
-            limit: 5, // Có thể điều chỉnh số lượng kết quả mong muốn
-          },
-        }
-      );
-      setSearchResults(response.data);
-    } catch (error) {
-      console.error("Search error:", error);
-      setSearchResults({
-        products: [],
-        categories: [],
-        brands: [],
-        totalResults: 0,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [searchTerm, search]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchTerm.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
-      setSearchResults(null);
     }
   };
 
@@ -188,7 +112,6 @@ const Navbar = () => {
         : `/ProductList?brandIds=${id}`
     );
     setSearchTerm("");
-    setSearchResults(null);
   };
   return (
     <div className="navbar-wrapper">
@@ -410,7 +333,7 @@ const Navbar = () => {
                 className="search-input flex-1 px-4 py-2"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                onFocus={() => searchTerm && fetchSearchResults()}
+                onFocus={() => searchTerm && search(searchTerm)}
               />
               <button type="submit" className="search-button">
                 <Search className="h-5 w-5" />
@@ -420,7 +343,7 @@ const Navbar = () => {
             {/* Dropdown kết quả - Phiên bản tinh chỉnh */}
             {searchResults && (
               <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 bg-white shadow-lg rounded-lg border border-gray-200 z-50 w-[28rem] max-h-[70vh] overflow-y-auto">
-                {isLoading ? (
+                {searchLoading ? (
                   <div className="p-4 flex items-center justify-center text-sm text-gray-500">
                     <svg
                       className="animate-spin h-5 w-5 mr-3 text-blue-500"
@@ -584,7 +507,6 @@ const Navbar = () => {
                           className="text-sm text-blue-600 hover:text-blue-800 font-medium"
                           onClick={() => {
                             navigate(`/productlist`);
-                            setSearchResults(null);
                           }}
                         >
                           Xem tất cả {searchResults.totalResults} kết quả →
@@ -673,15 +595,6 @@ const Navbar = () => {
                         >
                           <ShoppingBag className="w-4 h-4 mr-3" />
                           Đơn hàng của tôi
-                        </NavLink>
-
-                        <NavLink
-                          to="/compare"
-                          className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
-                          activeClassName="bg-blue-50 text-blue-600"
-                        >
-                          <Scale className="w-4 h-4 mr-3" />
-                          So sánh sản phẩm
                         </NavLink>
 
                         <NavLink

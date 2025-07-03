@@ -12,7 +12,7 @@ import ProductList from "@/pages/ProductList";
 import Shoppingcart from "@/pages/shoppingcart";
 import Checkout from "@/components/Checkout/Checkout";
 import PaymentSuccess from "@/components/PaymentSuccess/PaymentSuccess";
-import OrderLookup from "@/components/Order/OrderLookup";
+// import OrderLookup from "@/components/Order/OrderLookup";
 import ComparePage from "@/components/CompareProduct/ComparePage";
 import Unauthorized from "@/pages/Unauthorized";
 import { jwtDecode } from "jwt-decode";
@@ -74,7 +74,9 @@ export default class App extends Component {
           <Route path="/product/:id" element={<ProductPage />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
-          <Route path="/order-lookup" element={<OrderLookup />} />
+          <Route path="/order-lookup" element={<React.Suspense fallback={<div>Đang tải trang tra cứu đơn hàng...</div>}>
+            {React.createElement(require("@/pages/OrderLookupPage.jsx").default)}
+          </React.Suspense>} />
           <Route path="/compare" element={<ComparePage />} />
 
           {/* Admin Chat Dashboard Route */}

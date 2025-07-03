@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { jwtDecode } from "jwt-decode";
+import { useOrders } from "@/hooks/api/useOrders";
 import { useNavigate } from "react-router-dom";
 import {
   Table,
@@ -21,67 +20,19 @@ import {
 import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
 
 const UserOrders = () => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [userId, setUserId] = useState(null);
+  // Đã khai báo expandedOrder ở dưới, xóa dòng này để tránh trùng lặp
+  const { orders, loading, error, userId, setUserId, initUserId, fetchOrders } = useOrders();
   const [expandedOrder, setExpandedOrder] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const decodedToken = jwtDecode(token);
-        if (decodedToken.sub) {
-          setUserId(decodedToken.sub);
-        } else {
-          console.error("Không tìm thấy userId trong token!");
-        }
-      } catch (err) {
-        console.error("Lỗi khi decode token:", err);
-      }
+    const id = initUserId();
+    if (id) {
+      setUserId(id);
+      fetchOrders(id, 1, 10);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (!userId) return;
-
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        // Lấy danh sách đơn hàng với thông tin chi tiết sản phẩm
-        const response = await axios.get(
-          `${process.env.REACT_APP_API_BASE_URL}/api/orders/user/${userId}/paged`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            params: {
-              page: 1,
-              pageSize: 10, // Có thể điều chỉnh số lượng đơn hàng hiển thị
-            },
-          }
-        );
-        setOrders(response.data.orders);
-        console.log("Orders data:", response.data.orders);
-        // Debug: Check first order items structure
-        if (
-          response.data.orders.length > 0 &&
-          response.data.orders[0].items.length > 0
-        ) {
-          console.log("Sample order item:", response.data.orders[0].items[0]);
-        }
-      } catch (err) {
-        console.error("Lỗi khi lấy danh sách đơn hàng:", err);
-        setError("Không thể tải danh sách đơn hàng.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrders();
-  }, [userId]);
 
   const toggleOrderExpand = (orderId) => {
     setExpandedOrder(expandedOrder === orderId ? null : orderId);
