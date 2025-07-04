@@ -1,4 +1,6 @@
-import React, { Component } from "react";
+import React, { Component, useEffect } from "react";
+import { useAuthContext } from "@/hooks/auth/useAuth";
+import SessionExpiredModal from "@/components/SessionExpiredModal";
 import { Route, Routes, Navigate, useLocation } from "react-router-dom";
 import AppRoutes from "./AppRoutes";
 import AdminLayout from "@/components/layouts/AdminLayout";
@@ -59,78 +61,91 @@ const ConditionalChatWidget = () => {
   return <ChatWidget />;
 };
 
-export default class App extends Component {
-  static displayName = App.name;
+// Functional App component để dùng hook
+const App = () => {
+  const { sessionExpired, logout } = useAuthContext();
+  const location = useLocation();
 
-  render() {
-    return (
-      <>
-        <Routes>
-          {/* Các route đặc biệt không cần bảo vệ */}
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/shoppingcart" element={<Shoppingcart />} />
-          <Route path="/productlist" element={<ProductList />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/product/:id" element={<ProductPage />} />
-          <Route path="/unauthorized" element={<Unauthorized />} />
-          <Route path="/payment-success" element={<PaymentSuccess />} />
-          <Route path="/order-lookup" element={<React.Suspense fallback={<div>Đang tải trang tra cứu đơn hàng...</div>}>
-            {React.createElement(require("@/pages/OrderLookupPage.jsx").default)}
-          </React.Suspense>} />
-          <Route path="/compare" element={<ComparePage />} />
+  useEffect(() => {
+    if (sessionExpired) {
+      logout();
+    }
+  }, [sessionExpired, logout]);
 
-          {/* Admin Chat Dashboard Route */}
-          <Route
-            path="/admin/chat"
-            element={
-              <ProtectedRoute adminOnly={true}>
-                <AdminLayout>
-                  <AdminChatDashboard />
-                </AdminLayout>
-              </ProtectedRoute>
-            }
-          />
+  const handleLoginRedirect = () => {
+    window.location.href = "/"; // hoặc chuyển hướng đến trang đăng nhập nếu có
+  };
 
-          {/* Protected Profile routes */}
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<ProfileInfo />} />
-            <Route path="info" element={<ProfileInfo />} />
-            <Route path="address" element={<AddressBook />} />
-            <Route path="orders" element={<UserOrders />} />
-            <Route path="loyalty" element={<LoyaltyProgram />} />
-          </Route>
-          {/* Xử lý các route từ AppRoutes */}
-          {AppRoutes.map((route) => {
-            const isAdminRoute = route.path?.startsWith("/admin");
+  return (
+    <>
+      <SessionExpiredModal open={sessionExpired} onLogin={handleLoginRedirect} />
+      <Routes>
+        {/* Các route đặc biệt không cần bảo vệ */}
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/shoppingcart" element={<Shoppingcart />} />
+        <Route path="/productlist" element={<ProductList />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/product/:id" element={<ProductPage />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/order-lookup" element={<React.Suspense fallback={<div>Đang tải trang tra cứu đơn hàng...</div>}>
+          {React.createElement(require("@/pages/OrderLookupPage.jsx").default)}
+        </React.Suspense>} />
+        <Route path="/compare" element={<ComparePage />} />
 
-            return (
-              <Route
-                key={route.path}
-                path={route.path}
-                element={
-                  isAdminRoute ? (
-                    <ProtectedRoute adminOnly={true}>
-                      <AdminLayout>{route.element}</AdminLayout>
-                    </ProtectedRoute>
-                  ) : (
-                    route.element
-                  )
-                }
-              />
-            );
-          })}
-        </Routes>
+        {/* Admin Chat Dashboard Route */}
+        <Route
+          path="/admin/chat"
+          element={
+            <ProtectedRoute adminOnly={true}>
+              <AdminLayout>
+                <AdminChatDashboard />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Chat Widget - ẩn trên các trang admin */}
-        <ConditionalChatWidget />
-      </>
-    );
-  }
-}
+        {/* Protected Profile routes */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<ProfileInfo />} />
+          <Route path="info" element={<ProfileInfo />} />
+          <Route path="address" element={<AddressBook />} />
+          <Route path="orders" element={<UserOrders />} />
+          <Route path="loyalty" element={<LoyaltyProgram />} />
+        </Route>
+        {/* Xử lý các route từ AppRoutes */}
+        {AppRoutes.map((route) => {
+          const isAdminRoute = route.path?.startsWith("/admin");
+
+          return (
+            <Route
+              key={route.path}
+              path={route.path}
+              element={
+                isAdminRoute ? (
+                  <ProtectedRoute adminOnly={true}>
+                    <AdminLayout>{route.element}</AdminLayout>
+                  </ProtectedRoute>
+                ) : (
+                  route.element
+                )
+              }
+            />
+          );
+        })}
+      </Routes>
+
+      {/* Chat Widget - ẩn trên các trang admin */}
+      <ConditionalChatWidget />
+    </>
+  );
+};
+
+export default App;

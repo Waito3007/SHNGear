@@ -37,6 +37,7 @@ export const useAuth = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   // Check if user is authenticated on mount
   useEffect(() => {
@@ -65,16 +66,19 @@ export const useAuth = () => {
         } else {
           // Token expired
           localStorage.removeItem("token");
+          setSessionExpired(true);
         }
       } catch (error) {
         console.error("Error decoding token:", error);
         localStorage.removeItem("token");
+        setSessionExpired(true);
       }
     }
     setLoading(false);
   }, []);
 
   const login = useCallback(async (email, password) => {
+    setSessionExpired(false);
     try {
       setLoading(true);
       const response = await axios.post(
@@ -98,6 +102,7 @@ export const useAuth = () => {
   }, []);
 
   const register = useCallback(async (userData) => {
+    setSessionExpired(false);
     try {
       setLoading(true);
       const response = await axios.post(
@@ -124,6 +129,7 @@ export const useAuth = () => {
     localStorage.removeItem("token");
     setUser(null);
     setIsAuthenticated(false);
+    setSessionExpired(false);
   }, []);
 
   const updateProfile = useCallback(
@@ -172,6 +178,7 @@ export const useAuth = () => {
     user,
     loading,
     isAuthenticated,
+    sessionExpired,
     login,
     register,
     logout,
