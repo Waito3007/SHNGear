@@ -18,7 +18,7 @@
         "date-fns": "^2.30.0",
         "flowbite": "^3.1.2",
         "flowbite-react": "^0.10.2",
-        "framer-motion": "^12.4.7",
+        "framer-motion": "^12.22.0",
         "http-proxy-middleware": "^2.0.6",
         "https-browserify": "^1.0.0",
         "jquery": "^3.6.4",

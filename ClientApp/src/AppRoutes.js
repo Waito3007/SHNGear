@@ -4,6 +4,7 @@ import ProductsPage from "./pages/Admin/ProductsPage";
 import UsersPage from "./pages/Admin/UsersPage";
 import SalesPage from "./pages/Admin/SalesPage";
 import OrdersPage from "./pages/Admin/OrdersPage";
+import ManageHomePage from "./pages/Admin/ManageHomePage";
 import AnalyticsPage from "./pages/Admin/AnalyticsPage";
 import SettingsPage from "./pages/Admin/SettingsPage";
 import ProductPage from "./pages/ProductPage";
@@ -53,6 +54,11 @@ const AppRoutes = [
     path: "/admin/settings",
     element: <SettingsPage />,
     requiresAdmin: true 
+  },
+  {
+    path: "/admin/home",
+    element: <ManageHomePage />,
+    requiresAdmin: true
   },
   // Public routes
   {

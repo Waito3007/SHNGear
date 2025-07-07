@@ -686,6 +686,51 @@ namespace SHN_Gear.Migrations
                         });
                 });
 
+            modelBuilder.Entity("SHN_Gear.Models.Slider", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("LinkToProduct")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Status")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Sliders");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.SliderImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SliderId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SliderId");
+
+                    b.ToTable("SliderImages");
+                });
+
             modelBuilder.Entity("SHN_Gear.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -974,6 +1019,17 @@ namespace SHN_Gear.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SHN_Gear.Models.SliderImage", b =>
+                {
+                    b.HasOne("SHN_Gear.Models.Slider", "Slider")
+                        .WithMany("Images")
+                        .HasForeignKey("SliderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Slider");
+                });
+
             modelBuilder.Entity("SHN_Gear.Models.User", b =>
                 {
                     b.HasOne("SHN_Gear.Models.Role", "Role")
@@ -1034,6 +1090,11 @@ namespace SHN_Gear.Migrations
             modelBuilder.Entity("SHN_Gear.Models.Role", b =>
                 {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.Slider", b =>
+                {
+                    b.Navigation("Images");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.User", b =>

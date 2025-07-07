@@ -28,6 +28,8 @@ namespace SHN_Gear.Data
         public DbSet<Delivery> Deliveries { get; set; } // Thêm DbSet cho Delivery
         public DbSet<Voucher> Vouchers { get; set; }
         public DbSet<UserVoucher> UserVouchers { get; set; } // Thêm DbSet cho UserVoucher
+        public DbSet<Slider> Sliders { get; set; }
+        public DbSet<SliderImage> SliderImages { get; set; } // Thêm DbSet cho SliderImage
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -98,7 +100,7 @@ namespace SHN_Gear.Data
                 entity.Property(r => r.IsApproved);
 
                 entity.HasOne(r => r.User)
-                    .WithMany(u => u.Reviews) 
+                    .WithMany(u => u.Reviews)
                     .HasForeignKey(r => r.UserId);
 
                 entity.HasOne(r => r.Product) // ✅ mới
