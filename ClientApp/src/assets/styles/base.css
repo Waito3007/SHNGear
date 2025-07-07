@@ -1,6 +1,21 @@
+@font-face {
+  font-family: 'Monument Extended';
+  src: url('./MonumentExtended-Regular.woff2') format('woff2'),
+       url('./MonumentExtended-Regular.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-primary-dark text-white font-sans;
+  }
+}
 
 @layer utilities {
   .line-clamp-2 {
@@ -167,10 +182,6 @@
   50% {
     transform: translatey(-10px);
   }
-}
-
-body {
-    font-family: 'Roboto', sans-serif;
 }
 
 .swiper {

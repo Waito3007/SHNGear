@@ -1,0 +1,29 @@
+.featured-brands-section {
+    padding: 40px 20px;
+    background-color: #f9f9f9;
+}
+
+.section-title {
+    margin-bottom: 30px !important;
+    font-weight: 600 !important;
+}
+
+.brand-logo-container {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    height: 100px; /* Or adjust as needed */
+    padding: 10px;
+}
+
+.brand-logo {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    filter: grayscale(100%);
+    transition: filter 0.3s ease;
+}
+
+.brand-logo:hover {
+    filter: grayscale(0%);
+}

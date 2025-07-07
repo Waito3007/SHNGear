@@ -2,89 +2,68 @@ import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper/modules";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/autoplay";
 
-const DiscountProductSlider = () => {
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
+const BestSellers = ({ data }) => {
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchBestSellerProducts = async () => {
+      if (!data || !data.items || data.items.length === 0) {
+        setLoading(false);
+        return;
+      }
+
+      const productIds = data.items.map(item => item.productId);
       try {
-        // Giữ nguyên phần fetch data như cũ
-        const [productsResponse, categoriesResponse, brandsResponse] = await Promise.all([
-          fetch(`${process.env.REACT_APP_API_BASE_URL}/api/Products`),
-          fetch(`${process.env.REACT_APP_API_BASE_URL}/api/categories`),
-          fetch(`${process.env.REACT_APP_API_BASE_URL}/api/brands`)
-        ]);
+        setLoading(true);
+        const response = await axios.get(`${API_BASE_URL}/api/Products/by-ids?ids=${productIds.join(',')}`);
+        const fetchedProducts = response.data.$values || response.data || [];
 
-        if (!productsResponse.ok) throw new Error("Không thể tải sản phẩm");
-        if (!categoriesResponse.ok) throw new Error("Không thể tải danh mục");
-        if (!brandsResponse.ok) throw new Error("Không thể tải thương hiệu");
+        // Map fetched products with override prices from config
+        const combinedProducts = fetchedProducts.map(product => {
+          const configItem = data.items.find(item => item.productId === product.id);
+          const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
+          const imageUrl = primaryImage ? (primaryImage.imageUrl.startsWith("http") ? primaryImage.imageUrl : `${API_BASE_URL}/${primaryImage.imageUrl}`) : "https://via.placeholder.com/300";
 
-        const [productsData, categoriesData, brandsData] = await Promise.all([
-          productsResponse.json(),
-          categoriesResponse.json(),
-          brandsResponse.json()
-        ]);
+          // Determine prices
+          const originalVariantPrice = product.variants?.[0]?.price || 0;
+          const displayPrice = configItem?.overridePrice ?? originalVariantPrice;
+          const oldPrice = (configItem?.overridePrice && configItem.overridePrice < originalVariantPrice) ? originalVariantPrice : null;
+          const discountAmount = oldPrice ? oldPrice - displayPrice : 0;
 
-        // Xử lý dữ liệu như cũ
-        const categoriesArray = categoriesData.$values || categoriesData || [];
-        const brandsArray = brandsData.$values || brandsData || [];
-        const productsArray = productsData.$values || productsData || [];
-
-        const phoneCategory = categoriesArray.find(cat => cat.name === "Điện Thoại");
-        if (!phoneCategory) throw new Error("Không tìm thấy danh mục 'Điện Thoại'");
-
-        const phoneProducts = productsArray
-          .filter(product => product.categoryId === phoneCategory.id)
-          .map((product) => {
-            const variant = product.variants?.[0] || {};
-            const image = product.images?.[0]?.imageUrl || "/images/placeholder.jpg";
-            const oldPrice = variant.price || 0;
-            const newPrice = variant.discountPrice || oldPrice;
-            const discountAmount = oldPrice - newPrice;
-            const discount = oldPrice > 0
-              ? `-${Math.round((discountAmount / oldPrice) * 100)}%`
-              : "0%";
-
-            const brand = brandsArray.find(b => b.id === product.brandId);
-
-            return {
-              id: product.id,
-              name: product.name,
-              oldPrice,
-              newPrice,
-              discount,
-              discountAmount,
-              image,
-              features: [
-                variant.storage || "Không xác định",
-                brand?.name || "Không có thương hiệu",
-                "Hiệu suất cao",
-              ],
-            };
-          });
-
-        setProducts(phoneProducts);
-        setCategories(categoriesArray);
-        setBrands(brandsArray);
+          return {
+            ...product,
+            image: imageUrl,
+            oldPrice: oldPrice,
+            newPrice: displayPrice,
+            discountAmount: discountAmount,
+            // You might want to calculate discount percentage here if needed
+          };
+        });
+        setProducts(combinedProducts);
       } catch (err) {
-        setError("Không thể tải dữ liệu: " + err.message);
+        setError("Không thể tải sản phẩm bán chạy: " + err.message);
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, []);
+    fetchBestSellerProducts();
+  }, [data]);
+
+  if (!data || !data.enabled || products.length === 0) {
+    return null; // Don't render if section is not enabled or no products
+  }
 
   if (loading) {
     return (
@@ -107,11 +86,10 @@ const DiscountProductSlider = () => {
 
   return (
     <div className="w-full flex justify-center py-6">
-      {/* Bọc thêm 1 div để tạo background trắng cho nội dung */}
       <div className="max-w-[1200px] w-full px-4 bg-white bg-opacity-90 rounded-xl shadow-xl p-6 backdrop-blur-sm">
         <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center relative">
           <span className="relative z-10 px-4 bg-white bg-opacity-90 rounded-full">
-            Mua đúng quà - Điện thoại "Hiền Hòa"
+            {data.title || "Sản phẩm bán chạy"}
           </span>
           <span className="absolute left-0 right-0 top-1/2 h-0.5 bg-gradient-to-r from-transparent via-red-400 to-transparent z-0"></span>
         </h2>
@@ -138,16 +116,16 @@ const DiscountProductSlider = () => {
                 className="bg-white bg-opacity-95 p-4 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl hover:border-red-300 transition-all duration-300 relative overflow-hidden group"
                 onClick={() => navigate(`/product/${product.id}`)}
               >
-                {/* Ribbon giảm giá */}
-                {product.discount !== "0%" && (
+                {/* Discount ribbon - only show if there's a discount amount */}
+                {product.discountAmount > 0 && (
                   <div className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-2 py-1 transform rotate-12 translate-x-2 -translate-y-1 z-10">
-                    {product.discount}
+                    -{((product.discountAmount / product.oldPrice) * 100).toFixed(0)}%
                   </div>
                 )}
                 
                 <div className="relative h-40 mb-3 overflow-hidden rounded-lg">
                   <img
-                    src={product.image?.startsWith("http") ? product.image : `${process.env.REACT_APP_API_BASE_URL}/${product.image}`}
+                    src={product.image}
                     alt={product.name}
                     className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
                     onError={(e) => { 
@@ -159,30 +137,35 @@ const DiscountProductSlider = () => {
 
                 <div className="text-gray-700 text-sm space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-500 line-through">
-                      {product.oldPrice.toLocaleString()}đ
-                    </span>
-                    <span className="text-red-500 font-semibold">
-                      {product.newPrice.toLocaleString()}đ
+                    {product.oldPrice && (
+                      <span className="text-gray-500 line-through">
+                        {product.oldPrice.toLocaleString('vi-VN')}đ
+                      </span>
+                    )}
+                    <span className="text-red-500 font-semibold ml-auto">
+                      {product.newPrice.toLocaleString('vi-VN')}đ
                     </span>
                   </div>
                   
-                  <p className="text-green-600 text-sm font-medium bg-green-50 px-2 py-1 rounded-full inline-block">
-                    Giảm {product.discountAmount.toLocaleString()}đ
-                  </p>
+                  {product.discountAmount > 0 && (
+                    <p className="text-green-600 text-sm font-medium bg-green-50 px-2 py-1 rounded-full inline-block">
+                      Tiết kiệm {product.discountAmount.toLocaleString('vi-VN')}đ
+                    </p>
+                  )}
                   
                   <h3 className="text-gray-800 font-medium text-base truncate group-hover:text-red-600 transition-colors">
                     {product.name}
                   </h3>
                   
-                  <ul className="text-xs text-gray-600 space-y-1">
+                  {/* Features are not directly available from product DTO, remove or adapt */}
+                  {/* <ul className="text-xs text-gray-600 space-y-1">
                     {product.features.map((feature, index) => (
                       <li key={index} className="flex items-center">
                         <span className="w-1.5 h-1.5 bg-red-400 rounded-full mr-2"></span>
                         <span>{feature}</span>
                       </li>
                     ))}
-                  </ul>
+                  </ul> */}
                 </div>
               </div>
             </SwiperSlide>
@@ -193,4 +176,4 @@ const DiscountProductSlider = () => {
   );
 };
 
-export default DiscountProductSlider;
+export default BestSellers;

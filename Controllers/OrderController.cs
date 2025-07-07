@@ -1638,6 +1638,19 @@ namespace SHN_Gear.Controllers
                 return StatusCode(500, new { Message = "Lỗi khi lấy thống kê", Error = ex.Message });
             }
         }
+
+        [HttpGet("user/{userId}/has-purchased/{productId}")]
+        public async Task<ActionResult<bool>> HasUserPurchasedProduct(int userId, int productId)
+        {
+            var hasPurchased = await _context.OrderItems
+                .Include(oi => oi.Order)
+                .Include(oi => oi.ProductVariant)
+                .AnyAsync(oi => oi.Order.UserId == userId &&
+                                oi.ProductVariant.ProductId == productId &&
+                                oi.Order.OrderStatus == "Delivered");
+
+            return Ok(hasPurchased);
+        }
         [HttpGet("revenue-year")]
         public async Task<IActionResult> GetRevenueDataYear([FromQuery] string range = "year")
         {

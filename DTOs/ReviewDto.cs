@@ -10,6 +10,8 @@ namespace SHN_Gear.DTOs
         public string Comment { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public bool IsApproved { get; set; }
+        public bool HasPurchased { get; set; }
+        public string ProductName { get; set; } = string.Empty;
     }
 
     public class CreateReviewDto

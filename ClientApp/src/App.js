@@ -3,20 +3,21 @@ import { useAuthContext } from "@/hooks/auth/useAuth";
 import SessionExpiredModal from "@/components/SessionExpiredModal";
 import { Route, Routes, Navigate, useLocation } from "react-router-dom";
 import AppRoutes from "./AppRoutes";
-import AdminLayout from "@/components/layouts/AdminLayout";
-import ProductPage from "@/pages/ProductPage";
-import ProfilePage from "@/pages/ProfilePage";
+import AdminLayout from "@/components/layouts/AdminLayout"; // Add this line back
+import DefaultLayout from "@/components/layouts/DefaultLayout";
+import ProductPage from "@/pages/ProductPage/ProductPage";
+import ProfilePage from "@/pages/ProfilePage/ProfilePage";
 import ProfileInfo from "@/components/Profile/ProfileInfo";
 import AddressBook from "@/components/Profile/AddressBook";
 import UserOrders from "@/components/Profile/UserOrders";
 import LoyaltyProgram from "@/components/Profile/LoyaltyProgram";
-import ProductList from "@/pages/ProductList";
-import Shoppingcart from "@/pages/shoppingcart";
+import ProductList from "@/pages/ProductList/ProductList";
+import Shoppingcart from "@/pages/shoppingcart/shoppingcart";
 import Checkout from "@/components/Checkout/Checkout";
 import PaymentSuccess from "@/components/PaymentSuccess/PaymentSuccess";
 // import OrderLookup from "@/components/Order/OrderLookup";
 import ComparePage from "@/components/CompareProduct/ComparePage";
-import Unauthorized from "@/pages/Unauthorized";
+import Unauthorized from "@/pages/Unauthorized/Unauthorized";
 import { jwtDecode } from "jwt-decode";
 
 // Import Chat Components
@@ -81,17 +82,17 @@ const App = () => {
       <SessionExpiredModal open={sessionExpired} onLogin={handleLoginRedirect} />
       <Routes>
         {/* Các route đặc biệt không cần bảo vệ */}
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/shoppingcart" element={<Shoppingcart />} />
-        <Route path="/productlist" element={<ProductList />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/product/:id" element={<ProductPage />} />
-        <Route path="/unauthorized" element={<Unauthorized />} />
-        <Route path="/payment-success" element={<PaymentSuccess />} />
-        <Route path="/order-lookup" element={<React.Suspense fallback={<div>Đang tải trang tra cứu đơn hàng...</div>}>
-          {React.createElement(require("@/pages/OrderLookupPage.jsx").default)}
-        </React.Suspense>} />
-        <Route path="/compare" element={<ComparePage />} />
+        <Route path="/checkout" element={<DefaultLayout><Checkout /></DefaultLayout>} />
+        <Route path="/shoppingcart" element={<DefaultLayout><Shoppingcart /></DefaultLayout>} />
+        <Route path="/productlist" element={<DefaultLayout><ProductList /></DefaultLayout>} />
+        <Route path="/profile" element={<DefaultLayout><ProfilePage /></DefaultLayout>} />
+        <Route path="/product/:id" element={<DefaultLayout><ProductPage /></DefaultLayout>} />
+        <Route path="/unauthorized" element={<DefaultLayout><Unauthorized /></DefaultLayout>} />
+        <Route path="/payment-success" element={<DefaultLayout><PaymentSuccess /></DefaultLayout>} />
+        <Route path="/order-lookup" element={<DefaultLayout><React.Suspense fallback={<div>Đang tải trang tra cứu đơn hàng...</div>}>
+          {React.createElement(require("@/pages/OrderLookupPage/OrderLookupPage.jsx").default)}
+        </React.Suspense></DefaultLayout>} />
+        <Route path="/compare" element={<DefaultLayout><ComparePage /></DefaultLayout>} />
 
         {/* Admin Chat Dashboard Route */}
         <Route
@@ -134,7 +135,7 @@ const App = () => {
                     <AdminLayout>{route.element}</AdminLayout>
                   </ProtectedRoute>
                 ) : (
-                  route.element
+                  <DefaultLayout>{route.element}</DefaultLayout>
                 )
               }
             />

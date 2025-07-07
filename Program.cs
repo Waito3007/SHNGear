@@ -100,16 +100,9 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins("https://localhost:44479", "http://localhost:3000", "https://localhost:3001")
-              .AllowCredentials()
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .SetIsOriginAllowed(origin => true); // Allow SignalR
-    });
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowCredentials(); // Allow credentials for specific origins
     });
 });
 
@@ -172,8 +165,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseCors("AllowFrontend");
-app.UseCors("AllowAll");
+app.UseCors("AllowFrontend"); // Only use this one
 
 app.UseAuthentication();
 app.UseAuthorization();

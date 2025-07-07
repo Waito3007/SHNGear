@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import { jwtDecode } from "jwt-decode";
 
 /**
  * Hook for managing product reviews
@@ -26,13 +25,13 @@ export const useReviews = (productId) => {
       setError(null);
 
       const response = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/api/reviews/product/${productId}`
+        `${process.env.REACT_APP_API_BASE_URL}/api/Review/product/${productId}`
       );
 
       const reviewsData = response.data.$values || response.data || [];
       setReviews(reviewsData);
 
-      // Calculate average rating
+      // Calculate average rating từ data reviews
       if (reviewsData.length > 0) {
         const totalRating = reviewsData.reduce(
           (sum, review) => sum + review.rating,
@@ -51,7 +50,7 @@ export const useReviews = (productId) => {
         setRatingDistribution({ 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 });
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to fetch reviews");
+      setError(err.response?.data?.message || "Không thể tải đánh giá");
       console.error("Error fetching reviews:", err);
     } finally {
       setLoading(false);
@@ -70,6 +69,8 @@ export const useReviews = (productId) => {
     ratingDistribution,
     totalReviews: reviews.length,
     refetch: fetchReviews,
+    fetchReviews, // Alias để tương thích với component hiện tại
+    fetchAverageRating: fetchReviews, // Alias vì average rating được tính cùng lúc
   };
 };
 
@@ -91,14 +92,15 @@ export const useSubmitReview = (productId, onSuccess) => {
           throw new Error("You must be logged in to submit a review");
         }
 
-        const decoded = jwtDecode(token);
-        const userId = parseInt(decoded.sub, 10);
+        if (!token) {
+          throw new Error("You must be logged in to submit a review");
+        }
 
+        // Backend sẽ tự lấy userId từ JWT token
         const response = await axios.post(
-          `${process.env.REACT_APP_API_BASE_URL}/api/reviews`,
+          `${process.env.REACT_APP_API_BASE_URL}/api/Review`,
           {
             productId: parseInt(productId),
-            userId,
             rating: reviewData.rating,
             comment: reviewData.comment,
           },
@@ -132,139 +134,100 @@ export const useSubmitReview = (productId, onSuccess) => {
   };
 };
 
-/**
- * Hook for checking if user can review a product
- */
-export const useCanReview = (productId) => {
-  const [canReview, setCanReview] = useState(false);
+export const useUserReview = (userId, productId) => {
+  const [userReview, setUserReview] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [hasReviewed, setHasReviewed] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchUserReview = useCallback(async () => {
+    if (!userId || !productId) {
+      setUserReview(null);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_BASE_URL}/api/Review/user/${userId}/product/${productId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setUserReview(response.data);
+    } catch (err) {
+      if (err.response && err.response.status === 404) {
+        setUserReview(null); // No review found for this user/product
+      } else {
+        setError(err.response?.data?.message || "Không thể tải đánh giá của bạn");
+        console.error("Error fetching user review:", err);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, productId]);
 
   useEffect(() => {
-    const checkReviewEligibility = async () => {
+    fetchUserReview();
+  }, [fetchUserReview]);
+
+  return { userReview, loading, error, refetchUserReview: fetchUserReview };
+};
+
+export const useReviewModeration = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const approveReview = useCallback(async (reviewId) => {
+    try {
+      setLoading(true);
+      setError(null);
       const token = localStorage.getItem("token");
-      if (!token || !productId) {
-        setCanReview(false);
-        return;
-      }
+      await axios.put(
+        `${process.env.REACT_APP_API_BASE_URL}/api/Review/${reviewId}/approve`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return true;
+    } catch (err) {
+      setError(err.response?.data?.message || "Không thể duyệt đánh giá");
+      console.error("Error approving review:", err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-      try {
-        setLoading(true);
-        const decoded = jwtDecode(token);
-        const userId = parseInt(decoded.sub, 10);
+  const rejectReview = useCallback(async (reviewId) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem("token");
+      await axios.put(
+        `${process.env.REACT_APP_API_BASE_URL}/api/Review/${reviewId}/reject`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return true;
+    } catch (err) {
+      setError(err.response?.data?.message || "Không thể từ chối đánh giá");
+      console.error("Error rejecting review:", err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-        // Check if user has purchased this product
-        const purchaseResponse = await axios.get(
-          `${process.env.REACT_APP_API_BASE_URL}/api/orders/user/${userId}/has-purchased/${productId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        const hasPurchased = purchaseResponse.data;
-
-        // Check if user has already reviewed this product
-        const reviewResponse = await axios.get(
-          `${process.env.REACT_APP_API_BASE_URL}/api/reviews/user/${userId}/product/${productId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        const existingReview = reviewResponse.data;
-        setHasReviewed(!!existingReview);
-        setCanReview(hasPurchased && !existingReview);
-      } catch (err) {
-        console.error("Error checking review eligibility:", err);
-        setCanReview(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkReviewEligibility();
-  }, [productId]);
-
-  return {
-    canReview,
-    hasReviewed,
-    loading,
-  };
+  return { approveReview, rejectReview, loading, error };
 };
 
-/**
- * Hook for managing review filters and sorting
- */
-export const useReviewFilters = (reviews) => {
-  const [filters, setFilters] = useState({
-    rating: null, // null = all ratings, 1-5 = specific rating
-    sortBy: "newest", // 'newest', 'oldest', 'rating-high', 'rating-low'
-  });
-
-  const filteredAndSortedReviews = useCallback(() => {
-    let filtered = [...reviews];
-
-    // Apply rating filter
-    if (filters.rating) {
-      filtered = filtered.filter((review) => review.rating === filters.rating);
-    }
-
-    // Apply sorting
-    switch (filters.sortBy) {
-      case "oldest":
-        filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-        break;
-      case "rating-high":
-        filtered.sort((a, b) => b.rating - a.rating);
-        break;
-      case "rating-low":
-        filtered.sort((a, b) => a.rating - b.rating);
-        break;
-      case "newest":
-      default:
-        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        break;
-    }
-
-    return filtered;
-  }, [reviews, filters]);
-
-  const setRatingFilter = useCallback((rating) => {
-    setFilters((prev) => ({ ...prev, rating }));
-  }, []);
-
-  const setSortBy = useCallback((sortBy) => {
-    setFilters((prev) => ({ ...prev, sortBy }));
-  }, []);
-
-  const clearFilters = useCallback(() => {
-    setFilters({
-      rating: null,
-      sortBy: "newest",
-    });
-  }, []);
-
-  return {
-    filteredReviews: filteredAndSortedReviews(),
-    filters,
-    setRatingFilter,
-    setSortBy,
-    clearFilters,
-  };
-};
-
-/**
- * Hook for review analytics (Admin)
- */
 export const useReviewAnalytics = () => {
-  const [analytics, setAnalytics] = useState({
-    totalReviews: 0,
-    averageRating: 0,
-    ratingDistribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
-    recentReviews: [],
-    topRatedProducts: [],
-    reviewsThisMonth: 0,
-  });
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -272,20 +235,16 @@ export const useReviewAnalytics = () => {
     try {
       setLoading(true);
       setError(null);
-
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/api/reviews/analytics`,
+        `${process.env.REACT_APP_API_BASE_URL}/api/Review/analytics`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       setAnalytics(response.data);
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Failed to fetch review analytics"
-      );
+      setError(err.response?.data?.message || "Không thể tải phân tích đánh giá");
       console.error("Error fetching review analytics:", err);
     } finally {
       setLoading(false);
@@ -296,100 +255,47 @@ export const useReviewAnalytics = () => {
     fetchAnalytics();
   }, [fetchAnalytics]);
 
-  return {
-    analytics,
-    loading,
-    error,
-    refetch: fetchAnalytics,
-  };
+  return { analytics, loading, error, refetchAnalytics: fetchAnalytics };
 };
 
-/**
- * Hook for moderating reviews (Admin)
- */
-export const useReviewModeration = () => {
+export const useAllReviews = (filters = {}) => {
+  const [allReviews, setAllReviews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const approveReview = useCallback(async (reviewId) => {
+  const fetchAllReviews = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-
       const token = localStorage.getItem("token");
-      const response = await axios.put(
-        `${process.env.REACT_APP_API_BASE_URL}/api/reviews/${reviewId}/approve`,
-        {},
+
+      const queryParams = new URLSearchParams();
+      for (const key in filters) {
+        if (filters[key] !== null && filters[key] !== undefined && filters[key] !== '') {
+          queryParams.append(key, filters[key]);
+        }
+      }
+
+      const url = `${process.env.REACT_APP_API_BASE_URL}/api/Review/all?${queryParams.toString()}`;
+
+      const response = await axios.get(
+        url,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
-      return response.data;
+      setAllReviews(response.data.$values || response.data || []);
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || "Failed to approve review";
-      setError(errorMessage);
-      throw new Error(errorMessage);
+      setError(err.response?.data?.message || "Không thể tải tất cả đánh giá");
+      console.error("Error fetching all reviews:", err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [filters]);
 
-  const rejectReview = useCallback(async (reviewId, reason) => {
-    try {
-      setLoading(true);
-      setError(null);
+  useEffect(() => {
+    fetchAllReviews();
+  }, [fetchAllReviews]);
 
-      const token = localStorage.getItem("token");
-      const response = await axios.put(
-        `${process.env.REACT_APP_API_BASE_URL}/api/reviews/${reviewId}/reject`,
-        { reason },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      return response.data;
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || "Failed to reject review";
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const deleteReview = useCallback(async (reviewId) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const token = localStorage.getItem("token");
-      await axios.delete(
-        `${process.env.REACT_APP_API_BASE_URL}/api/reviews/${reviewId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      return true;
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || "Failed to delete review";
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  return {
-    loading,
-    error,
-    approveReview,
-    rejectReview,
-    deleteReview,
-  };
+  return { allReviews, loading, error, refetchAllReviews: fetchAllReviews };
 };

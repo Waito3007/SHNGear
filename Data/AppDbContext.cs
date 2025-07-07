@@ -26,6 +26,7 @@ namespace SHN_Gear.Data
         public DbSet<Delivery> Deliveries { get; set; } // Thêm DbSet cho Delivery
         public DbSet<Voucher> Vouchers { get; set; }
         public DbSet<UserVoucher> UserVouchers { get; set; } // Thêm DbSet cho UserVoucher
+        public DbSet<HomepageConfig> HomepageConfigurations { get; set; }
 
         // Chat System DbSets
         public DbSet<ChatSession> ChatSessions { get; set; }
@@ -69,6 +70,11 @@ namespace SHN_Gear.Data
             modelBuilder.Entity<ProductVariant>()
                 .Property(pv => pv.DiscountPrice)
                 .HasPrecision(18, 2);
+
+            // Specify the SQL Server column type for FlashSalePrice in Product
+            modelBuilder.Entity<Product>()
+                .Property(p => p.FlashSalePrice)
+                .HasColumnType("decimal(18,2)");
 
             modelBuilder.Entity<OrderItem>()
                 .HasOne(oi => oi.Order)
@@ -157,6 +163,20 @@ namespace SHN_Gear.Data
             });
 
             // Thêm các quan hệ khác tương tự ở đây.
+
+            // Add indexes for query optimization
+            modelBuilder.Entity<Product>(entity =>
+            {
+                entity.HasIndex(p => p.CategoryId).HasDatabaseName("IX_Products_CategoryId");
+                entity.HasIndex(p => p.BrandId).HasDatabaseName("IX_Products_BrandId");
+                entity.HasIndex(p => p.IsFlashSale).HasDatabaseName("IX_Products_IsFlashSale");
+            });
+
+            modelBuilder.Entity<ProductVariant>(entity =>
+            {
+                entity.HasIndex(pv => pv.ProductId).HasDatabaseName("IX_ProductVariants_ProductId");
+                entity.HasIndex(pv => pv.Price).HasDatabaseName("IX_ProductVariants_Price");
+            });
         }
     }
 }

@@ -12,8 +12,10 @@ export const useFlashSaleProducts = () => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API_BASE_URL}/api/Products/lowest-price`);
-        setProducts(response.data.$values || response.data || []);
+        // Corrected endpoint to fetch actual flash sale products
+        const response = await axios.get(`${API_BASE_URL}/api/Products/flash-sale`);
+        // The response from this endpoint is a simple array of ProductDto
+        setProducts(response.data || []);
       } catch (error) {
         setError("Không thể tải sản phẩm: " + error.message);
         setProducts([]);

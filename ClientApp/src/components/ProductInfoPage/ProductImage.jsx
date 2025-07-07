@@ -44,6 +44,7 @@ const ProductImage = ({ images, name }) => {
           overflow: "hidden",
           bgcolor: "white",
           position: "relative",
+          border: "1px solid #e0e0e0", // Subtle border
         }}
       >
         <Swiper
@@ -124,6 +125,7 @@ const ProductImage = ({ images, name }) => {
                   transform: "translateY(-50%) scale(1.1)",
                 },
                 transition: "all 0.3s ease",
+                color: "#d32f2f", // Added color
               }}
             >
               <ChevronLeft />
@@ -143,6 +145,7 @@ const ProductImage = ({ images, name }) => {
                   transform: "translateY(-50%) scale(1.1)",
                 },
                 transition: "all 0.3s ease",
+                color: "#d32f2f", // Added color
               }}
             >
               <ChevronRight />
@@ -161,6 +164,7 @@ const ProductImage = ({ images, name }) => {
                   transform: "scale(1.1)",
                 },
                 transition: "all 0.3s ease",
+                color: "#d32f2f", // Added color
               }}
             >
               <Maximize2 size={20} />
@@ -215,6 +219,7 @@ const ProductImage = ({ images, name }) => {
                   transition: "all 0.3s ease",
                   "&:hover": {
                     transform: "translateY(-2px)",
+                    borderColor: "#d32f2f", // Added hover border
                   },
                 }}
               >

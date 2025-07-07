@@ -385,6 +385,29 @@ namespace SHN_Gear.Migrations
                     b.ToTable("Deliveries");
                 });
 
+            modelBuilder.Entity("SHN_Gear.Models.HomepageConfig", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConfigJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("HomepageConfigurations");
+                });
+
             modelBuilder.Entity("SHN_Gear.Models.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -546,15 +569,35 @@ namespace SHN_Gear.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("FlashSaleEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("FlashSalePrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("FlashSaleStartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsBestSeller")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsFlashSale")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BrandId");
+                    b.HasIndex("BrandId")
+                        .HasDatabaseName("IX_Products_BrandId");
 
-                    b.HasIndex("CategoryId");
+                    b.HasIndex("CategoryId")
+                        .HasDatabaseName("IX_Products_CategoryId");
+
+                    b.HasIndex("IsFlashSale")
+                        .HasDatabaseName("IX_Products_IsFlashSale");
 
                     b.ToTable("Products");
                 });
@@ -659,7 +702,11 @@ namespace SHN_Gear.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductId");
+                    b.HasIndex("Price")
+                        .HasDatabaseName("IX_ProductVariants_Price");
+
+                    b.HasIndex("ProductId")
+                        .HasDatabaseName("IX_ProductVariants_ProductId");
 
                     b.ToTable("ProductVariants");
                 });

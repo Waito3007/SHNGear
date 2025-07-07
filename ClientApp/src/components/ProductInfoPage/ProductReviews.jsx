@@ -17,13 +17,14 @@ import {
 } from "@mui/material";
 import { 
   Star, 
-  StarBorder, 
+  CheckCircle, // For verified purchase
   Person, 
   RateReview, 
   Send,
   Close 
 } from "@mui/icons-material";
-import { useReviews, useSubmitReview } from "@/hooks/api/useReviews";
+import { useReviews, useSubmitReview, useUserReview } from "@/hooks/api/useReviews";
+import { jwtDecode } from "jwt-decode";
 
 const ProductReviews = ({ productId }) => {
   const [showForm, setShowForm] = useState(false);
@@ -34,17 +35,24 @@ const ProductReviews = ({ productId }) => {
   let currentUserId = null;
   if (token) {
     try {
-      const decoded = require("jwt-decode")(token);
+      const decoded = jwtDecode(token);
       currentUserId = decoded.nameid || decoded.sub || decoded.UserId || null;
     } catch (err) {
       console.error("Token decode error:", err);
     }
   }
+
   const { reviews, loading, error, averageRating, fetchReviews, fetchAverageRating } = useReviews(productId);
+  const { userReview, refetchUserReview } = useUserReview(currentUserId, productId);
   const { submitReview } = useSubmitReview(productId, () => {
     fetchReviews();
     fetchAverageRating();
+    refetchUserReview(); // Refetch user's specific review after submission
   });
+
+  // Xử lý khi không có dữ liệu hoặc API trả về rỗng
+  const safeReviews = Array.isArray(reviews) ? reviews : [];
+  const safeAverageRating = typeof averageRating === 'number' && !isNaN(averageRating) ? averageRating : 0;
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
@@ -64,23 +72,25 @@ const ProductReviews = ({ productId }) => {
       setShowForm(false);
       setComment("");
       setRating(5);
-      setSnackbar({ open: true, message: "Đánh giá của bạn đã được gửi!", severity: "success" });
+      setSnackbar({ open: true, message: "Đánh giá của bạn đã được gửi và đang chờ kiểm duyệt!", severity: "success" });
     } catch (err) {
       setSnackbar({ open: true, message: err.message || "Gửi đánh giá thất bại", severity: "error" });
     }
   };
-  const hasReviewed = reviews.some((r) => r.userId === Number(currentUserId));
+  
+  // Check if user has reviewed, considering both general reviews and their specific review
+  const hasReviewed = safeReviews.some((r) => r.userId === Number(currentUserId)) || !!userReview;
 
   const getRatingDistribution = () => {
     const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-    reviews.forEach(review => {
+    safeReviews.forEach(review => {
       distribution[review.rating] = (distribution[review.rating] || 0) + 1;
     });
     return distribution;
   };
 
   const ratingDistribution = getRatingDistribution();
-  const totalReviews = reviews.length;
+  const totalReviews = safeReviews.length;
 
   return (
     <Box sx={{ p: 0 }}>
@@ -95,9 +105,9 @@ const ProductReviews = ({ productId }) => {
         <Card sx={{ maxWidth: 400, mx: 'auto', mb: 3 }}>
           <CardContent sx={{ textAlign: 'center', py: 3 }}>
             <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#ff9800', mb: 1 }}>
-              {averageRating.toFixed(1)}
+              {safeAverageRating.toFixed(1)}
             </Typography>
-            <Rating value={averageRating} readOnly precision={0.1} size="large" sx={{ mb: 1 }} />
+            <Rating value={safeAverageRating} readOnly precision={0.1} size="large" sx={{ mb: 1 }} />
             <Typography variant="body2" color="text.secondary">
               Dựa trên {totalReviews} đánh giá
             </Typography>
@@ -147,40 +157,119 @@ const ProductReviews = ({ productId }) => {
 
       {/* Error State */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          <Typography variant="body2">
+            {error.includes('404') || error.includes('Not Found') 
+              ? 'Chức năng đánh giá đang được phát triển. Vui lòng quay lại sau!'
+              : `Lỗi khi tải đánh giá: ${error}`
+            }
+          </Typography>
         </Alert>
+      )}
+
+      {/* User's Own Review (if exists) */}
+      {userReview && (
+        <Card sx={{ mb: 2, boxShadow: 3, borderRadius: 2, border: '2px solid #1976d2', bgcolor: '#e3f2fd' }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
+              <Avatar sx={{ bgcolor: '#1976d2', mr: 2, width: 48, height: 48, fontSize: '1.5rem' }}>
+                {userReview.userName ? userReview.userName[0].toUpperCase() : '?'}
+              </Avatar>
+              <Box sx={{ flexGrow: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                    Đánh giá của bạn
+                  </Typography>
+                  <Chip 
+                    icon={<Star sx={{ fontSize: 16 }} />}
+                    label={`${userReview.rating}`}
+                    size="small"
+                    sx={{
+                      bgcolor: '#ffeb3b',
+                      color: '#333',
+                      fontWeight: 'bold',
+                      px: 1,
+                    }}
+                  />
+                </Box>
+                <Rating value={userReview.rating} readOnly size="small" sx={{ mb: 1 }} />
+                <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.6, color: '#333' }}>
+                  {userReview.comment}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {new Date(userReview.createdAt).toLocaleDateString('vi-VN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                  {userReview.hasPurchased && (
+                    <Chip
+                      icon={<CheckCircle />}
+                      label="Đã xác minh mua hàng"
+                      size="small"
+                      color="success"
+                      sx={{ ml: 1, height: 20, fontSize: '0.75rem' }}
+                    />
+                  )}
+                  {!userReview.isApproved && (
+                    <Chip
+                      label="Đang chờ duyệt"
+                      size="small"
+                      color="info"
+                      sx={{ ml: 1, height: 20, fontSize: '0.75rem' }}
+                    />
+                  )}
+                </Typography>
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
       )}
 
       {/* Reviews List */}
       {!loading && !error && (
         <Box sx={{ mb: 4 }}>
-          {reviews.length > 0 ? (
-            <Box sx={{ space: 2 }}>
-              {reviews.map((review, index) => (
-                <Card key={review.id} sx={{ mb: 2, boxShadow: 1, '&:hover': { boxShadow: 2 } }}>
+          {safeReviews.length > 0 ? (
+            <Box>
+              {safeReviews.map((review, index) => (
+                <Card key={review.id} sx={{ mb: 2, boxShadow: 2, borderRadius: 2, transition: 'all 0.3s ease', '&:hover': { boxShadow: 4 } }}>
                   <CardContent>
                     <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-                      <Avatar sx={{ bgcolor: '#1976d2', mr: 2, width: 40, height: 40 }}>
-                        <Person />
+                      <Avatar sx={{ bgcolor: '#d32f2f', mr: 2, width: 48, height: 48, fontSize: '1.5rem' }}>
+                        {review.userName ? review.userName[0].toUpperCase() : '?'}
                       </Avatar>
                       <Box sx={{ flexGrow: 1 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#d32f2f' }}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#333' }}>
                             {review.userName}
                           </Typography>
-                          <Chip 
-                            label={`${review.rating} ⭐`} 
-                            size="small" 
-                            sx={{ 
-                              bgcolor: '#fff3e0', 
-                              color: '#e65100',
-                              fontWeight: 'bold'
-                            }} 
-                          />
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Chip 
+                              icon={<Star sx={{ fontSize: 16 }} />}
+                              label={`${review.rating}`}
+                              size="small"
+                              sx={{
+                                bgcolor: '#ffeb3b',
+                                color: '#333',
+                                fontWeight: 'bold',
+                                px: 1,
+                              }}
+                            />
+                            {review.hasPurchased && (
+                              <Chip
+                                icon={<CheckCircle />}
+                                label="Đã xác minh mua hàng"
+                                size="small"
+                                color="success"
+                                sx={{ height: 20, fontSize: '0.75rem' }}
+                              />
+                            )}
+                          </Box>
                         </Box>
                         <Rating value={review.rating} readOnly size="small" sx={{ mb: 1 }} />
-                        <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.6 }}>
+                        <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.6, color: '#555' }}>
                           {review.comment}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
@@ -199,14 +288,17 @@ const ProductReviews = ({ productId }) => {
               ))}
             </Box>
           ) : (
-            <Card sx={{ textAlign: 'center', py: 6 }}>
+            <Card sx={{ textAlign: 'center', py: 6, boxShadow: 2, borderRadius: 2 }}>
               <CardContent>
-                <RateReview sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
-                <Typography variant="h6" color="text.secondary">
-                  Chưa có đánh giá nào
+                <RateReview sx={{ fontSize: 60, color: '#bdbdbd', mb: 2 }} />
+                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                  {error ? 'Không thể tải đánh giá' : 'Chưa có đánh giá nào'}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Hãy là người đầu tiên đánh giá sản phẩm này
+                  {error 
+                    ? 'Hệ thống đang bảo trì, vui lòng thử lại sau'
+                    : 'Hãy là người đầu tiên đánh giá sản phẩm này'
+                  }
                 </Typography>
               </CardContent>
             </Card>
@@ -215,7 +307,7 @@ const ProductReviews = ({ productId }) => {
       )}
 
       {/* Add Review Button */}
-      {!hasReviewed && currentUserId && (
+      {!hasReviewed && currentUserId && !error && (
         <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
           <Button
             variant="contained"
@@ -228,8 +320,9 @@ const ProductReviews = ({ productId }) => {
               py: 1.5,
               textTransform: 'none',
               fontSize: '1rem',
-              boxShadow: 2,
-              '&:hover': { boxShadow: 4 }
+              boxShadow: 3,
+              bgcolor: '#d32f2f',
+              '&:hover': { boxShadow: 5, bgcolor: '#b71c1c' }
             }}
           >
             {showForm ? "Đóng form đánh giá" : "Viết đánh giá"}
@@ -239,22 +332,22 @@ const ProductReviews = ({ productId }) => {
 
       {/* Review Form */}
       {showForm && (
-        <Card sx={{ mb: 3, boxShadow: 3 }}>
+        <Card sx={{ mb: 3, boxShadow: 3, borderRadius: 2 }}>
           <CardContent sx={{ p: 4 }}>
-            <Typography variant="h6" sx={{ mb: 3, textAlign: 'center', color: '#1976d2' }}>
+            <Typography variant="h6" sx={{ mb: 3, textAlign: 'center', color: '#d32f2f', fontWeight: 'bold' }}>
               Chia sẻ đánh giá của bạn
             </Typography>
             
-            <Box component="form" onSubmit={handleSubmitReview} sx={{ space: 3 }}>
-              <Box sx={{ mb: 3, textAlign: 'center' }}>
-                <Typography component="legend" sx={{ mb: 2, fontWeight: 'medium' }}>
+            <Box component="form" onSubmit={handleSubmitReview} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography component="legend" sx={{ mb: 1, fontWeight: 'medium', color: '#555' }}>
                   Đánh giá của bạn:
                 </Typography>
                 <Rating
                   value={rating}
                   onChange={(event, newValue) => setRating(newValue || 1)}
                   size="large"
-                  sx={{ fontSize: '2rem' }}
+                  sx={{ fontSize: '2.5rem', color: '#ffeb3b' }}
                 />
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                   {rating === 5 && "Tuyệt vời! 🌟"}
@@ -274,8 +367,12 @@ const ProductReviews = ({ productId }) => {
                 placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                sx={{ mb: 3 }}
                 required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                  },
+                }}
               />
 
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
@@ -284,7 +381,7 @@ const ProductReviews = ({ productId }) => {
                   variant="outlined"
                   size="large"
                   onClick={() => setShowForm(false)}
-                  sx={{ px: 4, borderRadius: 2 }}
+                  sx={{ px: 4, borderRadius: 2, borderColor: '#d32f2f', color: '#d32f2f', '&:hover': { borderColor: '#b71c1c', bgcolor: 'rgba(211, 47, 47, 0.04)' } }}
                 >
                   Hủy
                 </Button>
@@ -293,11 +390,12 @@ const ProductReviews = ({ productId }) => {
                   variant="contained"
                   size="large"
                   startIcon={<Send />}
-                  sx={{ 
-                    px: 4, 
+                  sx={{
+                    px: 4,
                     borderRadius: 2,
-                    boxShadow: 2,
-                    '&:hover': { boxShadow: 4 }
+                    boxShadow: 3,
+                    bgcolor: '#d32f2f',
+                    '&:hover': { boxShadow: 5, bgcolor: '#b71c1c' }
                   }}
                 >
                   Gửi đánh giá
@@ -310,7 +408,7 @@ const ProductReviews = ({ productId }) => {
 
       {/* Login prompt for non-logged in users */}
       {!currentUserId && (
-        <Card sx={{ textAlign: 'center', bgcolor: '#f8f9fa' }}>
+        <Card sx={{ textAlign: 'center', bgcolor: '#f5f5f5', borderRadius: 2, boxShadow: 1 }}>
           <CardContent sx={{ py: 3 }}>
             <Typography variant="body1" color="text.secondary">
               Đăng nhập để có thể đánh giá và bình luận sản phẩm
@@ -320,8 +418,8 @@ const ProductReviews = ({ productId }) => {
       )}
 
       {/* Already reviewed message */}
-      {hasReviewed && (
-        <Alert severity="info" sx={{ textAlign: 'center' }}>
+      {hasReviewed && !userReview && (
+        <Alert severity="info" sx={{ textAlign: 'center', borderRadius: 2, boxShadow: 1 }}>
           Bạn đã đánh giá sản phẩm này rồi. Cảm ơn phản hồi của bạn!
         </Alert>
       )}
@@ -341,3 +439,4 @@ const ProductReviews = ({ productId }) => {
 };
 
 export default ProductReviews;
+

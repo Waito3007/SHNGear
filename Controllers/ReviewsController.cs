@@ -19,17 +19,23 @@ public class ReviewController : ControllerBase
         var reviews = await _context.Reviews
             .Where(r => r.ProductId == productId && r.IsApproved)
             .Include(r => r.User)
+            .Include(r => r.Product)
             .OrderByDescending(r => r.CreatedAt)
             .Select(r => new ReviewDto
             {
                 Id = r.Id,
                 ProductId = r.ProductId,
+                ProductName = r.Product.Name,
                 UserId = r.UserId,
                 UserName = r.User.FullName,
                 Rating = r.Rating,
                 Comment = r.Comment,
                 CreatedAt = r.CreatedAt,
-                IsApproved = r.IsApproved
+                IsApproved = r.IsApproved,
+                HasPurchased = _context.OrderItems
+                                .Include(oi => oi.Order)
+                                .Include(oi => oi.ProductVariant)
+                                .Any(oi => oi.Order.UserId == r.UserId && oi.ProductVariant.ProductId == r.ProductId && oi.Order.OrderStatus == "Delivered")
             })
             .ToListAsync();
 
@@ -75,13 +81,13 @@ public class ReviewController : ControllerBase
             Rating = dto.Rating,
             Comment = dto.Comment,
             CreatedAt = DateTime.UtcNow,
-            IsApproved = true
+            IsApproved = false // Mặc định là false, cần admin duyệt
         };
 
         _context.Reviews.Add(review);
         await _context.SaveChangesAsync();
 
-        return Ok("Đánh giá thành công");
+        return Ok("Đánh giá thành công, đang chờ duyệt");
     }
 
     [Authorize]
@@ -115,5 +121,152 @@ public class ReviewController : ControllerBase
         await _context.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPut("{id}/approve")]
+    public async Task<IActionResult> ApproveReview(int id)
+    {
+        var review = await _context.Reviews.FindAsync(id);
+        if (review == null) return NotFound("Không tìm thấy đánh giá");
+
+        review.IsApproved = true;
+        await _context.SaveChangesAsync();
+        return Ok("Đánh giá đã được duyệt.");
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPut("{id}/reject")]
+    public async Task<IActionResult> RejectReview(int id)
+    {
+        var review = await _context.Reviews.FindAsync(id);
+        if (review == null) return NotFound("Không tìm thấy đánh giá");
+
+        review.IsApproved = false;
+        await _context.SaveChangesAsync();
+        return Ok("Đánh giá đã bị từ chối.");
+    }
+
+    [Authorize]
+    [HttpGet("user/{userId}/product/{productId}")]
+    public async Task<ActionResult<ReviewDto>> GetUserReviewForProduct(int userId, int productId)
+    {
+        var review = await _context.Reviews
+            .Where(r => r.UserId == userId && r.ProductId == productId)
+            .Include(r => r.User)
+            .Include(r => r.Product)
+            .Select(r => new ReviewDto
+            {
+                Id = r.Id,
+                ProductId = r.ProductId,
+                ProductName = r.Product.Name,
+                UserId = r.UserId,
+                UserName = r.User.FullName,
+                Rating = r.Rating,
+                Comment = r.Comment,
+                CreatedAt = r.CreatedAt,
+                IsApproved = r.IsApproved,
+                HasPurchased = _context.OrderItems
+                                .Include(oi => oi.Order)
+                                .Include(oi => oi.ProductVariant)
+                                .Any(oi => oi.Order.UserId == r.UserId && oi.ProductVariant.ProductId == r.ProductId && oi.Order.OrderStatus == "Delivered")
+            })
+            .FirstOrDefaultAsync();
+
+        if (review == null) return NotFound("Không tìm thấy đánh giá của người dùng cho sản phẩm này.");
+
+        return Ok(review);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet("analytics")]
+    public async Task<ActionResult> GetReviewAnalytics()
+    {
+        var totalReviews = await _context.Reviews.CountAsync();
+        var approvedReviews = await _context.Reviews.CountAsync(r => r.IsApproved);
+        var pendingReviews = await _context.Reviews.CountAsync(r => !r.IsApproved);
+        var averageRating = await _context.Reviews.AverageAsync(r => (double?)r.Rating) ?? 0;
+
+        var ratingDistribution = await _context.Reviews
+            .GroupBy(r => r.Rating)
+            .Select(g => new { Rating = g.Key, Count = g.Count() })
+            .OrderBy(x => x.Rating)
+            .ToListAsync();
+
+        return Ok(new
+        {
+            TotalReviews = totalReviews,
+            ApprovedReviews = approvedReviews,
+            PendingReviews = pendingReviews,
+            AverageRating = averageRating,
+            RatingDistribution = ratingDistribution
+        });
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet("all")]
+    public async Task<ActionResult<IEnumerable<ReviewDto>>> GetAllReviews(
+        [FromQuery] bool? isApproved = null,
+        [FromQuery] int? minRating = null,
+        [FromQuery] int? maxRating = null,
+        [FromQuery] int? productId = null,
+        [FromQuery] int? userId = null,
+        [FromQuery] string? searchComment = null)
+    {
+        var query = _context.Reviews.AsQueryable();
+
+        if (isApproved.HasValue)
+        {
+            query = query.Where(r => r.IsApproved == isApproved.Value);
+        }
+
+        if (minRating.HasValue)
+        {
+            query = query.Where(r => r.Rating >= minRating.Value);
+        }
+
+        if (maxRating.HasValue)
+        {
+            query = query.Where(r => r.Rating <= maxRating.Value);
+        }
+
+        if (productId.HasValue)
+        {
+            query = query.Where(r => r.ProductId == productId.Value);
+        }
+
+        if (userId.HasValue)
+        {
+            query = query.Where(r => r.UserId == userId.Value);
+        }
+
+        if (!string.IsNullOrEmpty(searchComment))
+        {
+            query = query.Where(r => r.Comment.Contains(searchComment));
+        }
+
+        var reviews = await query
+            .Include(r => r.User)
+            .Include(r => r.Product)
+            .OrderByDescending(r => r.CreatedAt)
+            .Select(r => new ReviewDto
+            {
+                Id = r.Id,
+                ProductId = r.ProductId,
+                ProductName = r.Product.Name,
+                UserId = r.UserId,
+                UserName = r.User.FullName,
+                Rating = r.Rating,
+                Comment = r.Comment,
+                CreatedAt = r.CreatedAt,
+                IsApproved = r.IsApproved,
+                HasPurchased = _context.OrderItems
+                                .Include(oi => oi.Order)
+                                .Include(oi => oi.ProductVariant)
+                                .Any(oi => oi.Order.UserId == r.UserId && oi.ProductVariant.ProductId == r.ProductId && oi.Order.OrderStatus == "Delivered")
+            })
+            .ToListAsync();
+
+        return Ok(reviews);
     }
 }

@@ -187,8 +187,10 @@ const ProductVariants = ({ variants, onAddToCart }) => {
                 borderRadius: 2,
                 transform: selectedColor === color ? "scale(1.05)" : "scale(1)",
                 transition: "all 0.3s ease-in-out",
+                border: selectedColor === color ? "2px solid #d32f2f" : "2px solid transparent",
                 "&:hover": {
                   transform: "scale(1.05)",
+                  borderColor: "#d32f2f",
                 },
               }}
             >
@@ -269,6 +271,9 @@ const ProductVariants = ({ variants, onAddToCart }) => {
                     selectedStorage === storage
                       ? "2px solid #d32f2f"
                       : "1px solid #ddd",
+                  "&:hover": {
+                    borderColor: availableStorages.includes(storage) ? "#d32f2f" : "#ddd",
+                  },
                 }}
               >
                 <CardActionArea

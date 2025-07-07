@@ -1,7 +1,0 @@
-Id          Rating      Comment                                                                                                                                                                                                                                                         
------------ ----------- ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-         19           2 San pham dep nhung khong tuong thich voi nhu cau.                                                                                                                                                                                                               
-         18           5 Qua ung y! Su dung muot ma, khong co loi nao.                                                                                                                                                                                                                   
-         17           4 Chat luong cao, tuy nhien gia hoi cao so voi doi thu.                                                                                                                                                                                                           
-
-(3 rows affected)

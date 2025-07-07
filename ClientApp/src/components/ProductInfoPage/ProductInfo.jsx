@@ -1,6 +1,6 @@
 import React from "react";
-import { Box, Typography, Chip, Divider, Paper, Rating } from "@mui/material";
-import { Package, Award, Clock, Shield, Truck, Gift } from "lucide-react";
+import { Box, Typography, Divider, Paper, Rating } from "@mui/material";
+import { Award, Shield, Truck, Gift } from "lucide-react";
 
 const ProductInfo = ({ product }) => {
   return (
@@ -62,6 +62,39 @@ const ProductInfo = ({ product }) => {
           {product?.name}
         </Typography>
 
+        {/* Price and Rating Section */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            mt: 2,
+            mb: 3,
+          }}
+        >
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              color: "#FFEB3B", // A vibrant yellow for price
+              textShadow: "1px 1px 3px rgba(0,0,0,0.3)",
+            }}
+          >
+            {product?.price?.toLocaleString("vi-VN")} VNĐ
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Rating
+              value={product?.averageRating || 0}
+              precision={0.5}
+              readOnly
+              sx={{ color: "#FFEB3B" }}
+            />
+            <Typography variant="caption" sx={{ color: "white", ml: 1 }}>
+              ({product?.reviewCount || 0} đánh giá)
+            </Typography>
+          </Box>
+        </Box>
+
         {/* Brand Section */}
         <Box
           sx={{
@@ -83,20 +116,26 @@ const ProductInfo = ({ product }) => {
               gap: 2,
             }}
           >
-            <Box
-              component="img"
-              src={
-                product?.brand?.logo?.startsWith("http")
-                  ? product.brand.logo
-                  : `${process.env.REACT_APP_API_BASE_URL}/${product.brand.logo}`
-              }
-              alt={product?.brand?.name}
-              sx={{
-                width: 40,
-                height: 40,
-                objectFit: "contain",
-              }}
-            />
+            {product?.brand?.logo && (
+              <Box
+                component="img"
+                src={
+                  product.brand.logo?.startsWith("http")
+                    ? product.brand.logo
+                    : `${process.env.REACT_APP_API_BASE_URL}/${product.brand.logo}`
+                }
+                alt={product?.brand?.name || "Brand Logo"}
+                sx={{
+                  width: 40,
+                  height: 40,
+                  objectFit: "contain",
+                }}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "https://via.placeholder.com/40?text=No+Logo";
+                }}
+              />
+            )}
             <Box>
               <Typography
                 variant="overline"
@@ -119,11 +158,20 @@ const ProductInfo = ({ product }) => {
             </Box>
           </Box>
 
-          {/* Rating Display */}
+          {/* Stock Status */}
           <Box sx={{ ml: "auto" }}>
-            <Rating value={4.5} precision={0.5} readOnly />
-            <Typography variant="caption" sx={{ color: "white", ml: 1 }}>
-              (128 đánh giá)
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 700,
+                color: product?.stock > 0 ? "#4CAF50" : "#F44336", // Green for in stock, Red for out of stock
+                bgcolor: "white",
+                p: 1,
+                borderRadius: 1,
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+              }}
+            >
+              {product?.stock > 0 ? "Còn hàng" : "Hết hàng"}
             </Typography>
           </Box>
         </Box>
