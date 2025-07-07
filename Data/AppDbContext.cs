@@ -32,6 +32,7 @@ namespace SHN_Gear.Data
         public DbSet<ChatSession> ChatSessions { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<AIKnowledgeBase> AIKnowledgeBases { get; set; }
+        public DbSet<BlogPost> BlogPosts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

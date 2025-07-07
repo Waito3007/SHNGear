@@ -29,7 +29,7 @@ const ProductCard = ({ product }) => {
       </div>
       <div className="p-4 text-left">
         <h3 className="font-sans text-base font-semibold text-white">
-          <a href={`/products/${product.id}`}>
+          <a href={`/product/${product.id}`}>
             <span aria-hidden="true" className="absolute inset-0" />
             {product.name}
           </a>

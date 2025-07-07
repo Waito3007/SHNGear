@@ -17,11 +17,38 @@ import Shoppingcart from "@/pages/shoppingcart/shoppingcart";
 import Unauthorized from "@/pages/Unauthorized/Unauthorized";
 import BestSellerAdminPage from "@/pages/Admin/BestSellerAdminPage";
 import ReviewManagementPage from "@/pages/Admin/ReviewManagementPage";
+import BlogList from "@/pages/blog/BlogList";
+import BlogPostDetail from "@/pages/blog/BlogPostDetail";
+import BlogPostEditor from "@/pages/blog/BlogPostEditor";
 
 const AppRoutes = [
   {
     path: "/admin/reviews",
     element: <ReviewManagementPage />,
+    requiresAdmin: true,
+  },
+  // Blog routes
+  {
+    path: "/blog",
+    element: <BlogList />,
+  },
+  {
+    path: "/blog/:id",
+    element: <BlogPostDetail />,
+  },
+  {
+    path: "/admin/blog",
+    element: <BlogList />,
+    requiresAdmin: true,
+  },
+  {
+    path: "/admin/blog/new",
+    element: <BlogPostEditor />,
+    requiresAdmin: true,
+  },
+  {
+    path: "/admin/blog/edit/:id",
+    element: <BlogPostEditor />,
     requiresAdmin: true,
   },
   {

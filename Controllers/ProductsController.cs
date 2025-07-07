@@ -24,6 +24,11 @@ namespace SHN_Gear.Controllers
         // Helper method to map Product to ProductDto
         private ProductDto MapProductToDto(Product product)
         {
+            var now = DateTime.UtcNow;
+            bool isInFlashSale = product.IsFlashSale &&
+                                 product.FlashSaleStartDate.HasValue && product.FlashSaleStartDate.Value <= now &&
+                                 product.FlashSaleEndDate.HasValue && product.FlashSaleEndDate.Value >= now;
+
             return new ProductDto
             {
                 Id = product.Id,
@@ -40,11 +45,16 @@ namespace SHN_Gear.Controllers
                 {
                     Color = v.Color,
                     Storage = v.Storage,
-                    Price = v.Price,
-                    DiscountPrice = v.DiscountPrice,
+                    // Apply flash sale price if applicable, otherwise use original price or discount price
+                    Price = isInFlashSale && product.FlashSalePrice.HasValue
+                            ? product.FlashSalePrice.Value
+                            : v.Price,
+                    DiscountPrice = isInFlashSale && product.FlashSalePrice.HasValue
+                                    ? product.FlashSalePrice.Value // Flash sale price overrides discount price
+                                    : v.DiscountPrice,
                     StockQuantity = v.StockQuantity
                 }).ToList(),
-                IsFlashSale = product.IsFlashSale,
+                IsFlashSale = isInFlashSale, // Reflect actual flash sale status
                 FlashSalePrice = product.FlashSalePrice,
                 FlashSaleStartDate = product.FlashSaleStartDate,
                 FlashSaleEndDate = product.FlashSaleEndDate

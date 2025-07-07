@@ -39,28 +39,22 @@ const FlashSaleAdminPage = () => {
     setLoading(true);
     try {
       const { data } = await axios.get(`${API_BASE_URL}/api/Products/flash-sale`);
-      const productIds = (data.$values || data).map(p => p.id);
+      const detailedProducts = data.$values || data || [];
 
-      if (productIds.length > 0) {
-        const productsDetailResponse = await axios.get(`${API_BASE_URL}/api/Products/by-ids?ids=${productIds.join(',')}`);
-        const detailedProducts = productsDetailResponse.data.$values || productsDetailResponse.data || [];
+      const combinedProducts = detailedProducts.map(flashSaleProduct => {
+        const primaryImage = flashSaleProduct?.images?.find(img => img.isPrimary) || flashSaleProduct?.images?.[0];
+        const imageUrl = primaryImage ? (primaryImage.imageUrl.startsWith("http") ? primaryImage.imageUrl : `${API_BASE_URL}/${primaryImage.imageUrl}`) : "https://via.placeholder.com/50";
 
-        const combinedProducts = (data.$values || data).map(flashSaleProduct => {
-          const detail = detailedProducts.find(dp => dp.id === flashSaleProduct.id);
-          const primaryImage = detail?.images?.find(img => img.isPrimary) || detail?.images?.[0];
-          const imageUrl = primaryImage ? (primaryImage.imageUrl.startsWith("http") ? primaryImage.imageUrl : `${API_BASE_URL}/${primaryImage.imageUrl}`) : "https://via.placeholder.com/50";
+        // Determine original price from variants (assuming first variant for simplicity, or find min price)
+        const originalPrice = flashSaleProduct.variants?.[0]?.price || 0;
 
-          return {
-            ...flashSaleProduct,
-            name: detail?.name || `Product ${flashSaleProduct.id}`,
-            imageUrl: imageUrl,
-            originalPrice: detail?.variants?.[0]?.price || 0, // Assuming first variant price as original
-          };
-        });
-        setFlashSaleProducts(combinedProducts);
-      } else {
-        setFlashSaleProducts([]);
-      }
+        return {
+          ...flashSaleProduct,
+          imageUrl: imageUrl,
+          originalPrice: originalPrice,
+        };
+      });
+      setFlashSaleProducts(combinedProducts);
     } catch (err) {
       setError('Failed to load flash sale products.');
       console.error(err);

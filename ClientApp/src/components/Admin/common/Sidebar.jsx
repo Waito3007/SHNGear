@@ -1,4 +1,4 @@
-import { BarChart2, DollarSign, Menu, ShoppingBag, ShoppingCart, Users, Home, MessageCircle, LayoutDashboard } from "lucide-react";
+import { BarChart2, DollarSign, Menu, ShoppingBag, ShoppingCart, Users, Home, MessageCircle, LayoutDashboard, FileText } from "lucide-react";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -22,6 +22,7 @@ const SIDEBAR_ITEMS = [
 	{ name: "Bán Hàng", icon: DollarSign, color: "#10B981", href: "/admin/sales" },
 	{ name: "Đơn Hàng", icon: ShoppingCart, color: "#F59E0B", href: "/admin/orders" },
 	{ name: "Quản lý Đánh giá", icon: RateReview, color: "#FFD700", href: "/admin/reviews" },
+	{ name: "Quản lý Blog", icon: FileText, color: "#34D399", href: "/admin/blog" },
 	{ name: "Chat AI", icon: MessageCircle, color: "#06B6D4", href: "/admin/chat" },
 	// { name: "Phân tích", icon: TrendingUp, color: "#3B82F6", href: "/admin/analytics" },
 	// { name: "Settings", icon: Settings, color: "#6EE7B7", href: "/admin/settings" },
