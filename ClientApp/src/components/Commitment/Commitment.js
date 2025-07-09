@@ -1,20 +1,33 @@
 import React from 'react';
-// File removed. Migrated to Commitment.jsx
+import { useBrands } from '@/hooks/api/useBrands';
+
 const BrandTrustSection = ({ data }) => {
+  // Fetch brands from API
+  const { brands, loading, error } = useBrands(true);
+
   return (
     <section className="py-16 md:py-24 bg-gray-900/50">
       <div className="container mx-auto px-4">
         {/* Brand Logos */}
         <div className="flex justify-center items-center flex-wrap gap-x-12 gap-y-8 mb-16">
-          {(data?.logos || []).map((brand) => (
-            <div key={brand.id} className="flex-shrink-0">
-              <img 
-                src={brand.logo_url} 
-                alt={brand.name} 
-                className="h-8 md:h-10 object-contain filter grayscale hover:filter-none transition-all duration-300"
-              />
-            </div>
-          ))}
+          {loading ? (
+            <div className="text-white">Đang tải thương hiệu...</div>
+          ) : error ? (
+            <div className="text-red-500">{error}</div>
+          ) : (
+            brands.map((brand) => (
+              <div key={brand.id} className="flex-shrink-0">
+                <img 
+                  src={brand.logo || '/placeholder-logo.png'} 
+                  alt={brand.name} 
+                  className="h-12 md:h-16 object-contain filter grayscale hover:filter-none transition-all duration-300"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              </div>
+            ))
+          )}
         </div>
 
         {/* Commitments */}
