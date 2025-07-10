@@ -45,12 +45,11 @@ namespace SHN_Gear.Controllers
                 {
                     Color = v.Color,
                     Storage = v.Storage,
-                    // Apply flash sale price if applicable, otherwise use original price or discount price
-                    Price = isInFlashSale && product.FlashSalePrice.HasValue
-                            ? product.FlashSalePrice.Value
-                            : v.Price,
+                    // Always keep original price for comparison
+                    Price = v.Price,
+                    // Set DiscountPrice to flash sale price if active, otherwise use existing discount price
                     DiscountPrice = isInFlashSale && product.FlashSalePrice.HasValue
-                                    ? product.FlashSalePrice.Value // Flash sale price overrides discount price
+                                    ? product.FlashSalePrice.Value
                                     : v.DiscountPrice,
                     StockQuantity = v.StockQuantity
                 }).ToList(),
