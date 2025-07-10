@@ -45,10 +45,7 @@ namespace SHN_Gear.Controllers
                 {
                     Color = v.Color,
                     Storage = v.Storage,
-                    // Apply flash sale price if applicable, otherwise use original price or discount price
-                    Price = isInFlashSale && product.FlashSalePrice.HasValue
-                            ? product.FlashSalePrice.Value
-                            : v.Price,
+                    Price = v.Price, // Always show original price
                     DiscountPrice = isInFlashSale && product.FlashSalePrice.HasValue
                                     ? product.FlashSalePrice.Value // Flash sale price overrides discount price
                                     : v.DiscountPrice,
