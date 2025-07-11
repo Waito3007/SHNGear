@@ -104,7 +104,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("https://localhost:44479", "http://localhost:3000", "https://localhost:3001")
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials(); // Allow credentials for specific origins
+              .AllowCredentials();
     });
 });
 
@@ -154,6 +154,7 @@ builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 // Thêm middleware rate limit đơn giản cho API Gemini/chat
+
 app.UseMiddleware<SimpleRateLimitMiddleware>();
 
 // 🔹 Middlewares (đúng thứ tự)
@@ -167,6 +168,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// 🔹 Move CORS before authentication/authorization
 app.UseCors("AllowFrontend"); // Only use this one
 
 app.UseAuthentication();
