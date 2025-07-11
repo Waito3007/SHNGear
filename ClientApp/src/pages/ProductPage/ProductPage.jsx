@@ -87,7 +87,6 @@ const ProductPage = () => {
     );
   }
 
-  const productType = getProductType();
 
   return (
     <Box className="min-h-screen bg-gray-50">
@@ -121,8 +120,8 @@ const ProductPage = () => {
               />
             </Box>
           </Grid>
-          Product Specifications Section
-          {productType && (
+          {/* Product Specifications Section */}
+   
             <Grid item xs={12}>
               <Box
                 sx={{
@@ -134,12 +133,10 @@ const ProductPage = () => {
                 }}
               >
                 <SpecificationDisplay
-                  productType={productType}
                   productId={product.id}
                 />
               </Box>
             </Grid>
-          )}
           {/* Product Reviews Section */}
           <Grid item xs={12}>
             <Box

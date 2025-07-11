@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SHN_Gear.Data;
@@ -39,7 +40,34 @@ namespace SHN_Gear.Controllers
 
             return Ok(specifications);
         }
+        // GET: api/Specifications/by-product/{productId}
+        [HttpGet("by-product/{productId}")]
+        public async Task<ActionResult<IEnumerable<ProductSpecificationDto>>> GetSpecificationsByProductId(int productId)
+        {
+            var product = await _context.Products.FindAsync(productId);
+            if (product == null)
+            {
+                return NotFound("Sản phẩm không tồn tại.");
+            }
 
+            var specifications = await _context.ProductSpecifications
+                .Where(s => s.ProductId == productId)
+                .OrderBy(s => s.DisplayOrder)
+                .ThenBy(s => s.Name)
+                .Select(s => new ProductSpecificationDto
+                {
+                    Id = s.Id,
+                    ProductId = s.ProductId,
+                    Name = s.Name,
+                    Value = s.Value,
+                    Unit = s.Unit,
+                    DisplayOrder = s.DisplayOrder,
+                    CreatedAt = s.CreatedAt
+                })
+                .ToListAsync();
+
+            return Ok(specifications);
+        }
         // GET: api/Specifications/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<ProductSpecificationDto>> GetSpecification(int id)

@@ -74,7 +74,9 @@ const ProductReviews = ({ productId }) => {
       setRating(5);
       setSnackbar({ open: true, message: "Đánh giá của bạn đã được gửi và đang chờ kiểm duyệt!", severity: "success" });
     } catch (err) {
-      setSnackbar({ open: true, message: err.message || "Gửi đánh giá thất bại", severity: "error" });
+      // Hiển thị thông báo chi tiết từ backend nếu có
+      const errorMsg = err?.response?.data?.message || err?.message || "Gửi đánh giá thất bại";
+      setSnackbar({ open: true, message: errorMsg, severity: "error" });
     }
   };
   
@@ -306,6 +308,28 @@ const ProductReviews = ({ productId }) => {
         </Box>
       )}
 
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        TransitionProps={{ appear: true }}
+      >
+        <Alert 
+          severity={snackbar.severity} 
+          variant="filled" 
+          sx={{ width: '100%', fontWeight: 500, fontSize: '1rem', display: 'flex', alignItems: 'center' }}
+          iconMapping={{
+            success: <CheckCircle fontSize="inherit" sx={{ color: '#43a047' }} />,
+            error: <Close fontSize="inherit" sx={{ color: '#d32f2f' }} />,
+            warning: <RateReview fontSize="inherit" sx={{ color: '#ffa726' }} />,
+            info: <Person fontSize="inherit" sx={{ color: '#1976d2' }} />,
+          }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+
       {/* Add Review Button */}
       {!hasReviewed && currentUserId && !error && (
         <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
@@ -322,8 +346,12 @@ const ProductReviews = ({ productId }) => {
               fontSize: '1rem',
               boxShadow: 3,
               bgcolor: '#d32f2f',
+              position: 'relative',
+              zIndex: 2,
+              transition: 'all 0.2s',
               '&:hover': { boxShadow: 5, bgcolor: '#b71c1c' }
             }}
+            title={showForm ? "Đóng form đánh giá" : "Viết đánh giá về sản phẩm này"}
           >
             {showForm ? "Đóng form đánh giá" : "Viết đánh giá"}
           </Button>
@@ -332,12 +360,11 @@ const ProductReviews = ({ productId }) => {
 
       {/* Review Form */}
       {showForm && (
-        <Card sx={{ mb: 3, boxShadow: 3, borderRadius: 2 }}>
-          <CardContent sx={{ p: 4 }}>
+        <Card sx={{ mb: 3, boxShadow: 3, borderRadius: 2, animation: 'fadeInUp 0.3s' }}>
+          <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
             <Typography variant="h6" sx={{ mb: 3, textAlign: 'center', color: '#d32f2f', fontWeight: 'bold' }}>
               Chia sẻ đánh giá của bạn
             </Typography>
-            
             <Box component="form" onSubmit={handleSubmitReview} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography component="legend" sx={{ mb: 1, fontWeight: 'medium', color: '#555' }}>
@@ -347,7 +374,7 @@ const ProductReviews = ({ productId }) => {
                   value={rating}
                   onChange={(event, newValue) => setRating(newValue || 1)}
                   size="large"
-                  sx={{ fontSize: '2.5rem', color: '#ffeb3b' }}
+                  sx={{ fontSize: { xs: '2rem', sm: '2.5rem' }, color: '#ffeb3b' }}
                 />
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                   {rating === 5 && "Tuyệt vời! 🌟"}
@@ -357,7 +384,6 @@ const ProductReviews = ({ productId }) => {
                   {rating === 1 && "Rất tệ 😞"}
                 </Typography>
               </Box>
-
               <TextField
                 fullWidth
                 multiline
@@ -374,7 +400,6 @@ const ProductReviews = ({ productId }) => {
                   },
                 }}
               />
-
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
                 <Button
                   type="button"
@@ -382,6 +407,7 @@ const ProductReviews = ({ productId }) => {
                   size="large"
                   onClick={() => setShowForm(false)}
                   sx={{ px: 4, borderRadius: 2, borderColor: '#d32f2f', color: '#d32f2f', '&:hover': { borderColor: '#b71c1c', bgcolor: 'rgba(211, 47, 47, 0.04)' } }}
+                  title="Hủy đánh giá"
                 >
                   Hủy
                 </Button>
@@ -395,8 +421,11 @@ const ProductReviews = ({ productId }) => {
                     borderRadius: 2,
                     boxShadow: 3,
                     bgcolor: '#d32f2f',
+                    position: 'relative',
                     '&:hover': { boxShadow: 5, bgcolor: '#b71c1c' }
                   }}
+                  title="Gửi đánh giá"
+                  disabled={snackbar.severity === 'success' && snackbar.open}
                 >
                   Gửi đánh giá
                 </Button>
@@ -405,6 +434,20 @@ const ProductReviews = ({ productId }) => {
           </CardContent>
         </Card>
       )}
+
+      {/* Hiệu ứng chuyển động cho form đánh giá */}
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
 
       {/* Login prompt for non-logged in users */}
       {!currentUserId && (
@@ -423,17 +466,6 @@ const ProductReviews = ({ productId }) => {
           Bạn đã đánh giá sản phẩm này rồi. Cảm ơn phản hồi của bạn!
         </Alert>
       )}
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity={snackbar.severity} variant="filled" sx={{ width: '100%' }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

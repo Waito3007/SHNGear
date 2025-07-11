@@ -298,7 +298,7 @@ const Navbar = () => {
           </div>
 
           {/* Thêm vào file CSS */}
-          <style jsx>{`
+          <style>{`
             .animate-fadeIn {
               animation: fadeIn 0.2s ease-out forwards;
             }
@@ -572,8 +572,9 @@ const Navbar = () => {
                         {user?.role?.id === 1 && (
                           <NavLink
                             to="/admin/overview"
-                            className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
-                            activeClassName="bg-blue-50 text-blue-600"
+                            className={({ isActive }) =>
+                              `px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center${isActive ? ' bg-blue-50 text-blue-600' : ''}`
+                            }
                           >
                             <Settings className="w-4 h-4 mr-3" />
                             Trang quản trị
@@ -581,8 +582,9 @@ const Navbar = () => {
                         )}
                         <NavLink
                           to="/profile/info"
-                          className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
-                          activeClassName="bg-blue-50 text-blue-600"
+                          className={({ isActive }) =>
+                            `px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center${isActive ? ' bg-blue-50 text-blue-600' : ''}`
+                          }
                         >
                           <User className="w-4 h-4 mr-3" />
                           Thông tin cá nhân
@@ -590,8 +592,9 @@ const Navbar = () => {
 
                         <NavLink
                           to="/profile/orders"
-                          className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
-                          activeClassName="bg-blue-50 text-blue-600"
+                          className={({ isActive }) =>
+                            `px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center${isActive ? ' bg-blue-50 text-blue-600' : ''}`
+                          }
                         >
                           <ShoppingBag className="w-4 h-4 mr-3" />
                           Đơn hàng của tôi
@@ -599,8 +602,9 @@ const Navbar = () => {
 
                         <NavLink
                           to="/profile/loyalty"
-                          className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
-                          activeClassName="bg-blue-50 text-blue-600"
+                          className={({ isActive }) =>
+                            `px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center${isActive ? ' bg-blue-50 text-blue-600' : ''}`
+                          }
                         >
                           <Star className="w-4 h-4 mr-3" />
                           Khách hàng thân thiết
@@ -608,8 +612,9 @@ const Navbar = () => {
 
                         <NavLink
                           to="/profile/address"
-                          className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
-                          activeClassName="bg-blue-50 text-blue-600"
+                          className={({ isActive }) =>
+                            `px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center${isActive ? ' bg-blue-50 text-blue-600' : ''}`
+                          }
                         >
                           <MapPin className="w-4 h-4 mr-3" />
                           Sổ địa chỉ

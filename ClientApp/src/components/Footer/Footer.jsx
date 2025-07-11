@@ -8,15 +8,15 @@ const Footer = () => {
   };
   return (
     <footer className="footer-container">
-      <div class="footer-top-container">
-        <div class="footer-title">
+      <div className="footer-top-container">
+        <div className="footer-title">
           <h3>Hệ thống SHN Gear trên toàn quốc</h3>
           <p>
             Bao gồm Cửa hàng SHN Gear, Trung tâm Laptop, F.Studio, S.Studio,
             Garmin Brand Store
           </p>
         </div>
-        <button class="store-button"onClick={handleOrderLookup}>Tra cứu đơn </button>
+        <button className="store-button" onClick={handleOrderLookup}>Tra cứu đơn </button>
       </div>
 
       <div className="footer-content">
