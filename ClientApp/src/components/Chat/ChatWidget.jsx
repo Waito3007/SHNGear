@@ -79,8 +79,11 @@ const ChatWidget = () => {
         : `${API_BASE_URL}/chatHub`;
       
       const newConnection = new HubConnectionBuilder()
-        .withUrl(connectionUrl)
-        .withAutomaticReconnect()
+        .withUrl(connectionUrl, {
+          skipNegotiation: false,
+          accessTokenFactory: () => token
+        })
+        .withAutomaticReconnect([0, 2000, 10000, 30000])
         .configureLogging(LogLevel.Information)
         .build();
 

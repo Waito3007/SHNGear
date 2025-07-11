@@ -200,7 +200,11 @@ const AdminChatDashboard = () => {
       const token = localStorage.getItem("token");
 
       const newConnection = new HubConnectionBuilder()
-        .withUrl(`${API_BASE_URL}/chatHub?access_token=${token}`)
+        .withUrl(`${API_BASE_URL}/chatHub?access_token=${token}`, {
+          skipNegotiation: false,
+          accessTokenFactory: () => token,
+          headers: {}
+        })
         .withAutomaticReconnect([0, 2000, 10000, 30000])
         .configureLogging(LogLevel.Information)
         .build();

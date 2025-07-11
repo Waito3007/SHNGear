@@ -11,14 +11,14 @@ namespace SHN_Gear.Services
     public class ChatService
     {
         private readonly AppDbContext _context;
-        private readonly AIService _aiService;
+        // private readonly AIService _aiService; // Tạm thời bỏ AI
         private readonly ILogger<ChatService> _logger;
         private readonly IHubContext<ChatHub> _hubContext;
 
-        public ChatService(AppDbContext context, AIService aiService, ILogger<ChatService> logger, IHubContext<ChatHub> hubContext)
+        public ChatService(AppDbContext context, ILogger<ChatService> logger, IHubContext<ChatHub> hubContext)
         {
             _context = context;
-            _aiService = aiService;
+            // _aiService = aiService; // Tạm thời bỏ AI
             _logger = logger;
             _hubContext = hubContext;
         }
@@ -157,10 +157,10 @@ namespace SHN_Gear.Services
                 await NotifyNewMessage(messageWithUser ?? userMessage, session.SessionId);
 
                 // Process with AI (if session type is AI or Mixed)
-                if (session.Type == ChatType.AI || session.Type == ChatType.Mixed)
-                {
-                    await ProcessAIResponse(session, messageDto.Content, userId, messageDto.Context);
-                }
+                // if (session.Type == ChatType.AI || session.Type == ChatType.Mixed)
+                // {
+                //     await ProcessAIResponse(session, messageDto.Content, userId, messageDto.Context);
+                // }
 
                 // Update session activity
                 session.LastActivityAt = DateTime.UtcNow;
@@ -178,83 +178,8 @@ namespace SHN_Gear.Services
 
         private async Task ProcessAIResponse(ChatSession session, string userMessage, int? userId, object? context)
         {
-            try
-            {
-                // Get AI response - pass session.SessionId instead of contextJson
-                var aiResponse = await _aiService.ProcessMessageAsync(userMessage, session.SessionId, userId);
-
-                // Create AI message
-                var aiMessage = new ChatMessage
-                {
-                    ChatSessionId = session.Id,
-                    Content = aiResponse.Response,
-                    Type = aiResponse.ProductRecommendations?.Any() == true ? MessageType.ProductRecommendation : MessageType.Text,
-                    Sender = MessageSender.AI,
-                    SentAt = DateTime.UtcNow,
-                    AIConfidenceScore = aiResponse.ConfidenceScore,
-                    AIIntent = aiResponse.Intent,
-                    RequiresEscalation = aiResponse.RequiresEscalation,
-                    SuggestedActionsJson = aiResponse.SuggestedActions != null ? JsonSerializer.Serialize(aiResponse.SuggestedActions) : null,
-                    MetadataJson = JsonSerializer.Serialize(new
-                    {
-                        ProductRecommendations = aiResponse.ProductRecommendations,
-                        Context = aiResponse.Context
-                    })
-                };
-
-                _context.ChatMessages.Add(aiMessage);
-
-                // Check if escalation is needed
-                if (aiResponse.RequiresEscalation || aiResponse.ConfidenceScore < 0.5m)
-                {
-                    session.RequiresHumanSupport = true;
-                    session.ConfidenceScore = aiResponse.ConfidenceScore;
-
-                    // Add escalation notice
-                    var escalationMessage = new ChatMessage
-                    {
-                        ChatSessionId = session.Id,
-                        Content = "Tôi sẽ kết nối bạn với nhân viên tư vấn để được hỗ trợ tốt hơn. Vui lòng chờ trong giây lát...",
-                        Type = MessageType.EscalationNotice,
-                        Sender = MessageSender.System,
-                        SentAt = DateTime.UtcNow
-                    };
-
-                    _context.ChatMessages.Add(escalationMessage);
-
-                    await _context.SaveChangesAsync();
-
-                    // Gửi tin nhắn AI và escalation real-time
-                    await NotifyNewMessage(aiMessage, session.SessionId);
-                    await NotifyNewMessage(escalationMessage, session.SessionId);
-                }
-                else
-                {
-                    await _context.SaveChangesAsync();
-
-                    // Gửi tin nhắn AI real-time
-                    await NotifyNewMessage(aiMessage, session.SessionId);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error processing AI response for session {SessionId}", session.Id);
-
-                // Add fallback message
-                var fallbackMessage = new ChatMessage
-                {
-                    ChatSessionId = session.Id,
-                    Content = "Xin lỗi, hiện tại tôi đang gặp sự cố. Tôi sẽ kết nối bạn với nhân viên tư vấn.",
-                    Type = MessageType.SystemMessage,
-                    Sender = MessageSender.System,
-                    SentAt = DateTime.UtcNow,
-                    RequiresEscalation = true
-                };
-
-                _context.ChatMessages.Add(fallbackMessage);
-                session.RequiresHumanSupport = true;
-                await _context.SaveChangesAsync();
-            }
+            // Tạm thời bỏ AI xử lý
+            // (method intentionally left blank)
         }
 
         public async Task<ChatMessageDto> SendAdminMessageAsync(string sessionId, string content, int adminId)

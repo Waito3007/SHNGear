@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using SHN_Gear.Services;
 using System.Security.Claims;
 
 namespace SHN_Gear.Hubs
 {
+    [EnableCors("SignalRPolicy")]
     public class ChatHub : Hub
     {
         private readonly ChatService _chatService;

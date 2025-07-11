@@ -1,4 +1,3 @@
-// ...existing code...
 using Microsoft.Extensions.FileProviders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -10,6 +9,7 @@ using CloudinaryDotNet;
 using SHN_Gear.Services;
 using Microsoft.OpenApi.Models;
 using SHN_Gear.Middleware;
+using SHN_Gear.Configuration;
 // using SHN_Gear.Export; // KnowledgeExportService nằm trong SHN_Gear.Services, không cần dòng này
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,7 +38,7 @@ builder.Services.AddScoped<MoMoPaymentService>();
 
 // 🔹 Chat & AI Services
 builder.Services.AddScoped<ContextManager>();
-builder.Services.AddScoped<AIService>();
+// builder.Services.AddScoped<AIService>(); // Tạm thời vô hiệu hóa AI
 
 // Đăng ký KnowledgeExportService để export tri thức từ DB
 // Ensure KnowledgeExportService exists in your project and the correct namespace is used above.
@@ -56,6 +56,9 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = true;
+}).AddJsonProtocol(options =>
+{
+    options.PayloadSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
 
 // 🔹 JWT Authentication
@@ -96,17 +99,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// 🔹 CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", policy =>
-    {
-        policy.WithOrigins("https://localhost:44479", "http://localhost:3000", "https://localhost:3001")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
-    });
-});
+// 🔹 CORS Configuration
+builder.Services.ConfigureCors(builder.Environment);
 
 // 🔹 Swagger + JWT Support
 builder.Services.AddEndpointsApiExplorer();
@@ -153,8 +147,18 @@ builder.Services.AddControllersWithViews()
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
-// Thêm middleware rate limit đơn giản cho API Gemini/chat
 
+// 🔹 Unified CORS Middleware - handles ALL CORS scenarios in one place
+app.UseMiddleware<UnifiedCorsMiddleware>();
+
+// 🔹 CORS Debug Middleware (development only)
+if (app.Environment.IsDevelopment())
+{
+    app.UseMiddleware<HeaderLoggingMiddleware>();
+    app.UseMiddleware<CorsDebugMiddleware>();
+}
+
+// Thêm middleware rate limit đơn giản cho API Gemini/chat
 app.UseMiddleware<SimpleRateLimitMiddleware>();
 
 // 🔹 Middlewares (đúng thứ tự)
@@ -168,8 +172,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// 🔹 Move CORS before authentication/authorization
-app.UseCors("AllowFrontend"); // Only use this one
+// 🔹 CORS Configuration
+app.UseCorsConfiguration();
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -216,8 +220,8 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller}/{action=Index}/{id?}");
 
-// 🔹 Map SignalR Hub
-app.MapHub<SHN_Gear.Hubs.ChatHub>("/chatHub");
+// 🔹 Map SignalR Hub với CORS policy riêng
+app.MapHub<SHN_Gear.Hubs.ChatHub>("/chatHub").RequireCors("SignalRPolicy");
 
 app.MapFallbackToFile("index.html");
 

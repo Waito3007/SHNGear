@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.Cors;
 using SHN_Gear.Services;
 using SHN_Gear.DTOs;
 using SHN_Gear.Hubs;
@@ -10,6 +11,7 @@ namespace SHN_Gear.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [EnableCors("AllowFrontend")]
     public class ChatController : ControllerBase
     {
         private readonly ChatService _chatService;
