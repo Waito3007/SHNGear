@@ -448,7 +448,7 @@ namespace SHN_Gear.Controllers
                 if (productSpecs.Any())
                 {
                     // Convert to a dynamic object with Name-Value pairs
-                    var specDict = productSpecs.ToDictionary(s => s.Name, s => new { s.Value, s.Unit });
+                    var specDict = productSpecs.ToDictionary(s => s.Name, s => new ProductSpecificationDetailDto { Value = s.Value, Unit = s.Unit });
 
                     specifications = new
                     {

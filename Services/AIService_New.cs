@@ -589,6 +589,7 @@ namespace SHN_Gear.Services
                 var productQuery = await _context.Products
                     .Include(p => p.Brand)
                     .Include(p => p.Category)
+                    .Include(p => p.ProductSpecifications) // Include ProductSpecifications
                     .Where(p => keywords.Any(k => p.Name.ToLower().Contains(k) ||
                                                 p.Brand.Name.ToLower().Contains(k) ||
                                                 p.Category.Name.ToLower().Contains(k)))

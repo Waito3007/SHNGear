@@ -21,6 +21,8 @@ namespace SHN_Gear.Models
 
         public bool IsBestSeller { get; set; } = false; // New property for best sellers
 
+        public ICollection<ProductSpecification> ProductSpecifications { get; set; } = new List<ProductSpecification>();
+
         public bool IsOutOfStock()
         {
             return Variants.Sum(v => v.StockQuantity) <= 0;

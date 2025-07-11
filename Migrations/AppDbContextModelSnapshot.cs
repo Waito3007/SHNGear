@@ -1094,7 +1094,7 @@ namespace SHN_Gear.Migrations
             modelBuilder.Entity("SHN_Gear.Models.ProductSpecification", b =>
                 {
                     b.HasOne("SHN_Gear.Models.Product", "Product")
-                        .WithMany()
+                        .WithMany("ProductSpecifications")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1190,6 +1190,8 @@ namespace SHN_Gear.Migrations
             modelBuilder.Entity("SHN_Gear.Models.Product", b =>
                 {
                     b.Navigation("Images");
+
+                    b.Navigation("ProductSpecifications");
 
                     b.Navigation("Variants");
                 });

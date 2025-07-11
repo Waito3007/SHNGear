@@ -1,153 +1,97 @@
-import React, { useMemo, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   Drawer, Button, Box, Typography, IconButton,
-  TextField, FormControlLabel, Checkbox,
-  CircularProgress, Alert, Dialog,
+  TextField, CircularProgress, Alert, Dialog,
   DialogActions, DialogContent, DialogContentText, DialogTitle,
-  Fade, Snackbar, LinearProgress, Paper, InputAdornment
+  Snackbar, LinearProgress, Paper, InputAdornment
 } from "@mui/material";
 import {
-  X, Trash, Check, Plus, Scale, Smartphone, Monitor,
-  Cpu, MemoryStick, HardDrive, Camera, BatteryFull, Nfc,
-  Laptop as LaptopIcon, Gauge, MousePointer2,
-  Headphones, Bluetooth, Cable, Usb,
-  Undo2,
-  AlertTriangle,
-  Package as PackageIcon,
-  LayoutGrid,
-  Info
+  X, Trash, Check, Plus, Package as PackageIcon,
+  LayoutGrid, Info, AlertTriangle, Edit, Save
 } from "lucide-react";
-import { useSpecificationForm } from "@/hooks/api/useSpecificationManager"; // Đường dẫn tới hook
-
-// Constants cho UI (nếu không dùng ở hook thì để đây)
-const CATEGORY_NAMES = {
-  1: "Điện thoại",
-  2: "Laptop",
-  3: "Tai nghe"
-};
-
-const COMMON_FIELDS = [
-  { name: "weight", label: "Trọng lượng", icon: Scale, required: false, props: { placeholder: "Ví dụ: 200g hoặc 1.2kg" } }
-];
-
-const CATEGORY_FIELDS = {
-  1: [ // Điện thoại
-    { name: "screenSize", label: "Kích thước màn hình", icon: Smartphone, required: true, props: { placeholder: "Ví dụ: 6.7 inches" } },
-    { name: "resolution", label: "Độ phân giải", icon: Monitor, required: true, props: { placeholder: "Ví dụ: 1080 x 2400 pixels" } },
-    { name: "screenType", label: "Loại màn hình", icon: Monitor, required: true, props: { placeholder: "Ví dụ: AMOLED" } },
-    { name: "cpuModel", label: "Model CPU", icon: Cpu, required: true, props: { placeholder: "Ví dụ: Snapdragon 8 Gen 2" } },
-    { name: "cpuCores", label: "Số nhân CPU", type: "number", icon: Cpu, required: true, props: { inputProps: { min: 1 }, placeholder:"Ví dụ: 8"} },
-    { name: "ram", label: "RAM", icon: MemoryStick, required: true, props: { placeholder: "Ví dụ: 8GB DDR5" } },
-    { name: "internalStorage", label: "Dung lượng lưu trữ", icon: HardDrive, required: true, props: { placeholder: "Ví dụ: 128GB UFS 3.1" } },
-    { name: "frontCamera", label: "Camera trước", icon: Camera, required: false, props: { placeholder: "Ví dụ: 12MP f/2.0" } },
-    { name: "rearCamera", label: "Camera sau", icon: Camera, required: false, props: { placeholder: "Ví dụ: Chính 50MP, Phụ 12MP" } },
-    { name: "batteryCapacity", label: "Dung lượng pin", icon: BatteryFull, required: true, props: { placeholder: "Ví dụ: 5000mAh" } },
-    { name: "supportsNFC", label: "Hỗ trợ NFC", type: "checkbox", icon: Nfc, required: false },
-  ],
-  2: [ // Laptop
-    { name: "cpuType", label: "Loại CPU", icon: Cpu, required: true, props: { placeholder: "Ví dụ: Intel Core i7-13700H" } },
-    { name: "cpuNumberOfCores", label: "Số nhân CPU", type: "number", icon: Cpu, required: true, props: { inputProps: { min: 1 }, placeholder:"Ví dụ: 14" } },
-    { name: "ram", label: "RAM", icon: MemoryStick, required: true, props: { placeholder: "Ví dụ: 16GB DDR5 5200MHz" } },
-    { name: "maxRAMSupport", label: "Hỗ trợ RAM tối đa", icon: MemoryStick, required: false, props: { placeholder: "Ví dụ: 32GB" } },
-    { name: "ssdStorage", label: "Dung lượng SSD", icon: HardDrive, required: true, props: { placeholder: "Ví dụ: 512GB PCIe NVMe Gen4" } },
-    { name: "screenSize", label: "Kích thước màn hình", icon: LaptopIcon, required: true, props: { placeholder: "Ví dụ: 15.6 inches" } },
-    { name: "resolution", label: "Độ phân giải", icon: Monitor, required: true, props: { placeholder: "Ví dụ: 1920 x 1080 (Full HD)" } },
-    { name: "refreshRate", label: "Tần số quét", icon: Gauge, required: false, props: { placeholder: "Ví dụ: 120Hz" } },
-    { name: "supportsTouch", label: "Hỗ trợ cảm ứng", type: "checkbox", icon: MousePointer2, required: false },
-  ],
-  3: [ // Tai nghe
-    { name: "type", label: "Loại tai nghe", icon: Headphones, required: true, props: { placeholder: "Ví dụ: Over-ear, True Wireless" } },
-    { name: "connectionType", label: "Loại kết nối", icon: Bluetooth, required: true, props: { placeholder: "Ví dụ: Bluetooth 5.3, Wired" } },
-    { name: "port", label: "Cổng sạc/kết nối", icon: Usb, required: false, props: { placeholder: "Ví dụ: USB-C, 3.5mm" } },
-  ]
-};
+import { useSpecificationForm } from "@/hooks/api/useProductSpecificationManager";
 
 const ICON_SIZE_FIELD = 20;
 const ICON_SIZE_BUTTON = 18;
 const ICON_SIZE_CLOSE = 22;
 
-
 const AddSpecificationDrawer = ({ open, onClose, product }) => {
-  const formFields = useMemo(() => {
-    if (!product?.categoryId || !CATEGORY_FIELDS[product.categoryId]) { // Sử dụng CATEGORY_FIELDS thay vì CATEGORY_ENDPOINTS để check
-        return COMMON_FIELDS;
+  const { specifications, loadingState, snackbarState, deleteDialogOpen, specToDelete, anyLoading, showInitialLoadSpinner, showRefetchProgressBar, actions } = useSpecificationForm(product, open, onClose);
+
+  const [newSpec, setNewSpec] = useState({
+    name: '',
+    value: '',
+    unit: '',
+    displayOrder: specifications.length > 0 ? Math.max(...specifications.map(s => s.displayOrder)) + 1 : 1,
+  });
+  const [editingSpecId, setEditingSpecId] = useState(null);
+  const [editingSpecData, setEditingSpecData] = useState({});
+
+  useEffect(() => {
+    if (!open) {
+      setNewSpec({
+        name: '',
+        value: '',
+        unit: '',
+        displayOrder: 1,
+      });
+      setEditingSpecId(null);
+      setEditingSpecData({});
+    } else if (specifications.length > 0) {
+      setNewSpec(prev => ({ ...prev, displayOrder: Math.max(...specifications.map(s => s.displayOrder)) + 1 }));
     }
-    const categorySpecificFields = CATEGORY_FIELDS[product.categoryId] || [];
-    return [...COMMON_FIELDS, ...categorySpecificFields];
-  }, [product?.categoryId]);
+  }, [open, specifications]);
 
-  const {
-    specification,
-    formData,
-    loadingState,
-    snackbarState,
-    deleteDialogOpen,
-    endpoint,
-    anyLoading,
-    canSubmit,
-    showInitialLoadSpinner,
-    showRefetchProgressBar,
-    actions
-  } = useSpecificationForm(product, open, formFields, onClose); // Truyền onClose vào hook nếu cần gọi từ đó
+  const handleNewSpecChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setNewSpec(prev => ({
+      ...prev,
+      [name]: name === 'displayOrder' ? (value === '' ? '' : Number(value)) : value
+    }));
+  }, []);
 
-  const handleDrawerClose = () => {
-    // onClose có thể nhận 1 tham số boolean để báo hiệu có sự thay đổi cần refresh list bên ngoài
-    onClose();
-  };
+  const handleEditSpecChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setEditingSpecData(prev => ({
+      ...prev,
+      [name]: name === 'displayOrder' ? (value === '' ? '' : Number(value)) : value
+    }));
+  }, []);
 
+  const handleAddNewSpec = useCallback(async (e) => {
+    e.preventDefault();
+    if (!newSpec.name || !newSpec.value) {
+      actions.showSnackbar("Tên và Giá trị thông số không được để trống.", "warning");
+      return;
+    }
+    await actions.handleAddOrUpdateSpecification(newSpec);
+    setNewSpec({
+      name: '',
+      value: '',
+      unit: '',
+      displayOrder: specifications.length > 0 ? Math.max(...specifications.map(s => s.displayOrder)) + 1 : 1,
+    });
+  }, [newSpec, actions, specifications]);
 
-  const renderFormFieldsContent = useCallback(() => (
-    formFields.map((field) => {
-      const labelText = field.required ? `${field.label} *` : field.label;
-      const IconComponent = field.icon;
+  const handleEditClick = useCallback((spec) => {
+    setEditingSpecId(spec.id);
+    setEditingSpecData({ ...spec });
+  }, []);
 
-      return (
-        <Box key={field.name} sx={{ mb: 2.5 }}>
-          {field.type === 'checkbox' ? (
-            <FormControlLabel
-              control={
-                <Checkbox
-                  name={field.name}
-                  checked={!!formData[field.name]}
-                  onChange={actions.handleInputChange}
-                  disabled={anyLoading || loadingState.fetch}
-                  size="small"
-                />
-              }
-              label={
-                <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
-                  {IconComponent && <IconComponent size={ICON_SIZE_FIELD - 4} style={{ marginRight: '8px', opacity: 0.7 }} />}
-                  {labelText}
-                </Box>
-              }
-            />
-          ) : (
-            <TextField
-              fullWidth
-              label={labelText}
-              name={field.name}
-              value={formData[field.name] || ''}
-              onChange={actions.handleInputChange}
-              type={field.type || 'text'}
-              variant="outlined"
-              size="small"
-              disabled={anyLoading || loadingState.fetch}
-              required={field.required}
-              InputProps={{
-                startAdornment: IconComponent ? (
-                  <InputAdornment position="start">
-                    <IconComponent size={ICON_SIZE_FIELD} style={{ opacity: 0.7 }}/>
-                  </InputAdornment>
-                ) : null,
-                ...(field.props?.InputProps || {})
-              }}
-              {...(field.props || {})}
-            />
-          )}
-        </Box>
-      );
-    })
-  ), [formFields, formData, actions.handleInputChange, anyLoading, loadingState.fetch]);
+  const handleSaveEdit = useCallback(async () => {
+    if (!editingSpecData.name || !editingSpecData.value) {
+      actions.showSnackbar("Tên và Giá trị thông số không được để trống.", "warning");
+      return;
+    }
+    await actions.handleAddOrUpdateSpecification(editingSpecData);
+    setEditingSpecId(null);
+    setEditingSpecData({});
+  }, [editingSpecData, actions]);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingSpecId(null);
+    setEditingSpecData({});
+  }, []);
 
   const renderProductInfo = useCallback(() => (
     product && (
@@ -158,18 +102,17 @@ const AddSpecificationDrawer = ({ open, onClose, product }) => {
         </Typography>
         <Typography variant="body2" component="div" sx={{ display: 'flex', alignItems: 'center' }}>
           <LayoutGrid size={ICON_SIZE_FIELD - 2} style={{ marginRight: '8px', opacity: 0.8 }} />
-          Danh mục: <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>{CATEGORY_NAMES[product.categoryId] || 'Chưa có hoặc không hợp lệ'}</Typography>
+          Danh mục: <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>{product.category?.name || 'Chưa có hoặc không hợp lệ'}</Typography>
         </Typography>
       </Paper>
     )
   ), [product]);
 
-
   return (
     <Drawer
       anchor="right"
       open={open}
-      onClose={handleDrawerClose} // Sử dụng handleDrawerClose đã định nghĩa
+      onClose={onClose}
       PaperProps={{
         sx: {
           width: { xs: '100%', sm: 480, md: 520 },
@@ -199,9 +142,9 @@ const AddSpecificationDrawer = ({ open, onClose, product }) => {
           borderColor="divider"
         >
           <Typography variant="h6" fontWeight={500}>
-            {specification?.id ? "Chỉnh sửa thông số" : "Thêm thông số"}
+            Quản lý Thông số Kỹ thuật
           </Typography>
-          <IconButton onClick={handleDrawerClose} aria-label="Đóng Drawer" size="small">
+          <IconButton onClick={onClose} aria-label="Đóng Drawer" size="small">
             <X size={ICON_SIZE_CLOSE} />
           </IconButton>
         </Box>
@@ -213,79 +156,155 @@ const AddSpecificationDrawer = ({ open, onClose, product }) => {
             <CircularProgress />
           </Box>
         ) : (
-          <Box
-            component="form"
-            id="specification-form"
-            onSubmit={actions.handleSubmit}
-            sx={{ flexGrow: 1, overflowY: 'auto', pr: { xs: 0, sm: 0.5 }, pt: 0.5 }}
-          >
-            {!endpoint && product?.id && (
-              <Alert severity="warning" sx={{ mt: 1, mb:2 }} icon={<AlertTriangle size={ICON_SIZE_FIELD}/>}>
-                Sản phẩm này chưa có danh mục được hỗ trợ thông số kỹ thuật, hoặc danh mục không hợp lệ.
+          <Box sx={{ flexGrow: 1, overflowY: 'auto', pr: { xs: 0, sm: 0.5 }, pt: 0.5 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>Thêm Thông số Mới</Typography>
+            <form onSubmit={handleAddNewSpec} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-4 border rounded-lg bg-gray-100">
+              <TextField
+                label="Tên thông số"
+                name="name"
+                value={newSpec.name}
+                onChange={handleNewSpecChange}
+                fullWidth
+                size="small"
+                required
+                disabled={anyLoading}
+              />
+              <TextField
+                label="Giá trị"
+                name="value"
+                value={newSpec.value}
+                onChange={handleNewSpecChange}
+                fullWidth
+                size="small"
+                required
+                disabled={anyLoading}
+              />
+              <TextField
+                label="Đơn vị (tùy chọn)"
+                name="unit"
+                value={newSpec.unit}
+                onChange={handleNewSpecChange}
+                fullWidth
+                size="small"
+                disabled={anyLoading}
+              />
+              <TextField
+                label="Thứ tự hiển thị"
+                name="displayOrder"
+                type="number"
+                value={newSpec.displayOrder}
+                onChange={handleNewSpecChange}
+                fullWidth
+                size="small"
+                disabled={anyLoading}
+                inputProps={{ min: 1 }}
+              />
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                startIcon={loadingState.submit ? <CircularProgress size={20} color="inherit" /> : <Plus size={ICON_SIZE_BUTTON} />}
+                disabled={anyLoading || !newSpec.name || !newSpec.value}
+                sx={{ mt: 1, gridColumn: 'span 2' }}
+              >
+                {loadingState.submit ? 'Đang thêm...' : 'Thêm Thông số'}
+              </Button>
+            </form>
+
+            <Typography variant="h6" sx={{ mb: 2, mt: 4 }}>Thông số Hiện có ({specifications.length})</Typography>
+            {specifications.length === 0 && !loadingState.fetch && (
+              <Alert severity="info" variant="outlined" icon={<Info size={ICON_SIZE_FIELD} />} sx={{ mt: 1, mb: 2, fontSize: '0.875rem' }}>
+                Sản phẩm này chưa có thông số kỹ thuật nào.
               </Alert>
             )}
-            {endpoint && formFields.length > 0 && renderFormFieldsContent()}
-            {endpoint && (!formFields.length || (formFields.length === COMMON_FIELDS.length && !COMMON_FIELDS.some(cf => formFields.find(f => f.name === cf.name && f.label !== cf.label)))) && (
-                <Typography variant="body2" color="text.secondary" sx={{mt: 2, textAlign: 'center', p:2, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                    <Info size={ICON_SIZE_FIELD} style={{marginRight: '8px'}}/> Danh mục này không có thông số kỹ thuật chi tiết để thêm/sửa.
-                </Typography>
-            )}
-            {endpoint && formFields.length > 0 && !specification?.id && !loadingState.fetch && open && ( // Thêm open để chỉ hiển thị khi drawer mở
-                 <Alert severity="info" variant="outlined" icon={<Info size={ICON_SIZE_FIELD} />} sx={{ mt: 1, mb:2, fontSize: '0.875rem' }}>
-                    Chưa có thông số cho sản phẩm này. Điền form để thêm mới.
-                </Alert>
-            )}
-          </Box>
-        )}
-
-        {!showInitialLoadSpinner && (
-          <Box
-            sx={{
-              mt: 'auto',
-              pt: 2,
-              borderTop: 1,
-              borderColor: 'divider',
-              display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' },
-              gap: 1.5,
-              justifyContent: 'flex-end',
-              bgcolor: 'background.paper',
-            }}
-          >
-            {specification?.id && endpoint && (
-              <Button
-                variant="outlined"
-                color="error"
-                startIcon={<Trash size={ICON_SIZE_BUTTON}/>}
-                onClick={actions.handleDeleteClick}
-                disabled={anyLoading}
-                sx={{ mr: { sm: 'auto' } }}
-                size="medium"
-              >
-                Xóa
-              </Button>
-            )}
-            <Button
-              variant="text"
-              startIcon={<Undo2 size={ICON_SIZE_BUTTON} />}
-              onClick={handleDrawerClose}
-              disabled={anyLoading}
-              size="medium"
-            >
-              Hủy
-            </Button>
-            <Button
-              type="submit"
-              form="specification-form"
-              variant="contained"
-              color="primary"
-              startIcon={loadingState.submit ? <CircularProgress size={20} color="inherit" /> : (specification?.id ? <Check size={ICON_SIZE_BUTTON}/> : <Plus size={ICON_SIZE_BUTTON}/>)}
-              disabled={anyLoading || !canSubmit || loadingState.fetch}
-              size="medium"
-              sx={{minWidth: '140px'}}
-            >
-              {loadingState.submit ? 'Đang xử lý...' : (specification?.id ? 'Lưu thay đổi' : 'Thêm mới')}
-            </Button>
+            <Box>
+              {specifications.map((spec) => (
+                <Paper key={spec.id} variant="outlined" sx={{ p: 2, mb: 2, display: 'flex', flexDirection: 'column', gap: 1, bgcolor: 'background.paper' }}>
+                  {editingSpecId === spec.id ? (
+                    <form onSubmit={(e) => { e.preventDefault(); handleSaveEdit(); }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <TextField
+                        label="Tên thông số"
+                        name="name"
+                        value={editingSpecData.name || ''}
+                        onChange={handleEditSpecChange}
+                        fullWidth
+                        size="small"
+                        required
+                        disabled={anyLoading}
+                      />
+                      <TextField
+                        label="Giá trị"
+                        name="value"
+                        value={editingSpecData.value || ''}
+                        onChange={handleEditSpecChange}
+                        fullWidth
+                        size="small"
+                        required
+                        disabled={anyLoading}
+                      />
+                      <TextField
+                        label="Đơn vị (tùy chọn)"
+                        name="unit"
+                        value={editingSpecData.unit || ''}
+                        onChange={handleEditSpecChange}
+                        fullWidth
+                        size="small"
+                        disabled={anyLoading}
+                      />
+                      <TextField
+                        label="Thứ tự hiển thị"
+                        name="displayOrder"
+                        type="number"
+                        value={editingSpecData.displayOrder || ''}
+                        onChange={handleEditSpecChange}
+                        fullWidth
+                        size="small"
+                        disabled={anyLoading}
+                        inputProps={{ min: 1 }}
+                      />
+                      <Box sx={{ gridColumn: 'span 2', display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                        <Button onClick={handleCancelEdit} variant="outlined" disabled={anyLoading}>Hủy</Button>
+                        <Button
+                          type="submit"
+                          variant="contained"
+                          color="primary"
+                          startIcon={loadingState.submit ? <CircularProgress size={20} color="inherit" /> : <Save size={ICON_SIZE_BUTTON} />}
+                          disabled={anyLoading || !editingSpecData.name || !editingSpecData.value}
+                        >
+                          {loadingState.submit ? 'Đang lưu...' : 'Lưu thay đổi'}
+                        </Button>
+                      </Box>
+                    </form>
+                  ) : (
+                    <>
+                      <Typography variant="body1" fontWeight="medium">{spec.name}: {spec.value} {spec.unit}</Typography>
+                      <Typography variant="body2" color="text.secondary">Thứ tự hiển thị: {spec.displayOrder}</Typography>
+                      <Box sx={{ display: 'flex', gap: 1, mt: 1, justifyContent: 'flex-end' }}>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<Edit size={ICON_SIZE_BUTTON} />}
+                          onClick={() => handleEditClick(spec)}
+                          disabled={anyLoading}
+                        >
+                          Sửa
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          color="error"
+                          startIcon={<Trash size={ICON_SIZE_BUTTON} />}
+                          onClick={() => actions.handleDeleteClick(spec)}
+                          disabled={anyLoading}
+                        >
+                          Xóa
+                        </Button>
+                      </Box>
+                    </>
+                  )}
+                </Paper>
+              ))}
+            </Box>
           </Box>
         )}
       </Box>
@@ -296,24 +315,24 @@ const AddSpecificationDrawer = ({ open, onClose, product }) => {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle sx={{display: 'flex', alignItems: 'center', gap: 1}}>
-            <AlertTriangle color="orange" size={ICON_SIZE_CLOSE}/> Xác nhận xóa
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <AlertTriangle color="orange" size={ICON_SIZE_CLOSE} /> Xác nhận xóa
         </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Bạn có chắc chắn muốn xóa thông số kỹ thuật cho sản phẩm này? Hành động này không thể hoàn tác.
+            Bạn có chắc chắn muốn xóa thông số kỹ thuật "{specToDelete?.name}: {specToDelete?.value}" này không? Hành động này không thể hoàn tác.
           </DialogContentText>
         </DialogContent>
-        <DialogActions sx={{p:2}}>
+        <DialogActions sx={{ p: 2 }}>
           <Button onClick={actions.handleCloseDeleteDialog} color="inherit" variant="outlined" disabled={loadingState.delete}>
             Hủy
           </Button>
           <Button
-            onClick={actions.handleDelete}
+            onClick={actions.handleDeleteSpecification}
             color="error"
             variant="contained"
             disabled={loadingState.delete}
-            startIcon={loadingState.delete ? <CircularProgress size={20} color="inherit" /> : <Trash size={ICON_SIZE_BUTTON}/>}
+            startIcon={loadingState.delete ? <CircularProgress size={20} color="inherit" /> : <Trash size={ICON_SIZE_BUTTON} />}
             sx={{ minWidth: '100px' }}
           >
             {loadingState.delete ? 'Đang xóa...' : 'Xác nhận xóa'}

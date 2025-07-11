@@ -12,8 +12,8 @@ using SHN_Gear.Data;
 namespace SHN_Gear.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250703183534_AddProductSpecificationsTable")]
-    partial class AddProductSpecificationsTable
+    [Migration("20250711110335_RemoveOldSpecificationTables")]
+    partial class RemoveOldSpecificationTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -134,6 +134,42 @@ namespace SHN_Gear.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Addresses");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.BlogPost", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AuthorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.ToTable("BlogPosts");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Brand", b =>
@@ -388,6 +424,29 @@ namespace SHN_Gear.Migrations
                     b.ToTable("Deliveries");
                 });
 
+            modelBuilder.Entity("SHN_Gear.Models.HomepageConfig", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConfigJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("HomepageConfigurations");
+                });
+
             modelBuilder.Entity("SHN_Gear.Models.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -549,15 +608,35 @@ namespace SHN_Gear.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("FlashSaleEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("FlashSalePrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("FlashSaleStartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsBestSeller")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsFlashSale")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BrandId");
+                    b.HasIndex("BrandId")
+                        .HasDatabaseName("IX_Products_BrandId");
 
-                    b.HasIndex("CategoryId");
+                    b.HasIndex("CategoryId")
+                        .HasDatabaseName("IX_Products_CategoryId");
+
+                    b.HasIndex("IsFlashSale")
+                        .HasDatabaseName("IX_Products_IsFlashSale");
 
                     b.ToTable("Products");
                 });
@@ -662,7 +741,11 @@ namespace SHN_Gear.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductId");
+                    b.HasIndex("Price")
+                        .HasDatabaseName("IX_ProductVariants_Price");
+
+                    b.HasIndex("ProductId")
+                        .HasDatabaseName("IX_ProductVariants_ProductId");
 
                     b.ToTable("ProductVariants");
                 });
@@ -857,6 +940,17 @@ namespace SHN_Gear.Migrations
                         .HasForeignKey("UserId");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.BlogPost", b =>
+                {
+                    b.HasOne("SHN_Gear.Models.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.CartItem", b =>
