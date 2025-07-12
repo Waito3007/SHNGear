@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Globalization;
 using Microsoft.Extensions.Caching.Memory;
 using SHN_Gear.DTOs;
+using SHN_Gear.Configuration;
 
 namespace SHN_Gear.Services
 {
@@ -23,9 +24,10 @@ namespace SHN_Gear.Services
             _logger = logger;
             _cache = cache;
 
-            _apiKey = _configuration["AIConfig:Gemini:ApiKey"] ?? throw new ArgumentNullException("Gemini API Key not configured");
-            _model = _configuration["AIConfig:Gemini:Model"] ?? "gemini-1.5-flash";
-            _baseUrl = _configuration["AIConfig:Gemini:BaseUrl"] ?? "https://generativelanguage.googleapis.com/v1beta/models";
+            // Sử dụng environment variables hoặc fallback về appsettings
+            _apiKey = EnvironmentConfig.Gemini.ApiKey ?? _configuration["AIConfig:Gemini:ApiKey"] ?? throw new ArgumentNullException("Gemini API Key not configured");
+            _model = EnvironmentConfig.Gemini.Model ?? _configuration["AIConfig:Gemini:Model"] ?? "gemini-1.5-flash";
+            _baseUrl = EnvironmentConfig.Gemini.BaseUrl ?? _configuration["AIConfig:Gemini:BaseUrl"] ?? "https://generativelanguage.googleapis.com/v1beta/models";
         }
 
         // Đọc tri thức website từ file JSON (cache trong memory)

@@ -14,11 +14,22 @@ using SHN_Gear.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Load environment variables from .env file
+EnvironmentConfig.LoadEnvironmentVariables();
+
 builder.Services.AddMemoryCache();
 
-// 🔹 Kết nối SQL Server
+// 🔹 Kết nối SQL Server - sử dụng environment variables
+var connectionString = EnvironmentConfig.GetConnectionString()
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Database connection string not configured");
+
+// Debug logging
+Console.WriteLine($"Using connection string: {connectionString}");
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString,
+    sqlOptions => sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 
 // 🔹 Session
 builder.Services.AddDistributedMemoryCache();
@@ -62,8 +73,10 @@ builder.Services.AddSignalR(options =>
     options.PayloadSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
 
-// 🔹 JWT Authentication
-var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured");
+// 🔹 JWT Authentication - sử dụng environment variables
+var jwtKey = EnvironmentConfig.Jwt.SecretKey
+    ?? builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException("JWT Key not configured");
 var key = Encoding.UTF8.GetBytes(jwtKey);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -74,8 +87,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
+            ValidIssuer = EnvironmentConfig.Jwt.Issuer ?? builder.Configuration["Jwt:Issuer"],
+            ValidAudience = EnvironmentConfig.Jwt.Audience ?? builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(key),
             RoleClaimType = System.Security.Claims.ClaimTypes.Role
         };

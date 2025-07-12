@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using SHN_Gear.Configuration;
 
 namespace SHN_Gear.Services
 {
@@ -20,7 +21,13 @@ namespace SHN_Gear.Services
 
         public async Task<string> CreatePaymentAsync(string orderId, string orderInfo, long amount, bool isCardPayment = false)
         {
-            var momoConfig = _configuration.GetSection("MoMoConfig");
+            // Sử dụng environment variables hoặc fallback về appsettings
+            var partnerCode = EnvironmentConfig.MoMo.PartnerCode ?? _configuration["MoMoConfig:PartnerCode"] ?? throw new InvalidOperationException("MoMo PartnerCode not configured");
+            var accessKey = EnvironmentConfig.MoMo.AccessKey ?? _configuration["MoMoConfig:AccessKey"] ?? throw new InvalidOperationException("MoMo AccessKey not configured");
+            var secretKey = EnvironmentConfig.MoMo.SecretKey ?? _configuration["MoMoConfig:SecretKey"] ?? throw new InvalidOperationException("MoMo SecretKey not configured");
+            var apiEndpoint = EnvironmentConfig.MoMo.ApiEndpoint ?? _configuration["MoMoConfig:ApiEndpoint"] ?? throw new InvalidOperationException("MoMo ApiEndpoint not configured");
+            var returnUrl = EnvironmentConfig.MoMo.ReturnUrl ?? _configuration["MoMoConfig:ReturnUrl"] ?? throw new InvalidOperationException("MoMo ReturnUrl not configured");
+            var notifyUrl = EnvironmentConfig.MoMo.NotifyUrl ?? _configuration["MoMoConfig:NotifyUrl"] ?? throw new InvalidOperationException("MoMo NotifyUrl not configured");
 
             // Tạo requestId mới cho mỗi lần gọi API
             var requestId = Guid.NewGuid().ToString();
@@ -28,29 +35,29 @@ namespace SHN_Gear.Services
             var extraData = isCardPayment ? "{\"paymentType\":\"CREDIT_CARD\"}" : "";
 
             // Tạo rawHash với requestId
-            var rawHash = "accessKey=" + momoConfig["AccessKey"] +
+            var rawHash = "accessKey=" + accessKey +
                          "&amount=" + amount +
                          "&extraData=" + extraData +
-                         "&ipnUrl=" + momoConfig["NotifyUrl"] +
+                         "&ipnUrl=" + notifyUrl +
                          "&orderId=" + orderId +
                          "&orderInfo=" + orderInfo +
-                         "&partnerCode=" + momoConfig["PartnerCode"] +
-                         "&redirectUrl=" + momoConfig["ReturnUrl"] +
+                         "&partnerCode=" + partnerCode +
+                         "&redirectUrl=" + returnUrl +
                          "&requestId=" + requestId +  // Đảm bảo requestId được thêm vào
                          "&requestType=" + requestType;
 
-            var signature = ComputeHmacSha256(rawHash, momoConfig["SecretKey"]);
+            var signature = ComputeHmacSha256(rawHash, secretKey);
 
             var requestBody = new
             {
-                partnerCode = momoConfig["PartnerCode"],
+                partnerCode = partnerCode,
                 partnerName = "SHN Gear",
                 requestId = requestId,  // Truyền requestId vào body
                 amount = amount,
                 orderId = orderId,
                 orderInfo = orderInfo,
-                redirectUrl = momoConfig["ReturnUrl"],
-                ipnUrl = momoConfig["NotifyUrl"],
+                redirectUrl = returnUrl,
+                ipnUrl = notifyUrl,
                 requestType = requestType,
                 extraData = extraData,
                 signature = signature,
@@ -64,7 +71,7 @@ namespace SHN_Gear.Services
                     Encoding.UTF8,
                     "application/json");
 
-                var response = await httpClient.PostAsync(momoConfig["ApiEndpoint"], content);
+                var response = await httpClient.PostAsync(apiEndpoint, content);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -81,7 +88,7 @@ namespace SHN_Gear.Services
 
         public bool VerifySignature(string signature, string rawData)
         {
-            var secretKey = _configuration["MoMoConfig:SecretKey"];
+            var secretKey = EnvironmentConfig.MoMo.SecretKey ?? _configuration["MoMoConfig:SecretKey"] ?? throw new InvalidOperationException("MoMo SecretKey not configured");
             var computedSignature = ComputeHmacSha256(rawData, secretKey);
             return signature.Equals(computedSignature, StringComparison.OrdinalIgnoreCase);
         }

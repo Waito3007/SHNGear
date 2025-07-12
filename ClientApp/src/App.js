@@ -19,6 +19,7 @@ import PaymentSuccess from "@/components/PaymentSuccess/PaymentSuccess";
 import ComparePage from "@/components/CompareProduct/ComparePage";
 import Unauthorized from "@/pages/Unauthorized/Unauthorized";
 import { jwtDecode } from "jwt-decode";
+import { AuthModalProvider } from "@/contexts/AuthModalContext";
 
 // Import Chat Components
 import ChatWidget from "@/components/Chat/ChatWidget";
@@ -63,7 +64,7 @@ const ConditionalChatWidget = () => {
 };
 
 // Functional App component để dùng hook
-const App = () => {
+const AppContent = () => {
   const { sessionExpired, logout } = useAuthContext();
   const location = useLocation();
 
@@ -79,20 +80,90 @@ const App = () => {
 
   return (
     <>
-      <SessionExpiredModal open={sessionExpired} onLogin={handleLoginRedirect} />
+      <SessionExpiredModal
+        open={sessionExpired}
+        onLogin={handleLoginRedirect}
+      />
       <Routes>
         {/* Các route đặc biệt không cần bảo vệ */}
-        <Route path="/checkout" element={<DefaultLayout><Checkout /></DefaultLayout>} />
-        <Route path="/shoppingcart" element={<DefaultLayout><Shoppingcart /></DefaultLayout>} />
-        <Route path="/productlist" element={<DefaultLayout><ProductList /></DefaultLayout>} />
-        <Route path="/profile" element={<DefaultLayout><ProfilePage /></DefaultLayout>} />
-        <Route path="/product/:id" element={<DefaultLayout><ProductPage /></DefaultLayout>} />
-        <Route path="/unauthorized" element={<DefaultLayout><Unauthorized /></DefaultLayout>} />
-        <Route path="/payment-success" element={<DefaultLayout><PaymentSuccess /></DefaultLayout>} />
-        <Route path="/order-lookup" element={<DefaultLayout><React.Suspense fallback={<div>Đang tải trang tra cứu đơn hàng...</div>}>
-          {React.createElement(require("@/pages/OrderLookupPage/OrderLookupPage.jsx").default)}
-        </React.Suspense></DefaultLayout>} />
-        <Route path="/compare" element={<DefaultLayout><ComparePage /></DefaultLayout>} />
+        <Route
+          path="/checkout"
+          element={
+            <DefaultLayout>
+              <Checkout />
+            </DefaultLayout>
+          }
+        />
+        <Route
+          path="/shoppingcart"
+          element={
+            <DefaultLayout>
+              <Shoppingcart />
+            </DefaultLayout>
+          }
+        />
+        <Route
+          path="/productlist"
+          element={
+            <DefaultLayout>
+              <ProductList />
+            </DefaultLayout>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <DefaultLayout>
+              <ProfilePage />
+            </DefaultLayout>
+          }
+        />
+        <Route
+          path="/product/:id"
+          element={
+            <DefaultLayout>
+              <ProductPage />
+            </DefaultLayout>
+          }
+        />
+        <Route
+          path="/unauthorized"
+          element={
+            <DefaultLayout>
+              <Unauthorized />
+            </DefaultLayout>
+          }
+        />
+        <Route
+          path="/payment-success"
+          element={
+            <DefaultLayout>
+              <PaymentSuccess />
+            </DefaultLayout>
+          }
+        />
+        <Route
+          path="/order-lookup"
+          element={
+            <DefaultLayout>
+              <React.Suspense
+                fallback={<div>Đang tải trang tra cứu đơn hàng...</div>}
+              >
+                {React.createElement(
+                  require("@/pages/OrderLookupPage/OrderLookupPage.jsx").default
+                )}
+              </React.Suspense>
+            </DefaultLayout>
+          }
+        />
+        <Route
+          path="/compare"
+          element={
+            <DefaultLayout>
+              <ComparePage />
+            </DefaultLayout>
+          }
+        />
 
         {/* Admin Chat Dashboard Route */}
         <Route
@@ -146,6 +217,15 @@ const App = () => {
       {/* Chat Widget - ẩn trên các trang admin */}
       <ConditionalChatWidget />
     </>
+  );
+};
+
+// Main App component with AuthModalProvider
+const App = () => {
+  return (
+    <AuthModalProvider>
+      <AppContent />
+    </AuthModalProvider>
   );
 };
 
