@@ -133,6 +133,28 @@ namespace SHN_Gear.Migrations
                     b.ToTable("Addresses");
                 });
 
+            modelBuilder.Entity("SHN_Gear.Models.BlogImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BlogPostId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlogPostId");
+
+                    b.ToTable("BlogImage");
+                });
+
             modelBuilder.Entity("SHN_Gear.Models.BlogPost", b =>
                 {
                     b.Property<int>("Id")
@@ -442,6 +464,28 @@ namespace SHN_Gear.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("HomepageConfigurations");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.LoyaltyPoint", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LoyaltyPoints");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Order", b =>
@@ -822,6 +866,79 @@ namespace SHN_Gear.Migrations
                         });
                 });
 
+            modelBuilder.Entity("SHN_Gear.Models.SpinConfig", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("SpinCost")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SpinConfigs");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.SpinHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("PointsUsed")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SpinAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("SpinItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SpinHistories");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.SpinItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("DropRate")
+                        .HasColumnType("float");
+
+                    b.Property<bool>("IsLuckyNextTime")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VoucherCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SpinItems");
+                });
+
             modelBuilder.Entity("SHN_Gear.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -937,6 +1054,17 @@ namespace SHN_Gear.Migrations
                         .HasForeignKey("UserId");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.BlogImage", b =>
+                {
+                    b.HasOne("SHN_Gear.Models.BlogPost", "BlogPost")
+                        .WithMany("Images")
+                        .HasForeignKey("BlogPostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BlogPost");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.BlogPost", b =>
@@ -1160,6 +1288,11 @@ namespace SHN_Gear.Migrations
                     b.Navigation("User");
 
                     b.Navigation("Voucher");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.BlogPost", b =>
+                {
+                    b.Navigation("Images");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Brand", b =>

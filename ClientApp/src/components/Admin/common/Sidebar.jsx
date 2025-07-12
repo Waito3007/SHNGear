@@ -6,6 +6,12 @@ import { RateReview } from "@mui/icons-material";
 
 const SIDEBAR_ITEMS = [
 	{
+		name: "Quản lý Vòng Quay",
+		icon: DollarSign,
+		color: "#F43F5E",
+		href: "/admin/lucky-spin",
+	},
+	{
 		name: "Tổng quan",
 		icon: BarChart2,
 		color: "#6366f1",

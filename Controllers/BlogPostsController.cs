@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using SHN_Gear.Services;
 
 namespace SHN_Gear.Controllers
 {
@@ -15,31 +16,18 @@ namespace SHN_Gear.Controllers
     [ApiController]
     public class BlogPostsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly BlogPostService _service;
 
-        public BlogPostsController(AppDbContext context)
+        public BlogPostsController(BlogPostService service)
         {
-            _context = context;
+            _service = service;
         }
 
         // GET: api/BlogPosts
         [HttpGet]
         public async Task<ActionResult<IEnumerable<BlogPostDto>>> GetBlogPosts()
         {
-            var blogPosts = await _context.BlogPosts
-                .Include(bp => bp.Author)
-                .Select(bp => new BlogPostDto
-                {
-                    Id = bp.Id,
-                    Title = bp.Title,
-                    Content = bp.Content,
-                    AuthorId = bp.AuthorId,
-                    AuthorName = bp.Author.FullName, // Using FullName property from User model
-                    CreatedAt = bp.CreatedAt,
-                    UpdatedAt = bp.UpdatedAt,
-                    IsPublished = bp.IsPublished
-                })
-                .ToListAsync();
+            var blogPosts = await _service.GetAllAsync();
             return Ok(blogPosts);
         }
 
@@ -47,21 +35,7 @@ namespace SHN_Gear.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<BlogPostDto>> GetBlogPost(int id)
         {
-            var blogPost = await _context.BlogPosts
-                .Include(bp => bp.Author)
-                .Where(bp => bp.Id == id)
-                .Select(bp => new BlogPostDto
-                {
-                    Id = bp.Id,
-                    Title = bp.Title,
-                    Content = bp.Content,
-                    AuthorId = bp.AuthorId,
-                    AuthorName = bp.Author.FullName,
-                    CreatedAt = bp.CreatedAt,
-                    UpdatedAt = bp.UpdatedAt,
-                    IsPublished = bp.IsPublished
-                })
-                .FirstOrDefaultAsync();
+            var blogPost = await _service.GetByIdAsync(id);
 
             if (blogPost == null)
             {
@@ -79,35 +53,8 @@ namespace SHN_Gear.Controllers
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userId == null) return Unauthorized();
 
-            var blogPost = new BlogPost
-            {
-                Title = createBlogPostDto.Title,
-                Content = createBlogPostDto.Content,
-                AuthorId = int.Parse(userId),
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                IsPublished = createBlogPostDto.IsPublished
-            };
-
-            _context.BlogPosts.Add(blogPost);
-            await _context.SaveChangesAsync();
-
-            var createdBlogPost = await _context.BlogPosts
-                .Include(bp => bp.Author)
-                .Where(bp => bp.Id == blogPost.Id)
-                .Select(bp => new BlogPostDto
-                {
-                    Id = bp.Id,
-                    Title = bp.Title,
-                    Content = bp.Content,
-                    AuthorId = bp.AuthorId,
-                    AuthorName = bp.Author.FullName,
-                    CreatedAt = bp.CreatedAt,
-                    UpdatedAt = bp.UpdatedAt,
-                    IsPublished = bp.IsPublished
-                })
-                .FirstOrDefaultAsync();
-
+            var createdBlogPost = await _service.CreateAsync(createBlogPostDto, int.Parse(userId));
+            if (createdBlogPost == null) return BadRequest();
             return CreatedAtAction(nameof(GetBlogPost), new { id = createdBlogPost.Id }, createdBlogPost);
         }
 
@@ -116,34 +63,8 @@ namespace SHN_Gear.Controllers
         [Authorize(Roles = "Admin")] // Only Admins can update blog posts
         public async Task<IActionResult> UpdateBlogPost(int id, UpdateBlogPostDto updateBlogPostDto)
         {
-            var blogPost = await _context.BlogPosts.FindAsync(id);
-
-            if (blogPost == null)
-            {
-                return NotFound();
-            }
-
-            blogPost.Title = updateBlogPostDto.Title;
-            blogPost.Content = updateBlogPostDto.Content;
-            blogPost.UpdatedAt = DateTime.UtcNow;
-            blogPost.IsPublished = updateBlogPostDto.IsPublished;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!BlogPostExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
+            var result = await _service.UpdateAsync(id, updateBlogPostDto);
+            if (!result) return NotFound();
             return NoContent();
         }
 
@@ -152,21 +73,11 @@ namespace SHN_Gear.Controllers
         [Authorize(Roles = "Admin")] // Only Admins can delete blog posts
         public async Task<IActionResult> DeleteBlogPost(int id)
         {
-            var blogPost = await _context.BlogPosts.FindAsync(id);
-            if (blogPost == null)
-            {
-                return NotFound();
-            }
-
-            _context.BlogPosts.Remove(blogPost);
-            await _context.SaveChangesAsync();
-
+            var result = await _service.DeleteAsync(id);
+            if (!result) return NotFound();
             return NoContent();
         }
 
-        private bool BlogPostExists(int id)
-        {
-            return _context.BlogPosts.Any(e => e.Id == id);
-        }
+        // BlogPostExists logic moved to service if needed
     }
 }
