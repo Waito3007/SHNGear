@@ -18,32 +18,248 @@ import {
   Divider,
   Stack,
   Paper,
+  Chip,
+  Fade,
+  Zoom,
+  Slide,
 } from "@mui/material";
-import { Delete, Edit, Add, Close } from "@mui/icons-material";
-import { styled } from "@mui/material/styles";
+import {
+  Delete,
+  Edit,
+  Add,
+  Close,
+  LocationOn,
+  Phone,
+  Person,
+  Home,
+  Public,
+  Circle,
+} from "@mui/icons-material";
+import { styled, keyframes } from "@mui/material/styles";
 import { useAddresses } from "@/hooks/api/useAddresses";
 
+// Animations
+const glowPulse = keyframes`
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(255, 255, 255, 0.6); }
+`;
+
+const slideInFromLeft = keyframes`
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+`;
+
+const float = keyframes`
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+`;
+
 const StyledCard = styled(Card)(({ theme }) => ({
-  maxWidth: "800px",
+  maxWidth: "900px",
   margin: "2rem auto",
-  borderRadius: "12px",
-  backgroundColor: "#ffffff",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-  border: "1px solid #e5e7eb",
+  borderRadius: "24px",
+  background:
+    "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)",
+  backdropFilter: "blur(20px)",
+  border: "1px solid rgba(0,0,0,0.1)",
+  boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
   overflow: "hidden",
+  position: "relative",
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "2px",
+    background: "linear-gradient(90deg, #000000, #666666, #000000)",
+  },
 }));
 
 const AddressItem = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
-  marginBottom: theme.spacing(2),
-  borderRadius: "8px",
-  backgroundColor: "#ffffff",
-  border: "1px solid #e5e7eb",
-  transition: "all 0.2s ease",
+  marginBottom: theme.spacing(3),
+  borderRadius: "16px",
+  background:
+    "linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.9) 100%)",
+  backdropFilter: "blur(10px)",
+  border: "1px solid rgba(0,0,0,0.1)",
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+  position: "relative",
+  overflow: "hidden",
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "4px",
+    height: "100%",
+    background: "linear-gradient(180deg, #000000, #666666)",
+    opacity: 0,
+    transition: "opacity 0.3s ease",
+  },
   "&:hover": {
-    borderColor: "#cb1c22",
-    boxShadow: "0 4px 12px rgba(203,28,34,0.15)",
-    transform: "translateY(-1px)",
+    transform: "translateY(-8px) scale(1.02)",
+    boxShadow: "0 25px 50px rgba(0,0,0,0.15)",
+    border: "1px solid rgba(0,0,0,0.2)",
+    background:
+      "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(248,250,252,1) 100%)",
+    "&::before": {
+      opacity: 1,
+    },
+  },
+  animation: `${slideInFromLeft} 0.6s ease-out`,
+}));
+
+const TechButton = styled(Button)(({ theme, variant }) => ({
+  borderRadius: "12px",
+  textTransform: "none",
+  fontWeight: 600,
+  padding: "12px 24px",
+  position: "relative",
+  overflow: "hidden",
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+  ...(variant === "contained" && {
+    background: "linear-gradient(135deg, #000000 0%, #333333 100%)",
+    color: "#ffffff",
+    border: "1px solid rgba(0,0,0,0.2)",
+    boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+    "&:hover": {
+      transform: "translateY(-2px)",
+      boxShadow: "0 12px 40px rgba(0,0,0,0.2)",
+      background: "linear-gradient(135deg, #333333 0%, #555555 100%)",
+    },
+  }),
+  ...(variant === "outlined" && {
+    background: "rgba(255,255,255,0.8)",
+    backdropFilter: "blur(10px)",
+    border: "1px solid rgba(0,0,0,0.3)",
+    color: "#000000",
+    "&:hover": {
+      background: "rgba(0,0,0,0.05)",
+      borderColor: "#000000",
+      transform: "translateY(-2px)",
+    },
+  }),
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    top: 0,
+    left: "-100%",
+    width: "100%",
+    height: "100%",
+    background:
+      "linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)",
+    transition: "left 0.5s",
+  },
+  "&:hover::before": {
+    left: "100%",
+  },
+}));
+
+const TechIconButton = styled(IconButton)(({ theme, color }) => ({
+  width: 44,
+  height: 44,
+  borderRadius: "12px",
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+  position: "relative",
+  overflow: "hidden",
+  ...(color === "edit" && {
+    background:
+      "linear-gradient(135deg, rgba(0, 0, 0, 0.05), rgba(50, 50, 50, 0.05))",
+    color: "#000000",
+    border: "1px solid rgba(0, 0, 0, 0.2)",
+    "&:hover": {
+      background: "linear-gradient(135deg, #000000, #333333)",
+      color: "#ffffff",
+      transform: "translateY(-3px) rotate(5deg)",
+      boxShadow: "0 8px 25px rgba(0, 0, 0, 0.2)",
+    },
+  }),
+  ...(color === "delete" && {
+    background:
+      "linear-gradient(135deg, rgba(220, 220, 220, 0.1), rgba(180, 180, 180, 0.1))",
+    color: "#666666",
+    border: "1px solid rgba(0, 0, 0, 0.2)",
+    "&:hover": {
+      background: "linear-gradient(135deg, #ff4444, #ff6666)",
+      color: "white",
+      transform: "translateY(-3px) rotate(-5deg)",
+      boxShadow: "0 8px 25px rgba(255, 68, 68, 0.3)",
+    },
+  }),
+}));
+
+const TechModal = styled(Modal)(({ theme }) => ({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+}));
+
+const ModalContent = styled(Box)(({ theme }) => ({
+  width: "90%",
+  maxWidth: "500px",
+  background:
+    "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)",
+  backdropFilter: "blur(20px)",
+  borderRadius: "24px",
+  border: "1px solid rgba(0,0,0,0.1)",
+  boxShadow: "0 25px 50px rgba(0,0,0,0.15)",
+  position: "relative",
+  overflow: "hidden",
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "3px",
+    background: "linear-gradient(90deg, #000000, #666666, #000000)",
+  },
+}));
+
+const TechTextField = styled(TextField)(({ theme }) => ({
+  "& .MuiOutlinedInput-root": {
+    borderRadius: "12px",
+    background: "rgba(255,255,255,0.8)",
+    backdropFilter: "blur(10px)",
+    transition: "all 0.3s ease",
+    "&:hover": {
+      background: "rgba(255,255,255,0.9)",
+    },
+    "&.Mui-focused": {
+      background: "rgba(255,255,255,1)",
+      boxShadow: "0 0 0 3px rgba(0,0,0,0.1)",
+    },
+    "& fieldset": {
+      borderColor: "rgba(0,0,0,0.2)",
+    },
+    "&:hover fieldset": {
+      borderColor: "rgba(0,0,0,0.4)",
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: "#000000",
+      borderWidth: "2px",
+    },
+  },
+  "& .MuiInputLabel-root": {
+    color: "#64748b",
+    "&.Mui-focused": {
+      color: "#000000",
+    },
+  },
+}));
+
+const InfoChip = styled(Chip)(({ theme }) => ({
+  background:
+    "linear-gradient(135deg, rgba(0, 0, 0, 0.05), rgba(50, 50, 50, 0.05))",
+  backdropFilter: "blur(10px)",
+  border: "1px solid rgba(0, 0, 0, 0.2)",
+  borderRadius: "8px",
+  color: "#000000",
+  fontWeight: 600,
+  "& .MuiChip-icon": {
+    color: "#333333",
   },
 }));
 
@@ -53,6 +269,7 @@ const AddressComponent = () => {
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [addressToDelete, setAddressToDelete] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [newAddress, setNewAddress] = useState({
     fullName: "",
     addressLine1: "",
@@ -63,11 +280,24 @@ const AddressComponent = () => {
     country: "",
     phoneNumber: "",
   });
-  const { addresses, loading, error, fetchAddresses, addAddress, updateAddress, deleteAddress } = useAddresses();
+  const {
+    addresses,
+    loading,
+    error,
+    fetchAddresses,
+    addAddress,
+    updateAddress,
+    deleteAddress,
+  } = useAddresses();
 
   useEffect(() => {
     fetchAddresses();
-  }, [fetchAddresses]);
+  }, [fetchAddresses, refreshTrigger]);
+
+  // Debug log để theo dõi thay đổi addresses
+  useEffect(() => {
+    console.log("Addresses updated:", addresses);
+  }, [addresses]);
 
   const handleOpenModal = (address = null) => {
     setEditMode(!!address);
@@ -100,17 +330,15 @@ const AddressComponent = () => {
   const handleSaveAddress = async () => {
     try {
       if (editMode && selectedAddress) {
-        const response = await updateAddress(selectedAddress.id, newAddress);
-        // setAddresses(
-        //   addresses.map((addr) =>
-        //     addr.id === selectedAddress.id ? response.data : addr
-        //   )
-        // );
+        await updateAddress(selectedAddress.id, newAddress);
+        console.log("Địa chỉ đã được cập nhật");
       } else {
-        const response = await addAddress(newAddress);
-        // setAddresses([...addresses, response.data]);
+        await addAddress(newAddress);
+        console.log("Địa chỉ mới đã được thêm");
       }
       handleCloseModal();
+      // Trigger refresh
+      setRefreshTrigger((prev) => prev + 1);
     } catch (error) {
       console.error("Lỗi khi lưu địa chỉ:", error);
     }
@@ -130,7 +358,9 @@ const AddressComponent = () => {
     if (!addressToDelete) return;
     try {
       await deleteAddress(addressToDelete.id);
-      // setAddresses(addresses.filter((addr) => addr.id !== addressToDelete.id));
+      console.log("Địa chỉ đã được xóa");
+      // Trigger refresh
+      setRefreshTrigger((prev) => prev + 1);
     } catch (error) {
       console.error("Lỗi khi xóa địa chỉ:", error);
     }
@@ -150,181 +380,304 @@ const AddressComponent = () => {
   const hiddenFieldsInEditMode = ["id", "userId", "user"];
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box
+      sx={{
+        p: 3,
+        minHeight: "100vh",
+        background:
+          "linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%)",
+        position: "relative",
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background:
+            'url(\'data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23000000" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="1"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\')',
+          opacity: 0.5,
+        },
+      }}
+    >
       <StyledCard>
         <CardHeader
           title={
-            <Typography variant="h5" fontWeight="600" color="#1f2937">
-              Sổ địa chỉ
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Box
+                sx={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: "12px",
+                  background: "linear-gradient(135deg, #000000, #333333)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  animation: `${float} 3s ease-in-out infinite`,
+                }}
+              >
+                <LocationOn sx={{ color: "#ffffff", fontSize: 24 }} />
+              </Box>
+              <Box>
+                <Typography
+                  variant="h4"
+                  fontWeight="700"
+                  sx={{
+                    background: "linear-gradient(135deg, #000000, #333333)",
+                    backgroundClip: "text",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    mb: 0.5,
+                  }}
+                >
+                  Sổ Địa Chỉ
+                </Typography>
+                <Typography variant="body2" sx={{ color: "#666666" }}>
+                  Quản lý địa chỉ giao hàng của bạn
+                </Typography>
+              </Box>
+            </Box>
           }
           action={
-            <Button
+            <TechButton
               variant="contained"
               startIcon={<Add />}
               onClick={() => handleOpenModal()}
-              sx={{
-                backgroundColor: "#cb1c22",
-                color: "white",
-                fontWeight: "500",
-                px: 3,
-                py: 1,
-                borderRadius: "6px",
-                textTransform: "none",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                "&:hover": {
-                  backgroundColor: "#a11520",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
-                },
-              }}
             >
-              Thêm địa chỉ
-            </Button>
+              Thêm Địa Chỉ
+            </TechButton>
           }
           sx={{
-            borderBottom: "1px solid #e5e7eb",
-            pb: 2,
+            borderBottom: "1px solid rgba(0, 0, 0, 0.1)",
+            pb: 3,
           }}
         />
-        <CardContent>
+        <CardContent sx={{ p: 4 }}>
           {loading ? (
-            <Box textAlign="center" py={4}>
-              <Typography color="text.secondary">
+            <Box textAlign="center" py={6}>
+              <Box
+                sx={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: "50%",
+                  border: "3px solid rgba(0, 0, 0, 0.3)",
+                  borderTopColor: "#000000",
+                  animation: "spin 1s linear infinite",
+                  margin: "0 auto 16px",
+                  "@keyframes spin": {
+                    "0%": { transform: "rotate(0deg)" },
+                    "100%": { transform: "rotate(360deg)" },
+                  },
+                }}
+              />
+              <Typography sx={{ color: "#666666" }} variant="h6">
                 Đang tải địa chỉ...
               </Typography>
             </Box>
           ) : addresses.length === 0 ? (
-            <Box
-              textAlign="center"
-              py={8}
-              sx={{
-                backgroundColor: "#f9fafb",
-                borderRadius: "8px",
-                border: "1px dashed #d1d5db",
-              }}
-            >
-              <Typography variant="h6" fontWeight="500" mb={1} color="#6b7280">
-                Chưa có địa chỉ nào
-              </Typography>
-              <Typography variant="body2" color="#9ca3af" mb={3}>
-                Thêm địa chỉ để thuận tiện cho việc giao hàng
-              </Typography>
-              <Button
-                variant="outlined"
-                startIcon={<Add />}
-                onClick={() => handleOpenModal()}
+            <Fade in={true}>
+              <Box
+                textAlign="center"
+                py={8}
                 sx={{
-                  borderColor: "#cb1c22",
-                  color: "#cb1c22",
-                  fontWeight: "500",
-                  px: 3,
-                  py: 1,
-                  textTransform: "none",
-                  "&:hover": {
-                    backgroundColor: "#cb1c22",
-                    color: "white",
-                    borderColor: "#cb1c22",
-                  },
+                  background:
+                    "linear-gradient(135deg, rgba(0, 0, 0, 0.05), rgba(50, 50, 50, 0.05))",
+                  borderRadius: "20px",
+                  border: "2px dashed rgba(0, 0, 0, 0.3)",
+                  position: "relative",
+                  overflow: "hidden",
                 }}
               >
-                Thêm địa chỉ đầu tiên
-              </Button>
-            </Box>
+                <Box
+                  sx={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: "50%",
+                    background: "linear-gradient(135deg, #000000, #333333)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: "0 auto 24px",
+                    animation: `${glowPulse} 2s ease-in-out infinite`,
+                  }}
+                >
+                  <Home sx={{ color: "white", fontSize: 32 }} />
+                </Box>
+                <Typography
+                  variant="h5"
+                  fontWeight="600"
+                  mb={2}
+                  sx={{
+                    background: "linear-gradient(135deg, #000000, #333333)",
+                    backgroundClip: "text",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                  }}
+                >
+                  Chưa có địa chỉ nào
+                </Typography>
+                <Typography variant="body1" sx={{ color: "#666666" }} mb={4}>
+                  Thêm địa chỉ để thuận tiện cho việc giao hàng
+                </Typography>
+                <TechButton
+                  variant="outlined"
+                  startIcon={<Add />}
+                  onClick={() => handleOpenModal()}
+                  size="large"
+                >
+                  Thêm địa chỉ đầu tiên
+                </TechButton>
+              </Box>
+            </Fade>
           ) : (
             <Stack spacing={3}>
-              {addresses.map((address) => (
-                <AddressItem key={address.id}>
-                  <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="flex-start"
-                  >
-                    <Box>
-                      <Typography
-                        variant="h6"
-                        fontWeight="600"
-                        mb={1}
-                        color="#1f2937"
-                      >
-                        {address.fullName}
-                      </Typography>
-
-                      <Typography variant="body1" mb={0.5} color="#374151">
-                        {address.addressLine1}
-                      </Typography>
-
-                      {address.addressLine2 && (
-                        <Typography variant="body2" mb={1} color="#6b7280">
-                          {address.addressLine2}
-                        </Typography>
-                      )}
-
-                      <Typography variant="body2" mb={1} color="#6b7280">
-                        {address.city}, {address.state} {address.zipCode}
-                      </Typography>
-
-                      <Typography variant="body2" mb={2} color="#6b7280">
-                        {address.country}
-                      </Typography>
-
-                      <Box
-                        sx={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          px: 2,
-                          py: 0.5,
-                          backgroundColor: "#f3f4f6",
-                          borderRadius: "4px",
-                          border: "1px solid #e5e7eb",
-                        }}
-                      >
-                        <Typography
-                          variant="body2"
-                          fontWeight="500"
-                          color="#374151"
+              {addresses.map((address, index) => (
+                <Zoom
+                  in={true}
+                  style={{ transitionDelay: `${index * 100}ms` }}
+                  key={address.id}
+                >
+                  <AddressItem>
+                    <Stack
+                      direction="row"
+                      justifyContent="space-between"
+                      alignItems="flex-start"
+                    >
+                      <Box sx={{ flex: 1 }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 2,
+                            mb: 2,
+                          }}
                         >
-                          📞 {address.phoneNumber}
-                        </Typography>
+                          <Box
+                            sx={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: "10px",
+                              background:
+                                "linear-gradient(135deg, #000000, #333333)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Person sx={{ color: "white", fontSize: 20 }} />
+                          </Box>
+                          <Typography
+                            variant="h6"
+                            fontWeight="700"
+                            sx={{
+                              background:
+                                "linear-gradient(135deg, #000000, #333333)",
+                              backgroundClip: "text",
+                              WebkitBackgroundClip: "text",
+                              WebkitTextFillColor: "transparent",
+                            }}
+                          >
+                            {address.fullName}
+                          </Typography>
+                        </Box>
+
+                        <Stack spacing={1.5} sx={{ ml: 1 }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1.5,
+                            }}
+                          >
+                            <LocationOn
+                              sx={{ color: "#000000", fontSize: 18 }}
+                            />
+                            <Typography
+                              variant="body1"
+                              color="#374151"
+                              fontWeight="500"
+                            >
+                              {address.addressLine1}
+                            </Typography>
+                          </Box>
+
+                          {address.addressLine2 && (
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1.5,
+                                ml: 4.5,
+                              }}
+                            >
+                              <Circle sx={{ color: "#94a3b8", fontSize: 6 }} />
+                              <Typography variant="body2" color="#6b7280">
+                                {address.addressLine2}
+                              </Typography>
+                            </Box>
+                          )}
+
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1.5,
+                            }}
+                          >
+                            <Public sx={{ color: "#333333", fontSize: 18 }} />
+                            <Typography
+                              variant="body2"
+                              color="#6b7280"
+                              fontWeight="500"
+                            >
+                              {address.city}, {address.state} {address.zipCode}
+                            </Typography>
+                          </Box>
+
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1.5,
+                            }}
+                          >
+                            <Public sx={{ color: "#666666", fontSize: 18 }} />
+                            <Typography
+                              variant="body2"
+                              color="#6b7280"
+                              fontWeight="500"
+                            >
+                              {address.country}
+                            </Typography>
+                          </Box>
+                        </Stack>
+
+                        <Box sx={{ mt: 3 }}>
+                          <InfoChip
+                            icon={<Phone />}
+                            label={address.phoneNumber}
+                            size="medium"
+                          />
+                        </Box>
                       </Box>
-                    </Box>
-                    <Stack direction="row" spacing={1}>
-                      <IconButton
-                        onClick={() => handleOpenModal(address)}
-                        sx={{
-                          color: "#3b82f6",
-                          backgroundColor: "#eff6ff",
-                          border: "1px solid #dbeafe",
-                          width: 36,
-                          height: 36,
-                          "&:hover": {
-                            backgroundColor: "#3b82f6",
-                            color: "white",
-                            borderColor: "#3b82f6",
-                          },
-                        }}
-                      >
-                        <Edit fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        onClick={() => handleOpenDeleteDialog(address)}
-                        sx={{
-                          color: "#ef4444",
-                          backgroundColor: "#fef2f2",
-                          border: "1px solid #fecaca",
-                          width: 36,
-                          height: 36,
-                          "&:hover": {
-                            backgroundColor: "#ef4444",
-                            color: "white",
-                            borderColor: "#ef4444",
-                          },
-                        }}
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
+
+                      <Stack direction="row" spacing={1.5}>
+                        <TechIconButton
+                          color="edit"
+                          onClick={() => handleOpenModal(address)}
+                        >
+                          <Edit fontSize="small" />
+                        </TechIconButton>
+                        <TechIconButton
+                          color="delete"
+                          onClick={() => handleOpenDeleteDialog(address)}
+                        >
+                          <Delete fontSize="small" />
+                        </TechIconButton>
+                      </Stack>
                     </Stack>
-                  </Stack>
-                </AddressItem>
+                  </AddressItem>
+                </Zoom>
               ))}
             </Stack>
           )}
@@ -332,85 +685,112 @@ const AddressComponent = () => {
       </StyledCard>
 
       {/* Modal thêm/sửa địa chỉ */}
-      <Modal open={openModal} onClose={handleCloseModal}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: { xs: "90%", sm: "500px" },
-            bgcolor: "background.paper",
-            boxShadow: 24,
-            borderRadius: "12px",
-            maxHeight: "90vh",
-            overflowY: "auto",
-          }}
-        >
-          <Box sx={{ p: 3 }}>
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-              mb={3}
-            >
-              <Typography variant="h6" fontWeight="600">
-                {editMode ? "Chỉnh sửa địa chỉ" : "Thêm địa chỉ mới"}
-              </Typography>
-              <IconButton onClick={handleCloseModal}>
-                <Close />
-              </IconButton>
-            </Stack>
-
-            <Divider sx={{ mb: 3 }} />
-
-            <Stack spacing={2}>
-              {Object.keys(newAddress)
-                .filter(
-                  (key) => !editMode || !hiddenFieldsInEditMode.includes(key)
-                )
-                .map((key) => (
-                  <TextField
-                    key={key}
-                    fullWidth
-                    label={fieldLabels[key] || key}
-                    name={key}
-                    value={newAddress[key]}
-                    onChange={handleInputChange}
-                    size="small"
-                    variant="outlined"
-                    required={key !== "addressLine2"} // Chỉ addressLine2 là không bắt buộc
-                  />
-                ))}
-            </Stack>
-
-            <Stack direction="row" spacing={2} justifyContent="flex-end" mt={4}>
-              <Button
-                variant="outlined"
-                onClick={handleCloseModal}
-                sx={{
-                  color: "text.primary",
-                  borderColor: "rgba(0,0,0,0.23)",
-                }}
+      <TechModal open={openModal} onClose={handleCloseModal}>
+        <Slide direction="up" in={openModal} mountOnEnter unmountOnExit>
+          <ModalContent>
+            <Box sx={{ p: 4 }}>
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                mb={3}
               >
-                Hủy
-              </Button>
-              <Button
-                variant="contained"
-                onClick={handleSaveAddress}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <Box
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: "10px",
+                      background: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {editMode ? (
+                      <Edit sx={{ color: "white", fontSize: 20 }} />
+                    ) : (
+                      <Add sx={{ color: "white", fontSize: 20 }} />
+                    )}
+                  </Box>
+                  <Typography
+                    variant="h5"
+                    fontWeight="700"
+                    sx={{
+                      background: "linear-gradient(135deg, #1e40af, #7c3aed)",
+                      backgroundClip: "text",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                    }}
+                  >
+                    {editMode ? "Chỉnh sửa địa chỉ" : "Thêm địa chỉ mới"}
+                  </Typography>
+                </Box>
+                <TechIconButton onClick={handleCloseModal} color="delete">
+                  <Close />
+                </TechIconButton>
+              </Stack>
+
+              <Divider
                 sx={{
-                  backgroundColor: "primary.main",
-                  "&:hover": {
-                    backgroundColor: "primary.dark",
-                  },
+                  mb: 4,
+                  background:
+                    "linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent)",
+                  height: "2px",
+                  border: "none",
                 }}
+              />
+
+              <Stack spacing={3}>
+                {Object.keys(newAddress)
+                  .filter(
+                    (key) => !editMode || !hiddenFieldsInEditMode.includes(key)
+                  )
+                  .map((key, index) => (
+                    <Fade
+                      in={true}
+                      style={{ transitionDelay: `${index * 100}ms` }}
+                      key={key}
+                    >
+                      <TechTextField
+                        fullWidth
+                        label={fieldLabels[key] || key}
+                        name={key}
+                        value={newAddress[key]}
+                        onChange={handleInputChange}
+                        size="medium"
+                        variant="outlined"
+                        required={key !== "addressLine2"}
+                      />
+                    </Fade>
+                  ))}
+              </Stack>
+
+              <Stack
+                direction="row"
+                spacing={2}
+                justifyContent="flex-end"
+                mt={5}
               >
-                {editMode ? "Cập nhật" : "Lưu địa chỉ"}
-              </Button>
-            </Stack>
-          </Box>
-        </Box>
-      </Modal>
+                <TechButton
+                  variant="outlined"
+                  onClick={handleCloseModal}
+                  size="large"
+                >
+                  Hủy
+                </TechButton>
+                <TechButton
+                  variant="contained"
+                  onClick={handleSaveAddress}
+                  size="large"
+                >
+                  {editMode ? "Cập nhật" : "Lưu địa chỉ"}
+                </TechButton>
+              </Stack>
+            </Box>
+          </ModalContent>
+        </Slide>
+      </TechModal>
 
       {/* Dialog xác nhận xóa */}
       <Dialog
@@ -418,42 +798,59 @@ const AddressComponent = () => {
         onClose={handleCloseDeleteDialog}
         PaperProps={{
           sx: {
-            borderRadius: "12px",
-            padding: "16px",
+            borderRadius: "20px",
+            padding: "8px",
+            background:
+              "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid rgba(255,255,255,0.3)",
+            boxShadow: "0 25px 50px rgba(0,0,0,0.15)",
           },
         }}
       >
-        <DialogTitle fontWeight="600">Xác nhận xóa địa chỉ</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Bạn có chắc chắn muốn xóa địa chỉ này? Thao tác này không thể hoàn
-            tác.
+        <DialogTitle
+          fontWeight="700"
+          sx={{
+            textAlign: "center",
+            pb: 1,
+            background: "linear-gradient(135deg, #1e40af, #7c3aed)",
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+        >
+          ⚠️ Xác nhận xóa địa chỉ
+        </DialogTitle>
+        <DialogContent sx={{ textAlign: "center", py: 3 }}>
+          <DialogContentText sx={{ fontSize: "1.1rem", color: "#374151" }}>
+            Bạn có chắc chắn muốn xóa địa chỉ này?
+            <br />
+            <strong>Thao tác này không thể hoàn tác.</strong>
           </DialogContentText>
         </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button
+        <DialogActions sx={{ p: 3, justifyContent: "center", gap: 2 }}>
+          <TechButton
             onClick={handleCloseDeleteDialog}
-            sx={{
-              color: "text.primary",
-              "&:hover": {
-                backgroundColor: "rgba(0,0,0,0.04)",
-              },
-            }}
+            variant="outlined"
+            size="large"
           >
             Hủy
-          </Button>
-          <Button
+          </TechButton>
+          <TechButton
             onClick={handleDeleteAddress}
-            color="error"
             variant="contained"
+            size="large"
             sx={{
+              background:
+                "linear-gradient(135deg, #ef4444, #f87171) !important",
               "&:hover": {
-                backgroundColor: "error.dark",
+                background:
+                  "linear-gradient(135deg, #dc2626, #ef4444) !important",
               },
             }}
           >
-            Xóa
-          </Button>
+            Xóa ngay
+          </TechButton>
         </DialogActions>
       </Dialog>
     </Box>

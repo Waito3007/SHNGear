@@ -39,26 +39,6 @@ const ProductPage = () => {
     fetchProduct();
   }, [id]);
 
-  const getProductType = () => {
-    if (!product?.category?.name) return null;
-
-    const categoryName = product.category.name.toLowerCase();
-    if (categoryName.includes("phone") || categoryName.includes("điện thoại")) {
-      return "phone";
-    } else if (
-      categoryName.includes("laptop") ||
-      categoryName.includes("máy tính")
-    ) {
-      return "laptop";
-    } else if (
-      categoryName.includes("headphone") ||
-      categoryName.includes("tai nghe")
-    ) {
-      return "headphone";
-    }
-    return null;
-  };
-
   if (loading) {
     return (
       <Box className="min-h-screen flex items-center justify-center">
@@ -86,7 +66,6 @@ const ProductPage = () => {
       </Box>
     );
   }
-
 
   return (
     <Box className="min-h-screen bg-gray-50">
@@ -121,22 +100,20 @@ const ProductPage = () => {
             </Box>
           </Grid>
           {/* Product Specifications Section */}
-   
-            <Grid item xs={12}>
-              <Box
-                sx={{
-                  backgroundColor: "white",
-                  borderRadius: 2,
-                  overflow: "hidden",
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-                  p: 3, // Added padding
-                }}
-              >
-                <SpecificationDisplay
-                  productId={product.id}
-                />
-              </Box>
-            </Grid>
+
+          <Grid item xs={12}>
+            <Box
+              sx={{
+                backgroundColor: "white",
+                borderRadius: 2,
+                overflow: "hidden",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+                p: 3, // Added padding
+              }}
+            >
+              <SpecificationDisplay productId={product.id} />
+            </Box>
+          </Grid>
           {/* Product Reviews Section */}
           <Grid item xs={12}>
             <Box
