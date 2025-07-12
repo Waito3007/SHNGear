@@ -35,6 +35,8 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddSingleton<PayPalService>();
 builder.Services.AddScoped<MoMoPaymentService>();
+builder.Services.AddScoped<LoyaltySpinService>();
+builder.Services.AddScoped<BlogPostService>();
 
 // 🔹 Chat & AI Services
 builder.Services.AddScoped<ContextManager>();
@@ -133,7 +135,7 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
-
+builder.Services.AddRazorPages();
 // 🔹 JSON vòng lặp
 builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>
@@ -145,6 +147,7 @@ builder.Services.AddControllersWithViews()
     });
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
@@ -219,11 +222,11 @@ app.MapControllers();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller}/{action=Index}/{id?}");
+app.MapRazorPages();
+app.MapFallbackToFile("index.html");
 
 // 🔹 Map SignalR Hub với CORS policy riêng
 app.MapHub<SHN_Gear.Hubs.ChatHub>("/chatHub").RequireCors("SignalRPolicy");
-
-app.MapFallbackToFile("index.html");
 
 // 🔹 Seed database on startup if requested
 if (args.Contains("--seed-data"))

@@ -24,5 +24,7 @@ namespace SHN_Gear.Models
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         public bool IsPublished { get; set; } = false;
+
+        public ICollection<BlogImage> Images { get; set; }
     }
 }

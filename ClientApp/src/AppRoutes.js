@@ -20,11 +20,17 @@ import ReviewManagementPage from "@/pages/Admin/ReviewManagementPage";
 import BlogList from "@/pages/blog/BlogList";
 import BlogPostDetail from "@/pages/blog/BlogPostDetail";
 import BlogPostEditor from "@/pages/blog/BlogPostEditor";
-
+import LuckySpinPage from "@/pages/Admin/LuckySpinPage";
 const AppRoutes = [
+
   {
     path: "/admin/reviews",
     element: <ReviewManagementPage />,
+    requiresAdmin: true,
+  },
+  {
+    path: "/admin/lucky-spin",
+    element: <LuckySpinPage />,
     requiresAdmin: true,
   },
   // Blog routes

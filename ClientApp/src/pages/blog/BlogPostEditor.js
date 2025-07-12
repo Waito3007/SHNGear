@@ -10,6 +10,8 @@ const BlogPostEditor = () => {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [isPublished, setIsPublished] = useState(false);
+    const [images, setImages] = useState([]); // array of string
+    const [imagesInput, setImagesInput] = useState(''); // textarea value
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -18,11 +20,15 @@ const BlogPostEditor = () => {
     useEffect(() => {
         if (isEditing) {
             setLoading(true);
-            axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/BlogPosts/${id}`)
+            let apiBase = process.env.REACT_APP_API_BASE_URL;
+            if (!apiBase) apiBase = window.location.origin;
+            axios.get(`${apiBase}/api/BlogPosts/${id}`)
                 .then(response => {
                     setTitle(response.data.title);
                     setContent(response.data.content);
                     setIsPublished(response.data.isPublished);
+                    setImages(response.data.images || []);
+                    setImagesInput((response.data.images || []).join('\n'));
                 })
                 .catch(err => {
                     setError('Failed to load blog post for editing.');
@@ -37,24 +43,27 @@ const BlogPostEditor = () => {
         setLoading(true);
         setError(null);
 
-        const blogPostData = { title, content, isPublished };
-        const token = localStorage.getItem('token'); // Assuming you store JWT token in localStorage
-
+        // Parse images from textarea (split by line, trim, remove empty)
+        const imagesArr = imagesInput.split('\n').map(s => s.trim()).filter(Boolean);
+        const blogPostData = { title, content, isPublished, images: imagesArr };
+        const token = localStorage.getItem('token');
+        let apiBase = process.env.REACT_APP_API_BASE_URL;
+        if (!apiBase) apiBase = window.location.origin;
         try {
             if (isEditing) {
-                await axios.put(`/api/BlogPosts/${id}`, blogPostData, {
+                await axios.put(`${apiBase}/api/BlogPosts/${id}`, blogPostData, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
             } else {
-                await axios.post('/api/BlogPosts', blogPostData, {
+                await axios.post(`${apiBase}/api/BlogPosts`, blogPostData, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
             }
-            navigate('/admin/blog'); // Redirect to blog list after save
+            navigate('/admin/blog');
         } catch (err) {
             setError('Failed to save blog post. Make sure you are logged in as an Admin.');
             console.error(err);
@@ -65,6 +74,8 @@ const BlogPostEditor = () => {
 
     if (loading && isEditing) return <div>Loading blog post for editing...</div>;
 
+    // Parse images from textarea (split by line, trim, remove empty) for preview
+    const imagesArr = imagesInput.split('\n').map(s => s.trim()).filter(Boolean);
     return (
         <div className="container mx-auto p-4">
             <h1 className="text-3xl font-bold mb-6">{isEditing ? 'Edit Blog Post' : 'Create New Blog Post'}</h1>
@@ -91,6 +102,25 @@ const BlogPostEditor = () => {
                         modules={BlogPostEditor.modules}
                         formats={BlogPostEditor.formats}
                     />
+                </div>
+                <div>
+                    <label htmlFor="images" className="block text-sm font-medium text-gray-700">Images (one URL or path per line)</label>
+                    <textarea
+                        id="images"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-gray-950"
+                        rows={3}
+                        value={imagesInput}
+                        onChange={e => setImagesInput(e.target.value)}
+                        placeholder="https://... or images/ten-anh.jpg"
+                    />
+                    {imagesArr && imagesArr.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                            {imagesArr.map((img, idx) => {
+                                const src = (img.startsWith('http://') || img.startsWith('https://')) ? img : (img.startsWith('/') ? img : '/' + img);
+                                return <img key={idx} src={src} alt={`Ảnh ${idx+1}`} className="h-14 w-14 object-cover rounded border" />;
+                            })}
+                        </div>
+                    )}
                 </div>
                 <div className="flex items-center">
                     <input

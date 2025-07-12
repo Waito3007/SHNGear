@@ -34,6 +34,12 @@ namespace SHN_Gear.Data
         public DbSet<AIKnowledgeBase> AIKnowledgeBases { get; set; }
         public DbSet<BlogPost> BlogPosts { get; set; }
 
+        // Loyalty Spin
+        public DbSet<LoyaltyPoint> LoyaltyPoints { get; set; }
+        public DbSet<SpinConfig> SpinConfigs { get; set; }
+        public DbSet<SpinItem> SpinItems { get; set; }
+        public DbSet<SpinHistory> SpinHistories { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
