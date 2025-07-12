@@ -94,6 +94,12 @@ const ProductVariants = ({ variants, onAddToCart }) => {
         return;
       }
 
+      console.log("🔍 Debug selectedVariant:", selectedVariant);
+      console.log("🔍 Debug selectedVariant.id:", selectedVariant.id);
+      console.log("🔍 Debug all variants:", variants);
+      console.log("🔍 Debug first variant structure:", variants[0]);
+      console.log("🔍 Debug selectedVariant keys:", Object.keys(selectedVariant));
+
       if (selectedVariant.stockQuantity <= 0) {
         showSnackbar("❌ Sản phẩm này đã hết hàng!", "error");
         return;
@@ -113,15 +119,24 @@ const ProductVariants = ({ variants, onAddToCart }) => {
       if (token) {
         const decoded = jwtDecode(token);
         const userId = parseInt(decoded.sub, 10);
-        await axios.post(
+        
+        console.log("🔄 Đang gửi request thêm vào giỏ hàng:", {
+          productVariantId: selectedVariant.id,
+          quantity: quantity,
+          userId: userId,
+        });
+
+        const response = await axios.post(
           `${process.env.REACT_APP_API_BASE_URL}/api/Cart`,
           {
             productVariantId: selectedVariant.id,
-            quantity: 1,
+            quantity: quantity,
             userId: userId,
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
+        
+        console.log("✅ Response từ server:", response.data);
       } else {
         const sessionCart = JSON.parse(sessionStorage.getItem("cart")) || [];
         const existingItemIndex = sessionCart.findIndex(
@@ -129,11 +144,11 @@ const ProductVariants = ({ variants, onAddToCart }) => {
         );
 
         if (existingItemIndex >= 0) {
-          sessionCart[existingItemIndex].quantity += 1;
+          sessionCart[existingItemIndex].quantity += quantity;
         } else {
           sessionCart.push({
             productVariantId: selectedVariant.id,
-            quantity: 1,
+            quantity: quantity,
             productImage: primaryImage,
             productName: productName,
             variantColor: variantColor,
@@ -151,7 +166,27 @@ const ProductVariants = ({ variants, onAddToCart }) => {
       if (onAddToCart) onAddToCart();
     } catch (error) {
       console.error("❌ Lỗi khi thêm vào giỏ hàng:", error);
-      showSnackbar(`❌ Không thể thêm vào giỏ hàng: ${error.message}`, "error");
+      
+      if (error.response) {
+        // Server responded with error status
+        console.error("❌ Response error:", {
+          status: error.response.status,
+          data: error.response.data,
+          headers: error.response.headers
+        });
+        showSnackbar(
+          `❌ Lỗi ${error.response.status}: ${error.response.data || error.message}`, 
+          "error"
+        );
+      } else if (error.request) {
+        // Request was made but no response received
+        console.error("❌ No response received:", error.request);
+        showSnackbar("❌ Không thể kết nối đến server", "error");
+      } else {
+        // Something else happened
+        console.error("❌ Error:", error.message);
+        showSnackbar(`❌ Lỗi: ${error.message}`, "error");
+      }
     }
   };
 

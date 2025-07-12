@@ -578,13 +578,39 @@ const Checkout = () => {
                     primary={`${item.productName}`}
                     secondary={`${item.variantColor} - ${item.variantStorage}`}
                   />
-                  <Typography variant="body2">
-                    {item.quantity} ×{" "}
-                    {(
-                      item.productDiscountPrice || item.productPrice
-                    ).toLocaleString()}
-                    ₫
-                  </Typography>
+                  <Box sx={{ textAlign: 'right' }}>
+                    <Typography variant="body2">
+                      {item.quantity} × 
+                      {item.isFlashSale && item.productPrice !== item.productDiscountPrice ? (
+                        <>
+                          <span style={{ textDecoration: 'line-through', color: '#888', marginLeft: '4px' }}>
+                            {item.productPrice.toLocaleString()}₫
+                          </span>
+                          <br />
+                          <span style={{ color: '#f44336', fontWeight: 'bold' }}>
+                            {item.productDiscountPrice.toLocaleString()}₫
+                          </span>
+                          <span style={{ backgroundColor: '#f44336', color: 'white', fontSize: '10px', padding: '2px 4px', marginLeft: '4px', borderRadius: '2px' }}>
+                            FLASH SALE
+                          </span>
+                        </>
+                      ) : item.productDiscountPrice && item.productPrice !== item.productDiscountPrice ? (
+                        <>
+                          <span style={{ textDecoration: 'line-through', color: '#888', marginLeft: '4px' }}>
+                            {item.productPrice.toLocaleString()}₫
+                          </span>
+                          <br />
+                          <span style={{ color: '#f44336', fontWeight: 'bold' }}>
+                            {item.productDiscountPrice.toLocaleString()}₫
+                          </span>
+                        </>
+                      ) : (
+                        <span style={{ marginLeft: '4px' }}>
+                          {item.productPrice.toLocaleString()}₫
+                        </span>
+                      )}
+                    </Typography>
+                  </Box>
                 </ListItem>
               ))}
             </List>
@@ -603,37 +629,60 @@ const Checkout = () => {
             )}
 
             <Box sx={{ mb: 2 }}>
-              <Box
-                sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
-              >
-                <Typography>Tạm tính:</Typography>
-                <Typography>
-                  {(totalAmount + discountAmount).toLocaleString()}₫
-                </Typography>
-              </Box>
-              {discountAmount > 0 && (
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    mb: 1,
-                  }}
-                >
-                  <Typography>Giảm giá:</Typography>
-                  <Typography color="success.main">
-                    -{discountAmount.toLocaleString()}₫
-                  </Typography>
-                </Box>
-              )}
-              <Divider sx={{ my: 1 }} />
-              <Box
-                sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
-              >
-                <Typography variant="h6">Tổng cộng:</Typography>
-                <Typography variant="h6" color="error">
-                  {totalAmount.toLocaleString()}₫
-                </Typography>
-              </Box>
+              {/* Tính toán tổng giá gốc và tiết kiệm */}
+              {(() => {
+                const originalTotal = selectedItems.reduce((sum, item) => sum + (item.productPrice * item.quantity), 0);
+                const currentTotal = selectedItems.reduce((sum, item) => sum + ((item.productDiscountPrice || item.productPrice) * item.quantity), 0);
+                const productSavings = originalTotal - currentTotal;
+                const finalTotal = currentTotal - discountAmount;
+                
+                return (
+                  <>
+                    <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+                      <Typography>Tổng giá gốc:</Typography>
+                      <Typography>
+                        {originalTotal.toLocaleString()}₫
+                      </Typography>
+                    </Box>
+                    {productSavings > 0 && (
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+                        <Typography>Tiết kiệm từ sản phẩm:</Typography>
+                        <Typography color="success.main">
+                          -{productSavings.toLocaleString()}₫
+                        </Typography>
+                      </Box>
+                    )}
+                    <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+                      <Typography>Tạm tính:</Typography>
+                      <Typography>
+                        {currentTotal.toLocaleString()}₫
+                      </Typography>
+                    </Box>
+                    {discountAmount > 0 && (
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+                        <Typography>Giảm giá từ voucher:</Typography>
+                        <Typography color="success.main">
+                          -{discountAmount.toLocaleString()}₫
+                        </Typography>
+                      </Box>
+                    )}
+                    <Divider sx={{ my: 1 }} />
+                    <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+                      <Typography variant="h6">Tổng cộng:</Typography>
+                      <Typography variant="h6" color="error">
+                        {finalTotal.toLocaleString()}₫
+                      </Typography>
+                    </Box>
+                    {(productSavings + discountAmount) > 0 && (
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+                        <Typography variant="body2" color="success.main">
+                          Tổng tiết kiệm: {(productSavings + discountAmount).toLocaleString()}₫
+                        </Typography>
+                      </Box>
+                    )}
+                  </>
+                );
+              })()}
             </Box>
 
             <Button
