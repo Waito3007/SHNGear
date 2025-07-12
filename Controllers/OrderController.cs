@@ -32,15 +32,18 @@ namespace SHN_Gear.Controllers
         private readonly AppDbContext _context;
         private readonly MoMoPaymentService _momoService;
         private readonly IConfiguration _configuration;
+        private readonly EmailService _emailService; // Thêm dòng này
 
         public OrderController(
             AppDbContext context,
             MoMoPaymentService momoService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            EmailService emailService) // Thêm tham số này
         {
             _context = context;
             _momoService = momoService;
             _configuration = configuration;
+            _emailService = emailService; // Thêm dòng này
         }
 
 
@@ -436,6 +439,23 @@ namespace SHN_Gear.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
+                // Gửi email xác nhận nếu là đơn hàng COD
+                if (user != null && order.PaymentMethodId == 1) // 1 là COD
+                {
+                    // Lấy lại thông tin đầy đủ của đơn hàng để gửi mail
+                    var orderDetailsForEmail = await _context.Orders
+                        .Include(o => o.OrderItems)
+                            .ThenInclude(oi => oi.ProductVariant)
+                                .ThenInclude(pv => pv.Product)
+                        .Include(o => o.Address)
+                        .FirstOrDefaultAsync(o => o.Id == order.Id);
+
+                    if (orderDetailsForEmail != null)
+                    {
+                        await _emailService.SendOrderConfirmationEmailAsync(user, orderDetailsForEmail);
+                    }
+                }
+
                 return Ok(new
                 {
                     Message = "Đơn hàng đã được tạo.",
@@ -525,6 +545,12 @@ namespace SHN_Gear.Controllers
 
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
+
+                    // Gửi email xác nhận
+                    if (order.User != null)
+                    {
+                        await _emailService.SendOrderConfirmationEmailAsync(order.User, order);
+                    }
 
                     // Trả về URL xác nhận
                     return Ok(new
