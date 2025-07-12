@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar/Navbar";
 import Footer from "../components/Footer/Footer";
@@ -12,6 +12,7 @@ const ProfilePage = () => {
     { id: "address", label: "Sổ địa chỉ", icon: "🏠" },
     { id: "orders", label: "Đơn hàng", icon: "📦" },
     { id: "loyalty", label: "Tích điểm", icon: "⭐" },
+    { id: "voucher", label: "Voucher", icon: "🎟️" },
   ];
 
   return (

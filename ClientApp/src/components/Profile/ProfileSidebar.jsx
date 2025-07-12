@@ -10,6 +10,7 @@ const ProfileSidebar = ({ setActiveTab }) => {
         <li onClick={() => setActiveTab("orders")}>Đơn hàng của tôi</li>
         <li onClick={() => setActiveTab("loyalty")}>Khách hàng thân thiết</li>
         <li onClick={() => setActiveTab("address")}> Sổ địa chỉ nhận hàng</li>
+        <li onClick={() => setActiveTab("voucher")}>Voucher</li>
       </ul>
     </div>
   );

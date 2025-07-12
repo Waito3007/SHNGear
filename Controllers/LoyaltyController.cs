@@ -115,10 +115,12 @@ public class LoyaltyController : ControllerBase
 
         if (prizeType == "Voucher")
         {
+            decimal minOrder = Math.Ceiling(voucherValue / 0.3m / 1000) * 1000;
             var voucher = new Voucher
             {
                 Code = $"SPIN-{currentRank}-{Guid.NewGuid().ToString().Substring(0, 8)}",
                 DiscountAmount = voucherValue,
+                MinimumOrderAmount = minOrder,
                 ExpiryDate = DateTime.UtcNow.AddDays(30),
                 IsActive = true
             };
@@ -218,9 +220,10 @@ public class LoyaltyController : ControllerBase
         switch (currentRank)
         {
             case "Admin":
-                if (chance <= 50) return (500000, "Voucher"); // 50% nhận 500k
-                else if (chance <= 80) return (350000, "Voucher"); // 30% nhận 350k
-                else return (200000, "Voucher"); // 20% nhận 200k
+                // Admin không nên nhận voucher giá trị cao - SỬA LỖI BẢO MẬT
+                if (chance <= 30) return (50000, "Voucher"); // 30% nhận 50k
+                else if (chance <= 60) return (30000, "Voucher"); // 30% nhận 30k
+                else return (10000, "Voucher"); // 40% nhận 10k
             case "VIP 0":
                 if (chance <= 50) return (50000, "Voucher"); // 50% nhận 50k
                 else if (chance <= 80) return (20000, "Voucher"); // 30% nhận 20k

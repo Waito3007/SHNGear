@@ -30,9 +30,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
   const [originalTotal, setOriginalTotal] = useState(0);
   const [selectedItem, setSelectedItem] = useState(null);
   const [quantityModalOpen, setQuantityModalOpen] = useState(false);
-  const [voucherApplied, setVoucherApplied] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [voucherLoading, setVoucherLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -188,44 +186,18 @@ const CartDrawer = ({ isOpen, onClose }) => {
     }
   };
 
-  // Sửa lỗi: Cập nhật hàm handleApplyVoucher để tính lại totalAmount
-  const handleApplyVoucher = async () => {
-    if (!userId) {
-      alert("Vui lòng đăng nhập để tận hưởng ưu đãi.");
-      return;
-    }
-
-    if (voucherApplied) {
-      alert("Voucher đã được áp dụng.");
-      return;
-    }
-
-    setVoucherLoading(true);
-    try {
-      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/vouchers/apply`, { 
-        code: voucherCode, 
-        userId 
-      });
-      
-      const newDiscountAmount = response.data.discountAmount;
-      setDiscountAmount(newDiscountAmount);
-      setVoucherApplied(true);
-      
-      // Tính toán lại tổng tiền với giá trị giảm giá mới
-      calculateTotalAmount(selectedItems, newDiscountAmount);
-    } catch (error) {
-      console.error("Error applying voucher:", error);
-      alert(error.response?.data?.message || "Voucher không hợp lệ hoặc đã hết hạn.");
-    } finally {
-      setVoucherLoading(false);
-    }
+  // Xóa toàn bộ logic handleApplyVoucher, voucherError, voucherLoading, voucherId, voucherApplied
+  // Khi nhập mã voucher, chỉ lưu voucherCode vào state
+  // Không gọi API validate, không hiển thị lỗi, không kiểm tra sở hữu
+  // Khi chuyển sang checkout, chỉ truyền voucherCode (nếu có) sang bước tiếp theo
+  const handleApplyVoucher = () => {
+    setVoucherCode(voucherCode); // Lưu voucherCode vào state
   };
 
   // Sửa lỗi: Cập nhật hàm handleRemoveVoucher để tính lại totalAmount
   const handleRemoveVoucher = () => {
     setVoucherCode("");
     setDiscountAmount(0);
-    setVoucherApplied(false);
     calculateTotalAmount(selectedItems, 0); // Đặt discount = 0
   };
 
@@ -240,7 +212,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
         totalAmount, 
         originalTotal,
         discountAmount,
-        voucherCode: voucherApplied ? voucherCode : null 
+        voucherCode: voucherCode 
       } 
     });
   };
@@ -445,14 +417,15 @@ const CartDrawer = ({ isOpen, onClose }) => {
                     placeholder="Nhập mã giảm giá"
                     value={voucherCode}
                     onChange={(e) => setVoucherCode(e.target.value)}
-                    disabled={voucherApplied}
+                    disabled={false} // Không bắt buộc phải áp dụng voucher
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '4px',
                       }
                     }}
                   />
-                  {voucherApplied ? (
+                  {/* Không hiển thị lỗi voucher ở đây */}
+                  {voucherCode && (
                     <Button 
                       variant="outlined" 
                       color="error"
@@ -461,17 +434,16 @@ const CartDrawer = ({ isOpen, onClose }) => {
                     >
                       Hủy
                     </Button>
-                  ) : (
-                    <Button 
-                      variant="contained" 
-                      color="primary"
-                      onClick={handleApplyVoucher}
-                      disabled={!voucherCode || voucherLoading}
-                      sx={{ minWidth: '100px' }}
-                    >
-                      {voucherLoading ? <CircularProgress size={20} /> : 'Áp dụng'}
-                    </Button>
                   )}
+                  <Button 
+                    variant="contained" 
+                    color="primary"
+                    onClick={handleApplyVoucher}
+                    disabled={!voucherCode}
+                    sx={{ minWidth: '100px' }}
+                  >
+                    Áp dụng
+                  </Button>
                 </Box>
                 {discountAmount > 0 && (
                   <Box sx={{ 

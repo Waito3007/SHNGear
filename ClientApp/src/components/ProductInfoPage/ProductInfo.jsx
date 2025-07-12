@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Typography, Chip, Divider, Paper, Rating } from "@mui/material";
 import { Package, Award, Clock, Shield, Truck, Gift } from "lucide-react";
 
-const ProductInfo = ({ product }) => {
+const ProductInfo = ({ product, averageRating = 0, ratingCount = 0 }) => {
   return (
     <Paper
       elevation={0}
@@ -121,9 +121,9 @@ const ProductInfo = ({ product }) => {
 
           {/* Rating Display */}
           <Box sx={{ ml: "auto" }}>
-            <Rating value={4.5} precision={0.5} readOnly />
+            <Rating value={averageRating} readOnly precision={0.1} />
             <Typography variant="caption" sx={{ color: "white", ml: 1 }}>
-              (128 đánh giá)
+              ({ratingCount} đánh giá)
             </Typography>
           </Box>
         </Box>

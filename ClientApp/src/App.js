@@ -8,6 +8,7 @@ import ProfileInfo from "./components/Profile/ProfileInfo";
 import AddressBook from "./components/Profile/AddressBook";
 import UserOrders from "./components/Profile/UserOrders";
 import LoyaltyProgram from "./components/Profile/LoyaltyProgram";
+import VoucherList from "./components/Profile/VoucherList";
 import ProductList from "./pages/ProductList";
 import Shoppingcart from "./pages/shoppingcart";
 import Checkout from "./components/Checkout/Checkout";
@@ -66,6 +67,7 @@ export default class App extends Component {
           <Route path="address" element={<AddressBook />} />
           <Route path="orders" element={<UserOrders />} />
           <Route path="loyalty" element={<LoyaltyProgram />} />
+          <Route path="voucher" element={<VoucherList />} />
         </Route>
         {/* Xử lý các route từ AppRoutes */}
         {AppRoutes.map((route) => {

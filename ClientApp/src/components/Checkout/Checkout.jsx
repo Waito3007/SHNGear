@@ -27,9 +27,11 @@ const Checkout = () => {
   const { 
     selectedItems = [], 
     totalAmount = 0, 
-    voucherCode = "", 
-    discountAmount = 0
+    voucherCode = ""
   } = location.state || {};
+
+  // Thêm state cho discountAmount
+  const [discountAmount, setDiscountAmount] = useState(0);
   
   const [userId, setUserId] = useState(null);
   const [addresses, setAddresses] = useState([]);
@@ -50,7 +52,17 @@ const Checkout = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [error, setError] = useState(null);
-  const [finalAmount, setFinalAmount] = useState(totalAmount);
+  const [finalAmount, setFinalAmount] = useState(0);
+  // State bổ sung
+  const [voucherValid, setVoucherValid] = useState(false);
+  const [voucherError, setVoucherError] = useState("");
+
+  // Cập nhật finalAmount khi totalAmount thay đổi
+  useEffect(() => {
+    if (!voucherValid) {
+      setFinalAmount(totalAmount);
+    }
+  }, [totalAmount, voucherValid]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -65,13 +77,79 @@ const Checkout = () => {
         console.error("Lỗi khi giải mã token:", error);
       }
     }
+    fetchPaymentMethods();
+  }, []);
 
-    if (voucherCode) {
-      fetchVoucherId(voucherCode);
+  // Cải thiện validation voucher với debounce và error handling tốt hơn
+  useEffect(() => {
+    if (!voucherCode) {
+      setVoucherValid(false);
+      setVoucherError("");
+      setDiscountAmount(0);
+      setFinalAmount(totalAmount);
+      return;
     }
 
-    fetchPaymentMethods();
-  }, [voucherCode]);
+    // Debounce để tránh gọi API quá nhiều
+    const timeoutId = setTimeout(async () => {
+      try {
+        const url = userId 
+          ? `${process.env.REACT_APP_API_BASE_URL}/api/vouchers/validate/${voucherCode}?userId=${userId}`
+          : `${process.env.REACT_APP_API_BASE_URL}/api/vouchers/validate/${voucherCode}`;
+        
+        const res = await axios.get(url);
+        
+        if (!res.data.isValid) {
+          // Hiển thị lỗi chi tiết hơn
+          const details = res.data.validationDetails;
+          let errorMessage = "Voucher không hợp lệ.";
+          
+          if (!details.isActive) {
+            errorMessage = "Voucher đã bị tắt.";
+          } else if (!details.notExpired) {
+            errorMessage = "Voucher đã hết hạn.";
+          } else if (details.hasUsageLimit) {
+            errorMessage = "Voucher đã hết lượt sử dụng.";
+          } else if (!details.userOwnsVoucher && userId) {
+            errorMessage = "Bạn chưa sở hữu voucher này.";
+          }
+          
+          setVoucherValid(false);
+          setVoucherError(errorMessage);
+          setDiscountAmount(0);
+          setFinalAmount(totalAmount);
+          return;
+        }
+
+        // Kiểm tra giá trị tối thiểu
+        if (totalAmount < res.data.minimumOrderAmount) {
+          setVoucherValid(false);
+          setVoucherError(`Đơn hàng chưa đạt giá trị tối thiểu ${res.data.minimumOrderAmount.toLocaleString()}₫ để áp dụng voucher.`);
+          setDiscountAmount(0);
+          setFinalAmount(totalAmount);
+          return;
+        }
+
+        setVoucherValid(true);
+        setVoucherError("");
+        setDiscountAmount(res.data.discountAmount);
+        setFinalAmount(Math.max(0, totalAmount - res.data.discountAmount));
+        
+        // Lưu voucherId để sử dụng khi đặt hàng
+        if (res.data.voucherId) {
+          setVoucherId(res.data.voucherId);
+        }
+      } catch (err) {
+        console.error("Lỗi validate voucher:", err);
+        setVoucherValid(false);
+        setVoucherError(err.response?.data?.Message || "Lỗi khi kiểm tra voucher. Vui lòng thử lại.");
+        setDiscountAmount(0);
+        setFinalAmount(totalAmount);
+      }
+    }, 500); // Debounce 500ms
+
+    return () => clearTimeout(timeoutId);
+  }, [voucherCode, totalAmount, userId]);
 
   const fetchAddresses = async (userId) => {
     try {
@@ -86,15 +164,7 @@ const Checkout = () => {
     }
   };
 
-  const fetchVoucherId = async (code) => {
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/vouchers/code/${code}`);
-      setVoucherId(response.data.id);
-    } catch (error) {
-      console.error("Lỗi khi lấy voucher:", error);
-      setError("Mã giảm giá không hợp lệ hoặc đã hết hạn");
-    }
-  };
+  // Xóa hàm fetchVoucherId không sử dụng - voucherId đã được set trong validateVoucher
 
   const fetchPaymentMethods = async () => {
     try {
@@ -179,7 +249,7 @@ const Checkout = () => {
         quantity: item.quantity,
         price: item.productDiscountPrice || item.productPrice,
       })),
-      voucherId: voucherId || null,
+      voucherId: voucherValid ? voucherId : null,
     };
 
     try {
@@ -487,6 +557,10 @@ const Checkout = () => {
                   -{discountAmount.toLocaleString()}₫
                 </Typography>
               </Box>
+            )}
+
+            {voucherError && (
+              <Alert severity="error" sx={{ mb: 2 }}>{voucherError}</Alert>
             )}
 
             <Box sx={{ mb: 2 }}>

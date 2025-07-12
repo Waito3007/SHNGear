@@ -17,7 +17,7 @@ public class ReviewController : ControllerBase
     public async Task<ActionResult<IEnumerable<ReviewDto>>> GetReviewsByProduct(int productId)
     {
         var reviews = await _context.Reviews
-            .Where(r => r.ProductId == productId && r.IsApproved)
+            .Where(r => r.ProductId == productId)
             .Include(r => r.User)
             .OrderByDescending(r => r.CreatedAt)
             .Select(r => new ReviewDto
@@ -40,7 +40,7 @@ public class ReviewController : ControllerBase
     public async Task<ActionResult<double>> GetAverageRating(int productId)
     {
         var avg = await _context.Reviews
-            .Where(r => r.ProductId == productId && r.IsApproved)
+            .Where(r => r.ProductId == productId)
             .AverageAsync(r => (double?)r.Rating) ?? 0;
 
         return Ok(avg);

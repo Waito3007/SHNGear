@@ -28,7 +28,12 @@ const ProductPage = () => {
           throw new Error("Không thể tải dữ liệu sản phẩm.");
         }
         const data = await response.json();
-        setProduct(data);
+        // Lưu thêm averageRating và ratingCount nếu có
+        setProduct({
+          ...data,
+          averageRating: data.averageRating ?? 0,
+          ratingCount: data.ratingCount ?? 0,
+        });
       } catch (err) {
         setError(err.message);
       } finally {
@@ -114,7 +119,11 @@ const ProductPage = () => {
           {/* Phần thông tin sản phẩm */}
           <Grid item xs={12} md={6} lg={7}>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              <ProductInfo product={product} />
+              <ProductInfo 
+                product={product}
+                averageRating={product.averageRating}
+                ratingCount={product.ratingCount}
+              />
               <ProductVariants
                 variants={product.variants || []}
                 onAddToCart={() => {}}

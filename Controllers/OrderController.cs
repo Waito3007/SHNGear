@@ -174,6 +174,12 @@ namespace SHN_Gear.Controllers
                     {
                         return BadRequest("Voucher không hợp lệ.");
                     }
+                    // Kiểm tra số lượt sử dụng tối đa
+                    var usedCount = await _context.UserVouchers.CountAsync(uv => uv.VoucherId == voucher.Id && uv.IsUsed);
+                    if (voucher.MaxUsageCount > 0 && usedCount >= voucher.MaxUsageCount)
+                    {
+                        return BadRequest("Voucher đã hết lượt sử dụng.");
+                    }
                     order.VoucherId = updateOrderDto.VoucherId;
                 }
                 else
@@ -215,6 +221,12 @@ namespace SHN_Gear.Controllers
 
                 // Tính toán lại tổng tiền
                 order.TotalAmount = order.OrderItems.Sum(oi => oi.Quantity * oi.Price);
+
+                // Kiểm tra giá trị tối thiểu đơn hàng cho voucher
+                if (voucher != null && order.TotalAmount < voucher.MinimumOrderAmount)
+                {
+                    return BadRequest($"Đơn hàng chưa đạt giá trị tối thiểu {voucher.MinimumOrderAmount:N0}đ để áp dụng voucher.");
+                }
 
                 // Áp dụng voucher nếu có
                 if (voucher != null)
@@ -311,6 +323,13 @@ namespace SHN_Gear.Controllers
                         return BadRequest("Voucher không hợp lệ hoặc đã hết hạn.");
                     }
 
+                    // Kiểm tra số lượt sử dụng tối đa
+                    var usedCount = await _context.UserVouchers.CountAsync(uv => uv.VoucherId == voucher.Id && uv.IsUsed);
+                    if (voucher.MaxUsageCount > 0 && usedCount >= voucher.MaxUsageCount)
+                    {
+                        return BadRequest("Voucher đã hết lượt sử dụng.");
+                    }
+
                     // Kiểm tra xem voucher đã được gán cho người dùng chưa
                     userVoucher = await _context.UserVouchers
                         .FirstOrDefaultAsync(uv => uv.VoucherId == voucher.Id && uv.UserId == orderDto.UserId.Value);
@@ -355,6 +374,12 @@ namespace SHN_Gear.Controllers
                         Price = oi.Price
                     }).ToList()
                 };
+
+                // Kiểm tra giá trị tối thiểu đơn hàng cho voucher
+                if (voucher != null && order.TotalAmount < voucher.MinimumOrderAmount)
+                {
+                    return BadRequest($"Đơn hàng chưa đạt giá trị tối thiểu {voucher.MinimumOrderAmount:N0}đ để áp dụng voucher.");
+                }
 
                 // Apply voucher discount
                 if (voucher != null)
@@ -514,13 +539,14 @@ namespace SHN_Gear.Controllers
                     // Mark voucher as used if exists
                     if (order.VoucherId.HasValue && order.UserId.HasValue)
                     {
-                        var userVoucher = new UserVoucher
+                        var userVoucher = await _context.UserVouchers
+                            .FirstOrDefaultAsync(uv => uv.UserId == order.UserId.Value && uv.VoucherId == order.VoucherId.Value);
+                        
+                        if (userVoucher != null && !userVoucher.IsUsed)
                         {
-                            UserId = order.UserId.Value,
-                            VoucherId = order.VoucherId.Value,
-                            UsedAt = DateTime.UtcNow
-                        };
-                        _context.UserVouchers.Add(userVoucher);
+                            userVoucher.IsUsed = true;
+                            _context.UserVouchers.Update(userVoucher);
+                        }
                     }
 
                     await _context.SaveChangesAsync();

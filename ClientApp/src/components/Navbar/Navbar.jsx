@@ -489,7 +489,7 @@ const handleSearchSubmit = (e) => {
   </p>
 </div>
            {/* Thêm điều kiện hiển thị cho admin */}
-          {user.role?.id === 1 && (
+          {user?.role?.id === 1 && (
             <NavLink 
               to="/admin/overview"
               className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"

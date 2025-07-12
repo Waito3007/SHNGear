@@ -38,7 +38,7 @@ public class ProductsController : ControllerBase
 
     //Lấy thông tin chi tiết sản phẩm theo ID
     [HttpGet("{id}")]
-    public async Task<ActionResult<Product>> GetProduct(int id)
+    public async Task<ActionResult> GetProduct(int id)
     {
         var product = await _context.Products
             .Include(p => p.Images)
@@ -52,7 +52,22 @@ public class ProductsController : ControllerBase
             return NotFound();
         }
 
-        return product;
+        var averageRating = await _context.Reviews.Where(r => r.ProductId == product.Id).AnyAsync()
+            ? await _context.Reviews.Where(r => r.ProductId == product.Id).AverageAsync(r => (double?)r.Rating) ?? 0
+            : 0;
+        var ratingCount = await _context.Reviews.CountAsync(r => r.ProductId == product.Id);
+
+        return Ok(new {
+            product.Id,
+            product.Name,
+            product.Description,
+            product.Brand,
+            product.Category,
+            product.Images,
+            product.Variants,
+            averageRating,
+            ratingCount
+        });
     }
 
     // Thêm sản phẩm mới
