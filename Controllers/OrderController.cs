@@ -46,6 +46,48 @@ namespace SHN_Gear.Controllers
             _emailService = emailService; // Thêm dòng này
         }
 
+        // Test endpoint for email functionality
+        [HttpPost("test-email/{orderId}")]
+        public async Task<IActionResult> TestEmailForOrder(int orderId)
+        {
+            try
+            {
+                var order = await _context.Orders
+                    .Include(o => o.OrderItems)
+                        .ThenInclude(oi => oi.ProductVariant)
+                            .ThenInclude(pv => pv.Product)
+                    .Include(o => o.Address)
+                    .Include(o => o.User)
+                    .FirstOrDefaultAsync(o => o.Id == orderId);
+
+                if (order == null)
+                {
+                    return NotFound("Đơn hàng không tồn tại");
+                }
+
+                if (order.User == null || string.IsNullOrEmpty(order.User.Email))
+                {
+                    return BadRequest("Đơn hàng không có thông tin email người dùng");
+                }
+
+                await _emailService.SendOrderConfirmationEmailAsync(order.User, order);
+
+                return Ok(new { 
+                    Success = true, 
+                    Message = $"Email đã được gửi tới {order.User.Email}",
+                    OrderId = orderId 
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { 
+                    Success = false, 
+                    Message = $"Lỗi khi gửi email: {ex.Message}",
+                    OrderId = orderId 
+                });
+            }
+        }
+
 
 
 
@@ -439,20 +481,29 @@ namespace SHN_Gear.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                // Gửi email xác nhận nếu là đơn hàng COD
-                if (user != null && order.PaymentMethodId == 1) // 1 là COD
+                // Gửi email xác nhận cho tất cả đơn hàng (không chỉ COD)
+                if (user != null && !string.IsNullOrEmpty(user.Email))
                 {
-                    // Lấy lại thông tin đầy đủ của đơn hàng để gửi mail
-                    var orderDetailsForEmail = await _context.Orders
-                        .Include(o => o.OrderItems)
-                            .ThenInclude(oi => oi.ProductVariant)
-                                .ThenInclude(pv => pv.Product)
-                        .Include(o => o.Address)
-                        .FirstOrDefaultAsync(o => o.Id == order.Id);
-
-                    if (orderDetailsForEmail != null)
+                    try
                     {
-                        await _emailService.SendOrderConfirmationEmailAsync(user, orderDetailsForEmail);
+                        // Lấy lại thông tin đầy đủ của đơn hàng để gửi mail
+                        var orderDetailsForEmail = await _context.Orders
+                            .Include(o => o.OrderItems)
+                                .ThenInclude(oi => oi.ProductVariant)
+                                    .ThenInclude(pv => pv.Product)
+                            .Include(o => o.Address)
+                            .Include(o => o.User)
+                            .FirstOrDefaultAsync(o => o.Id == order.Id);
+
+                        if (orderDetailsForEmail != null)
+                        {
+                            await _emailService.SendOrderConfirmationEmailAsync(user, orderDetailsForEmail);
+                        }
+                    }
+                    catch (Exception emailEx)
+                    {
+                        // Log email error but don't fail the order
+                        Console.WriteLine($"Lỗi gửi email xác nhận đơn hàng {order.Id}: {emailEx.Message}");
                     }
                 }
 

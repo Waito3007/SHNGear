@@ -2,6 +2,7 @@ using PayPalCheckoutSdk.Core;
 using PayPalCheckoutSdk.Orders;
 using System.Text.Json;
 using System.Globalization;
+using SHN_Gear.Configuration;
 
 namespace SHN_Gear.Services
 {
@@ -16,10 +17,12 @@ namespace SHN_Gear.Services
             _config = config;
             _logger = logger;
 
-            var clientId = _config["PayPal:ClientId"];
-            var secret = _config["PayPal:Secret"];
+            // Sử dụng environment variables hoặc fallback về appsettings
+            var clientId = EnvironmentConfig.PayPal.ClientId ?? _config["PayPal:ClientId"] ?? throw new InvalidOperationException("PayPal ClientId not configured");
+            var secret = EnvironmentConfig.PayPal.Secret ?? _config["PayPal:Secret"] ?? throw new InvalidOperationException("PayPal Secret not configured");
+            var mode = EnvironmentConfig.PayPal.Mode ?? _config["PayPal:Mode"] ?? "Sandbox";
 
-            PayPalEnvironment environment = _config["PayPal:Mode"] == "Sandbox"
+            PayPalEnvironment environment = mode == "Sandbox"
                 ? new SandboxEnvironment(clientId, secret)
                 : new LiveEnvironment(clientId, secret);
 
