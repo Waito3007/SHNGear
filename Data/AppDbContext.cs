@@ -57,6 +57,22 @@ namespace SHN_Gear.Data
                 new PaymentMethod { Id = 2, Name = "MoMo", Description = "Thanh toán bằng Momo" },
                 new PaymentMethod { Id = 3, Name = "Paypal", Description = "Thanh toán bằng ví Paypal" }
             );
+
+            // ✅ Seed dữ liệu mặc định cho SpinConfig
+            modelBuilder.Entity<SpinConfig>().HasData(
+                new SpinConfig { Id = 1, SpinCost = 100, UpdatedAt = DateTime.UtcNow }
+            );
+
+            // ✅ Seed dữ liệu mặc định cho SpinItems
+            modelBuilder.Entity<SpinItem>().HasData(
+                new SpinItem { Id = 1, Name = "Chúc may mắn lần sau", Description = "Hãy thử lại nhé!", DropRate = 0.4, IsLuckyNextTime = true },
+                new SpinItem { Id = 2, Name = "Voucher 50K", Description = "Giảm 50,000đ cho đơn hàng từ 500K", DropRate = 0.15, VoucherCode = "VOUCHER50K" },
+                new SpinItem { Id = 3, Name = "Voucher 100K", Description = "Giảm 100,000đ cho đơn hàng từ 1M", DropRate = 0.1, VoucherCode = "VOUCHER100K" },
+                new SpinItem { Id = 4, Name = "Voucher 200K", Description = "Giảm 200,000đ cho đơn hàng từ 2M", DropRate = 0.05, VoucherCode = "VOUCHER200K" },
+                new SpinItem { Id = 5, Name = "Freeship", Description = "Miễn phí vận chuyển", DropRate = 0.2, VoucherCode = "FREESHIP" },
+                new SpinItem { Id = 6, Name = "Voucher 500K", Description = "Giảm 500,000đ cho đơn hàng từ 5M", DropRate = 0.02, VoucherCode = "VOUCHER500K" },
+                new SpinItem { Id = 7, Name = "Điểm thưởng x2", Description = "Nhận gấp đôi điểm loyalty", DropRate = 0.08 }
+            );
             // ✅ Thiết lập quan hệ Category - Product (1-N)
             modelBuilder.Entity<Product>()
                 .HasOne(p => p.Category)

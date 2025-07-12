@@ -21,6 +21,7 @@ import BlogList from "@/pages/blog/BlogList";
 import BlogPostDetail from "@/pages/blog/BlogPostDetail";
 import BlogPostEditor from "@/pages/blog/BlogPostEditor";
 import LuckySpinPage from "@/pages/Admin/LuckySpinPage";
+import LoyaltyPage from "@/pages/Loyalty/LoyaltyPage";
 const AppRoutes = [
 
   {
@@ -32,6 +33,11 @@ const AppRoutes = [
     path: "/admin/lucky-spin",
     element: <LuckySpinPage />,
     requiresAdmin: true,
+  },
+  // Loyalty routes
+  {
+    path: "/loyalty",
+    element: <LoyaltyPage />,
   },
   // Blog routes
   {

@@ -1,0 +1,214 @@
+/* LoyaltySpinWheel.css */
+.spin-wheel-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+}
+
+.points-display {
+    margin-bottom: 30px;
+}
+
+.points-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    display: inline-block;
+    min-width: 200px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.points-card h3 {
+    margin: 0 0 15px 0;
+    color: #4c51bf;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.points-value {
+    font-size: 36px;
+    font-weight: 800;
+    color: #667eea;
+    margin-bottom: 5px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.points-label {
+    color: #6b7280;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.error-message {
+    background: linear-gradient(135deg, #fee 0%, #fcc 100%);
+    color: #dc2626;
+    padding: 15px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    font-weight: 500;
+}
+
+.wheel-section {
+    margin-bottom: 40px;
+}
+
+.wheel-section h2 {
+    color: white;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 30px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.spin-cost-info {
+    margin-top: 20px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 12px 20px;
+    border-radius: 25px;
+    backdrop-filter: blur(5px);
+    display: inline-block;
+}
+
+.spin-cost-info strong {
+    color: #ffd700;
+}
+
+.spin-controls {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.spin-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    min-width: 140px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.spin-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6);
+}
+
+.spin-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.spin-btn:disabled {
+    background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.6;
+    transform: none !important;
+    pointer-events: none;
+}
+
+.spin-btn:disabled::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 50px;
+}
+
+.spin-btn.spin-10 {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+}
+
+.spin-btn.spin-10:hover:not(:disabled) {
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.6);
+}
+
+.spinning-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top: 3px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .spin-wheel-container {
+        padding: 15px;
+    }
+    
+    .points-card {
+        padding: 20px;
+        min-width: 180px;
+    }
+    
+    .points-value {
+        font-size: 28px;
+    }
+    
+    .wheel-section h2 {
+        font-size: 24px;
+    }
+    
+    .spin-controls {
+        gap: 15px;
+    }
+    
+    .spin-btn {
+        padding: 12px 25px;
+        font-size: 14px;
+        min-width: 120px;
+    }
+}
+
+@media (max-width: 480px) {
+    .spin-controls {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .spin-btn {
+        width: 100%;
+        max-width: 250px;
+    }
+    
+    .points-card {
+        width: 100%;
+        max-width: 300px;
+    }
+}
