@@ -445,7 +445,7 @@ const Navbar = () => {
 
               <input
                 type="text"
-                placeholder="SYSTEM_SEARCH..."
+                placeholder="TÌM KIẾM..."
                 className="border-none outline-none px-2 py-2.5 text-sm font-mono font-medium w-full bg-transparent text-black placeholder:text-black/40 placeholder:font-mono transition-all duration-300"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -514,7 +514,7 @@ const Navbar = () => {
                         <div className="absolute inset-2 w-4 h-4 border border-black/60 rounded-full animate-pulse"></div>
                       </div>
                       <span className="ml-3 font-mono font-medium tracking-wider">
-                        SCANNING_SYSTEM...
+                        ĐANG TẢI DỮ LIỆU...
                       </span>
                     </div>
                   ) : (
@@ -524,7 +524,7 @@ const Navbar = () => {
                         <div className="py-3">
                           <div className="px-5 py-2 text-xs font-mono font-bold text-black uppercase tracking-[0.2em] flex items-center">
                             <div className="w-2 h-2 bg-black rounded-full mr-2 animate-pulse"></div>
-                            <span>PRODUCTS_FOUND</span>
+                            <span>SẢN PHẨM</span>
                             <div className="ml-auto text-[10px] font-mono text-black/60">
                               {searchResults.products.length}
                             </div>
@@ -606,7 +606,7 @@ const Navbar = () => {
                         <div className="py-3">
                           <div className="px-5 py-2 text-xs font-mono font-bold text-black uppercase tracking-[0.2em] flex items-center">
                             <div className="w-2 h-2 bg-black/70 rounded-full mr-2 animate-pulse"></div>
-                            <span>CATEGORIES_FOUND</span>
+                            <span>DANH MỤC</span>
                             <div className="ml-auto text-[10px] font-mono text-black/60">
                               {searchResults.categories.length}
                             </div>
@@ -669,7 +669,7 @@ const Navbar = () => {
                         <div className="py-3">
                           <div className="px-5 py-2 text-xs font-mono font-bold text-black uppercase tracking-[0.2em] flex items-center">
                             <div className="w-2 h-2 bg-black/50 rounded-full mr-2 animate-pulse"></div>
-                            <span>BRANDS_FOUND</span>
+                            <span>THƯƠNG HIỆU</span>
                             <div className="ml-auto text-[10px] font-mono text-black/60">
                               {searchResults.brands.length}
                             </div>
@@ -731,9 +731,7 @@ const Navbar = () => {
                             className="w-full bg-black text-white font-mono font-semibold py-3 px-4 rounded-xl hover:bg-black/80 transition-all duration-300 flex items-center justify-center group shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.4)] hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.5)] active:translate-x-[1px] active:translate-y-[1px] tracking-wider"
                             onClick={() => navigate(`/productlist`)}
                           >
-                            <span>
-                              VIEW_ALL_{searchResults.totalResults}_RESULTS
-                            </span>
+                            <span>HIỆN THÊM</span>
                             <svg
                               className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300"
                               fill="none"
@@ -766,10 +764,10 @@ const Navbar = () => {
                             </svg>
                           </div>
                           <h3 className="text-sm font-mono font-semibold text-black mb-1 tracking-wider">
-                            NO_RESULTS_FOUND
+                            TRỐNG
                           </h3>
                           <p className="text-xs text-black/60 font-mono tracking-wide">
-                            TRY_DIFFERENT_SEARCH_TERMS
+                            HÃY THỬ BẰNG TỪ KHOÁ KHÁC
                           </p>
                         </div>
                       )}
@@ -826,7 +824,7 @@ const Navbar = () => {
                           }}
                         />
                         <p className="text-sm font-mono font-medium relative z-10 tracking-wider">
-                          USER: {user?.fullName || "GUEST"}
+                          {user?.fullName || "GUEST"}
                         </p>
                         <p className="text-xs text-white/60 truncate font-mono relative z-10">
                           {user?.email || "user@system.local"}
@@ -857,7 +855,7 @@ const Navbar = () => {
                             }
                           >
                             <Settings className="w-4 h-4 mr-3" />
-                            ADMIN_PANEL
+                            GIAO DIỆN QUẢN TRỊ
                           </NavLink>
                         )}
 
@@ -870,7 +868,7 @@ const Navbar = () => {
                           }
                         >
                           <User className="w-4 h-4 mr-3" />
-                          USER_INFO
+                          THÔNG TIN NGƯỜI DÙNG
                         </NavLink>
 
                         <NavLink
@@ -882,7 +880,7 @@ const Navbar = () => {
                           }
                         >
                           <ShoppingBag className="w-4 h-4 mr-3" />
-                          ORDER_HISTORY
+                          LỊCH SỬ MUA HÀNG
                         </NavLink>
 
                         <NavLink
@@ -894,7 +892,7 @@ const Navbar = () => {
                           }
                         >
                           <Star className="w-4 h-4 mr-3" />
-                          VIP_STATUS
+                          KHÁCH HÀNG THÂN THIẾT
                         </NavLink>
 
                         <NavLink
@@ -906,7 +904,7 @@ const Navbar = () => {
                           }
                         >
                           <MapPin className="w-4 h-4 mr-3" />
-                          ADDRESS_BOOK
+                          SỔ ĐỊA CHỈ
                         </NavLink>
 
                         <NavLink
@@ -917,7 +915,7 @@ const Navbar = () => {
                           className="px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-all duration-300 flex items-center mt-1 border-t-2 border-black font-mono tracking-wide border-l-2 border-transparent hover:border-red-600 relative z-10"
                         >
                           <LogOut className="w-4 h-4 mr-3" />
-                          LOGOUT_SYSTEM
+                          ĐĂNG XUẤT
                         </NavLink>
                       </div>
                     </div>
