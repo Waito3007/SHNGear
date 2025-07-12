@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import CategoryImage from "../shared/CategoryImage";
 
 const FeaturedCategories = ({ data }) => {
   const [categories, setCategories] = useState([]);
@@ -11,12 +12,14 @@ const FeaturedCategories = ({ data }) => {
       try {
         setLoading(true);
         // Fetch categories from the new API endpoint
-        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/categories`);
+        const response = await axios.get(
+          `${process.env.REACT_APP_API_BASE_URL}/api/categories`
+        );
         // Filter for active categories if the API doesn't do it by default
         // (Our new API does, but keeping this for robustness)
         setCategories(response.data);
       } catch (err) {
-        setError('Failed to load categories.');
+        setError("Failed to load categories.");
         console.error(err);
       } finally {
         setLoading(false);
@@ -27,7 +30,25 @@ const FeaturedCategories = ({ data }) => {
   }, []);
 
   if (loading) {
-    return <div className="text-white">Loading categories...</div>;
+    return (
+      <section className="py-16 md:py-24 bg-primary-dark">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[...Array(8)].map((_, index) => (
+              <div
+                key={index}
+                className="block bg-white/5 p-6 rounded-lg border border-white-20 backdrop-blur-sm animate-pulse"
+              >
+                <div className="flex flex-col items-center text-center">
+                  <div className="h-24 w-24 mb-4 bg-white/10 rounded"></div>
+                  <div className="h-6 w-24 bg-white/10 rounded"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
   }
 
   if (error) {
@@ -45,7 +66,10 @@ const FeaturedCategories = ({ data }) => {
               className="group block bg-white/5 p-6 rounded-lg border border-white-20 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:border-electric-blue"
             >
               <div className="flex flex-col items-center text-center">
-                <img src={category.image} alt={category.name} className="h-24 w-24 object-contain mb-4 filter grayscale group-hover:filter-none transition-all duration-300" />
+                <CategoryImage
+                  category={category}
+                  className="h-24 w-24 mb-4 filter grayscale group-hover:filter-none transition-all duration-300"
+                />
                 <h3 className="font-display text-xl font-bold text-white transition-colors duration-300 group-hover:text-electric-blue">
                   {category.name}
                 </h3>

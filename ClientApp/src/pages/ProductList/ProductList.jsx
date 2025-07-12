@@ -353,9 +353,7 @@ const ProductList = () => {
           </Box>
         </motion.div>
 
-        <motion.div variants={item}>
-          <Footer />
-        </motion.div>
+        <motion.div variants={item}></motion.div>
       </Box>
 
       {/* Scroll to Top Button */}
