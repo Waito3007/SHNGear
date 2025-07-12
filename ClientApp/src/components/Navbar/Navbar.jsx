@@ -160,7 +160,7 @@ const Navbar = () => {
           >
             <div className="flex flex-col">
               <span className="text-2xl md:text-xl font-mono font-bold text-black tracking-widest group-hover:tracking-[0.3em] transition-all duration-300">
-                SHN_GEAR
+                SHN GEAR
               </span>
               <div className="text-[11px] font-mono text-black/60 tracking-[0.25em] flex items-center gap-2">
                 <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
