@@ -200,6 +200,11 @@ namespace SHN_Gear.Data
                 entity.HasIndex(pv => pv.ProductId).HasDatabaseName("IX_ProductVariants_ProductId");
                 entity.HasIndex(pv => pv.Price).HasDatabaseName("IX_ProductVariants_Price");
             });
+
+            modelBuilder.Entity<User>().HasData(new User {
+    Id = 1, // Số nguyên
+    CreatedAt = new DateTime(2024, 7, 12, 0, 0, 0, DateTimeKind.Utc)
+});
         }
     }
 }

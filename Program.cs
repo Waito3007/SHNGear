@@ -18,8 +18,7 @@ builder.Services.AddMemoryCache();
 
 // 🔹 Kết nối SQL Server
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
-    sqlOptions => sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // 🔹 Session
 builder.Services.AddDistributedMemoryCache();
@@ -189,7 +188,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-
+app.UseDeveloperExceptionPage();
 
 // Tự động export tri thức website ra file JSON khi khởi động (đồng bộ, đảm bảo chắc chắn export xong trước khi app chạy)
 try
