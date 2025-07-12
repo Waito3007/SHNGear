@@ -20,9 +20,23 @@ EnvironmentConfig.LoadEnvironmentVariables();
 builder.Services.AddMemoryCache();
 
 // 🔹 Kết nối SQL Server - sử dụng environment variables
-var connectionString = EnvironmentConfig.GetConnectionString()
-    ?? builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Database connection string not configured");
+//var connectionString = EnvironmentConfig.GetConnectionString()
+    //?? builder.Configuration.GetConnectionString("DefaultConnection")
+    //?? throw new InvalidOperationException("Database connection string not configured");
+string dbServer = Environment.GetEnvironmentVariable("DB_SERVER") ?? "";
+string dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? "";
+string dbUser = Environment.GetEnvironmentVariable("DB_USER") ?? "";
+string dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "";
+string dbEncrypt = Environment.GetEnvironmentVariable("DB_ENCRYPT") ?? "True";
+string dbTrustServerCertificate = Environment.GetEnvironmentVariable("DB_TRUST_SERVER_CERTIFICATE") ?? "True";
+string dbMultipleActiveResultSets = Environment.GetEnvironmentVariable("DB_MULTIPLE_ACTIVE_RESULT_SETS") ?? "True";
+
+if (string.IsNullOrWhiteSpace(dbServer) || string.IsNullOrWhiteSpace(dbName) || string.IsNullOrWhiteSpace(dbUser) || string.IsNullOrWhiteSpace(dbPassword))
+{
+    throw new InvalidOperationException("Database connection environment variables not configured properly.");
+}
+
+var connectionString = $"Server={dbServer};Database={dbName};User Id={dbUser};Password={dbPassword};Encrypt={dbEncrypt};TrustServerCertificate={dbTrustServerCertificate};MultipleActiveResultSets={dbMultipleActiveResultSets};";
 
 // Debug logging
 Console.WriteLine($"Using connection string: {connectionString}");
