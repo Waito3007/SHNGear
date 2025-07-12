@@ -137,14 +137,14 @@ const Navbar = () => {
       {/* Corner Tech Indicators */}
       <div className="fixed top-2 left-2 z-[1001] flex items-center gap-2">
         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-        <div className="text-[10px] font-mono text-black/60 tracking-wider">
+        {/* <div className="text-[10px] font-mono text-black/60 tracking-wider">
           SYS_ONLINE
-        </div>
+        </div> */}
       </div>
       <div className="fixed top-2 right-2 z-[1001] flex items-center gap-2">
-        <div className="text-[10px] font-mono text-black/60 tracking-wider">
+        {/* <div className="text-[10px] font-mono text-black/60 tracking-wider">
           {currentTime.toLocaleTimeString("vi-VN", { hour12: false })}
-        </div>
+        </div> */}
         <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
       </div>
 
