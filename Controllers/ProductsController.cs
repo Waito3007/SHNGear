@@ -43,6 +43,7 @@ namespace SHN_Gear.Controllers
                 }).ToList(),
                 Variants = product.Variants.Select(v => new ProductVariantDto
                 {
+                    Id = v.Id,
                     Color = v.Color,
                     Storage = v.Storage,
                     Price = v.Price, // Always show original price
@@ -239,6 +240,7 @@ namespace SHN_Gear.Controllers
             var variants = product.Variants
                 .Select(v => new
                 {
+                    v.Id,
                     v.Color,
                     v.Storage,
                     v.StockQuantity,
@@ -473,6 +475,7 @@ namespace SHN_Gear.Controllers
                     }).ToList(),
                     Variants = product.Variants.Select(v => new
                     {
+                        v.Id,
                         v.Color,
                         v.Storage,
                         v.Price,

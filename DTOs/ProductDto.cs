@@ -21,6 +21,7 @@ public class ProductImageDto
 
 public class ProductVariantDto
 {
+    public int Id { get; set; }
     public string Color { get; set; } = null!;
     public string Storage { get; set; } = null!;
     public decimal Price { get; set; }

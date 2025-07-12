@@ -34,6 +34,21 @@ namespace SHN_Gear.Controllers
                 return BadRequest("Thông tin sản phẩm không hợp lệ.");
             }
 
+            // Kiểm tra ProductVariant có tồn tại không
+            var productVariant = await _context.ProductVariants
+                .FirstOrDefaultAsync(pv => pv.Id == request.ProductVariantId);
+            
+            if (productVariant == null)
+            {
+                return BadRequest("Biến thể sản phẩm không tồn tại.");
+            }
+
+            // Kiểm tra stock
+            if (productVariant.StockQuantity < request.Quantity)
+            {
+                return BadRequest("Số lượng yêu cầu vượt quá số lượng trong kho.");
+            }
+
             if (request.UserId > 0)
             {
                 // Người dùng đã đăng nhập
@@ -113,20 +128,56 @@ namespace SHN_Gear.Controllers
                     return Ok(new List<object>());
                 }
 
-                var cartItems = cart.Items.Select(i => new
+                var cartItems = cart.Items.Select(i =>
                 {
-                    i.Id,
-                    i.Quantity,
-                    i.ProductVariantId,
-                    ProductName = i.ProductVariant.Product.Name,
-                    ProductImage = i.ProductVariant.Product.Images
-        .OrderByDescending(img => img.IsPrimary) // Ưu tiên ảnh IsPrimary
-        .ThenBy(img => img.Id)                  // Sau đó sắp xếp theo ID
-        .FirstOrDefault()?.ImageUrl ?? "/images/default-product.png", // Fallback image
-                    VariantColor = i.ProductVariant.Color,
-                    VariantStorage = i.ProductVariant.Storage,
-                    ProductPrice = i.ProductVariant.Price,
-                    ProductDiscountPrice = i.ProductVariant.DiscountPrice
+                    var now = DateTime.UtcNow;
+                    
+                    // Check Product-level flash sale
+                    bool isProductFlashSale = i.ProductVariant.Product.IsFlashSale &&
+                                            i.ProductVariant.Product.FlashSaleStartDate.HasValue && 
+                                            i.ProductVariant.Product.FlashSaleStartDate.Value <= now &&
+                                            i.ProductVariant.Product.FlashSaleEndDate.HasValue && 
+                                            i.ProductVariant.Product.FlashSaleEndDate.Value >= now;
+                    
+                    // Check Variant-level flash sale
+                    bool isVariantFlashSale = i.ProductVariant.FlashSaleStart.HasValue && 
+                                             i.ProductVariant.FlashSaleEnd.HasValue &&
+                                             i.ProductVariant.FlashSaleStart.Value <= now &&
+                                             i.ProductVariant.FlashSaleEnd.Value >= now;
+                    
+                    // Calculate final price (Priority: Variant Flash Sale > Product Flash Sale > Discount Price > Regular Price)
+                    decimal finalPrice = i.ProductVariant.Price;
+                    if (isVariantFlashSale)
+                    {
+                        // Variant flash sale has highest priority (but we need variant flash sale price - this might need to be added to model)
+                        finalPrice = i.ProductVariant.DiscountPrice ?? i.ProductVariant.Price;
+                    }
+                    else if (isProductFlashSale && i.ProductVariant.Product.FlashSalePrice.HasValue)
+                    {
+                        finalPrice = i.ProductVariant.Product.FlashSalePrice.Value;
+                    }
+                    else if (i.ProductVariant.DiscountPrice.HasValue)
+                    {
+                        finalPrice = i.ProductVariant.DiscountPrice.Value;
+                    }
+
+                    return new
+                    {
+                        i.Id,
+                        i.Quantity,
+                        i.ProductVariantId,
+                        ProductName = i.ProductVariant.Product.Name,
+                        ProductImage = i.ProductVariant.Product.Images
+            .OrderByDescending(img => img.IsPrimary) // Ưu tiên ảnh IsPrimary
+            .ThenBy(img => img.Id)                  // Sau đó sắp xếp theo ID
+            .FirstOrDefault()?.ImageUrl ?? "/images/default-product.png", // Fallback image
+                        VariantColor = i.ProductVariant.Color,
+                        VariantStorage = i.ProductVariant.Storage,
+                        ProductPrice = i.ProductVariant.Price,
+                        ProductDiscountPrice = finalPrice, // This will be the actual price to display
+                        IsFlashSale = isProductFlashSale || isVariantFlashSale,
+                        FlashSalePrice = isProductFlashSale ? i.ProductVariant.Product.FlashSalePrice : null
+                    };
                 }).ToList();
 
                 return Ok(cartItems);
@@ -151,6 +202,36 @@ namespace SHN_Gear.Controllers
 
                     if (variant != null)
                     {
+                        var now = DateTime.UtcNow;
+                        
+                        // Check Product-level flash sale
+                        bool isProductFlashSale = variant.Product.IsFlashSale &&
+                                                variant.Product.FlashSaleStartDate.HasValue && 
+                                                variant.Product.FlashSaleStartDate.Value <= now &&
+                                                variant.Product.FlashSaleEndDate.HasValue && 
+                                                variant.Product.FlashSaleEndDate.Value >= now;
+                        
+                        // Check Variant-level flash sale
+                        bool isVariantFlashSale = variant.FlashSaleStart.HasValue && 
+                                                 variant.FlashSaleEnd.HasValue &&
+                                                 variant.FlashSaleStart.Value <= now &&
+                                                 variant.FlashSaleEnd.Value >= now;
+                        
+                        // Calculate final price
+                        decimal finalPrice = variant.Price;
+                        if (isVariantFlashSale)
+                        {
+                            finalPrice = variant.DiscountPrice ?? variant.Price;
+                        }
+                        else if (isProductFlashSale && variant.Product.FlashSalePrice.HasValue)
+                        {
+                            finalPrice = variant.Product.FlashSalePrice.Value;
+                        }
+                        else if (variant.DiscountPrice.HasValue)
+                        {
+                            finalPrice = variant.DiscountPrice.Value;
+                        }
+
                         result.Add(new
                         {
                             item.ProductVariantId,
@@ -163,7 +244,9 @@ namespace SHN_Gear.Controllers
                             VariantColor = variant.Color,
                             VariantStorage = variant.Storage,
                             ProductPrice = variant.Price,
-                            ProductDiscountPrice = variant.DiscountPrice
+                            ProductDiscountPrice = finalPrice,
+                            IsFlashSale = isProductFlashSale || isVariantFlashSale,
+                            FlashSalePrice = isProductFlashSale ? variant.Product.FlashSalePrice : null
                         });
                     }
                 }

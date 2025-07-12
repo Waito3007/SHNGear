@@ -31,9 +31,34 @@ const CartItem = ({ item }) => {
             Màu: {item.color || "Không xác định"}
           </span>
         </div>
-        <span className="text-red-500 font-bold text-lg">
-          {item.price ? item.price.toLocaleString() : "0"} đ
-        </span>
+        <div className="text-right">
+          {item.isFlashSale && item.productPrice !== item.productDiscountPrice ? (
+            <>
+              <span className="text-gray-400 line-through text-sm">
+                {item.productPrice ? item.productPrice.toLocaleString() : "0"} đ
+              </span>
+              <br />
+              <span className="text-red-500 font-bold text-lg">
+                {item.productDiscountPrice ? item.productDiscountPrice.toLocaleString() : "0"} đ
+              </span>
+              <span className="bg-red-500 text-white text-xs px-1 ml-1 rounded">FLASH SALE</span>
+            </>
+          ) : item.productDiscountPrice && item.productPrice !== item.productDiscountPrice ? (
+            <>
+              <span className="text-gray-400 line-through text-sm">
+                {item.productPrice ? item.productPrice.toLocaleString() : "0"} đ
+              </span>
+              <br />
+              <span className="text-red-500 font-bold text-lg">
+                {item.productDiscountPrice ? item.productDiscountPrice.toLocaleString() : "0"} đ
+              </span>
+            </>
+          ) : (
+            <span className="text-red-500 font-bold text-lg">
+              {item.productPrice ? item.productPrice.toLocaleString() : "0"} đ
+            </span>
+          )}
+        </div>
         <div className="flex items-center">
           <button
             onClick={() => setQuantity(quantity > 1 ? quantity - 1 : 1)}

@@ -270,15 +270,47 @@ const OrderDetailDrawer = ({ orderId, open, onClose }) => {
                                     </Typography>
                                     <Divider sx={{ mb: 1 }} />
                                     {order.items?.length > 0 ? (
-                                        <List disablePadding>
-                                            {order.items.map((item) => (
-                                                <OrderDetailItem
-                                                    key={item.id || item.variantId}
-                                                    item={item}
-                                                    variantDetail={variantDetails[item.variantId]}
-                                                />
-                                            ))}
-                                        </List>
+                                        <>
+                                            <List disablePadding>
+                                                {order.items.map((item) => (
+                                                    <OrderDetailItem
+                                                        key={item.id || item.variantId}
+                                                        item={item}
+                                                        variantDetail={variantDetails[item.variantId]}
+                                                    />
+                                                ))}
+                                            </List>
+                                            
+                                            {/* Tổng kết chi tiết */}
+                                            <Box sx={{ mt: 2, p: 2, backgroundColor: '#f9f9f9', borderRadius: 1 }}>
+                                                <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                                                    Chi tiết thanh toán:
+                                                </Typography>
+                                                <Grid container spacing={1}>
+                                                    <Grid item xs={8}>
+                                                        <Typography variant="body2">Tổng tiền hàng:</Typography>
+                                                    </Grid>
+                                                    <Grid item xs={4} sx={{ textAlign: 'right' }}>
+                                                        <Typography variant="body2" fontWeight="medium">
+                                                            {formatCurrency(order.items.reduce((sum, item) => sum + (item.quantity * item.price), 0))}
+                                                        </Typography>
+                                                    </Grid>
+                                                    
+                                                    <Grid item xs={12}>
+                                                        <Divider sx={{ my: 1 }} />
+                                                    </Grid>
+                                                    
+                                                    <Grid item xs={8}>
+                                                        <Typography variant="body1" fontWeight="bold">Tổng cộng:</Typography>
+                                                    </Grid>
+                                                    <Grid item xs={4} sx={{ textAlign: 'right' }}>
+                                                        <Typography variant="body1" fontWeight="bold" color="error">
+                                                            {formatCurrency(order.totalAmount)}
+                                                        </Typography>
+                                                    </Grid>
+                                                </Grid>
+                                            </Box>
+                                        </>
                                     ) : (
                                         <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
                                             Không có sản phẩm trong đơn hàng.

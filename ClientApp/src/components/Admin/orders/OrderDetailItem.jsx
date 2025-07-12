@@ -49,12 +49,35 @@ const OrderDetailItem = React.memo(({ item, variantDetail }) => {
             </>
           }
         />
-        <Box sx={{ textAlign: 'right', ml: 1, minWidth: '100px' }}>
-          <Typography variant="body2" color="text.secondary">
-            {item.quantity} × {formatCurrency(item.price)}
+        <Box sx={{ textAlign: 'right', ml: 1, minWidth: '120px' }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+            Số lượng: {item.quantity}
           </Typography>
-          <Typography variant="body1" fontWeight="bold">
-            {formatCurrency(item.quantity * item.price)}
+          
+          {/* Hiển thị giá chi tiết */}
+          {variant.price && item.price !== variant.price ? (
+            <>
+              <Typography variant="caption" color="text.secondary" sx={{ textDecoration: 'line-through' }}>
+                Giá gốc: {formatCurrency(variant.price)}
+              </Typography>
+              <br />
+              <Typography variant="body2" color="error" fontWeight="medium">
+                Giá bán: {formatCurrency(item.price)}
+              </Typography>
+              {variant.price && item.price && (
+                <Typography variant="caption" color="success.main">
+                  Tiết kiệm: {formatCurrency(variant.price - item.price)}
+                </Typography>
+              )}
+            </>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              Đơn giá: {formatCurrency(item.price)}
+            </Typography>
+          )}
+          
+          <Typography variant="body1" fontWeight="bold" color="primary" sx={{ mt: 0.5 }}>
+            Thành tiền: {formatCurrency(item.quantity * item.price)}
           </Typography>
         </Box>
       </Box>

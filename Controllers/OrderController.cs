@@ -875,15 +875,19 @@ namespace SHN_Gear.Controllers
                 PaymentMethodId = order.PaymentMethodId,
                 Items = order.OrderItems.Select(oi => new
                 {
+                    Id = oi.Id,
                     VariantId = oi.ProductVariantId,
                     Quantity = oi.Quantity,
-                    Price = oi.Price,
-                    // ProductImage = oi.ProductVariant?.Product?.Images, // Lấy ảnh từ Product
+                    Price = oi.Price, // Giá đã thanh toán (có thể là giá flash sale hoặc giá giảm)
+                    OriginalPrice = oi.ProductVariant?.Price, // Giá gốc của variant
+                    DiscountPrice = oi.ProductVariant?.DiscountPrice, // Giá giảm của variant
                     ProductImage = oi.ProductVariant.Product.Images
                                 .OrderByDescending(img => img.IsPrimary)
                                 .ThenBy(img => img.Id)
                                 .FirstOrDefault()?.ImageUrl ?? "/images/default-product.png",
-                    ProductName = oi.ProductVariant?.Product?.Name // Có thể thêm tên sản phẩm nếu cần
+                    ProductName = oi.ProductVariant?.Product?.Name,
+                    VariantColor = oi.ProductVariant?.Color,
+                    VariantStorage = oi.ProductVariant?.Storage
                 }).ToList()
             };
 
@@ -1001,9 +1005,9 @@ namespace SHN_Gear.Controllers
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.ProductVariant)
                         .ThenInclude(pv => pv.Product)
+                            .ThenInclude(p => p.Images) // Đảm bảo include cả Images nếu cần
                 .Include(o => o.Address)
                 .Include(o => o.PaymentMethod)
-                // .Include(o => o.User) // Không còn cần User nếu chỉ lấy TaxCode từ đó
                 .FirstOrDefaultAsync(o => o.Id == orderId);
 
             if (order == null)
@@ -1034,12 +1038,53 @@ namespace SHN_Gear.Controllers
                 BuyerAddress = order.Address?.AddressLine1 ?? "N/A",
                 // BuyerTaxCode = buyerTaxCode ?? "N/A", // <<<< LOẠI BỎ DÒNG NÀY
                 PaymentMethodName = order.PaymentMethod?.Name ?? "Tiền mặt",
-                Items = order.OrderItems.Select((item, index) => new InvoiceItemViewModel
-                {
-                    Index = index + 1,
-                    ProductName = item.ProductVariant?.Product?.Name ?? "N/A",
-                    Quantity = item.Quantity,
-                    Price = item.Price
+                Items = order.OrderItems.Select((item, index) => {
+                    var now = DateTime.UtcNow;
+                    var product = item.ProductVariant?.Product;
+                    var variant = item.ProductVariant;
+                    
+                    // Check flash sale status
+                    bool isProductFlashSale = product != null && product.IsFlashSale &&
+                                            product.FlashSaleStartDate.HasValue && 
+                                            product.FlashSaleStartDate.Value <= now &&
+                                            product.FlashSaleEndDate.HasValue && 
+                                            product.FlashSaleEndDate.Value >= now;
+                    
+                    bool isVariantFlashSale = variant != null && 
+                                             variant.FlashSaleStart.HasValue && 
+                                             variant.FlashSaleEnd.HasValue &&
+                                             variant.FlashSaleStart.Value <= now &&
+                                             variant.FlashSaleEnd.Value >= now;
+                    
+                    decimal originalPrice = variant?.Price ?? 0;
+                    decimal discountPrice = variant?.DiscountPrice ?? originalPrice;
+                    decimal? flashSalePrice = null;
+                    
+                    if (isVariantFlashSale)
+                    {
+                        flashSalePrice = discountPrice; // Variant flash sale uses discount price
+                    }
+                    else if (isProductFlashSale && product?.FlashSalePrice.HasValue == true)
+                    {
+                        flashSalePrice = product.FlashSalePrice.Value;
+                    }
+                    
+                    Console.WriteLine($"Order Item {index}: Product={product?.Name ?? "NULL"}, Variant={variant?.Color}-{variant?.Storage}, Price={item.Price}");
+                    Console.WriteLine($"  - ProductVariant: {item.ProductVariant?.Id}, Product: {item.ProductVariant?.Product?.Name ?? "NULL"}");
+                    Console.WriteLine($"  - IsProductFlashSale: {isProductFlashSale}, IsVariantFlashSale: {isVariantFlashSale}");
+                    
+                    return new InvoiceItemViewModel
+                    {
+                        Index = index + 1,
+                        ProductName = !string.IsNullOrEmpty(product?.Name) ? product.Name : $"Sản phẩm không xác định (Variant ID: {item.ProductVariantId})",
+                        VariantInfo = $"{variant?.Color ?? "N/A"} - {variant?.Storage ?? "N/A"}".Trim(' ', '-'),
+                        Quantity = item.Quantity,
+                        Price = item.Price, // This is the actual price paid
+                        OriginalPrice = originalPrice,
+                        DiscountPrice = discountPrice != originalPrice ? discountPrice : (decimal?)null,
+                        FlashSalePrice = flashSalePrice,
+                        IsFlashSale = isProductFlashSale || isVariantFlashSale
+                    };
                 }).ToList(),
                 SubtotalAmount = subtotal,
                 VatRate = vatRate,
@@ -1155,9 +1200,49 @@ namespace SHN_Gear.Controllers
                         {
                             currentY += lineSpacing;
                             graphics.DrawString(item.Index.ToString(), normalFont, blackBrush, colSttX + 5, currentY);
-                            graphics.DrawString(item.ProductName, normalFont, blackBrush, colProductNameX, currentY, new StringFormat { Trimming = StringTrimming.EllipsisCharacter });
+                            
+                            // Product name with variant info
+                            string productDisplayName = !string.IsNullOrEmpty(item.ProductName) ? item.ProductName : "Sản phẩm không xác định";
+                            if (!string.IsNullOrEmpty(item.VariantInfo))
+                            {
+                                productDisplayName += $" ({item.VariantInfo})";
+                            }
+                            graphics.DrawString(productDisplayName, normalFont, blackBrush, colProductNameX, currentY, new StringFormat { Trimming = StringTrimming.EllipsisCharacter });
+                            
                             graphics.DrawString(item.Quantity.ToString(), normalFont, blackBrush, colQuantityX, currentY, sfRight);
-                            graphics.DrawString(item.Price.ToString("N0"), normalFont, blackBrush, colUnitPriceX, currentY, sfRight);
+                            
+                            // Display price with flash sale info
+                            if (item.IsFlashSale && item.FlashSalePrice.HasValue)
+                            {
+                                // Show original price crossed out and flash sale price
+                                float priceY = currentY;
+                                graphics.DrawString(item.OriginalPrice.ToString("N0"), smallFont, grayBrush, colUnitPriceX, priceY, sfRight);
+                                
+                                // Draw line through original price
+                                SizeF originalPriceSize = graphics.MeasureString(item.OriginalPrice.ToString("N0"), smallFont);
+                                graphics.DrawLine(Pens.Gray, colUnitPriceX - originalPriceSize.Width, priceY + originalPriceSize.Height / 2, colUnitPriceX, priceY + originalPriceSize.Height / 2);
+                                
+                                priceY += smallFont.GetHeight(graphics);
+                                graphics.DrawString($"{item.Price:N0} (FLASH)", normalFont, Brushes.Red, colUnitPriceX, priceY, sfRight);
+                            }
+                            else if (item.DiscountPrice.HasValue && item.DiscountPrice != item.OriginalPrice)
+                            {
+                                // Show original price crossed out and discount price
+                                float priceY = currentY;
+                                graphics.DrawString(item.OriginalPrice.ToString("N0"), smallFont, grayBrush, colUnitPriceX, priceY, sfRight);
+                                
+                                // Draw line through original price
+                                SizeF originalPriceSize = graphics.MeasureString(item.OriginalPrice.ToString("N0"), smallFont);
+                                graphics.DrawLine(Pens.Gray, colUnitPriceX - originalPriceSize.Width, priceY + originalPriceSize.Height / 2, colUnitPriceX, priceY + originalPriceSize.Height / 2);
+                                
+                                priceY += smallFont.GetHeight(graphics);
+                                graphics.DrawString(item.Price.ToString("N0"), normalFont, Brushes.DarkOrange, colUnitPriceX, priceY, sfRight);
+                            }
+                            else
+                            {
+                                graphics.DrawString(item.Price.ToString("N0"), normalFont, blackBrush, colUnitPriceX, currentY, sfRight);
+                            }
+                            
                             graphics.DrawString(item.Amount.ToString("N0"), normalFont, blackBrush, colAmountX, currentY, sfRight);
                             currentY += itemRowHeight;
                             graphics.DrawLine(Pens.LightGray, leftMargin, currentY, rightMarginContent, currentY);
@@ -1326,9 +1411,47 @@ namespace SHN_Gear.Controllers
                     foreach (var item in invoiceData.Items)
                     {
                         itemsTable.AddCell(new PdfPCell(new Phrase(item.Index.ToString(), fontNormal)) { Padding = 5f, HorizontalAlignment = Element.ALIGN_CENTER });
-                        itemsTable.AddCell(new PdfPCell(new Phrase(item.ProductName, fontNormal)) { Padding = 5f });
+                        
+                        // Product name with variant info
+                        string productDisplayName = !string.IsNullOrEmpty(item.ProductName) ? item.ProductName : "Sản phẩm không xác định";
+                        if (!string.IsNullOrEmpty(item.VariantInfo))
+                        {
+                            productDisplayName += $"\n({item.VariantInfo})";
+                        }
+                        
+                        // Add flash sale indicator to product name if applicable
+                        if (item.IsFlashSale)
+                        {
+                            productDisplayName += " [FLASH SALE]";
+                        }
+                        
+                        PdfPCell productCell = new PdfPCell(new Phrase(productDisplayName, fontNormal)) { Padding = 5f };
+                        itemsTable.AddCell(productCell);
+                        
                         itemsTable.AddCell(new PdfPCell(new Phrase(item.Quantity.ToString(), fontNormal)) { Padding = 5f, HorizontalAlignment = Element.ALIGN_RIGHT });
-                        itemsTable.AddCell(new PdfPCell(new Phrase(item.Price.ToString("N0"), fontNormal)) { Padding = 5f, HorizontalAlignment = Element.ALIGN_RIGHT });
+                        
+                        // Price cell with original and sale prices
+                        PdfPCell priceCell = new PdfPCell { Padding = 5f, HorizontalAlignment = Element.ALIGN_RIGHT };
+                        if (item.IsFlashSale && item.FlashSalePrice.HasValue)
+                        {
+                            // Original price crossed out
+                            var originalPricePhrase = new Phrase(item.OriginalPrice.ToString("N0"), new iTextSharp.text.Font(bfBase, 8, iTextSharp.text.Font.STRIKETHRU, BaseColor.GRAY));
+                            priceCell.AddElement(originalPricePhrase);
+                            priceCell.AddElement(new Phrase("\n" + item.Price.ToString("N0"), new iTextSharp.text.Font(bfBase, 10, iTextSharp.text.Font.BOLD, BaseColor.RED)));
+                        }
+                        else if (item.DiscountPrice.HasValue && item.DiscountPrice != item.OriginalPrice)
+                        {
+                            // Original price crossed out  
+                            var originalPricePhrase = new Phrase(item.OriginalPrice.ToString("N0"), new iTextSharp.text.Font(bfBase, 8, iTextSharp.text.Font.STRIKETHRU, BaseColor.GRAY));
+                            priceCell.AddElement(originalPricePhrase);
+                            priceCell.AddElement(new Phrase("\n" + item.Price.ToString("N0"), new iTextSharp.text.Font(bfBase, 10, iTextSharp.text.Font.BOLD, BaseColor.ORANGE)));
+                        }
+                        else
+                        {
+                            priceCell.AddElement(new Phrase(item.Price.ToString("N0"), fontNormal));
+                        }
+                        itemsTable.AddCell(priceCell);
+                        
                         itemsTable.AddCell(new PdfPCell(new Phrase(item.Amount.ToString("N0"), fontNormal)) { Padding = 5f, HorizontalAlignment = Element.ALIGN_RIGHT });
                     }
                     document.Add(itemsTable);
@@ -1866,9 +1989,14 @@ namespace SHN_Gear.Controllers
     public class InvoiceItemViewModel
     {
         public int Index { get; set; }
-        public string ProductName { get; set; }
+        public string ProductName { get; set; } = null!;
+        public string? VariantInfo { get; set; }
         public int Quantity { get; set; }
-        public decimal Price { get; set; }
+        public decimal Price { get; set; } // Final price paid
+        public decimal OriginalPrice { get; set; }
+        public decimal? DiscountPrice { get; set; }
+        public decimal? FlashSalePrice { get; set; }
+        public bool IsFlashSale { get; set; }
         public decimal Amount => Quantity * Price;
     }
 
