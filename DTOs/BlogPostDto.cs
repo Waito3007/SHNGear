@@ -13,5 +13,6 @@ namespace SHN_Gear.DTOs
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public bool IsPublished { get; set; }
+        public List<string> Images { get; set; } = new List<string>();
     }
 }

@@ -10,7 +10,11 @@ const BlogList = () => {
     useEffect(() => {
         const fetchBlogPosts = async () => {
             try {
-                const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/BlogPosts`);
+                let apiBase = process.env.REACT_APP_API_BASE_URL;
+                if (!apiBase) {
+                    apiBase = window.location.origin;
+                }
+                const response = await axios.get(`${apiBase}/api/BlogPosts`);
                 setBlogPosts(response.data);
             } catch (err) {
                 setError('Failed to fetch blog posts.');
@@ -19,7 +23,6 @@ const BlogList = () => {
                 setLoading(false);
             }
         };
-
         fetchBlogPosts();
     }, []);
 
@@ -33,19 +36,30 @@ const BlogList = () => {
                 Create New Post
             </Link>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {blogPosts.map((post) => (
-                    <div key={post.id} className="bg-white rounded-lg shadow-md p-6">
-                        <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
-                        <p className="text-gray-600 text-sm mb-2">By {post.authorName} on {new Date(post.createdAt).toLocaleDateString()}</p>
-                        <div className="text-gray-800 mb-4" dangerouslySetInnerHTML={{ __html: post.content.substring(0, 150) + '...' }}></div>
-                        <Link to={`/blog/${post.id}`} className="text-blue-500 hover:underline">
-                            Read More
-                        </Link>
-                        <Link to={`/admin/blog/edit/${post.id}`} className="ml-4 text-green-500 hover:underline">
-                            Edit
-                        </Link>
-                    </div>
-                ))}
+                {blogPosts.map((post) => {
+                    // Xử lý ảnh đầu tiên (nếu có)
+                    let imgSrc = null;
+                    if (post.images && post.images.length > 0 && post.images[0]) {
+                        const img = post.images[0];
+                        imgSrc = (img.startsWith('http://') || img.startsWith('https://')) ? img : (img.startsWith('/') ? img : '/'+img);
+                    }
+                    return (
+                        <div key={post.id} className="bg-white rounded-lg shadow-md p-6">
+                            {imgSrc && (
+                                <img src={imgSrc} alt={post.title} className="w-full h-48 object-cover rounded mb-3 border-b-4 border-teal-400" />
+                            )}
+                            <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
+                            <p className="text-gray-600 text-sm mb-2">By {post.authorName} on {new Date(post.createdAt).toLocaleDateString()}</p>
+                            <div className="text-gray-800 mb-4" dangerouslySetInnerHTML={{ __html: post.content.substring(0, 150) + '...' }}></div>
+                            <Link to={`/blog/${post.id}`} className="text-blue-500 hover:underline">
+                                Read More
+                            </Link>
+                            <Link to={`/admin/blog/edit/${post.id}`} className="ml-4 text-green-500 hover:underline">
+                                Edit
+                            </Link>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );

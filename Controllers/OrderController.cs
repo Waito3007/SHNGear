@@ -634,6 +634,24 @@ namespace SHN_Gear.Controllers
                     if (order.UserId.HasValue && order.User != null)
                     {
                         order.User.Points += 500;
+
+                        // Đồng bộ điểm loyalty
+                        var loyaltyPoint = await _context.LoyaltyPoints.FirstOrDefaultAsync(lp => lp.UserId == order.UserId.Value);
+                        if (loyaltyPoint == null)
+                        {
+                            loyaltyPoint = new LoyaltyPoint
+                            {
+                                UserId = order.UserId.Value,
+                                Points = 500,
+                                LastUpdated = DateTime.UtcNow
+                            };
+                            _context.LoyaltyPoints.Add(loyaltyPoint);
+                        }
+                        else
+                        {
+                            loyaltyPoint.Points += 500;
+                            loyaltyPoint.LastUpdated = DateTime.UtcNow;
+                        }
                     }
                 }
 
