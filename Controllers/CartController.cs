@@ -37,7 +37,7 @@ namespace SHN_Gear.Controllers
             // Kiểm tra ProductVariant có tồn tại không
             var productVariant = await _context.ProductVariants
                 .FirstOrDefaultAsync(pv => pv.Id == request.ProductVariantId);
-            
+
             if (productVariant == null)
             {
                 return BadRequest("Biến thể sản phẩm không tồn tại.");
@@ -131,20 +131,20 @@ namespace SHN_Gear.Controllers
                 var cartItems = cart.Items.Select(i =>
                 {
                     var now = DateTime.UtcNow;
-                    
+
                     // Check Product-level flash sale
                     bool isProductFlashSale = i.ProductVariant.Product.IsFlashSale &&
-                                            i.ProductVariant.Product.FlashSaleStartDate.HasValue && 
+                                            i.ProductVariant.Product.FlashSaleStartDate.HasValue &&
                                             i.ProductVariant.Product.FlashSaleStartDate.Value <= now &&
-                                            i.ProductVariant.Product.FlashSaleEndDate.HasValue && 
+                                            i.ProductVariant.Product.FlashSaleEndDate.HasValue &&
                                             i.ProductVariant.Product.FlashSaleEndDate.Value >= now;
-                    
+
                     // Check Variant-level flash sale
-                    bool isVariantFlashSale = i.ProductVariant.FlashSaleStart.HasValue && 
+                    bool isVariantFlashSale = i.ProductVariant.FlashSaleStart.HasValue &&
                                              i.ProductVariant.FlashSaleEnd.HasValue &&
                                              i.ProductVariant.FlashSaleStart.Value <= now &&
                                              i.ProductVariant.FlashSaleEnd.Value >= now;
-                    
+
                     // Calculate final price (Priority: Variant Flash Sale > Product Flash Sale > Discount Price > Regular Price)
                     decimal finalPrice = i.ProductVariant.Price;
                     if (isVariantFlashSale)
@@ -203,20 +203,20 @@ namespace SHN_Gear.Controllers
                     if (variant != null)
                     {
                         var now = DateTime.UtcNow;
-                        
+
                         // Check Product-level flash sale
                         bool isProductFlashSale = variant.Product.IsFlashSale &&
-                                                variant.Product.FlashSaleStartDate.HasValue && 
+                                                variant.Product.FlashSaleStartDate.HasValue &&
                                                 variant.Product.FlashSaleStartDate.Value <= now &&
-                                                variant.Product.FlashSaleEndDate.HasValue && 
+                                                variant.Product.FlashSaleEndDate.HasValue &&
                                                 variant.Product.FlashSaleEndDate.Value >= now;
-                        
+
                         // Check Variant-level flash sale
-                        bool isVariantFlashSale = variant.FlashSaleStart.HasValue && 
+                        bool isVariantFlashSale = variant.FlashSaleStart.HasValue &&
                                                  variant.FlashSaleEnd.HasValue &&
                                                  variant.FlashSaleStart.Value <= now &&
                                                  variant.FlashSaleEnd.Value >= now;
-                        
+
                         // Calculate final price
                         decimal finalPrice = variant.Price;
                         if (isVariantFlashSale)

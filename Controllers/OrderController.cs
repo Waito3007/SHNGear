@@ -1038,28 +1038,29 @@ namespace SHN_Gear.Controllers
                 BuyerAddress = order.Address?.AddressLine1 ?? "N/A",
                 // BuyerTaxCode = buyerTaxCode ?? "N/A", // <<<< LOẠI BỎ DÒNG NÀY
                 PaymentMethodName = order.PaymentMethod?.Name ?? "Tiền mặt",
-                Items = order.OrderItems.Select((item, index) => {
+                Items = order.OrderItems.Select((item, index) =>
+                {
                     var now = DateTime.UtcNow;
                     var product = item.ProductVariant?.Product;
                     var variant = item.ProductVariant;
-                    
+
                     // Check flash sale status
                     bool isProductFlashSale = product != null && product.IsFlashSale &&
-                                            product.FlashSaleStartDate.HasValue && 
+                                            product.FlashSaleStartDate.HasValue &&
                                             product.FlashSaleStartDate.Value <= now &&
-                                            product.FlashSaleEndDate.HasValue && 
+                                            product.FlashSaleEndDate.HasValue &&
                                             product.FlashSaleEndDate.Value >= now;
-                    
-                    bool isVariantFlashSale = variant != null && 
-                                             variant.FlashSaleStart.HasValue && 
+
+                    bool isVariantFlashSale = variant != null &&
+                                             variant.FlashSaleStart.HasValue &&
                                              variant.FlashSaleEnd.HasValue &&
                                              variant.FlashSaleStart.Value <= now &&
                                              variant.FlashSaleEnd.Value >= now;
-                    
+
                     decimal originalPrice = variant?.Price ?? 0;
                     decimal discountPrice = variant?.DiscountPrice ?? originalPrice;
                     decimal? flashSalePrice = null;
-                    
+
                     if (isVariantFlashSale)
                     {
                         flashSalePrice = discountPrice; // Variant flash sale uses discount price
@@ -1068,11 +1069,11 @@ namespace SHN_Gear.Controllers
                     {
                         flashSalePrice = product.FlashSalePrice.Value;
                     }
-                    
+
                     Console.WriteLine($"Order Item {index}: Product={product?.Name ?? "NULL"}, Variant={variant?.Color}-{variant?.Storage}, Price={item.Price}");
                     Console.WriteLine($"  - ProductVariant: {item.ProductVariant?.Id}, Product: {item.ProductVariant?.Product?.Name ?? "NULL"}");
                     Console.WriteLine($"  - IsProductFlashSale: {isProductFlashSale}, IsVariantFlashSale: {isVariantFlashSale}");
-                    
+
                     return new InvoiceItemViewModel
                     {
                         Index = index + 1,
@@ -1200,7 +1201,7 @@ namespace SHN_Gear.Controllers
                         {
                             currentY += lineSpacing;
                             graphics.DrawString(item.Index.ToString(), normalFont, blackBrush, colSttX + 5, currentY);
-                            
+
                             // Product name with variant info
                             string productDisplayName = !string.IsNullOrEmpty(item.ProductName) ? item.ProductName : "Sản phẩm không xác định";
                             if (!string.IsNullOrEmpty(item.VariantInfo))
@@ -1208,20 +1209,20 @@ namespace SHN_Gear.Controllers
                                 productDisplayName += $" ({item.VariantInfo})";
                             }
                             graphics.DrawString(productDisplayName, normalFont, blackBrush, colProductNameX, currentY, new StringFormat { Trimming = StringTrimming.EllipsisCharacter });
-                            
+
                             graphics.DrawString(item.Quantity.ToString(), normalFont, blackBrush, colQuantityX, currentY, sfRight);
-                            
+
                             // Display price with flash sale info
                             if (item.IsFlashSale && item.FlashSalePrice.HasValue)
                             {
                                 // Show original price crossed out and flash sale price
                                 float priceY = currentY;
                                 graphics.DrawString(item.OriginalPrice.ToString("N0"), smallFont, grayBrush, colUnitPriceX, priceY, sfRight);
-                                
+
                                 // Draw line through original price
                                 SizeF originalPriceSize = graphics.MeasureString(item.OriginalPrice.ToString("N0"), smallFont);
                                 graphics.DrawLine(Pens.Gray, colUnitPriceX - originalPriceSize.Width, priceY + originalPriceSize.Height / 2, colUnitPriceX, priceY + originalPriceSize.Height / 2);
-                                
+
                                 priceY += smallFont.GetHeight(graphics);
                                 graphics.DrawString($"{item.Price:N0} (FLASH)", normalFont, Brushes.Red, colUnitPriceX, priceY, sfRight);
                             }
@@ -1230,11 +1231,11 @@ namespace SHN_Gear.Controllers
                                 // Show original price crossed out and discount price
                                 float priceY = currentY;
                                 graphics.DrawString(item.OriginalPrice.ToString("N0"), smallFont, grayBrush, colUnitPriceX, priceY, sfRight);
-                                
+
                                 // Draw line through original price
                                 SizeF originalPriceSize = graphics.MeasureString(item.OriginalPrice.ToString("N0"), smallFont);
                                 graphics.DrawLine(Pens.Gray, colUnitPriceX - originalPriceSize.Width, priceY + originalPriceSize.Height / 2, colUnitPriceX, priceY + originalPriceSize.Height / 2);
-                                
+
                                 priceY += smallFont.GetHeight(graphics);
                                 graphics.DrawString(item.Price.ToString("N0"), normalFont, Brushes.DarkOrange, colUnitPriceX, priceY, sfRight);
                             }
@@ -1242,7 +1243,7 @@ namespace SHN_Gear.Controllers
                             {
                                 graphics.DrawString(item.Price.ToString("N0"), normalFont, blackBrush, colUnitPriceX, currentY, sfRight);
                             }
-                            
+
                             graphics.DrawString(item.Amount.ToString("N0"), normalFont, blackBrush, colAmountX, currentY, sfRight);
                             currentY += itemRowHeight;
                             graphics.DrawLine(Pens.LightGray, leftMargin, currentY, rightMarginContent, currentY);
@@ -1411,25 +1412,25 @@ namespace SHN_Gear.Controllers
                     foreach (var item in invoiceData.Items)
                     {
                         itemsTable.AddCell(new PdfPCell(new Phrase(item.Index.ToString(), fontNormal)) { Padding = 5f, HorizontalAlignment = Element.ALIGN_CENTER });
-                        
+
                         // Product name with variant info
                         string productDisplayName = !string.IsNullOrEmpty(item.ProductName) ? item.ProductName : "Sản phẩm không xác định";
                         if (!string.IsNullOrEmpty(item.VariantInfo))
                         {
                             productDisplayName += $"\n({item.VariantInfo})";
                         }
-                        
+
                         // Add flash sale indicator to product name if applicable
                         if (item.IsFlashSale)
                         {
                             productDisplayName += " [FLASH SALE]";
                         }
-                        
+
                         PdfPCell productCell = new PdfPCell(new Phrase(productDisplayName, fontNormal)) { Padding = 5f };
                         itemsTable.AddCell(productCell);
-                        
+
                         itemsTable.AddCell(new PdfPCell(new Phrase(item.Quantity.ToString(), fontNormal)) { Padding = 5f, HorizontalAlignment = Element.ALIGN_RIGHT });
-                        
+
                         // Price cell with original and sale prices
                         PdfPCell priceCell = new PdfPCell { Padding = 5f, HorizontalAlignment = Element.ALIGN_RIGHT };
                         if (item.IsFlashSale && item.FlashSalePrice.HasValue)
@@ -1451,7 +1452,7 @@ namespace SHN_Gear.Controllers
                             priceCell.AddElement(new Phrase(item.Price.ToString("N0"), fontNormal));
                         }
                         itemsTable.AddCell(priceCell);
-                        
+
                         itemsTable.AddCell(new PdfPCell(new Phrase(item.Amount.ToString("N0"), fontNormal)) { Padding = 5f, HorizontalAlignment = Element.ALIGN_RIGHT });
                     }
                     document.Add(itemsTable);
@@ -1678,23 +1679,32 @@ namespace SHN_Gear.Controllers
                         summary = new
                         {
                             TotalSales = salesData.Sum(x => x.Sales),
-                            AverageDailySales = salesData.Average(x => x.Sales)
+                            TotalOrders = salesData.Sum(x => x.OrderCount),
+                            AverageDailySales = salesData.Average(x => x.Sales),
+                            BestDay = salesData.OrderByDescending(x => x.Sales).FirstOrDefault()?.FormattedPeriod,
+                            WorstDay = salesData.OrderBy(x => x.Sales).Where(x => x.Sales > 0).FirstOrDefault()?.FormattedPeriod
                         };
                         break;
                     case "month":
                         summary = new
                         {
                             TotalSales = salesData.Sum(x => x.Sales),
-                            AverageDailySales = salesData.Average(x => x.Sales)
+                            TotalOrders = salesData.Sum(x => x.OrderCount),
+                            AverageDailySales = salesData.Average(x => x.Sales),
+                            BestDay = salesData.OrderByDescending(x => x.Sales).FirstOrDefault()?.FormattedPeriod,
+                            WorstDay = salesData.OrderBy(x => x.Sales).Where(x => x.Sales > 0).FirstOrDefault()?.FormattedPeriod,
+                            DaysWithSales = salesData.Count(x => x.Sales > 0)
                         };
                         break;
                     case "year":
                         summary = new
                         {
                             TotalSales = salesData.Sum(x => x.Sales),
+                            TotalOrders = salesData.Sum(x => x.OrderCount),
                             AverageMonthlySales = salesData.Average(x => x.Sales),
                             BestMonth = salesData.OrderByDescending(x => x.Sales).FirstOrDefault()?.FormattedPeriod,
-                            WorstMonth = salesData.OrderBy(x => x.Sales).FirstOrDefault()?.FormattedPeriod
+                            WorstMonth = salesData.OrderBy(x => x.Sales).Where(x => x.Sales > 0).FirstOrDefault()?.FormattedPeriod,
+                            MonthsWithSales = salesData.Count(x => x.Sales > 0)
                         };
                         break;
                     default:
@@ -1716,6 +1726,54 @@ namespace SHN_Gear.Controllers
                 return StatusCode(500, new { Message = "Lỗi khi lấy dữ liệu tổng quan bán hàng", Error = ex.Message });
             }
         }
+
+        // Thống kê doanh số theo danh mục sản phẩm
+        [HttpGet("sales-by-category")]
+        public async Task<IActionResult> GetSalesByCategory()
+        {
+            try
+            {
+                var salesByCategory = await _context.OrderItems
+                    .Include(oi => oi.Order)
+                    .Include(oi => oi.ProductVariant)
+                        .ThenInclude(pv => pv.Product)
+                            .ThenInclude(p => p.Category)
+                    .Where(oi => oi.Order.OrderStatus == "Delivered")
+                    .GroupBy(oi => new
+                    {
+                        CategoryId = oi.ProductVariant.Product.CategoryId,
+                        CategoryName = oi.ProductVariant.Product.Category.Name
+                    })
+                    .Select(g => new
+                    {
+                        categoryId = g.Key.CategoryId,
+                        categoryName = g.Key.CategoryName ?? "Khác",
+                        totalSales = g.Sum(oi => oi.Price * oi.Quantity),
+                        totalOrders = g.Count(),
+                        totalQuantity = g.Sum(oi => oi.Quantity)
+                    })
+                    .OrderByDescending(x => x.totalSales)
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    data = salesByCategory,
+                    summary = new
+                    {
+                        totalCategories = salesByCategory.Count,
+                        totalSales = salesByCategory.Sum(x => x.totalSales),
+                        totalOrders = salesByCategory.Sum(x => x.totalOrders),
+                        totalQuantity = salesByCategory.Sum(x => x.totalQuantity)
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetSalesByCategory: {ex.Message}");
+                return BadRequest(new { message = "Lỗi khi lấy dữ liệu thống kê theo danh mục", error = ex.Message });
+            }
+        }
+
         // Đếm tổng số đơn hàng
         [HttpGet("total-count")]
         public async Task<IActionResult> GetTotalOrderCount()
