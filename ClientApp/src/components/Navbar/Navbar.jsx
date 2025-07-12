@@ -15,16 +15,15 @@ import { useUserProfile } from "@/hooks/api/useUserProfile";
 import { useCategories } from "@/hooks/api/useCategories";
 import { useBrands } from "@/hooks/api/useBrands";
 import { useSearch } from "@/hooks/api/useSearch";
+import { useAuthModal } from "@/contexts/AuthModalContext";
 import menuIcon from "@/assets/icon/menu.svg";
 // import logo from "@/assets/img/Phone/logo.png";
-import AuthModal from "@/components/Auth/AuthModal";
 import CartDrawer from "@/components/shoppingcart/CartDrawer"; // Import Drawer
 
 const Navbar = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDropdownProfileOpen, setIsDropdownProfileOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
   const [anchorEl, setAnchorEl] = useState(null);
   const searchRef = useRef(null);
@@ -36,6 +35,7 @@ const Navbar = () => {
   const { user, initUserId, fetchUserProfile } = useUserProfile();
   const { categories } = useCategories();
   const { brands } = useBrands();
+  const { openAuthModal } = useAuthModal();
   const {
     results: searchResults,
     loading: searchLoading,
@@ -137,14 +137,14 @@ const Navbar = () => {
       {/* Corner Tech Indicators */}
       <div className="fixed top-2 left-2 z-[1001] flex items-center gap-2">
         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-        <div className="text-[10px] font-mono text-black/60 tracking-wider">
+        {/* <div className="text-[10px] font-mono text-black/60 tracking-wider">
           SYS_ONLINE
-        </div>
+        </div> */}
       </div>
       <div className="fixed top-2 right-2 z-[1001] flex items-center gap-2">
-        <div className="text-[10px] font-mono text-black/60 tracking-wider">
+        {/* <div className="text-[10px] font-mono text-black/60 tracking-wider">
           {currentTime.toLocaleTimeString("vi-VN", { hour12: false })}
-        </div>
+        </div> */}
         <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
       </div>
 
@@ -160,7 +160,7 @@ const Navbar = () => {
           >
             <div className="flex flex-col">
               <span className="text-2xl md:text-xl font-mono font-bold text-black tracking-widest group-hover:tracking-[0.3em] transition-all duration-300">
-                SHN_GEAR
+                SHN GEAR
               </span>
               <div className="text-[11px] font-mono text-black/60 tracking-[0.25em] flex items-center gap-2">
                 <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
@@ -923,7 +923,7 @@ const Navbar = () => {
                 </div>
               ) : (
                 <button
-                  onClick={() => setIsAuthModalOpen(true)}
+                  onClick={() => openAuthModal()}
                   className="cursor-pointer bg-white backdrop-blur-[20px] border-[2px] border-black rounded-full p-2 transition-all duration-300 text-black h-11 w-11 sm:h-10 sm:w-10 font-mono font-semibold text-sm flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px]"
                   aria-label="System Login"
                 >
@@ -974,11 +974,6 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Modal đăng nhập */}
-        <AuthModal
-          isOpen={isAuthModalOpen}
-          onClose={() => setIsAuthModalOpen(false)}
-        />
         <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       </nav>
     </div>

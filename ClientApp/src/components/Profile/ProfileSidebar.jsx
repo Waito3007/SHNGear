@@ -23,28 +23,28 @@ const ProfileSidebar = ({ setActiveTab }) => {
   const menuItems = [
     {
       id: "info",
-      label: "THÔNG_TIN_CÁ_NHÂN",
+      label: "THÔNG TIN CÁ NHÂN",
       icon: User,
       code: "USER_PROFILE",
       status: "ACTIVE",
     },
     {
       id: "orders",
-      label: "ĐƠN_HÀNG_CỦA_TÔI",
+      label: "ĐƠN HÀNG CỦA TÔI",
       icon: ShoppingBag,
       code: "ORDER_HISTORY",
       status: "READY",
     },
     {
       id: "loyalty",
-      label: "KHÁCH_HÀNG_THÂN_THIẾT",
+      label: "KHÁCH HÀNG THÂN THIẾT",
       icon: Award,
       code: "LOYALTY_PROGRAM",
       status: "VIP",
     },
     {
       id: "address",
-      label: "SỔ_ĐỊA_CHỈ_NHẬN_HÀNG",
+      label: "SỔ ĐỊA CHỈ NHẬN HÀNG",
       icon: MapPin,
       code: "ADDRESS_BOOK",
       status: "SYNC",
@@ -100,13 +100,13 @@ const ProfileSidebar = ({ setActiveTab }) => {
 
         <div className="flex items-center space-x-3 mb-2">
           <span className="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded border border-black">
-            NAVIGATION_MENU
+            NAVIGATION MENU
           </span>
           <span className="text-xs font-mono text-gray-600">v2.1.0</span>
         </div>
 
         <h2 className="text-xl font-bold text-black font-mono tracking-wider mb-2">
-          ĐIỀU_KHIỂN_HỒ_SƠ
+          ĐIỀU KHIỂN HỒ SƠ
         </h2>
 
         <div className="flex space-x-1 mb-3">
@@ -117,7 +117,7 @@ const ProfileSidebar = ({ setActiveTab }) => {
 
         {/* System Time */}
         <div className="text-xs font-mono text-gray-500 flex justify-between">
-          <span>HỆ_THỐNG_THỜI_GIAN:</span>
+          <span>HỆ THỐNG THỜI GIAN:</span>
           <span>{currentTime.toLocaleTimeString()}</span>
         </div>
       </div>
@@ -218,11 +218,11 @@ const ProfileSidebar = ({ setActiveTab }) => {
         <div className="flex justify-between items-center text-xs font-mono text-gray-500 mb-2">
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span>HỆ_THỐNG_HOẠT_ĐỘNG</span>
+            <span>HỆ THỐNG HOẠT ĐỘNG</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-            <span>MENU_SẴN_SÀNG</span>
+            <span>MENU SẴN SÀNG</span>
           </div>
         </div>
 

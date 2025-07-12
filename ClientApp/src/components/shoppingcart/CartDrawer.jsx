@@ -510,7 +510,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                   fontSize: "1.1rem",
                 }}
               >
-                CART_SYSTEM
+                GIỎ HÀNG
               </Typography>
               <Typography
                 variant="caption"
@@ -520,7 +520,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                   letterSpacing: "0.15em",
                 }}
               >
-                v2.0_TECH |{" "}
+                v2.0 CÔNG NGHỆ |{" "}
                 {currentTime.toLocaleTimeString("vi-VN", { hour12: false })}
               </Typography>
             </Box>
@@ -606,7 +606,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
               textAlign: "center",
             }}
           >
-            LOADING_CART_DATA...
+            ĐANG TẢI DỮ LIỆU GIỎ HÀNG...
           </Typography>
         </Box>
       ) : cartItems.length > 0 ? (
@@ -748,7 +748,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                       fontSize: "0.75rem",
                     }}
                   >
-                    SPEC: {item.variantColor} | {item.variantStorage}
+                    THÔNG SỐ: {item.variantColor} | {item.variantStorage}
                   </Typography>
 
                   {item.productDiscountPrice ? (
@@ -822,7 +822,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                         fontSize: "0.75rem",
                       }}
                     >
-                      QTY:
+                      SỐ LƯỢNG:
                     </Typography>
                     <Box
                       sx={{
@@ -835,6 +835,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                         cursor: "pointer",
                         fontFamily: "monospace",
                         fontSize: "0.75rem",
+
                         fontWeight: "bold",
                         "&:hover": {
                           backgroundColor: "rgba(0,0,0,0.8)",
@@ -866,121 +867,412 @@ const CartDrawer = ({ isOpen, onClose }) => {
             ))}
           </List>
 
+          {/* Tech Footer Section */}
           <Box
-            sx={{ p: 2, borderTop: "1px solid #e0e0e0", bgcolor: "#fafafa" }}
+            sx={{
+              position: "relative",
+              backgroundColor: "white",
+              border: "2px solid black",
+              borderRadius: 0,
+              m: 2,
+              overflow: "hidden",
+              boxShadow: "4px 4px 0px 0px rgba(0,0,0,1)",
+              zIndex: 2,
+            }}
           >
-            {userId && (
-              <>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                  <Gift size={20} color="#ff6b6b" style={{ marginRight: 8 }} />
-                  <Typography variant="subtitle1" fontWeight="medium">
-                    Mã giảm giá
-                  </Typography>
-                </Box>
-                <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    variant="outlined"
-                    placeholder="Nhập mã giảm giá"
-                    value={voucherCode}
-                    onChange={(e) => setVoucherCode(e.target.value)}
-                    disabled={voucherApplied}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "4px",
-                      },
-                    }}
-                  />
-                  {voucherApplied ? (
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      onClick={handleRemoveVoucher}
-                      sx={{ minWidth: "100px" }}
-                    >
-                      Hủy
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={handleApplyVoucher}
-                      disabled={!voucherCode || voucherLoading}
-                      sx={{ minWidth: "100px" }}
-                    >
-                      {voucherLoading ? (
-                        <CircularProgress size={20} />
-                      ) : (
-                        "Áp dụng"
-                      )}
-                    </Button>
-                  )}
-                </Box>
-                {discountAmount > 0 && (
+            {/* Tech Grid Background */}
+            <Box
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                opacity: 0.03,
+                backgroundImage: `
+                  linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)
+                `,
+                backgroundSize: "15px 15px",
+              }}
+            />
+
+            {/* Tech Corner Indicators */}
+            <Box
+              sx={{
+                position: "absolute",
+                top: 8,
+                left: 8,
+                width: 12,
+                height: 12,
+                borderLeft: "2px solid black",
+                borderTop: "2px solid black",
+              }}
+            />
+            <Box
+              sx={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                width: 12,
+                height: 12,
+                borderRight: "2px solid black",
+                borderTop: "2px solid black",
+              }}
+            />
+
+            <Box sx={{ p: 3, position: "relative", zIndex: 1 }}>
+              {/* Voucher Section */}
+              {userId && (
+                <>
                   <Box
                     sx={{
                       display: "flex",
-                      justifyContent: "space-between",
-                      mb: 1,
+                      alignItems: "center",
+                      mb: 2,
+                      pb: 2,
+                      borderBottom: "1px solid rgba(0,0,0,0.1)",
                     }}
                   >
-                    <Typography variant="body2">Giảm giá:</Typography>
-                    <Typography
-                      variant="body2"
-                      color="error"
-                      fontWeight="medium"
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        backgroundColor: "black",
+                        color: "white",
+                        px: 2,
+                        py: 1,
+                        fontFamily: "monospace",
+                        fontSize: "0.75rem",
+                        fontWeight: "bold",
+                        letterSpacing: "0.1em",
+                      }}
                     >
-                      -{discountAmount.toLocaleString()}₫
-                    </Typography>
+                      <Gift size={16} />
+                      VOUCHER
+                    </Box>
+                    <Box
+                      sx={{
+                        ml: 2,
+                        fontSize: "0.7rem",
+                        fontFamily: "monospace",
+                        color: "rgba(0,0,0,0.6)",
+                      }}
+                    >
+                      v1.0 HOẠT ĐỘNG
+                    </Box>
                   </Box>
-                )}
-                <Divider sx={{ my: 1 }} />
-              </>
-            )}
 
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                mb: 1,
-              }}
-            >
-              <Typography variant="body1">Tạm tính:</Typography>
-              <Typography variant="body1" fontWeight="medium">
-                {originalTotal.toLocaleString()}₫
-              </Typography>
+                  <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      variant="outlined"
+                      placeholder="NHẬP MÃ VOUCHER"
+                      value={voucherCode}
+                      onChange={(e) => setVoucherCode(e.target.value)}
+                      disabled={voucherApplied}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 0,
+                          border: "2px solid black",
+                          fontFamily: "monospace",
+                          fontSize: "0.8rem",
+                          backgroundColor: voucherApplied
+                            ? "rgba(0,0,0,0.05)"
+                            : "white",
+                          "&:hover": {
+                            "& > fieldset": {
+                              border: "2px solid black",
+                            },
+                          },
+                          "&.Mui-focused": {
+                            "& > fieldset": {
+                              border: "2px solid black",
+                            },
+                          },
+                        },
+                        "& .MuiInputBase-input": {
+                          fontFamily: "monospace",
+                          fontWeight: "bold",
+                          letterSpacing: "0.05em",
+                        },
+                        "& .MuiInputBase-input::placeholder": {
+                          fontFamily: "monospace",
+                          fontSize: "0.75rem",
+                          opacity: 0.7,
+                        },
+                      }}
+                    />
+                    {voucherApplied ? (
+                      <Button
+                        variant="outlined"
+                        onClick={handleRemoveVoucher}
+                        sx={{
+                          minWidth: "100px",
+                          border: "2px solid black",
+                          borderRadius: 0,
+                          color: "black",
+                          fontFamily: "monospace",
+                          fontWeight: "bold",
+                          fontSize: "0.75rem",
+                          "&:hover": {
+                            backgroundColor: "black",
+                            color: "white",
+                            border: "2px solid black",
+                          },
+                        }}
+                      >
+                        XÓA
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="contained"
+                        onClick={handleApplyVoucher}
+                        disabled={!voucherCode || voucherLoading}
+                        sx={{
+                          minWidth: "100px",
+                          backgroundColor: "black",
+                          color: "white",
+                          border: "2px solid black",
+                          borderRadius: 0,
+                          fontFamily: "monospace",
+                          fontWeight: "bold",
+                          fontSize: "0.75rem",
+                          "&:hover": {
+                            backgroundColor: "rgba(0,0,0,0.8)",
+                          },
+                          "&:disabled": {
+                            backgroundColor: "rgba(0,0,0,0.3)",
+                            color: "rgba(255,255,255,0.5)",
+                          },
+                        }}
+                      >
+                        {voucherLoading ? (
+                          <CircularProgress size={16} sx={{ color: "white" }} />
+                        ) : (
+                          "ÁP DỤNG"
+                        )}
+                      </Button>
+                    )}
+                  </Box>
+
+                  {discountAmount > 0 && (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        mb: 2,
+                        p: 2,
+                        border: "1px solid rgba(0,0,0,0.2)",
+                        backgroundColor: "rgba(0,0,0,0.05)",
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontFamily: "monospace",
+                          fontSize: "0.75rem",
+                          fontWeight: "bold",
+                          color: "black",
+                        }}
+                      >
+                        MÃ ĐÃ QUA SỬ DỤNG:
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontFamily: "monospace",
+                          fontSize: "0.8rem",
+                          fontWeight: "bold",
+                          color: "black",
+                          backgroundColor: "white",
+                          px: 1,
+                          py: 0.5,
+                          border: "1px solid black",
+                        }}
+                      >
+                        -{discountAmount.toLocaleString()}₫
+                      </Typography>
+                    </Box>
+                  )}
+
+                  <Box
+                    sx={{
+                      height: "1px",
+                      backgroundColor: "black",
+                      my: 2,
+                      position: "relative",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        left: "50%",
+                        top: "50%",
+                        transform: "translate(-50%, -50%)",
+                        width: "20px",
+                        height: "20px",
+                        backgroundColor: "white",
+                        border: "2px solid black",
+                        borderRadius: "50%",
+                      }}
+                    />
+                  </Box>
+                </>
+              )}
+
+              {/* Calculation Section */}
+              <Box sx={{ mb: 3 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 1,
+                    py: 1,
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontFamily: "monospace",
+                      fontSize: "0.8rem",
+                      fontWeight: "bold",
+                      color: "rgba(0,0,0,0.7)",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    TẠM TÍNH:
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: "monospace",
+                      fontSize: "0.85rem",
+                      fontWeight: "bold",
+                      color: "black",
+                    }}
+                  >
+                    {originalTotal.toLocaleString()}₫
+                  </Typography>
+                </Box>
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    p: 2,
+                    border: "2px solid black",
+                    backgroundColor: "black",
+                    color: "white",
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontFamily: "monospace",
+                      fontSize: "1rem",
+                      fontWeight: "bold",
+                      letterSpacing: "0.1em",
+                    }}
+                  >
+                    TỔNG TIỀN:
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: "monospace",
+                      fontSize: "1.1rem",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {totalAmount.toLocaleString()}₫
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* Checkout Button */}
+              <Button
+                fullWidth
+                onClick={handlePlaceOrder}
+                disabled={selectedItems.length === 0}
+                sx={{
+                  py: 2,
+                  backgroundColor:
+                    selectedItems.length === 0 ? "rgba(0,0,0,0.3)" : "black",
+                  color: "white",
+                  border: "2px solid black",
+                  borderRadius: 0,
+                  fontFamily: "monospace",
+                  fontWeight: "bold",
+                  fontSize: "1rem",
+                  letterSpacing: "0.1em",
+                  boxShadow: "4px 4px 0px 0px rgba(0,0,0,0.3)",
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    backgroundColor:
+                      selectedItems.length === 0
+                        ? "rgba(0,0,0,0.3)"
+                        : "rgba(0,0,0,0.8)",
+                    boxShadow: "6px 6px 0px 0px rgba(0,0,0,0.3)",
+                    transform:
+                      selectedItems.length === 0
+                        ? "none"
+                        : "translate(-2px, -2px)",
+                  },
+                  "&:disabled": {
+                    color: "rgba(255,255,255,0.5)",
+                    cursor: "not-allowed",
+                  },
+                }}
+              >
+                {selectedItems.length === 0
+                  ? "CHỌN SẢN PHẨM ĐỂ TIẾP TỤC"
+                  : "THANH TOÁN"}
+              </Button>
+
+              {/* Tech Stats Footer */}
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mt: 2,
+                  pt: 2,
+                  borderTop: "1px solid rgba(0,0,0,0.1)",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Box
+                    sx={{
+                      width: 6,
+                      height: 6,
+                      backgroundColor: "#22c55e",
+                      borderRadius: "50%",
+                      animation: "pulse 2s infinite",
+                    }}
+                  />
+                  <Typography
+                    sx={{
+                      fontFamily: "monospace",
+                      fontSize: "0.65rem",
+                      color: "rgba(0,0,0,0.6)",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    GIỎ HÀNG SẴN SÀNG
+                  </Typography>
+                </Box>
+                <Typography
+                  sx={{
+                    fontFamily: "monospace",
+                    fontSize: "0.6rem",
+                    color: "rgba(0,0,0,0.4)",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  © SHN GIỎ HÀNG v2.0
+                </Typography>
+              </Box>
             </Box>
-
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                mb: 2,
-              }}
-            >
-              <Typography variant="h6">Tổng cộng:</Typography>
-              <Typography variant="h6" fontWeight="bold" color="error">
-                {totalAmount.toLocaleString()}₫
-              </Typography>
-            </Box>
-
-            <Button
-              fullWidth
-              variant="contained"
-              color="error"
-              size="large"
-              onClick={handlePlaceOrder}
-              disabled={selectedItems.length === 0}
-              sx={{
-                py: 1.5,
-                borderRadius: "4px",
-                fontWeight: "bold",
-                fontSize: "1rem",
-              }}
-            >
-              Tiến hành đặt hàng
-            </Button>
           </Box>
         </>
       ) : (
@@ -992,16 +1284,210 @@ const CartDrawer = ({ isOpen, onClose }) => {
           flexGrow={1}
           textAlign="center"
           p={4}
+          sx={{ position: "relative", zIndex: 2 }}
         >
-          <Typography variant="h6" gutterBottom>
-            Giỏ hàng của bạn đang trống
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Hãy thêm sản phẩm vào giỏ hàng để bắt đầu mua sắm
-          </Typography>
-          <Button variant="outlined" color="primary" onClick={onClose}>
-            Tiếp tục mua sắm
-          </Button>
+          {/* Tech Empty State */}
+          <Box
+            sx={{
+              position: "relative",
+              border: "2px solid black",
+              borderRadius: 0,
+              p: 4,
+              backgroundColor: "white",
+              boxShadow: "4px 4px 0px 0px rgba(0,0,0,1)",
+              maxWidth: 400,
+              width: "100%",
+              overflow: "hidden",
+            }}
+          >
+            {/* Tech Grid Background */}
+            <Box
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                opacity: 0.03,
+                backgroundImage: `
+                  linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)
+                `,
+                backgroundSize: "20px 20px",
+              }}
+            />
+
+            {/* Tech Corner Indicators */}
+            <Box
+              sx={{
+                position: "absolute",
+                top: 8,
+                left: 8,
+                width: 12,
+                height: 12,
+                borderLeft: "2px solid black",
+                borderTop: "2px solid black",
+              }}
+            />
+            <Box
+              sx={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                width: 12,
+                height: 12,
+                borderRight: "2px solid black",
+                borderTop: "2px solid black",
+              }}
+            />
+
+            <Box sx={{ position: "relative", zIndex: 1 }}>
+              {/* Status Indicator */}
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  mb: 3,
+                }}
+              >
+                <Box
+                  sx={{
+                    backgroundColor: "black",
+                    color: "white",
+                    px: 3,
+                    py: 1,
+                    fontFamily: "monospace",
+                    fontSize: "0.75rem",
+                    fontWeight: "bold",
+                    letterSpacing: "0.1em",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  <ShoppingCart size={16} />
+                  HIỆN ĐANG TRỐNG
+                </Box>
+              </Box>
+
+              {/* Empty Cart Icon */}
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  mb: 3,
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 80,
+                    height: 80,
+                    border: "2px solid black",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "rgba(0,0,0,0.05)",
+                  }}
+                >
+                  <ShoppingCart size={40} color="black" />
+                </Box>
+              </Box>
+
+              <Typography
+                variant="h6"
+                sx={{
+                  fontFamily: "monospace",
+                  fontWeight: "bold",
+                  mb: 2,
+                  color: "black",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                GIỎ HÀNG TRỐNG
+              </Typography>
+
+              <Typography
+                variant="body2"
+                sx={{
+                  mb: 3,
+                  fontFamily: "monospace",
+                  color: "rgba(0,0,0,0.7)",
+                  fontSize: "0.8rem",
+                  letterSpacing: "0.02em",
+                }}
+              >
+                THÔNG BÁO : KHÔNG CÓ SẢN PHẨM
+                <br />
+              </Typography>
+
+              <Button
+                variant="outlined"
+                onClick={onClose}
+                sx={{
+                  border: "2px solid black",
+                  borderRadius: 0,
+                  color: "black",
+                  fontFamily: "monospace",
+                  fontWeight: "bold",
+                  fontSize: "0.8rem",
+                  letterSpacing: "0.05em",
+                  px: 3,
+                  py: 1.5,
+                  "&:hover": {
+                    backgroundColor: "black",
+                    color: "white",
+                    border: "2px solid black",
+                  },
+                }}
+              >
+                TIẾP TỤC MUA HÀNG
+              </Button>
+
+              {/* System Stats */}
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mt: 3,
+                  pt: 2,
+                  borderTop: "1px solid rgba(0,0,0,0.1)",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Box
+                    sx={{
+                      width: 6,
+                      height: 6,
+                      backgroundColor: "#eab308",
+                      borderRadius: "50%",
+                      animation: "pulse 2s infinite",
+                    }}
+                  />
+                  <Typography
+                    sx={{
+                      fontFamily: "monospace",
+                      fontSize: "0.65rem",
+                      color: "rgba(0,0,0,0.6)",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    CHỜ GIỎ HÀNG
+                  </Typography>
+                </Box>
+                <Typography
+                  sx={{
+                    fontFamily: "monospace",
+                    fontSize: "0.6rem",
+                    color: "rgba(0,0,0,0.4)",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  SẢN PHẨM: 00
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
         </Box>
       )}
 
@@ -1015,70 +1501,279 @@ const CartDrawer = ({ isOpen, onClose }) => {
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            width: 300,
-            bgcolor: "background.paper",
-            boxShadow: 24,
-            p: 3,
-            borderRadius: 2,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 2,
+            width: 380,
+            backgroundColor: "white",
+            border: "3px solid black",
+            borderRadius: 0,
+            boxShadow: "8px 8px 0px 0px rgba(0,0,0,1)",
+            p: 0,
+            overflow: "hidden",
+            position: "relative",
           }}
         >
-          <Typography variant="h6" fontWeight="medium">
-            Điều chỉnh số lượng
-          </Typography>
-          <Box display="flex" alignItems="center" gap={3}>
-            <IconButton
-              onClick={() => {
-                const newQuantity = Math.max(1, selectedItem.quantity - 1);
-                setSelectedItem({ ...selectedItem, quantity: newQuantity });
-              }}
-              disabled={selectedItem?.quantity <= 1}
+          {/* Tech Grid Background */}
+          <Box
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              opacity: 0.03,
+              backgroundImage: `
+                linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)
+              `,
+              backgroundSize: "15px 15px",
+            }}
+          />
+
+          {/* Tech Corner Indicators */}
+          <Box
+            sx={{
+              position: "absolute",
+              top: 8,
+              left: 8,
+              width: 12,
+              height: 12,
+              borderLeft: "2px solid black",
+              borderTop: "2px solid black",
+            }}
+          />
+          <Box
+            sx={{
+              position: "absolute",
+              top: 8,
+              right: 8,
+              width: 12,
+              height: 12,
+              borderRight: "2px solid black",
+              borderTop: "2px solid black",
+            }}
+          />
+
+          {/* Header */}
+          <Box
+            sx={{
+              backgroundColor: "black",
+              color: "white",
+              p: 2,
+              position: "relative",
+            }}
+          >
+            <Box
               sx={{
-                border: "1px solid #e0e0e0",
-                "&:hover": { bgcolor: "#f5f5f5" },
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+                position: "relative",
+                zIndex: 1,
               }}
             >
-              <Minus size={20} />
-            </IconButton>
-            <Typography variant="h5" sx={{ minWidth: 40, textAlign: "center" }}>
-              {selectedItem?.quantity}
-            </Typography>
-            <IconButton
-              onClick={() => {
-                const newQuantity = selectedItem.quantity + 1;
-                setSelectedItem({ ...selectedItem, quantity: newQuantity });
-              }}
-              sx={{
-                border: "1px solid #e0e0e0",
-                "&:hover": { bgcolor: "#f5f5f5" },
-              }}
-            >
-              <Plus size={20} />
-            </IconButton>
+              <Box
+                sx={{
+                  backgroundColor: "white",
+                  color: "black",
+                  px: 2,
+                  py: 1,
+                  fontFamily: "monospace",
+                  fontSize: "0.75rem",
+                  fontWeight: "bold",
+                  letterSpacing: "0.1em",
+                }}
+              >
+                SỐ LƯỢNG
+              </Box>
+              <Typography
+                sx={{
+                  fontFamily: "monospace",
+                  fontSize: "0.8rem",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                v1.0 HOẠT ĐỘNG
+              </Typography>
+            </Box>
           </Box>
-          <Box display="flex" gap={2} width="100%">
-            <Button
-              variant="outlined"
-              fullWidth
-              onClick={() => setQuantityModalOpen(false)}
-              sx={{ py: 1 }}
-            >
-              Hủy
-            </Button>
-            <Button
-              variant="contained"
-              fullWidth
-              onClick={() => {
-                updateQuantity(selectedItem.quantity);
-                setQuantityModalOpen(false);
+
+          {/* Content */}
+          <Box sx={{ p: 3, position: "relative", zIndex: 1 }}>
+            <Typography
+              sx={{
+                fontFamily: "monospace",
+                fontWeight: "bold",
+                mb: 3,
+                color: "black",
+                letterSpacing: "0.05em",
+                textAlign: "center",
               }}
-              sx={{ py: 1 }}
             >
-              Xác nhận
-            </Button>
+              ĐIỀU CHỈNH SỐ LƯỢNG
+            </Typography>
+
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 3,
+                mb: 3,
+              }}
+            >
+              <IconButton
+                onClick={() => {
+                  const newQuantity = Math.max(1, selectedItem.quantity - 1);
+                  setSelectedItem({ ...selectedItem, quantity: newQuantity });
+                }}
+                disabled={selectedItem?.quantity <= 1}
+                sx={{
+                  border: "2px solid black",
+                  borderRadius: 0,
+                  width: 48,
+                  height: 48,
+                  color: "black",
+                  fontFamily: "monospace",
+                  fontWeight: "bold",
+                  "&:hover": {
+                    backgroundColor: "black",
+                    color: "white",
+                  },
+                  "&:disabled": {
+                    backgroundColor: "rgba(0,0,0,0.1)",
+                    color: "rgba(0,0,0,0.3)",
+                    border: "2px solid rgba(0,0,0,0.3)",
+                  },
+                }}
+              >
+                <Minus size={20} />
+              </IconButton>
+
+              <Box
+                sx={{
+                  backgroundColor: "black",
+                  color: "white",
+                  px: 3,
+                  py: 2,
+                  minWidth: 80,
+                  textAlign: "center",
+                  border: "2px solid black",
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontFamily: "monospace",
+                    fontSize: "1.5rem",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {String(selectedItem?.quantity || 0).padStart(2, "0")}
+                </Typography>
+              </Box>
+
+              <IconButton
+                onClick={() => {
+                  const newQuantity = selectedItem.quantity + 1;
+                  setSelectedItem({ ...selectedItem, quantity: newQuantity });
+                }}
+                sx={{
+                  border: "2px solid black",
+                  borderRadius: 0,
+                  width: 48,
+                  height: 48,
+                  color: "black",
+                  fontFamily: "monospace",
+                  fontWeight: "bold",
+                  "&:hover": {
+                    backgroundColor: "black",
+                    color: "white",
+                  },
+                }}
+              >
+                <Plus size={20} />
+              </IconButton>
+            </Box>
+
+            <Box sx={{ display: "flex", gap: 2, width: "100%" }}>
+              <Button
+                variant="outlined"
+                fullWidth
+                onClick={() => setQuantityModalOpen(false)}
+                sx={{
+                  py: 1.5,
+                  border: "2px solid black",
+                  borderRadius: 0,
+                  color: "black",
+                  fontFamily: "monospace",
+                  fontWeight: "bold",
+                  fontSize: "0.8rem",
+                  letterSpacing: "0.05em",
+                  "&:hover": {
+                    backgroundColor: "rgba(0,0,0,0.1)",
+                    border: "2px solid black",
+                  },
+                }}
+              >
+                HUỶ BỎ
+              </Button>
+              <Button
+                variant="contained"
+                fullWidth
+                onClick={() => {
+                  updateQuantity(selectedItem.quantity);
+                  setQuantityModalOpen(false);
+                }}
+                sx={{
+                  py: 1.5,
+                  backgroundColor: "black",
+                  color: "white",
+                  border: "2px solid black",
+                  borderRadius: 0,
+                  fontFamily: "monospace",
+                  fontWeight: "bold",
+                  fontSize: "0.8rem",
+                  letterSpacing: "0.05em",
+                  "&:hover": {
+                    backgroundColor: "rgba(0,0,0,0.8)",
+                  },
+                }}
+              >
+                XÁC NHẬN
+              </Button>
+            </Box>
+
+            {/* System Info */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                mt: 2,
+                pt: 2,
+                borderTop: "1px solid rgba(0,0,0,0.1)",
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box
+                  sx={{
+                    width: 6,
+                    height: 6,
+                    backgroundColor: "#22c55e",
+                    borderRadius: "50%",
+                    animation: "pulse 2s infinite",
+                  }}
+                />
+                <Typography
+                  sx={{
+                    fontFamily: "monospace",
+                    fontSize: "0.65rem",
+                    color: "rgba(0,0,0,0.6)",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  HỆ THỐNG SẴN SÀNG
+                </Typography>
+              </Box>
+            </Box>
           </Box>
         </Box>
       </Modal>

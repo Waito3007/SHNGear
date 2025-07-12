@@ -190,7 +190,7 @@ const ProfileInfo = () => {
               <div>
                 <div className="flex items-center space-x-2 mb-2">
                   <span className="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded border border-black">
-                    HỒ_SƠ_NGƯỜI_DÙNG
+                    HỒ SƠ NGƯỜI DÙNG
                   </span>
                   <span className="text-xs font-mono text-gray-600">
                     v2.1.0
@@ -227,7 +227,7 @@ const ProfileInfo = () => {
                 transition: "all 0.3s ease",
               }}
             >
-              CHỈNH_SỬA
+              CHỈNH SỬA
             </Button>
           </div>
         </div>{" "}
@@ -266,7 +266,7 @@ const ProfileInfo = () => {
                   variant="h5"
                   className="font-bold mt-6 mb-2 font-mono text-black"
                 >
-                  {user.fullName || "NGƯỜI_DÙNG_CHƯA_XÁC_ĐỊNH"}
+                  {user.fullName || "NGƯỜI DÙNG CHƯA XÁC ĐỊNH"}
                 </Typography>
                 {/* Tech role badge */}
                 <div
@@ -286,19 +286,19 @@ const ProfileInfo = () => {
                       <span className="text-purple-600">⚡</span>
                     )}{" "}
                     <span className="uppercase tracking-wider">
-                      {user.role?.name || "THÀNH_VIÊN"}
+                      {user.role?.name || "THÀNH VIÊN"}
                     </span>
                   </div>
                 </div>
                 {/* Tech stats */}{" "}
                 <div className="mt-4 w-full grid grid-cols-2 gap-2 text-xs font-mono">
                   <div className="bg-gray-50 border border-gray-300 rounded p-2 text-center">
-                    <div className="text-black font-bold">MÃ_SỐ</div>
+                    <div className="text-black font-bold">MÃ SỐ</div>
                     <div className="text-gray-600">{user.id || "####"}</div>
                   </div>
                   <div className="bg-gray-50 border border-gray-300 rounded p-2 text-center">
-                    <div className="text-black font-bold">TRẠNG_THÁI</div>
-                    <div className="text-green-600">HOẠT_ĐỘNG</div>
+                    <div className="text-black font-bold">TRẠNG THÁI</div>
+                    <div className="text-green-600">HOẠT ĐỘNG</div>
                   </div>
                 </div>
               </div>
@@ -320,11 +320,11 @@ const ProfileInfo = () => {
                     style={{ animationDelay: "1s" }}
                   ></div>{" "}
                   <h2 className="text-xl font-bold text-black font-mono tracking-wider ml-4">
-                    BẢNG_ĐIỀU_KHIỂN_DỮ_LIỆU
+                    BẢNG ĐIỀU KHIỂN DỮ LIỆU
                   </h2>
                 </div>
                 <div className="flex items-center space-x-2 text-xs font-mono text-gray-500">
-                  <span>CẬP_NHẬT_CUỐI:</span>
+                  <span>CẬP NHẬT CUỐI:</span>
                   <span>{new Date().toLocaleTimeString()}</span>
                 </div>
               </div>
@@ -338,31 +338,31 @@ const ProfileInfo = () => {
             <div className="grid gap-4">
               <TechInfoField
                 icon="👤"
-                label="HỌ_VÀ_TÊN"
+                label="HỌ VÀ TÊN"
                 value={user.fullName}
               />
               <TechInfoField
                 icon="📧"
-                label="ĐỊA_CHỈ_EMAIL"
+                label="ĐỊA CHỈ EMAIL"
                 value={user.email}
               />
               <TechInfoField
                 icon="📱"
-                label="SỐ_ĐIỆN_THOẠI"
-                value={user.phoneNumber || "CHƯA_CÓ"}
+                label="SỐ ĐIỆN THOẠI"
+                value={user.phoneNumber || "CHƯA CÓ"}
               />
               <TechInfoField
                 icon="⚧"
-                label="GIỚI_TÍNH"
-                value={user.gender || "CHƯA_XÁC_ĐỊNH"}
+                label="GIỚI TÍNH"
+                value={user.gender || "CHƯA XÁC ĐỊNH"}
               />
               <TechInfoField
                 icon="🎂"
-                label="NGÀY_SINH"
+                label="NGÀY SINH"
                 value={
                   user.dateOfBirth
                     ? new Date(user.dateOfBirth).toLocaleDateString("vi-VN")
-                    : "CHƯA_THIẾT_LẬP"
+                    : "CHƯA THIẾT LẬP"
                 }
               />
             </div>
@@ -372,14 +372,14 @@ const ProfileInfo = () => {
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-1">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span>HỆ_THỐNG_SẴN_SÀNG</span>
+                  <span>HỆ THỐNG SẴN SÀNG</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  <span>DỮ_LIỆU_ĐỒNG_BỘ</span>
+                  <span>DỮ LIỆU ĐỒNG BỘ</span>
                 </div>
               </div>
-              <div>© 2025 SHN_GEAR_HỆ_THỐNG</div>
+              <div>© 2025 SHN GEAR</div>
             </div>
           </div>
         </div>
@@ -424,7 +424,7 @@ const ProfileInfo = () => {
                   variant="h6"
                   className="font-bold font-mono text-black ml-4"
                 >
-                  CHỈNH_SỬA_DỮ_LIỆU_NGƯỜI_DÙNG.exe
+                  CHỈNH SỬA DỮ LIỆU NGƯỜI DÙNG
                 </Typography>
               </div>
               <div className="text-xs font-mono text-gray-500">v1.0.0</div>
@@ -437,28 +437,28 @@ const ProfileInfo = () => {
               <div className="space-y-4">
                 <TechTextField
                   fullWidth
-                  label="HỌ_VÀ_TÊN"
+                  label="HỌ VÀ TÊN"
                   name="fullName"
                   value={updatedUser?.fullName || ""}
                   onChange={handleInputChange}
                 />
                 <TechTextField
                   fullWidth
-                  label="ĐỊA_CHỈ_EMAIL"
+                  label="ĐỊA CHỈ EMAIL"
                   name="email"
                   value={updatedUser?.email || ""}
                   onChange={handleInputChange}
                 />
                 <TechTextField
                   fullWidth
-                  label="SỐ_ĐIỆN_THOẠI"
+                  label="SỐ ĐIỆN THOẠI"
                   name="phoneNumber"
                   value={updatedUser?.phoneNumber || ""}
                   onChange={handleInputChange}
                 />
                 <TechTextField
                   fullWidth
-                  label="GIỚI_TÍNH"
+                  label="GIỚI TÍNH"
                   name="gender"
                   value={updatedUser?.gender || ""}
                   onChange={handleInputChange}
@@ -473,7 +473,7 @@ const ProfileInfo = () => {
                   <option value="Khác">KHÁC</option>
                 </TechTextField>
                 <DatePicker
-                  label="NGÀY_SINH"
+                  label="NGÀY SINH"
                   value={birthDate}
                   onChange={handleDateChange}
                   renderInput={(params) => (
@@ -498,7 +498,7 @@ const ProfileInfo = () => {
                       },
                     }}
                   >
-                    HỦY_BỎ
+                    HỦY BỎ
                   </Button>
                   <Button
                     variant="contained"
@@ -516,7 +516,7 @@ const ProfileInfo = () => {
                       },
                     }}
                   >
-                    LƯU_DỮ_LIỆU
+                    LƯU DỮ LIỆU
                   </Button>
                 </div>
               </div>
@@ -560,7 +560,7 @@ const TechInfoField = ({ icon, label, value }) => (
             wordBreak: "break-word",
           }}
         >
-          {value || "CHƯA_CÓ_DỮ_LIỆU"}
+          {value || "CHƯA CÓ DỮ LIỆU"}
         </Typography>
       </div>
       <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
