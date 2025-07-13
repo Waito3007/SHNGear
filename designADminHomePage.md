@@ -1,0 +1,1 @@
+tôi muốn bạn nghiên cứu kĩ dự án này và giúp tôi cải thiện trang web, ở phần quản trị Admin, hiện tại có các component slider, banner, pined product, tôi cần bạn tích hợp nó vào trong homepageOverviewPage theo các tab, khi nhấn vào tab tương ứng thì sẽ hiển thị giao diện xử lí slider, banner, hoặc pined product tương ứng, nhớ là đồng nhất giao diện admin.
