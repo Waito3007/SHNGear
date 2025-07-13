@@ -599,8 +599,7 @@ namespace SHN_Gear.Controllers
                     Price = v.Price,
                     DiscountPrice = v.DiscountPrice,
                     StockQuantity = v.StockQuantity,
-                    FlashSaleStart = v.FlashSaleStart,
-                    FlashSaleEnd = v.FlashSaleEnd
+
                 }).ToList()
             });
 

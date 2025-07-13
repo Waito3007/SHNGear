@@ -5,18 +5,23 @@ import UsersPage from "@/pages/Admin/UsersPage";
 import SalesPage from "@/pages/Admin/SalesPage";
 import OrdersPage from "@/pages/Admin/OrdersPage";
 import AnalyticsPage from "@/pages/Admin/AnalyticsPage";
-import HomepageAdminPage from "@/pages/Admin/HomepageAdminPage";
-import CategoryAdminPage from "@/pages/Admin/CategoryAdminPage";
-import FlashSaleAdminPage from "@/pages/Admin/FlashSaleAdminPage";
-import HomepageOverviewPage from "@/pages/Admin/HomepageOverviewPage";
+import HomepageAdminPage from "@/pages/Admin/Home/HomepageAdminPage";
+import CategoryAdminPage from "@/pages/Admin/Home/CategoryAdminPage";
+import FlashSaleAdminPage from "@/pages/Admin/Home/FlashSaleAdminPage";
+import HomepageOverviewPage from "@/pages/Admin/Home/HomepageOverviewPage";
 import SettingsPage from "@/pages/Admin/SettingsPage";
-import ProductPage from "@/pages/ProductPage";
-import ProfilePage from "@/pages/ProfilePage";
-import ProductList from "@/pages/ProductList";
-import Shoppingcart from "@/pages/shoppingcart";
-import Unauthorized from "@/pages/Unauthorized";
+import ProductPage from "@/pages/ProductPage/ProductPage";
+import ProfilePage from "@/pages/ProfilePage/ProfilePage";
+import ProductList from "@/pages/ProductList/ProductList";
+import Shoppingcart from "@/pages/shoppingcart/shoppingcart";
+import Unauthorized from "@/pages/Unauthorized/Unauthorized";
 import ManageHomePage from "./pages/Admin/ManageHomePage";
-
+import ReviewManagementPage from "@/pages/Admin/ReviewManagementPage";
+import LuckySpinPage from "@/pages/Admin/LuckySpinPage";
+import BestSellerAdminPage from "@/pages/Admin/Home/BestSellerAdminPage";
+import BlogPostEditor from "@/components/Admin/blog/BlogPostEditor";
+import BlogList from "@/components/Admin/blog/BlogList";
+import BlogPostDetail from "./components/Admin/blog/BlogPostDetail";
 const AppRoutes = [
 
   {
