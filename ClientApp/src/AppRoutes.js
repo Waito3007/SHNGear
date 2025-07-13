@@ -18,6 +18,7 @@ import Unauthorized from "@/pages/Unauthorized/Unauthorized";
 import ManageHomePage from "./pages/Admin/ManageHomePage";
 import ReviewManagementPage from "@/pages/Admin/ReviewManagementPage";
 import LuckySpinPage from "@/pages/Admin/LuckySpinPage";
+import LoyaltyPage from "@/pages/Loyalty/LoyaltyPage";
 import BestSellerAdminPage from "@/pages/Admin/Home/BestSellerAdminPage";
 import BlogPostEditor from "@/components/Admin/blog/BlogPostEditor";
 import BlogList from "@/components/Admin/blog/BlogList";
@@ -33,6 +34,11 @@ const AppRoutes = [
     path: "/admin/lucky-spin",
     element: <LuckySpinPage />,
     requiresAdmin: true,
+  },
+  // Loyalty routes
+  {
+    path: "/loyalty",
+    element: <LoyaltyPage />,
   },
   // Blog routes
   {
