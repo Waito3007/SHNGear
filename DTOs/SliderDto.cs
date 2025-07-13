@@ -1,7 +1,7 @@
 public class SliderDto
 {
-    public string Title { get; set; }
-public bool Status { get; set; }
+    public string Title { get; set; } = null!;
+    public bool Status { get; set; }
     public string? LinkToProduct { get; set; } 
     public List<SliderImageDto> Images { get; set; } = new();
 }

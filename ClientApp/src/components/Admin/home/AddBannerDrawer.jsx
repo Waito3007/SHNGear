@@ -1,15 +1,15 @@
 import { Drawer, IconButton, TextField, Button, Typography, CircularProgress, InputBase, Box, Tab, Tabs} from "@mui/material";
 import { Close } from "@mui/icons-material";
-import { useSliderForm } from "hook/sliders/useSliderForm";
-import { useSliderImageManager } from "hook/sliders/useSliderImageManager";
-import { useSliderData } from "hook/sliders/useSliderData";
+import { useBannerForm } from "hook/banners/useBannerForm";
+import { useBannerImageManager } from "hook/banners/useBannerImageManager";
+import { useBannerData } from "hook/banners/useBannerData";
 
 
-const AddSliderDrawer = ({ isOpen, onClose, onAddSlider }) => {
-  const { loading: dataLoading, error: dataError } = useSliderData();
-  const imageManager = useSliderImageManager();
-  const sliderForm = useSliderForm({
-    onAddSlider,
+const AddBannerDrawer = ({ isOpen, onClose, onAddBanner }) => {
+  const { loading: dataLoading, error: dataError } = useBannerData();
+  const imageManager = useBannerImageManager();
+  const bannerForm = useBannerForm({
+    onAddBanner,
     onClose: () => {
       onClose();
       imageManager.resetImageManager();
@@ -26,19 +26,19 @@ const AddSliderDrawer = ({ isOpen, onClose, onAddSlider }) => {
     }
 
     if (!processedImages || processedImages.length === 0) {
-      imageManager.setImageError("Vui lòng tải lên ít nhất một ảnh.");
+      imageManager.setImageError("Vui lòng tải lên một ảnh.");
       return;
     }
 
     try {
-      await sliderForm.handleFormSubmit(formData, processedImages);
+      await bannerForm.handleFormSubmit(formData, processedImages);
     } catch (error) {
-      console.error("Error submitting slider data:", error);
+      console.error("Error submitting banner data:", error);
     }
   };
 
   const handleCloseDrawer = () => {
-    sliderForm.resetForm();
+    bannerForm.resetForm();
     imageManager.resetImageManager();
     onClose();
   };
@@ -57,7 +57,7 @@ const AddSliderDrawer = ({ isOpen, onClose, onAddSlider }) => {
     <Drawer anchor="right" open={isOpen} onClose={handleCloseDrawer} BackdropProps={{ invisible: false }}>
       <Box sx={{ width: 400, p: 3, bgcolor: "background.default", height: "100%", overflowY: "auto" }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h6" fontWeight="bold">Thêm Slider</Typography>
+          <Typography variant="h6" fontWeight="bold">Thêm Banner</Typography>
           <IconButton onClick={handleCloseDrawer}>
             <Close />
           </IconButton>
@@ -65,10 +65,10 @@ const AddSliderDrawer = ({ isOpen, onClose, onAddSlider }) => {
         
         {dataError && <Typography color="error" mb={2}>{dataError}</Typography>}
 
-        <form onSubmit={sliderForm.handleSubmit(handleMainSubmit)}>
+        <form onSubmit={bannerForm.handleSubmit(handleMainSubmit)}>
           <Box mt={2} p={2} border="1px solid #e0e0e0" borderRadius={2}>
-            <Typography mb={1} fontWeight="medium">Tiêu đề slider</Typography>
-            <InputBase {...sliderForm.register("title", { required: "Tiêu đề Slider là bắt buộc" })} fullWidth required placeholder="Nhập tiêu đề Slider" sx={{ border: '1px solid #ccc', borderRadius: 1, p: '2px 8px' }}/>
+            <Typography mb={1} fontWeight="medium">Tiêu đề Banner</Typography>
+            <InputBase {...bannerForm.register("title", { required: "Tiêu đề Banner là bắt buộc" })} fullWidth required placeholder="Nhập tiêu đề Banner" sx={{ border: '1px solid #ccc', borderRadius: 1, p: '2px 8px' }}/>
           </Box>
           
           <Box mt={2} p={2} border="1px solid #e0e0e0" borderRadius={2}>
@@ -134,34 +134,23 @@ const AddSliderDrawer = ({ isOpen, onClose, onAddSlider }) => {
             )}
           </Box>
 
-          {/* Tab link tới sản phẩm hoặc danh sách sản phẩm */}
-          <Box mt={2} p={2} border="1px solid #e0e0e0" borderRadius={2}>
-            <Typography mb={1} fontWeight="medium">Liên kết đến sản phẩm</Typography>
-            <InputBase
-              {...sliderForm.register("linkToProduct")}
-              fullWidth
-              placeholder="Nhập URL liên kết sản phẩm"
-              sx={{ border: '1px solid #ccc', borderRadius: 1, p: '2px 8px' }}
-            />
-          </Box>
-
           <Box mt={3} display="flex" justifyContent="flex-end">
             <Button 
                 type="button" 
                 variant="outlined" 
                 onClick={handleCloseDrawer} 
                 sx={{ mr: 1, borderRadius: 2 }}
-                disabled={imageManager.uploadingImage || sliderForm.formState?.isSubmitting}
+                disabled={imageManager.uploadingImage || bannerForm.formState?.isSubmitting}
             >
               Hủy
             </Button>
             <Button
                 type="submit"
                 variant="contained"
-                disabled={imageManager.uploadingImage || sliderForm.formState?.isSubmitting} // Vô hiệu hóa khi đang tải ảnh hoặc submit form
+                disabled={imageManager.uploadingImage || bannerForm.formState?.isSubmitting} // Vô hiệu hóa khi đang tải ảnh hoặc submit form
                 sx={{ bgcolor: "black", color: "white", borderRadius: 2, "&:hover": { bgcolor: "grey.800" }, "&:disabled": { bgcolor: "grey.400"} }}
             >
-              { (imageManager.uploadingImage || sliderForm.formState?.isSubmitting) ? <CircularProgress size={24} color="inherit" /> : "Thêm slider" }
+              { (imageManager.uploadingImage || bannerForm.formState?.isSubmitting) ? <CircularProgress size={24} color="inherit" /> : "Thêm banner" }
             </Button>
             </Box>
         </form>
@@ -170,4 +159,4 @@ const AddSliderDrawer = ({ isOpen, onClose, onAddSlider }) => {
   );
 }
 
-export default AddSliderDrawer;
+export default AddBannerDrawer;

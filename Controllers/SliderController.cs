@@ -43,9 +43,9 @@ public class SliderController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateSlider(int id, [FromBody] Slider sliderDto)
+    public async Task<IActionResult> UpdateSlider(int id, [FromBody] SliderDto sliderDto)
     {
-        if (sliderDto == null || id < 0)
+        if (sliderDto == null || id <= 0)
             return BadRequest("Dữ liệu Slider không hợp lệ.");
 
         var existingSlider = await _context.Sliders
@@ -58,7 +58,6 @@ public class SliderController : ControllerBase
         existingSlider.Title = sliderDto.Title;
         existingSlider.Status = sliderDto.Status;
         existingSlider.LinkToProduct = sliderDto.LinkToProduct;
-
         existingSlider.Images = sliderDto.Images?.Select(img => new SliderImage
         {
             ImageUrl = img.ImageUrl

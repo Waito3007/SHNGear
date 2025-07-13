@@ -385,7 +385,7 @@ public class ProductsController : ControllerBase
             {
                 // Convert to a dynamic object with Name-Value pairs
                 var specDict = productSpecs.ToDictionary(s => s.Name, s => new { s.Value, s.Unit });
-                
+
                 specifications = new
                 {
                     Type = "unified",
@@ -421,4 +421,54 @@ public class ProductsController : ControllerBase
 
         return Ok(result);
     }
+
+    [HttpGet("pinned")]
+    public async Task<ActionResult<IEnumerable<ProductDto>>> GetPinnedProducts()
+    {
+        var pinnedProducts = await _context.Products
+            .Include(p => p.Images)
+            .Include(p => p.Variants)
+            .Where(p => p.IsPinned)
+            .ToListAsync();
+
+        var productDtos = pinnedProducts.Select(p => new ProductDto
+        {
+            Name = p.Name,
+            Description = p.Description,
+            CategoryId = p.CategoryId,
+            BrandId = p.BrandId,
+            Images = p.Images.Select(img => new ProductImageDto
+            {
+                ImageUrl = img.ImageUrl,
+                IsPrimary = img.IsPrimary
+            }).ToList(),
+            Variants = p.Variants.Select(v => new ProductVariantDto
+            {
+                Color = v.Color,
+                Storage = v.Storage,
+                Price = v.Price,
+                DiscountPrice = v.DiscountPrice,
+                StockQuantity = v.StockQuantity,
+                FlashSaleStart = v.FlashSaleStart,
+                FlashSaleEnd = v.FlashSaleEnd
+            }).ToList()
+        });
+
+        return Ok(productDtos);
+    }
+
+
+    [HttpPut("{id}/pin")]
+    public async Task<IActionResult> TogglePin(int id, [FromBody] PinnedProductDto pinnedProductDto)
+    {
+        var pinnedProduct = await _context.Products.FindAsync(id);
+        if (pinnedProduct == null)
+            return NotFound();
+
+        pinnedProduct.IsPinned = pinnedProductDto.IsPinned;
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
 }

@@ -11,6 +11,8 @@ import ProfilePage from "@/pages/ProfilePage";
 import ProductList from "@/pages/ProductList";
 import Shoppingcart from "@/pages/shoppingcart";
 import Unauthorized from "@/pages/Unauthorized";
+import ManageHomePage from "./pages/Admin/ManageHomePage";
+
 
 const AppRoutes = [
   {
@@ -51,7 +53,12 @@ const AppRoutes = [
   {
     path: "/admin/settings",
     element: <SettingsPage />,
-    requiresAdmin: true,
+    requiresAdmin: true 
+  },
+  {
+    path: "/admin/home",
+    element: <ManageHomePage/>,
+    requiresAdmin: true
   },
   // Public routes
   {

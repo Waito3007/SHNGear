@@ -7,11 +7,10 @@ import axios from "axios";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const initialImageState = { imageUrl: ''};
-const EditSliderDrawer = ({ isOpen, onClose, slider, onUpdateSlider }) => {
+const EditBannerDrawer = ({ isOpen, onClose, banner, onUpdateBanner }) => {
   const [formData, setFormData] = useState({
     title: '',
     images: [initialImageState],
-    link: '',
     status: true,
   });
   const [loading, setLoading] = useState(false);
@@ -19,30 +18,25 @@ const EditSliderDrawer = ({ isOpen, onClose, slider, onUpdateSlider }) => {
   const [successMessage, setSuccessMessage] = useState(null);
   
   useEffect(() => {
-    if (slider) {
+    if (banner) {
       setFormData({
-        title: slider.title || "",
-        status: !(slider.status ?? false),
+        title: banner.title || "",
+        status: !(banner.status ?? false),
         images:
-          slider.images?.length > 0
-            ? slider.images.map((img) => ({
+          banner.images?.length > 0
+            ? banner.images.map((img) => ({
                 imageUrl: img.imageUrl || "",
               }))
             : [initialImageState],
-        // Ưu tiên link, nếu không có thì lấy linkToProduct
-        link: slider.link || slider.linkToProduct || "",
-        linkToProduct: slider.linkToProduct || slider.link || "",
       });
     } else {
       setFormData({
         title: "",
-        link: "",
-        linkToProduct: "",
         status: true,
         images: [initialImageState],
       });
     }
-  }, [slider]);
+  }, [banner]);
 
   const handleChange = useCallback((e, index, type) => {
     const { name, value, checked, type: inputType } = e.target;
@@ -91,20 +85,15 @@ const EditSliderDrawer = ({ isOpen, onClose, slider, onUpdateSlider }) => {
     return;
     }
 
-    if (!slider || !slider.id) {
-      setError("Không tìm thấy slider để cập nhật.");
+    if (!banner || !banner.id) {
+      setError("Không tìm thấy banner để cập nhật.");
       setLoading(false);
       return;
     }
     
     try{
-      // Nếu formData.link rỗng, fallback sang slider.linkToProduct (nếu có)
-      const linkValue = formData.link || (slider && slider.linkToProduct) || "";
-      const linkToProductValue = formData.linkToProduct || (slider && slider.linkToProduct) || formData.link || "";
       const updatedData = {
         title: formData.title,
-        link: linkValue,
-        linkToProduct: linkToProductValue,
         status: !formData.status,
         images: formData.images
           .filter(img => img.imageUrl && img.imageUrl.trim() !== "")
@@ -115,15 +104,15 @@ const EditSliderDrawer = ({ isOpen, onClose, slider, onUpdateSlider }) => {
 
       console.log("Submitting data:", updatedData);
       const response = await axios.put(
-        `${API_BASE_URL}/api/Slider/${slider.id}`,
+        `${API_BASE_URL}/api/Banner/${banner.id}`,
         updatedData,
         {headers: { "Content-Type": "application/json" }}
       );
 
       if(response.status === 204 || response.status === 200) {
-        const updatedSliderData = response.data && Object.keys(response.data).length > 0 ? response.data : { ...slider, ...updatedData};
-        onUpdateSlider(updatedSliderData);
-        setSuccessMessage("Slider đã được cập nhật thành công!");
+        const updatedBannerData = response.data && Object.keys(response.data).length > 0 ? response.data : { ...banner, ...updatedData};
+        onUpdateBanner(updatedBannerData);
+        setSuccessMessage("Banner đã được cập nhật thành công!");
       } else {
         setError(`Cập nhật thất bại với status: ${response.status}`)
       }
@@ -135,12 +124,12 @@ const EditSliderDrawer = ({ isOpen, onClose, slider, onUpdateSlider }) => {
         (err.response?.data?.errors ? Object.values(err.response.data.errors).flat().join('; ') : null) ||
         err.message ||
         "Đã xảy ra lỗi không xác định";
-      setError(`Lỗi khi cập nhật Slider: ${errorMessage}`);
-      console.error("Lỗi khi cập nhật Slider:", err.response || err);
+      setError(`Lỗi khi cập nhật Banner: ${errorMessage}`);
+      console.error("Lỗi khi cập nhật Banner:", err.response || err);
     } finally {
       setLoading(false);
     }
-  }, [formData, slider, onUpdateSlider]);
+  }, [formData, banner, onUpdateBanner]);
 
     const handleCloseDrawer = useCallback(() => {
     setError(null); // Reset lỗi khi đóng
@@ -161,7 +150,7 @@ const EditSliderDrawer = ({ isOpen, onClose, slider, onUpdateSlider }) => {
       <Box sx={{ width: { xs: "100vw", sm: 500, md: 600 }, p: {xs: 2, md: 3} }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography variant="h5" component="h1">
-            Chỉnh sửa thông tin Slider
+            Chỉnh sửa thông tin Banner
           </Typography>
           <IconButton onClick={handleCloseDrawer} aria-label="Đóng">
             <CloseIcon />
@@ -178,23 +167,13 @@ const EditSliderDrawer = ({ isOpen, onClose, slider, onUpdateSlider }) => {
         <form onSubmit={handleSubmit}>
           <Stack spacing={2.5}>
             <TextField
-              label="Tiêu đề Slider"
+              label="Tiêu đề Banner"
               name="title"
               value={formData.title}
               onChange={handleChange}
               fullWidth
               required
               disabled={loading}
-            />
-
-            <TextField
-              label="Link (URL hoặc route)"
-              name="link"
-              value={formData.link}
-              onChange={handleChange}
-              fullWidth
-              disabled={loading}
-              sx={{ mt: 1 }}
             />
 
             <Typography variant="h6" component="h2" mt={1} mb={0}> {/* Giảm margin top */}
@@ -289,4 +268,4 @@ const EditSliderDrawer = ({ isOpen, onClose, slider, onUpdateSlider }) => {
   );
 };
 
-export default React.memo(EditSliderDrawer);
+export default React.memo(EditBannerDrawer);

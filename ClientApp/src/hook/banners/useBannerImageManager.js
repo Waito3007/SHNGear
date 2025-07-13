@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-export const useSliderImageManager = (initialImages = [], initialImageUrls = [""]) => {
+export const useBannerImageManager = (initialImages = [], initialImageUrls = [""]) => {
     const [tabValue, setTabValue] = useState(0);
     const [localImages, setLocalImages] = useState(initialImages);
     const [imageUrls, setImageUrls] = useState(initialImageUrls);

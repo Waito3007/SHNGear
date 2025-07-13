@@ -1,8 +1,8 @@
 import React from 'react';
-import { Container, Typography } from '@mui/material';
 import SlidersTable from "../../components/Admin/home/SlidersTable";
-
+import BannersTable from '@/components/Admin/home/BannersTable';
 import Header from "../../components/Admin/common/Header";
+import BestSellerTable from '@/components/Admin/home/BestSellerTable';
 
 const ManageHomePage = () => {
   return (
@@ -12,7 +12,10 @@ const ManageHomePage = () => {
         <SlidersTable />
       </main>
       <main className='max-w-7xl mx-auto py-6 px-4 lg:px-8'>
-        <SlidersTable />
+        <BannersTable />
+      </main>
+      <main className='max-w-7xl mx-auto py-6 px-4 lg:px-8'>
+        <BestSellerTable />
       </main>
     </div>
   );

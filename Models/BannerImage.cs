@@ -1,12 +1,12 @@
 namespace SHN_Gear.Models
 {
-    public class SliderImage
+    public class BannerImage
     {
         public int Id { get; set; }
-        public int SliderId { get; set; }
+        public int BannerId { get; set; }
         public string ImageUrl { get; set; } = null!;
 
         //Khóa ngoại
-        public Slider Slider { get; set; } = null!;
+        public Banner Banner { get; set; } = null!;
     }
 }

@@ -28,6 +28,8 @@ namespace SHN_Gear.Data
         public DbSet<UserVoucher> UserVouchers { get; set; } // Thêm DbSet cho UserVoucher
         public DbSet<Slider> Sliders { get; set; }
         public DbSet<SliderImage> SliderImages { get; set; } // Thêm DbSet cho SliderImage
+        public DbSet<Banner> Banners { get; set; }
+        public DbSet<BannerImage> BannerImages { get; set; }
 
         // Chat System DbSets
         public DbSet<ChatSession> ChatSessions { get; set; }
