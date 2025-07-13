@@ -31,6 +31,7 @@ const SIDEBAR_ITEMS = [
 	{ name: "Quản lý Blog", icon: FileText, color: "#34D399", href: "/admin/blog" },
 	{ name: "Chat AI", icon: MessageCircle, color: "#06B6D4", href: "/admin/chat" },
 	// { name: "Phân tích", icon: TrendingUp, color: "#3B82F6", href: "/admin/analytics" },
+	{ name: "Trang chủ", icon: Home, color: "#3B82F6", href: "/admin/home" },
 	// { name: "Settings", icon: Settings, color: "#6EE7B7", href: "/admin/settings" },
 ];
 

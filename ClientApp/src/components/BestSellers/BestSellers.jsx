@@ -16,40 +16,64 @@ const BestSellers = ({ data }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchBestSellerProducts = async () => {
-      if (!data || !data.items || data.items.length === 0) {
-        setLoading(false);
-        return;
-      }
-
-      const productIds = data.items.map(item => item.productId);
+    const fetchData = async () => {
       try {
-        setLoading(true);
-        const response = await axios.get(`${API_BASE_URL}/api/Products/by-ids?ids=${productIds.join(',')}`);
-        const fetchedProducts = response.data.$values || response.data || [];
+        const [productsResponse, categoriesResponse, brandsResponse] = await Promise.all([
+          fetch(`${process.env.REACT_APP_API_BASE_URL}/api/products`),
+          fetch(`${process.env.REACT_APP_API_BASE_URL}/api/categories`),
+          fetch(`${process.env.REACT_APP_API_BASE_URL}/api/brands`)
+        ]);
 
-        // Map fetched products with override prices from config
-        const combinedProducts = fetchedProducts.map(product => {
-          const configItem = data.items.find(item => item.productId === product.id);
-          const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
-          const imageUrl = primaryImage ? (primaryImage.imageUrl.startsWith("http") ? primaryImage.imageUrl : `${API_BASE_URL}/${primaryImage.imageUrl}`) : "https://via.placeholder.com/300";
+        if (!productsResponse.ok) throw new Error("Không thể tải sản phẩm");
+        if (!categoriesResponse.ok) throw new Error("Không thể tải danh mục");
+        if (!brandsResponse.ok) throw new Error("Không thể tải thương hiệu");
 
-          // Determine prices
-          const originalVariantPrice = product.variants?.[0]?.price || 0;
-          const displayPrice = configItem?.overridePrice ?? originalVariantPrice;
-          const oldPrice = (configItem?.overridePrice && configItem.overridePrice < originalVariantPrice) ? originalVariantPrice : null;
-          const discountAmount = oldPrice ? oldPrice - displayPrice : 0;
+        const [productsData, categoriesData, brandsData] = await Promise.all([
+          productsResponse.json(),
+          categoriesResponse.json(),
+          brandsResponse.json()
+        ]);
 
-          return {
-            ...product,
-            image: imageUrl,
-            oldPrice: oldPrice,
-            newPrice: displayPrice,
-            discountAmount: discountAmount,
-            // You might want to calculate discount percentage here if needed
-          };
-        });
-        setProducts(combinedProducts);
+        const categoriesArray = categoriesData.$values || categoriesData || [];
+        const brandsArray = brandsData.$values || brandsData || [];
+        const productsArray = productsData.$values || productsData || [];
+
+        const phoneCategory = categoriesArray.find(cat => cat.name === "Điện Thoại");
+        if (!phoneCategory) throw new Error("Không tìm thấy danh mục 'Điện Thoại'");
+
+        const pinnedPhoneProducts = productsArray
+          .filter(p => p.categoryId === phoneCategory.id && p.isPinned) // ✅ chỉ lấy sản phẩm ghim
+          .map(product => {
+            const variant = product.variants?.[0] || {};
+            const image = product.images?.[0]?.imageUrl || "/images/placeholder.jpg";
+            const oldPrice = variant.price || 0;
+            const newPrice = variant.discountPrice || oldPrice;
+            const discountAmount = oldPrice - newPrice;
+            const discount = oldPrice > 0
+              ? `-${Math.round((discountAmount / oldPrice) * 100)}%`
+              : "0%";
+
+            const brand = brandsArray.find(b => b.id === product.brandId);
+
+            return {
+              id: product.id,
+              name: product.name,
+              oldPrice,
+              newPrice,
+              discount,
+              discountAmount,
+              image,
+              features: [
+                variant.storage || "Không xác định",
+                brand?.name || "Không có thương hiệu",
+                "Hiệu suất cao",
+              ],
+            };
+          });
+
+        setProducts(pinnedPhoneProducts);
+        setCategories(categoriesArray);
+        setBrands(brandsArray);
       } catch (err) {
         setError("Không thể tải sản phẩm bán chạy: " + err.message);
         console.error(err);
@@ -93,7 +117,7 @@ const BestSellers = ({ data }) => {
           </span>
           <span className="absolute left-0 right-0 top-1/2 h-0.5 bg-gradient-to-r from-transparent via-red-400 to-transparent z-0"></span>
         </h2>
-        
+
         <Swiper
           modules={[Navigation, Autoplay]}
           navigation
@@ -116,21 +140,20 @@ const BestSellers = ({ data }) => {
                 className="bg-white bg-opacity-95 p-4 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl hover:border-red-300 transition-all duration-300 relative overflow-hidden group"
                 onClick={() => navigate(`/product/${product.id}`)}
               >
-                {/* Discount ribbon - only show if there's a discount amount */}
-                {product.discountAmount > 0 && (
+                {product.discount !== "0%" && (
                   <div className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-2 py-1 transform rotate-12 translate-x-2 -translate-y-1 z-10">
                     -{((product.discountAmount / product.oldPrice) * 100).toFixed(0)}%
                   </div>
                 )}
-                
+
                 <div className="relative h-40 mb-3 overflow-hidden rounded-lg">
                   <img
                     src={product.image}
                     alt={product.name}
                     className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
-                    onError={(e) => { 
-                      e.target.onerror = null; 
-                      e.target.src = "https://via.placeholder.com/150"; 
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "https://via.placeholder.com/150";
                     }}
                   />
                 </div>
@@ -146,19 +169,16 @@ const BestSellers = ({ data }) => {
                       {product.newPrice.toLocaleString('vi-VN')}đ
                     </span>
                   </div>
-                  
-                  {product.discountAmount > 0 && (
-                    <p className="text-green-600 text-sm font-medium bg-green-50 px-2 py-1 rounded-full inline-block">
-                      Tiết kiệm {product.discountAmount.toLocaleString('vi-VN')}đ
-                    </p>
-                  )}
-                  
+
+                  <p className="text-green-600 text-sm font-medium bg-green-50 px-2 py-1 rounded-full inline-block">
+                    Giảm {product.discountAmount.toLocaleString()}đ
+                  </p>
+
                   <h3 className="text-gray-800 font-medium text-base truncate group-hover:text-red-600 transition-colors">
                     {product.name}
                   </h3>
-                  
-                  {/* Features are not directly available from product DTO, remove or adapt */}
-                  {/* <ul className="text-xs text-gray-600 space-y-1">
+
+                  <ul className="text-xs text-gray-600 space-y-1">
                     {product.features.map((feature, index) => (
                       <li key={index} className="flex items-center">
                         <span className="w-1.5 h-1.5 bg-red-400 rounded-full mr-2"></span>
@@ -176,4 +196,4 @@ const BestSellers = ({ data }) => {
   );
 };
 
-export default BestSellers;
+export default DiscountProductSlider;

@@ -10,17 +10,13 @@ import CategoryAdminPage from "@/pages/Admin/CategoryAdminPage";
 import FlashSaleAdminPage from "@/pages/Admin/FlashSaleAdminPage";
 import HomepageOverviewPage from "@/pages/Admin/HomepageOverviewPage";
 import SettingsPage from "@/pages/Admin/SettingsPage";
-import ProductPage from "@/pages/ProductPage/ProductPage";
-import ProfilePage from "@/pages/ProfilePage/ProfilePage";
-import ProductList from "@/pages/ProductList/ProductList";
-import Shoppingcart from "@/pages/shoppingcart/shoppingcart";
-import Unauthorized from "@/pages/Unauthorized/Unauthorized";
-import BestSellerAdminPage from "@/pages/Admin/BestSellerAdminPage";
-import ReviewManagementPage from "@/pages/Admin/ReviewManagementPage";
-import BlogList from "@/pages/blog/BlogList";
-import BlogPostDetail from "@/pages/blog/BlogPostDetail";
-import BlogPostEditor from "@/pages/blog/BlogPostEditor";
-import LuckySpinPage from "@/pages/Admin/LuckySpinPage";
+import ProductPage from "@/pages/ProductPage";
+import ProfilePage from "@/pages/ProfilePage";
+import ProductList from "@/pages/ProductList";
+import Shoppingcart from "@/pages/shoppingcart";
+import Unauthorized from "@/pages/Unauthorized";
+import ManageHomePage from "./pages/Admin/ManageHomePage";
+
 const AppRoutes = [
 
   {
@@ -100,7 +96,12 @@ const AppRoutes = [
   {
     path: "/admin/settings",
     element: <SettingsPage />,
-    requiresAdmin: true,
+    requiresAdmin: true 
+  },
+  {
+    path: "/admin/home",
+    element: <ManageHomePage/>,
+    requiresAdmin: true
   },
   {
     path: "/admin/homepage",
@@ -121,6 +122,16 @@ const AppRoutes = [
     path: "/admin/homepage-dashboard",
     element: <HomepageOverviewPage />,
     requiresAdmin: true,
+  },
+  {
+    path: "/admin/homepage",
+    element: <HomepageAdminPage />,
+    requiresAdmin: true,
+  },
+  {
+    path: "/admin/home",
+    element: <ManageHomePage/>,
+    requiresAdmin: true
   },
   // Public routes
   {

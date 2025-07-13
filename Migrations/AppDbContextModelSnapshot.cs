@@ -191,6 +191,48 @@ namespace SHN_Gear.Migrations
                     b.ToTable("BlogPosts");
                 });
 
+            modelBuilder.Entity("SHN_Gear.Models.Banner", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Status")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Banners");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.BannerImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BannerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BannerId");
+
+                    b.ToTable("BannerImages");
+                });
+
             modelBuilder.Entity("SHN_Gear.Models.Brand", b =>
                 {
                     b.Property<int>("Id")
@@ -664,6 +706,9 @@ namespace SHN_Gear.Migrations
                     b.Property<bool>("IsFlashSale")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -939,6 +984,51 @@ namespace SHN_Gear.Migrations
                     b.ToTable("SpinItems");
                 });
 
+            modelBuilder.Entity("SHN_Gear.Models.Slider", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("LinkToProduct")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Status")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Sliders");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.SliderImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SliderId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SliderId");
+
+                    b.ToTable("SliderImages");
+                });
+
             modelBuilder.Entity("SHN_Gear.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -1076,6 +1166,17 @@ namespace SHN_Gear.Migrations
                         .IsRequired();
 
                     b.Navigation("Author");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.BannerImage", b =>
+                {
+                    b.HasOne("SHN_Gear.Models.Banner", "Banner")
+                        .WithMany("Images")
+                        .HasForeignKey("BannerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Banner");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.CartItem", b =>
@@ -1260,6 +1361,17 @@ namespace SHN_Gear.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SHN_Gear.Models.SliderImage", b =>
+                {
+                    b.HasOne("SHN_Gear.Models.Slider", "Slider")
+                        .WithMany("Images")
+                        .HasForeignKey("SliderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Slider");
+                });
+
             modelBuilder.Entity("SHN_Gear.Models.User", b =>
                 {
                     b.HasOne("SHN_Gear.Models.Role", "Role")
@@ -1291,6 +1403,11 @@ namespace SHN_Gear.Migrations
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.BlogPost", b =>
+                {
+                    b.Navigation("Images");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.Banner", b =>
                 {
                     b.Navigation("Images");
                 });
@@ -1332,6 +1449,11 @@ namespace SHN_Gear.Migrations
             modelBuilder.Entity("SHN_Gear.Models.Role", b =>
                 {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.Slider", b =>
+                {
+                    b.Navigation("Images");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.User", b =>

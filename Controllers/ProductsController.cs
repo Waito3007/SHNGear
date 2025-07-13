@@ -571,5 +571,40 @@ namespace SHN_Gear.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+        [HttpGet("pinned")]
+        public async Task<ActionResult<IEnumerable<ProductDto>>> GetPinnedProducts()
+        {
+            var pinnedProducts = await _context.Products
+                .Include(p => p.Images)
+                .Include(p => p.Variants)
+                .Where(p => p.IsPinned)
+                .ToListAsync();
+
+            var productDtos = pinnedProducts.Select(p => new ProductDto
+            {
+                Name = p.Name,
+                Description = p.Description,
+                CategoryId = p.CategoryId,
+                BrandId = p.BrandId,
+                Images = p.Images.Select(img => new ProductImageDto
+                {
+                    ImageUrl = img.ImageUrl,
+                    IsPrimary = img.IsPrimary
+                }).ToList(),
+                Variants = p.Variants.Select(v => new ProductVariantDto
+                {
+                    Color = v.Color,
+                    Storage = v.Storage,
+                    Price = v.Price,
+                    DiscountPrice = v.DiscountPrice,
+                    StockQuantity = v.StockQuantity,
+                    FlashSaleStart = v.FlashSaleStart,
+                    FlashSaleEnd = v.FlashSaleEnd
+                }).ToList()
+            });
+
+            return Ok(productDtos);
+        }
     }
 }
