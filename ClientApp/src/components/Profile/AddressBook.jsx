@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import {
   Card,
@@ -22,6 +21,7 @@ import {
 } from "@mui/material";
 import { Delete, Edit, Add, Close } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
+import { useAddresses } from "@/hooks/api/useAddresses";
 
 const StyledCard = styled(Card)(({ theme }) => ({
   maxWidth: "800px",
@@ -48,9 +48,6 @@ const AddressItem = styled(Paper)(({ theme }) => ({
 }));
 
 const AddressComponent = () => {
-  const [addresses, setAddresses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -66,44 +63,11 @@ const AddressComponent = () => {
     country: "",
     phoneNumber: "",
   });
+  const { addresses, loading, error, fetchAddresses, addAddress, updateAddress, deleteAddress } = useAddresses();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const decodedToken = jwtDecode(token);
-        if (decodedToken.sub) {
-          setUserId(decodedToken.sub);
-        } else {
-          console.error("Không tìm thấy userId trong token!");
-        }
-      } catch (error) {
-        console.error("Lỗi khi decode token:", error);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!userId) return;
-    const fetchAddresses = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_API_BASE_URL}/api/Address/user/${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        setAddresses(response.data);
-      } catch (error) {
-        console.error("Lỗi khi lấy địa chỉ:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchAddresses();
-  }, [userId]);
+  }, [fetchAddresses]);
 
   const handleOpenModal = (address = null) => {
     setEditMode(!!address);
@@ -134,40 +98,17 @@ const AddressComponent = () => {
   };
 
   const handleSaveAddress = async () => {
-    if (!userId) {
-      console.error("Không tìm thấy userId, không thể thêm địa chỉ.");
-      return;
-    }
-
     try {
       if (editMode && selectedAddress) {
-        const response = await axios.put(
-          `${process.env.REACT_APP_API_BASE_URL}/api/Address/update/${selectedAddress.id}`,
-          { ...newAddress, userId },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        setAddresses(
-          addresses.map((addr) =>
-            addr.id === selectedAddress.id ? response.data : addr
-          )
-        );
+        const response = await updateAddress(selectedAddress.id, newAddress);
+        // setAddresses(
+        //   addresses.map((addr) =>
+        //     addr.id === selectedAddress.id ? response.data : addr
+        //   )
+        // );
       } else {
-        const response = await axios.post(
-          `${process.env.REACT_APP_API_BASE_URL}/api/Address/add`,
-          { ...newAddress, userId },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        setAddresses([...addresses, response.data]);
+        const response = await addAddress(newAddress);
+        // setAddresses([...addresses, response.data]);
       }
       handleCloseModal();
     } catch (error) {
@@ -188,13 +129,8 @@ const AddressComponent = () => {
   const handleDeleteAddress = async () => {
     if (!addressToDelete) return;
     try {
-      await axios.delete(
-        `${process.env.REACT_APP_API_BASE_URL}/api/Address/delete/${addressToDelete.id}`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
-      setAddresses(addresses.filter((addr) => addr.id !== addressToDelete.id));
+      await deleteAddress(addressToDelete.id);
+      // setAddresses(addresses.filter((addr) => addr.id !== addressToDelete.id));
     } catch (error) {
       console.error("Lỗi khi xóa địa chỉ:", error);
     }

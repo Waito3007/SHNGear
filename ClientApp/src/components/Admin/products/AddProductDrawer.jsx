@@ -18,9 +18,9 @@ import { Close } from "@mui/icons-material";
 // import { useFieldArray } from "react-hook-form"; // Sẽ được quản lý trong useProductForm nếu cần field array cho variants
 
 // Import các custom hooks
-import { useProductForm } from "../../../hook/products/useProductForm";
-import { useProductImageManager } from "../../../hook/products/useProductImageManager";
-import { useProductData } from "../../../hook/products/useProductData";
+import { useProductForm } from "@/hooks/api/useProductForm";
+import { useProductImageManager } from "@/hooks/api/useProductImageManager";
+import { useProductData } from "@/hooks/api/useProductData";
 
 const ProductDrawer = ({ isOpen, onClose, onAddProduct }) => {
   const { categories, brands, loading: dataLoading, error: dataError } = useProductData();

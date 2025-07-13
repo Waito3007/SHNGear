@@ -19,6 +19,7 @@ import {
 } from "@mui/material";
 import { ChevronDown, Filter, X, CheckCircle2, Circle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useBrands } from "@/hooks/api/useBrands";
 
 const priceRanges = [
   { value: "all", min: 0, max: Infinity, label: "Tất cả" },
@@ -59,27 +60,8 @@ const FilterSection = ({ onPriceChange, onBrandChange }) => {
   const [expanded, setExpanded] = useState(["price", "brand"]);
   const [selectedBrands, setSelectedBrands] = useState([]);
   const [selectedPrice, setSelectedPrice] = useState("all");
-  const [brands, setBrands] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [showAllBrands, setShowAllBrands] = useState(false);
-
-  useEffect(() => {
-    const fetchBrands = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.REACT_APP_API_BASE_URL}/api/brands`
-        );
-        if (!response.ok) throw new Error("Could not fetch brands");
-        const data = await response.json();
-        setBrands(data.$values || data || []);
-      } catch (error) {
-        console.error("Error fetching brands:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBrands();
-  }, []);
+  const { brands, loading } = useBrands(true);
 
   const handleAccordionChange = (panel) => (_, isExpanded) => {
     setExpanded(

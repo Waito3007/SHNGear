@@ -1,4 +1,3 @@
-// src/hooks/products/useProductForm.js
 import { useForm } from "react-hook-form";
 import axios from "axios";
 
@@ -12,7 +11,7 @@ export const useProductForm = ({ onAddProduct, onClose, initialImages = [], init
     control, 
     setValue, 
     watch,
-    formState // Lấy toàn bộ formState từ useForm
+    formState
   } = useForm({
     defaultValues: {
       name: "",
@@ -22,10 +21,9 @@ export const useProductForm = ({ onAddProduct, onClose, initialImages = [], init
       images: initialImages,
       variants: [],
     },
-    mode: "onChange", // Hoặc "onBlur" hoặc "onSubmit" (mặc định)
+    mode: "onChange",
   });
 
-  // Destructure errors từ formState để tiện sử dụng nếu muốn, hoặc trả về cả formState
   const { errors } = formState;
 
   const handleFormSubmit = async (data, uploadedImages) => {
@@ -70,9 +68,7 @@ export const useProductForm = ({ onAddProduct, onClose, initialImages = [], init
     resetForm: reset,
     setValue,
     watch,
-    formState, // Trả về toàn bộ formState (bao gồm errors, isSubmitting, isValid, v.v.)
-    // HOẶC chỉ trả về errors nếu bạn chỉ cần nó:
-    // errors,
+    formState,
     handleFormSubmit,
   };
 };

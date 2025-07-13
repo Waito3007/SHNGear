@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import Navbar from "../components/Navbar/Navbar";
-import CartItem from "../components/shoppingcart/CartItem";
-import OrderSummary from "../components/shoppingcart/OrderSummary";
-import Commitment from "../components/Commitment/Commitment";
-import Footer from "../components/Footer/Footer";
+import Navbar from "@/components/Navbar/Navbar";
+import CartItem from "@/components/shoppingcart/CartItem";
+import OrderSummary from "@/components/shoppingcart/OrderSummary";
+import Commitment from "@/components/Commitment/Commitment";
+import Footer from "@/components/Footer/Footer";
 
 const Shoppingcart = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -16,10 +16,13 @@ const Shoppingcart = () => {
   useEffect(() => {
     const fetchCart = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/cart`, {
-          method: "GET",
-          credentials: "include",
-        });
+        const response = await fetch(
+          `${process.env.REACT_APP_API_BASE_URL}/api/cart`,
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Không thể lấy dữ liệu giỏ hàng");

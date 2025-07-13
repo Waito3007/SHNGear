@@ -28,29 +28,24 @@ export const useBrands = (drawerOpen) => {
   }, []);
 
   useEffect(() => {
-    // Chỉ fetch khi drawer được mở lần đầu hoặc khi drawerOpen thay đổi từ false sang true
-    // để tránh fetch liên tục nếu component cha re-render mà drawer vẫn đang đóng.
-    // Hoặc đơn giản là fetch mỗi khi drawerOpen là true.
-    if (drawerOpen) {
+    if (drawerOpen === undefined || drawerOpen) {
       fetchBrands();
     }
-  }, [drawerOpen, fetchBrands]); // Thêm drawerOpen vào dependencies
+  }, [drawerOpen, fetchBrands]);
 
   const handleConfirmDelete = async () => {
     if (!brandToDelete) return;
-    setLoading(true); // Bắt đầu loading cho thao tác xoá
+    setLoading(true);
     try {
       await axios.delete(`${API_URL}/${brandToDelete.id}`);
-      await fetchBrands(); // Tải lại danh sách sau khi xóa
+      await fetchBrands();
       setDeleteDialogOpen(false);
       setBrandToDelete(null);
-      // Thông báo thành công (có thể dùng snackbar như ví dụ trước)
     } catch (err) {
       console.error("Failed to delete brand:", err);
       setError("Xóa thương hiệu thất bại. Vui lòng thử lại.");
-      // Thông báo lỗi
     } finally {
-      setLoading(false); // Kết thúc loading
+      setLoading(false);
     }
   };
 
@@ -61,7 +56,7 @@ export const useBrands = (drawerOpen) => {
 
   const handleCloseModal = (shouldRefresh = false) => {
     setModalOpen(false);
-    setSelectedBrand(null); // Reset selectedBrand khi đóng modal
+    setSelectedBrand(null);
     if (shouldRefresh) {
       fetchBrands();
     }
@@ -74,8 +69,6 @@ export const useBrands = (drawerOpen) => {
 
   const handleCloseDeleteDialog = () => {
     setDeleteDialogOpen(false);
-    // Không reset brandToDelete ở đây để Dialog vẫn có thể hiển thị tên brand khi đóng
-    // Nó sẽ được reset trong handleConfirmDelete hoặc khi mở dialog cho brand khác
   };
 
   return {
@@ -87,13 +80,13 @@ export const useBrands = (drawerOpen) => {
     loading,
     error,
     actions: {
-      fetchBrands, // Có thể cần gọi lại từ UI nếu có nút refresh riêng
+      fetchBrands,
       handleOpenModal,
       handleCloseModal,
       handleOpenDeleteDialog,
       handleCloseDeleteDialog,
       handleConfirmDelete,
-      clearError: () => setError(null) // Cho phép UI clear lỗi
+      clearError: () => setError(null)
     }
   };
 };

@@ -23,70 +23,28 @@ import {
   Send,
   Close 
 } from "@mui/icons-material";
-import { jwtDecode } from "jwt-decode";
+import { useReviews, useSubmitReview } from "@/hooks/api/useReviews";
 
 const ProductReviews = ({ productId }) => {
-  const [reviews, setReviews] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
-  const [averageRating, setAverageRating] = useState(0);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
-
   const token = localStorage.getItem("token");
   let currentUserId = null;
-
   if (token) {
     try {
-      const decoded = jwtDecode(token);
+      const decoded = require("jwt-decode")(token);
       currentUserId = decoded.nameid || decoded.sub || decoded.UserId || null;
     } catch (err) {
       console.error("Token decode error:", err);
     }
   }
-
-  const fetchReviews = useCallback(async (signal) => {
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_BASE_URL}/api/review/product/${productId}`,
-        { signal }
-      );
-
-      if (!response.ok) throw new Error("Không thể tải đánh giá");
-
-      const data = await response.json();
-      setReviews(data);
-    } catch (err) {
-      console.error("Lỗi fetch review:", err);
-      setError(`Không thể tải đánh giá: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  }, [productId]);
-
-  const fetchAverageRating = useCallback(async () => {
-    try {
-      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/review/product/${productId}/average-rating`);
-      const avg = await res.json();
-      setAverageRating(avg);
-    } catch (err) {
-      console.error("Lỗi fetch rating:", err);
-    }
-  }, [productId]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3000); // Giảm thời gian tải xuống còn 3 giây
-
-    if (productId) {
-      fetchReviews(controller.signal);
-      fetchAverageRating();
-    }
-
-    return () => clearTimeout(timeout); // Dọn timeout
-  }, [productId, fetchReviews, fetchAverageRating]);
+  const { reviews, loading, error, averageRating, fetchReviews, fetchAverageRating } = useReviews(productId);
+  const { submitReview } = useSubmitReview(productId, () => {
+    fetchReviews();
+    fetchAverageRating();
+  });
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
@@ -102,26 +60,13 @@ const ProductReviews = ({ productId }) => {
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/review`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ productId, rating, comment }),
-      });
-
-      if (!response.ok) throw new Error(await response.text());
-
-      await fetchReviews(); // Cập nhật lại đánh giá
-      fetchAverageRating();
-
+      await submitReview({ rating, comment });
       setShowForm(false);
       setComment("");
       setRating(5);
-      setSnackbar({ open: true, message: "Gửi đánh giá thành công", severity: "success" });
+      setSnackbar({ open: true, message: "Đánh giá của bạn đã được gửi!", severity: "success" });
     } catch (err) {
-      setSnackbar({ open: true, message: `Lỗi gửi đánh giá: ${err.message}`, severity: "error" });
+      setSnackbar({ open: true, message: err.message || "Gửi đánh giá thất bại", severity: "error" });
     }
   };
   const hasReviewed = reviews.some((r) => r.userId === Number(currentUserId));

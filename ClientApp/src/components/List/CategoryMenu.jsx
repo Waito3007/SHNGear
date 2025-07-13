@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   Box,
   Container,
@@ -10,29 +10,11 @@ import {
   Chip,
 } from "@mui/material";
 import { motion } from "framer-motion";
+import { useCategories } from "@/hooks/api/useCategories";
 
 const CategoryMenu = () => {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [hoveredCategory, setHoveredCategory] = useState(null);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.REACT_APP_API_BASE_URL}/api/categories`
-        );
-        if (!response.ok) throw new Error("Could not fetch categories");
-        const data = await response.json();
-        setCategories(data.$values || data || []);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCategories();
-  }, []);
+  const { categories, loading } = useCategories();
+  const [hoveredCategory, setHoveredCategory] = React.useState(null);
 
   const container = {
     hidden: { opacity: 0 },

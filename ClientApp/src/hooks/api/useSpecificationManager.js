@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 
-// Constants (có thể chuyển ra file riêng nếu dùng ở nhiều nơi)
 const API_BASE_URL_SPECS = `${process.env.REACT_APP_API_BASE_URL}/api/Specifications`;
 const CATEGORY_ENDPOINTS = {
   1: "PhoneSpecifications",
@@ -9,7 +8,6 @@ const CATEGORY_ENDPOINTS = {
   3: "HeadphoneSpecifications"
 };
 
-// Hàm khởi tạo form data (giữ lại ở đây hoặc trong hook đều được)
 const getInitialFormData = (fields) => {
   return fields.reduce((acc, field) => {
     acc[field.name] = field.type === 'checkbox' ? false : '';
@@ -40,9 +38,7 @@ export const useSpecificationForm = (product, open, formFields, onClose) => {
     setSpecification(null);
     setFormData(getInitialFormData(formFields));
     setDeleteDialogOpen(false);
-    // Không reset snackbar ở đây để nó có thể hiển thị sau khi đóng drawer
   }, [formFields]);
-
 
   const fetchSpecification = useCallback(async () => {
     if (!endpoint || !product?.id) {
@@ -99,7 +95,7 @@ export const useSpecificationForm = (product, open, formFields, onClose) => {
       if (specification?.id) {
         await axios.put(`${url}/${specification.id}`, payload);
         successMessage = 'Cập nhật thông số thành công!';
-        fetchSpecification(); // Refetch để cập nhật UI với data mới nhất
+        fetchSpecification();
       } else {
         const postResponse = await axios.post(url, payload);
         successMessage = 'Thêm thông số thành công!';
@@ -107,7 +103,7 @@ export const useSpecificationForm = (product, open, formFields, onClose) => {
           setSpecification(postResponse.data);
           setFormData(postResponse.data);
         } else {
-          fetchSpecification(); // Fetch nếu API không trả về data mới
+          fetchSpecification();
         }
       }
       showSnackbar(successMessage, "success");
@@ -137,10 +133,8 @@ export const useSpecificationForm = (product, open, formFields, onClose) => {
       await axios.delete(`${API_BASE_URL_SPECS}/${endpoint}/${specification.id}`);
       showSnackbar("Xóa thông số thành công!");
       setDeleteDialogOpen(false);
-      resetComponentState(); // Reset state sau khi xóa
-      // Cân nhắc gọi fetchSpecification ở đây nếu muốn load lại (mặc dù đã reset)
-      // hoặc đảm bảo drawer đóng và refresh danh sách bên ngoài
-      if (onClose) onClose(true); // Truyền true để báo hiệu có thay đổi cần refresh
+      resetComponentState();
+      if (onClose) onClose(true);
     } catch (error) {
       console.error("Lỗi khi xóa thông số:", error);
       showSnackbar(error.response?.data?.message || error.message || "Không thể xóa thông số.", "error");
@@ -149,18 +143,13 @@ export const useSpecificationForm = (product, open, formFields, onClose) => {
     }
   }, [endpoint, specification?.id, resetComponentState, onClose]);
 
-
   useEffect(() => {
     if (open && product) {
-      // Chỉ fetch khi drawer được mở và có product
-      // Việc reset formData về initial sẽ được fetchSpecification xử lý nếu không tìm thấy data
       fetchSpecification();
     } else if (!open) {
-      // Khi drawer đóng, reset tất cả state liên quan đến form này
       resetComponentState();
     }
   }, [open, product, fetchSpecification, resetComponentState]);
-
 
   const handleInputChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
@@ -188,9 +177,8 @@ export const useSpecificationForm = (product, open, formFields, onClose) => {
 
   const anyLoading = loadingState.fetch || loadingState.submit || loadingState.delete;
   const canSubmit = !!(product?.id && endpoint);
-  const showInitialLoadSpinner = loadingState.fetch && !specification?.id && open; // Chỉ show khi đang fetch và chưa có spec và drawer mở
-  const showRefetchProgressBar = loadingState.fetch && !!specification?.id && open; // Chỉ show khi đang refetch và drawer mở
-
+  const showInitialLoadSpinner = loadingState.fetch && !specification?.id && open;
+  const showRefetchProgressBar = loadingState.fetch && !!specification?.id && open;
 
   return {
     specification,
@@ -198,7 +186,7 @@ export const useSpecificationForm = (product, open, formFields, onClose) => {
     loadingState,
     snackbarState,
     deleteDialogOpen,
-    endpoint, // UI cần endpoint để quyết định hiển thị một số thứ
+    endpoint,
     anyLoading,
     canSubmit,
     showInitialLoadSpinner,
@@ -210,7 +198,7 @@ export const useSpecificationForm = (product, open, formFields, onClose) => {
       handleDeleteClick,
       handleCloseDeleteDialog,
       handleCloseSnackbar,
-      showSnackbar // Có thể cần từ UI
+      showSnackbar
     }
   };
 };

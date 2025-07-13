@@ -22,6 +22,67 @@ namespace SHN_Gear.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("SHN_Gear.Models.AIKnowledgeBase", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Answer")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BrandIds")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("EscalationThreshold")
+                        .HasPrecision(5, 3)
+                        .HasColumnType("decimal(5,3)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.PrimitiveCollection<string>("Keywords")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("MinConfidenceScore")
+                        .HasPrecision(5, 3)
+                        .HasColumnType("decimal(5,3)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProductCategoryIds")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("RequiresLogin")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Topic")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AIKnowledgeBases");
+                });
+
             modelBuilder.Entity("SHN_Gear.Models.Address", b =>
                 {
                     b.Property<int>("Id")
@@ -176,6 +237,122 @@ namespace SHN_Gear.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("SHN_Gear.Models.ChatMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("AIConfidenceScore")
+                        .HasPrecision(5, 3)
+                        .HasColumnType("decimal(5,3)");
+
+                    b.Property<string>("AIContext")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AIIntent")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AttachmentsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ChatSessionId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MetadataJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("RequiresEscalation")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Sender")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SenderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SuggestedActionsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChatSessionId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("ChatMessages");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.ChatSession", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AssignedAdminId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("ConfidenceScore")
+                        .HasPrecision(5, 3)
+                        .HasColumnType("decimal(5,3)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GuestEmail")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GuestName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("LastActivityAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("RequiresHumanSupport")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SessionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserContext")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedAdminId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ChatSessions");
+                });
+
             modelBuilder.Entity("SHN_Gear.Models.Delivery", b =>
                 {
                     b.Property<int>("Id")
@@ -206,100 +383,6 @@ namespace SHN_Gear.Migrations
                     b.HasIndex("OrderId");
 
                     b.ToTable("Deliveries");
-                });
-
-            modelBuilder.Entity("SHN_Gear.Models.HeadphoneSpecification", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ConnectionType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Port")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Weight")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("HeadphoneSpecifications");
-                });
-
-            modelBuilder.Entity("SHN_Gear.Models.LaptopSpecification", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CPUNumberOfCores")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CPUType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Material")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MaxRAMSupport")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RAM")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RefreshRate")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Resolution")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SSDStorage")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ScreenSize")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("SupportsTouch")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Weight")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("LaptopSpecifications");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Order", b =>
@@ -442,74 +525,6 @@ namespace SHN_Gear.Migrations
                         });
                 });
 
-            modelBuilder.Entity("SHN_Gear.Models.PhoneSpecification", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("BatteryCapacity")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("CPUCores")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CPUModel")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FrontCamera")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InternalStorage")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Material")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RAM")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RearCamera")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Resolution")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ScreenSize")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ScreenType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("SupportsNFC")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Weight")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("PhoneSpecifications");
-                });
-
             modelBuilder.Entity("SHN_Gear.Models.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -567,6 +582,44 @@ namespace SHN_Gear.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("ProductImages");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.ProductSpecification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Unit")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductSpecifications");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.ProductVariant", b =>
@@ -867,6 +920,39 @@ namespace SHN_Gear.Migrations
                     b.Navigation("ProductVariant");
                 });
 
+            modelBuilder.Entity("SHN_Gear.Models.ChatMessage", b =>
+                {
+                    b.HasOne("SHN_Gear.Models.ChatSession", "ChatSession")
+                        .WithMany("Messages")
+                        .HasForeignKey("ChatSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SHN_Gear.Models.User", "SenderUser")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ChatSession");
+
+                    b.Navigation("SenderUser");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.ChatSession", b =>
+                {
+                    b.HasOne("SHN_Gear.Models.User", "AssignedAdmin")
+                        .WithMany()
+                        .HasForeignKey("AssignedAdminId");
+
+                    b.HasOne("SHN_Gear.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("AssignedAdmin");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SHN_Gear.Models.Delivery", b =>
                 {
                     b.HasOne("SHN_Gear.Models.Order", "Order")
@@ -876,28 +962,6 @@ namespace SHN_Gear.Migrations
                         .IsRequired();
 
                     b.Navigation("Order");
-                });
-
-            modelBuilder.Entity("SHN_Gear.Models.HeadphoneSpecification", b =>
-                {
-                    b.HasOne("SHN_Gear.Models.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("SHN_Gear.Models.LaptopSpecification", b =>
-                {
-                    b.HasOne("SHN_Gear.Models.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Order", b =>
@@ -948,17 +1012,6 @@ namespace SHN_Gear.Migrations
                     b.Navigation("ProductVariant");
                 });
 
-            modelBuilder.Entity("SHN_Gear.Models.PhoneSpecification", b =>
-                {
-                    b.HasOne("SHN_Gear.Models.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("SHN_Gear.Models.Product", b =>
                 {
                     b.HasOne("SHN_Gear.Models.Brand", "Brand")
@@ -982,6 +1035,17 @@ namespace SHN_Gear.Migrations
                 {
                     b.HasOne("SHN_Gear.Models.Product", "Product")
                         .WithMany("Images")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.ProductSpecification", b =>
+                {
+                    b.HasOne("SHN_Gear.Models.Product", "Product")
+                        .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1073,6 +1137,11 @@ namespace SHN_Gear.Migrations
             modelBuilder.Entity("SHN_Gear.Models.Category", b =>
                 {
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.ChatSession", b =>
+                {
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Order", b =>

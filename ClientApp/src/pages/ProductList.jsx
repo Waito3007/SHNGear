@@ -24,12 +24,12 @@ import {
   ListIcon,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import Navbar from "../components/Navbar/Navbar";
-import CategoryMenu from "../components/List/CategoryMenu";
-import FilterSection from "../components/List/FilterSection";
-import ProductGrid from "../components/List/ProductGrid";
-import Commitment from "../components/Commitment/Commitment";
-import Footer from "../components/Footer/Footer";
+import Navbar from "@/components/Navbar/Navbar";
+import CategoryMenu from "@/components/List/CategoryMenu";
+import FilterSection from "@/components/List/FilterSection";
+import ProductGrid from "@/components/List/ProductGrid";
+import Commitment from "@/components/Commitment/Commitment";
+import Footer from "@/components/Footer/Footer";
 
 const container = {
   hidden: { opacity: 0 },

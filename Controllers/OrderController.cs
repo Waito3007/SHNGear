@@ -718,6 +718,8 @@ namespace SHN_Gear.Controllers
                 PaymentMethodId = order.PaymentMethodId,
                 Items = order.OrderItems.Select(oi => new
                 {
+                    ProductId = oi.ProductVariant.Product.Id, // Thêm ProductId
+                    ProductVariantId = oi.ProductVariantId,
                     ProductName = oi.ProductVariant.Product.Name,
                     ProductDescription = oi.ProductVariant.Product.Description,
                     ProductImage = oi.ProductVariant.Product.Images

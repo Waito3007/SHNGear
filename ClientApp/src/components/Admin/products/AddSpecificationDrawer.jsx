@@ -17,7 +17,7 @@ import {
   LayoutGrid,
   Info
 } from "lucide-react";
-import { useSpecificationForm } from "../../../hook/products/useSpecificationManager"; // Đường dẫn tới hook
+import { useSpecificationForm } from "@/hooks/api/useSpecificationManager"; // Đường dẫn tới hook
 
 // Constants cho UI (nếu không dùng ở hook thì để đây)
 const CATEGORY_NAMES = {
