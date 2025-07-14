@@ -12,8 +12,8 @@ using SHN_Gear.Data;
 namespace SHN_Gear.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250712063927_AddBlogImageAndRelation")]
-    partial class AddBlogImageAndRelation
+    [Migration("20250713180748_updateBannerandSlider")]
+    partial class updateBannerandSlider
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -134,6 +134,33 @@ namespace SHN_Gear.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Addresses");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.Banner", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LinkTo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Status")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Banners");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.BlogImage", b =>
@@ -667,6 +694,9 @@ namespace SHN_Gear.Migrations
                     b.Property<bool>("IsFlashSale")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -869,6 +899,33 @@ namespace SHN_Gear.Migrations
                         });
                 });
 
+            modelBuilder.Entity("SHN_Gear.Models.Slider", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LinkToProduct")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Status")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Sliders");
+                });
+
             modelBuilder.Entity("SHN_Gear.Models.SpinConfig", b =>
                 {
                     b.Property<int>("Id")
@@ -886,6 +943,14 @@ namespace SHN_Gear.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SpinConfigs");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            SpinCost = 100,
+                            UpdatedAt = new DateTime(2024, 7, 12, 0, 0, 0, 0, DateTimeKind.Utc)
+                        });
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.SpinHistory", b =>
@@ -940,6 +1005,69 @@ namespace SHN_Gear.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SpinItems");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "Hãy thử lại nhé!",
+                            DropRate = 0.40000000000000002,
+                            IsLuckyNextTime = true,
+                            Name = "Chúc may mắn lần sau"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Description = "Giảm 50,000đ cho đơn hàng từ 500K",
+                            DropRate = 0.14999999999999999,
+                            IsLuckyNextTime = false,
+                            Name = "Voucher 50K",
+                            VoucherCode = "VOUCHER50K"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Description = "Giảm 100,000đ cho đơn hàng từ 1M",
+                            DropRate = 0.10000000000000001,
+                            IsLuckyNextTime = false,
+                            Name = "Voucher 100K",
+                            VoucherCode = "VOUCHER100K"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Description = "Giảm 200,000đ cho đơn hàng từ 2M",
+                            DropRate = 0.050000000000000003,
+                            IsLuckyNextTime = false,
+                            Name = "Voucher 200K",
+                            VoucherCode = "VOUCHER200K"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Description = "Miễn phí vận chuyển",
+                            DropRate = 0.20000000000000001,
+                            IsLuckyNextTime = false,
+                            Name = "Freeship",
+                            VoucherCode = "FREESHIP"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Description = "Giảm 500,000đ cho đơn hàng từ 5M",
+                            DropRate = 0.02,
+                            IsLuckyNextTime = false,
+                            Name = "Voucher 500K",
+                            VoucherCode = "VOUCHER500K"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Description = "Nhận gấp đôi điểm loyalty",
+                            DropRate = 0.080000000000000002,
+                            IsLuckyNextTime = false,
+                            Name = "Điểm thưởng x2"
+                        });
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.User", b =>
@@ -1001,6 +1129,20 @@ namespace SHN_Gear.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAt = new DateTime(2024, 7, 12, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "",
+                            FullName = "",
+                            IsActive = true,
+                            Password = "",
+                            PhoneNumber = "",
+                            Points = 0,
+                            RoleId = 0
+                        });
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.UserVoucher", b =>

@@ -15,25 +15,24 @@ export const useBannerForm = ({ onAddBanner, onClose, initialImage = [], initial
         defaultValues: {
             title: '',
             imageUrl: initialImageUrls[0] || '',
-            images: initialImage
+            linkTo: '',
+            status: true
         },
         mode: 'onChange',
     });
     
-    const handleFormSubmit = async (data, uploadedImages) => {
+    const handleFormSubmit = async (data) => {
         try {
-            if(!uploadedImages || uploadedImages.length === 0) {
-                console.error("No images provided for the banner.");
+            if (!data.imageUrl || data.imageUrl.trim() === "") {
+                console.error("No image provided for the banner.");
                 return;
             }
             const bannerData = {
                 title: data.title,
-                linkToProduct: data.linkToProduct,
-                images: uploadedImages.map(img => ({ imageUrl: img.imageUrl }))
+                imageUrl: data.imageUrl,
+                linkTo: data.linkTo,
+                status: data.status
             };
-            if (typeof data.status !== 'undefined' && data.status !== null && data.status !== "") {
-                bannerData.status = data.status;
-            }
             console.log('Banner data gửi lên:', bannerData);
             const response = await axios.post(`${API_BASE_URL}/api/Banner`, bannerData);
             onAddBanner(response.data);

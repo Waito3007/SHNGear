@@ -12,8 +12,8 @@ using SHN_Gear.Data;
 namespace SHN_Gear.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250707095145_ChangeSliderStatusToBool")]
-    partial class ChangeSliderStatusToBool
+    [Migration("20250713153425_MergeSliderBannerImages")]
+    partial class MergeSliderBannerImages
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,67 @@ namespace SHN_Gear.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("SHN_Gear.Models.AIKnowledgeBase", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Answer")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BrandIds")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("EscalationThreshold")
+                        .HasPrecision(5, 3)
+                        .HasColumnType("decimal(5,3)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.PrimitiveCollection<string>("Keywords")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("MinConfidenceScore")
+                        .HasPrecision(5, 3)
+                        .HasColumnType("decimal(5,3)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProductCategoryIds")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("RequiresLogin")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Topic")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AIKnowledgeBases");
+                });
 
             modelBuilder.Entity("SHN_Gear.Models.Address", b =>
                 {
@@ -73,6 +134,91 @@ namespace SHN_Gear.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Addresses");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.Banner", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LinkTo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Status")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Banners");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.BlogImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BlogPostId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlogPostId");
+
+                    b.ToTable("BlogImage");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.BlogPost", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AuthorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.ToTable("BlogPosts");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Brand", b =>
@@ -179,6 +325,122 @@ namespace SHN_Gear.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("SHN_Gear.Models.ChatMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("AIConfidenceScore")
+                        .HasPrecision(5, 3)
+                        .HasColumnType("decimal(5,3)");
+
+                    b.Property<string>("AIContext")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AIIntent")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AttachmentsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ChatSessionId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MetadataJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("RequiresEscalation")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Sender")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SenderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SuggestedActionsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChatSessionId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("ChatMessages");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.ChatSession", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AssignedAdminId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("ConfidenceScore")
+                        .HasPrecision(5, 3)
+                        .HasColumnType("decimal(5,3)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GuestEmail")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GuestName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("LastActivityAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("RequiresHumanSupport")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SessionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserContext")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedAdminId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ChatSessions");
+                });
+
             modelBuilder.Entity("SHN_Gear.Models.Delivery", b =>
                 {
                     b.Property<int>("Id")
@@ -211,7 +473,7 @@ namespace SHN_Gear.Migrations
                     b.ToTable("Deliveries");
                 });
 
-            modelBuilder.Entity("SHN_Gear.Models.HeadphoneSpecification", b =>
+            modelBuilder.Entity("SHN_Gear.Models.HomepageConfig", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -219,33 +481,22 @@ namespace SHN_Gear.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ConnectionType")
+                    b.Property<string>("ConfigJson")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Port")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
 
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Weight")
-                        .IsRequired()
+                    b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("HeadphoneSpecifications");
+                    b.ToTable("HomepageConfigurations");
                 });
 
-            modelBuilder.Entity("SHN_Gear.Models.LaptopSpecification", b =>
+            modelBuilder.Entity("SHN_Gear.Models.LoyaltyPoint", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -253,56 +504,18 @@ namespace SHN_Gear.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CPUNumberOfCores")
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Points")
                         .HasColumnType("int");
 
-                    b.Property<string>("CPUType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Material")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MaxRAMSupport")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ProductId")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
-
-                    b.Property<string>("RAM")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RefreshRate")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Resolution")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SSDStorage")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ScreenSize")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("SupportsTouch")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Weight")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("LaptopSpecifications");
+                    b.ToTable("LoyaltyPoints");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Order", b =>
@@ -445,74 +658,6 @@ namespace SHN_Gear.Migrations
                         });
                 });
 
-            modelBuilder.Entity("SHN_Gear.Models.PhoneSpecification", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("BatteryCapacity")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("CPUCores")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CPUModel")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FrontCamera")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InternalStorage")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Material")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RAM")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RearCamera")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Resolution")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ScreenSize")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ScreenType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("SupportsNFC")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Weight")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("PhoneSpecifications");
-                });
-
             modelBuilder.Entity("SHN_Gear.Models.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -534,15 +679,38 @@ namespace SHN_Gear.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("FlashSaleEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("FlashSalePrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("FlashSaleStartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsBestSeller")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsFlashSale")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BrandId");
+                    b.HasIndex("BrandId")
+                        .HasDatabaseName("IX_Products_BrandId");
 
-                    b.HasIndex("CategoryId");
+                    b.HasIndex("CategoryId")
+                        .HasDatabaseName("IX_Products_CategoryId");
+
+                    b.HasIndex("IsFlashSale")
+                        .HasDatabaseName("IX_Products_IsFlashSale");
 
                     b.ToTable("Products");
                 });
@@ -570,6 +738,44 @@ namespace SHN_Gear.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("ProductImages");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.ProductSpecification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Unit")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductSpecifications");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.ProductVariant", b =>
@@ -609,7 +815,11 @@ namespace SHN_Gear.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductId");
+                    b.HasIndex("Price")
+                        .HasDatabaseName("IX_ProductVariants_Price");
+
+                    b.HasIndex("ProductId")
+                        .HasDatabaseName("IX_ProductVariants_ProductId");
 
                     b.ToTable("ProductVariants");
                 });
@@ -697,6 +907,10 @@ namespace SHN_Gear.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("LinkToProduct")
                         .HasColumnType("nvarchar(max)");
 
@@ -712,7 +926,7 @@ namespace SHN_Gear.Migrations
                     b.ToTable("Sliders");
                 });
 
-            modelBuilder.Entity("SHN_Gear.Models.SliderImage", b =>
+            modelBuilder.Entity("SHN_Gear.Models.SpinConfig", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -720,18 +934,140 @@ namespace SHN_Gear.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("SpinCost")
+                        .HasColumnType("int");
 
-                    b.Property<int>("SliderId")
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SpinConfigs");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            SpinCost = 100,
+                            UpdatedAt = new DateTime(2024, 7, 12, 0, 0, 0, 0, DateTimeKind.Utc)
+                        });
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.SpinHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("PointsUsed")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SpinAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("SpinItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SliderId");
+                    b.ToTable("SpinHistories");
+                });
 
-                    b.ToTable("SliderImages");
+            modelBuilder.Entity("SHN_Gear.Models.SpinItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("DropRate")
+                        .HasColumnType("float");
+
+                    b.Property<bool>("IsLuckyNextTime")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VoucherCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SpinItems");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "Hãy thử lại nhé!",
+                            DropRate = 0.40000000000000002,
+                            IsLuckyNextTime = true,
+                            Name = "Chúc may mắn lần sau"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Description = "Giảm 50,000đ cho đơn hàng từ 500K",
+                            DropRate = 0.14999999999999999,
+                            IsLuckyNextTime = false,
+                            Name = "Voucher 50K",
+                            VoucherCode = "VOUCHER50K"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Description = "Giảm 100,000đ cho đơn hàng từ 1M",
+                            DropRate = 0.10000000000000001,
+                            IsLuckyNextTime = false,
+                            Name = "Voucher 100K",
+                            VoucherCode = "VOUCHER100K"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Description = "Giảm 200,000đ cho đơn hàng từ 2M",
+                            DropRate = 0.050000000000000003,
+                            IsLuckyNextTime = false,
+                            Name = "Voucher 200K",
+                            VoucherCode = "VOUCHER200K"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Description = "Miễn phí vận chuyển",
+                            DropRate = 0.20000000000000001,
+                            IsLuckyNextTime = false,
+                            Name = "Freeship",
+                            VoucherCode = "FREESHIP"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Description = "Giảm 500,000đ cho đơn hàng từ 5M",
+                            DropRate = 0.02,
+                            IsLuckyNextTime = false,
+                            Name = "Voucher 500K",
+                            VoucherCode = "VOUCHER500K"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Description = "Nhận gấp đôi điểm loyalty",
+                            DropRate = 0.080000000000000002,
+                            IsLuckyNextTime = false,
+                            Name = "Điểm thưởng x2"
+                        });
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.User", b =>
@@ -793,6 +1129,20 @@ namespace SHN_Gear.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAt = new DateTime(2024, 7, 12, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "",
+                            FullName = "",
+                            IsActive = true,
+                            Password = "",
+                            PhoneNumber = "",
+                            Points = 0,
+                            RoleId = 0
+                        });
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.UserVoucher", b =>
@@ -851,6 +1201,28 @@ namespace SHN_Gear.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SHN_Gear.Models.BlogImage", b =>
+                {
+                    b.HasOne("SHN_Gear.Models.BlogPost", "BlogPost")
+                        .WithMany("Images")
+                        .HasForeignKey("BlogPostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BlogPost");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.BlogPost", b =>
+                {
+                    b.HasOne("SHN_Gear.Models.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+                });
+
             modelBuilder.Entity("SHN_Gear.Models.CartItem", b =>
                 {
                     b.HasOne("SHN_Gear.Models.Cart", "Cart")
@@ -870,6 +1242,39 @@ namespace SHN_Gear.Migrations
                     b.Navigation("ProductVariant");
                 });
 
+            modelBuilder.Entity("SHN_Gear.Models.ChatMessage", b =>
+                {
+                    b.HasOne("SHN_Gear.Models.ChatSession", "ChatSession")
+                        .WithMany("Messages")
+                        .HasForeignKey("ChatSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SHN_Gear.Models.User", "SenderUser")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ChatSession");
+
+                    b.Navigation("SenderUser");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.ChatSession", b =>
+                {
+                    b.HasOne("SHN_Gear.Models.User", "AssignedAdmin")
+                        .WithMany()
+                        .HasForeignKey("AssignedAdminId");
+
+                    b.HasOne("SHN_Gear.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("AssignedAdmin");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SHN_Gear.Models.Delivery", b =>
                 {
                     b.HasOne("SHN_Gear.Models.Order", "Order")
@@ -879,28 +1284,6 @@ namespace SHN_Gear.Migrations
                         .IsRequired();
 
                     b.Navigation("Order");
-                });
-
-            modelBuilder.Entity("SHN_Gear.Models.HeadphoneSpecification", b =>
-                {
-                    b.HasOne("SHN_Gear.Models.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("SHN_Gear.Models.LaptopSpecification", b =>
-                {
-                    b.HasOne("SHN_Gear.Models.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Order", b =>
@@ -951,17 +1334,6 @@ namespace SHN_Gear.Migrations
                     b.Navigation("ProductVariant");
                 });
 
-            modelBuilder.Entity("SHN_Gear.Models.PhoneSpecification", b =>
-                {
-                    b.HasOne("SHN_Gear.Models.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("SHN_Gear.Models.Product", b =>
                 {
                     b.HasOne("SHN_Gear.Models.Brand", "Brand")
@@ -985,6 +1357,17 @@ namespace SHN_Gear.Migrations
                 {
                     b.HasOne("SHN_Gear.Models.Product", "Product")
                         .WithMany("Images")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("SHN_Gear.Models.ProductSpecification", b =>
+                {
+                    b.HasOne("SHN_Gear.Models.Product", "Product")
+                        .WithMany("ProductSpecifications")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1022,17 +1405,6 @@ namespace SHN_Gear.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("SHN_Gear.Models.SliderImage", b =>
-                {
-                    b.HasOne("SHN_Gear.Models.Slider", "Slider")
-                        .WithMany("Images")
-                        .HasForeignKey("SliderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Slider");
-                });
-
             modelBuilder.Entity("SHN_Gear.Models.User", b =>
                 {
                     b.HasOne("SHN_Gear.Models.Role", "Role")
@@ -1063,6 +1435,11 @@ namespace SHN_Gear.Migrations
                     b.Navigation("Voucher");
                 });
 
+            modelBuilder.Entity("SHN_Gear.Models.BlogPost", b =>
+                {
+                    b.Navigation("Images");
+                });
+
             modelBuilder.Entity("SHN_Gear.Models.Brand", b =>
                 {
                     b.Navigation("Products");
@@ -1078,6 +1455,11 @@ namespace SHN_Gear.Migrations
                     b.Navigation("Products");
                 });
 
+            modelBuilder.Entity("SHN_Gear.Models.ChatSession", b =>
+                {
+                    b.Navigation("Messages");
+                });
+
             modelBuilder.Entity("SHN_Gear.Models.Order", b =>
                 {
                     b.Navigation("OrderItems");
@@ -1087,17 +1469,14 @@ namespace SHN_Gear.Migrations
                 {
                     b.Navigation("Images");
 
+                    b.Navigation("ProductSpecifications");
+
                     b.Navigation("Variants");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.Role", b =>
                 {
                     b.Navigation("Users");
-                });
-
-            modelBuilder.Entity("SHN_Gear.Models.Slider", b =>
-                {
-                    b.Navigation("Images");
                 });
 
             modelBuilder.Entity("SHN_Gear.Models.User", b =>

@@ -15,9 +15,7 @@ public class BannerController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetBanners()
     {
-        var banners = await _context.Banners
-            .Include(s => s.Images)
-            .ToListAsync();
+        var banners = await _context.Banners.ToListAsync();
         return Ok(banners);
     }
 
@@ -25,17 +23,14 @@ public class BannerController : ControllerBase
     public async Task<ActionResult<Banner>> AddBanner([FromBody] BannerDto bannerDto)
     {
         if (bannerDto == null)
-            return BadRequest("Dữ liệu Slider không hợp lệ.");
+            return BadRequest("Dữ liệu Banner không hợp lệ.");
         var banner = new Banner
         {
             Title = bannerDto.Title,
-            Status = bannerDto.Status == false ? false : true,
-            Images = bannerDto.Images?.Select(img => new BannerImage
-            {
-                ImageUrl = img.ImageUrl,
-            }).ToList() ?? new List<BannerImage>(),
+            Status = bannerDto.Status,
+            ImageUrl = bannerDto.ImageUrl,
+            LinkTo = bannerDto.LinkTo
         };
-
         _context.Banners.Add(banner);
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetBanners), new { id = banner.Id }, banner);
@@ -47,19 +42,15 @@ public class BannerController : ControllerBase
         if (bannerDto == null || id <= 0)
             return BadRequest("Dữ liệu Banner không hợp lệ.");
 
-        var existingBanner = await _context.Banners
-            .Include(p => p.Images)
-            .FirstOrDefaultAsync(p => p.Id == id);
+        var existingBanner = await _context.Banners.FirstOrDefaultAsync(p => p.Id == id);
 
         if (existingBanner == null)
             return NotFound("Banner không tồn tại.");
 
         existingBanner.Title = bannerDto.Title;
         existingBanner.Status = bannerDto.Status;
-        existingBanner.Images = bannerDto.Images?.Select(img => new BannerImage
-        {
-            ImageUrl = img.ImageUrl
-        }).ToList() ?? new List<BannerImage>();
+        existingBanner.ImageUrl = bannerDto.ImageUrl;
+        existingBanner.LinkTo = bannerDto.LinkTo;
 
         _context.Banners.Update(existingBanner);
         await _context.SaveChangesAsync();
@@ -69,10 +60,7 @@ public class BannerController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteBanner(int id)
     {
-        var banner = await _context.Banners
-        .Include(p => p.Images)
-        .FirstOrDefaultAsync(p => p.Id == id);
-
+        var banner = await _context.Banners.FirstOrDefaultAsync(p => p.Id == id);
         if (banner == null)
         {
             return NotFound();

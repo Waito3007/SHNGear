@@ -15,9 +15,7 @@ public class SliderController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetSliders()
     {
-        var sliders = await _context.Sliders
-            .Include(s => s.Images)
-            .ToListAsync();
+        var sliders = await _context.Sliders.ToListAsync();
         return Ok(sliders);
     }
 
@@ -29,14 +27,10 @@ public class SliderController : ControllerBase
         var slider = new Slider
         {
             Title = sliderDto.Title,
-            Status = sliderDto.Status == false ? false : true,
+            Status = sliderDto.Status,
             LinkToProduct = sliderDto.LinkToProduct,
-            Images = sliderDto.Images?.Select(img => new SliderImage
-            {
-                ImageUrl = img.ImageUrl,
-            }).ToList() ?? new List<SliderImage>(),
+            ImageUrl = sliderDto.ImageUrl
         };
-
         _context.Sliders.Add(slider);
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetSliders), new { id = slider.Id }, slider);
@@ -48,9 +42,7 @@ public class SliderController : ControllerBase
         if (sliderDto == null || id <= 0)
             return BadRequest("Dữ liệu Slider không hợp lệ.");
 
-        var existingSlider = await _context.Sliders
-            .Include(p => p.Images)
-            .FirstOrDefaultAsync(p => p.Id == id);
+        var existingSlider = await _context.Sliders.FirstOrDefaultAsync(p => p.Id == id);
 
         if (existingSlider == null)
             return NotFound("Slider không tồn tại.");
@@ -58,10 +50,7 @@ public class SliderController : ControllerBase
         existingSlider.Title = sliderDto.Title;
         existingSlider.Status = sliderDto.Status;
         existingSlider.LinkToProduct = sliderDto.LinkToProduct;
-        existingSlider.Images = sliderDto.Images?.Select(img => new SliderImage
-        {
-            ImageUrl = img.ImageUrl
-        }).ToList() ?? new List<SliderImage>();
+        existingSlider.ImageUrl = sliderDto.ImageUrl;
 
         _context.Sliders.Update(existingSlider);
         await _context.SaveChangesAsync();
@@ -71,10 +60,7 @@ public class SliderController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteSlider(int id)
     {
-        var slider = await _context.Sliders
-        .Include(p => p.Images)
-        .FirstOrDefaultAsync(p => p.Id == id);
-
+        var slider = await _context.Sliders.FirstOrDefaultAsync(p => p.Id == id);
         if (slider == null)
         {
             return NotFound();

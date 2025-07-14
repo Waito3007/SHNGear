@@ -1,18 +1,39 @@
 import React, { useState, useEffect, useCallback, } from "react";
-import { Drawer, IconButton, TextField, Button, Typography, Stack, Box, Alert, Snackbar, CircularProgress, FormControlLabel, Switch } from "@mui/material";
+import { Drawer, IconButton, TextField, Button, Typography, Stack, Box, Alert, Snackbar, CircularProgress, FormControlLabel, Switch, Tabs, Tab } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close"
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import axios from "axios";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const initialImageState = { imageUrl: ''};
 const EditBannerDrawer = ({ isOpen, onClose, banner, onUpdateBanner }) => {
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imageTab, setImageTab] = useState(0); // 0: link, 1: file
+
+  const handleFileChange = useCallback((e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.match('image.*')) {
+      setImageError("Chỉ chấp nhận file ảnh");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setImageError("Kích thước ảnh tối đa 5MB");
+      return;
+    }
+    setImageError("");
+    setSelectedFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    setFormData((prev) => ({ ...prev, imageUrl: "" }));
+  }, []);
   const [formData, setFormData] = useState({
     title: '',
-    images: [initialImageState],
+    linkTo: '',
+    imageUrl: '',
     status: true,
   });
+  const [imagePreview, setImagePreview] = useState("");
+  const [imageError, setImageError] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
@@ -21,56 +42,39 @@ const EditBannerDrawer = ({ isOpen, onClose, banner, onUpdateBanner }) => {
     if (banner) {
       setFormData({
         title: banner.title || "",
+        linkTo: banner.linkTo || "",
         status: !(banner.status ?? false),
-        images:
-          banner.images?.length > 0
-            ? banner.images.map((img) => ({
-                imageUrl: img.imageUrl || "",
-              }))
-            : [initialImageState],
+        imageUrl: banner.imageUrl || "",
       });
+      setImagePreview(banner.imageUrl || "");
+      setSelectedFile(null);
     } else {
       setFormData({
         title: "",
+        linkTo: "",
         status: true,
-        images: [initialImageState],
+        imageUrl: "",
       });
+      setImagePreview("");
+      setSelectedFile(null);
     }
+    setImageError("");
   }, [banner]);
 
-  const handleChange = useCallback((e, index, type) => {
-    const { name, value, checked, type: inputType } = e.target;
-    setFormData((prev) => {
-      if (type === "image" && index !== undefined) {
-        let newImages = prev.images.map((img, i) => {
-          if (i === index) {
-            return {
-              ...img,
-              [name]: inputType === "checkbox" ? checked : value,
-            };
-          }
-          return img;
-        });
-        return { ...prev, images: newImages };
-      } else {
-        return { ...prev, [name]: value };
-      }
-    });
-  }, []);
-
-  const addImage = useCallback(() => {
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      images: [...prev.images, { ...initialImageState }],
+      [name]: value,
     }));
+    if (name === "imageUrl") {
+      setImagePreview(value);
+      setImageError("");
+      setSelectedFile(null);
+    }
   }, []);
 
-  const removeImage = useCallback((index) => {
-    setFormData((prev) => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }));
-  }, []);
+  // Removed addImage and removeImage logic
 
   const handleSubmit = useCallback (async (e) => {
     e.preventDefault();
@@ -78,11 +82,44 @@ const EditBannerDrawer = ({ isOpen, onClose, banner, onUpdateBanner }) => {
     setError(null);
     setSuccessMessage(null);
 
-    const hasImages = formData.images.some(img => img.imageUrl && img.imageUrl.trim() !== "");
-    if(hasImages && !formData.images.some(img => img.imageUrl && img.imageUrl.trim() !== "")) {
-      setError("Vui lòng chọn ảnh.");
-    setLoading(false);
-    return;
+    let imageUrl = formData.imageUrl;
+    if (imageTab === 1) {
+      if (!selectedFile) {
+        setError("Vui lòng chọn file ảnh.");
+        setLoading(false);
+        return;
+      }
+      try {
+        const data = new FormData();
+        data.append("file", selectedFile);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        const res = await fetch(`${API_BASE_URL}/api/upload`, {
+          method: "POST",
+          body: data,
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
+        if (!res.ok) throw new Error("Upload thất bại");
+        const result = await res.json();
+        if (!result.url && !result.imageUrl) throw new Error("Upload thất bại");
+        imageUrl = result.url || result.imageUrl;
+      } catch (err) {
+        setError("Upload ảnh thất bại hoặc quá lâu. Vui lòng thử lại hoặc chọn ảnh khác.");
+        setLoading(false);
+        return;
+      }
+    } else {
+      if (!imageUrl || imageUrl.trim() === "") {
+        setError("Vui lòng nhập URL hình ảnh.");
+        setLoading(false);
+        return;
+      }
+    }
+    if (!formData.linkTo || formData.linkTo.trim() === "") {
+      setError("Vui lòng nhập link chuyển tới (linkTo).");
+      setLoading(false);
+      return;
     }
 
     if (!banner || !banner.id) {
@@ -94,12 +131,9 @@ const EditBannerDrawer = ({ isOpen, onClose, banner, onUpdateBanner }) => {
     try{
       const updatedData = {
         title: formData.title,
+        linkTo: formData.linkTo,
         status: !formData.status,
-        images: formData.images
-          .filter(img => img.imageUrl && img.imageUrl.trim() !== "")
-          .map(img => ({
-            imageUrl: img.imageUrl,
-          })),
+        imageUrl,
       };
 
       console.log("Submitting data:", updatedData);
@@ -129,7 +163,7 @@ const EditBannerDrawer = ({ isOpen, onClose, banner, onUpdateBanner }) => {
     } finally {
       setLoading(false);
     }
-  }, [formData, banner, onUpdateBanner]);
+  }, [formData, banner, onUpdateBanner, imageTab, selectedFile]);
 
     const handleCloseDrawer = useCallback(() => {
     setError(null); // Reset lỗi khi đóng
@@ -175,35 +209,74 @@ const EditBannerDrawer = ({ isOpen, onClose, banner, onUpdateBanner }) => {
               required
               disabled={loading}
             />
-
-            <Typography variant="h6" component="h2" mt={1} mb={0}> {/* Giảm margin top */}
-              Hình ảnh
-            </Typography>
-            {formData.images.map((image, index) => (
-              <Stack key={`image-${index}`} direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+            <TextField
+              label="Link chuyển tới (linkTo)"
+              name="linkTo"
+              value={formData.linkTo}
+              onChange={handleChange}
+              fullWidth
+              required
+              disabled={loading}
+            />
+            <Box>
+              <Tabs value={imageTab} onChange={(_, v) => setImageTab(v)} aria-label="Chọn cách thêm ảnh" sx={{ mb: 2 }}>
+                <Tab label="Nhập link ảnh" value={0} sx={{ minWidth: 120 }} />
+                <Tab label="Chọn file ảnh" value={1} sx={{ minWidth: 120 }} />
+              </Tabs>
+              {imageTab === 0 && (
                 <TextField
-                  label={`URL Hình ảnh`}
+                  label="URL Hình ảnh"
                   name="imageUrl"
-                  value={image.imageUrl}
-                  onChange={(e) => handleChange(e, index, "image")}
+                  value={formData.imageUrl}
+                  onChange={handleChange}
                   fullWidth
                   disabled={loading}
                   variant="outlined"
                   size="small"
+                  required
+                  error={!!imageError}
+                  helperText={imageError}
                 />
-                {formData.images.length > 0 && ( // Luôn cho phép xóa nếu có ảnh, có thể để lại 1 ảnh trống
-                  <IconButton
-                    onClick={() => removeImage(index)}
-                    color="error"
-                    disabled={loading}
-                    aria-label={`Xóa hình ảnh ${index + 1}`}
-                    size="small"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                )}
-              </Stack>
-            ))}
+              )}
+              {imageTab === 1 && (
+                <Button
+                  variant="outlined"
+                  component="label"
+                  sx={{ mb: 2 }}
+                >
+                  Chọn file ảnh
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={handleFileChange}
+                  />
+                </Button>
+              )}
+              {(imagePreview || selectedFile) ? (
+                <Box mt={2} display="flex" alignItems="center" gap={2}>
+                  <img
+                    src={(() => {
+                      if (imageTab === 1 && selectedFile && imagePreview) return imagePreview;
+                      if (imagePreview && imagePreview.startsWith("http")) return imagePreview;
+                      if (imagePreview) return `${API_BASE_URL}${imagePreview}`;
+                      return "https://via.placeholder.com/80?text=No+Image";
+                    })()}
+                    alt="Preview"
+                    style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #ccc" }}
+                    onError={() => setImageError("Không thể load ảnh từ URL này.")}
+                    onLoad={() => setImageError("")}
+                  />
+                  <Button variant="outlined" color="error" size="small" onClick={() => { setImagePreview(""); setSelectedFile(null); setFormData((prev) => ({ ...prev, imageUrl: "" })); }}>
+                    Xóa ảnh
+                  </Button>
+                </Box>
+              ) : (
+                <Box mt={2}>
+                  <img src="https://via.placeholder.com/80?text=No+Image" alt="No preview" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #ccc" }} />
+                </Box>
+              )}
+            </Box>
 
             <FormControlLabel
               control={
@@ -220,16 +293,7 @@ const EditBannerDrawer = ({ isOpen, onClose, banner, onUpdateBanner }) => {
               label={formData.status ? "Hiển thị" : "Ẩn"}
             />
             
-            <Button
-              variant="outlined"
-              startIcon={<AddIcon />}
-              onClick={addImage}
-              disabled={loading}
-              size="small"
-              sx={{ alignSelf: 'flex-start'}}
-            >
-              Thêm ảnh
-            </Button>
+            {/* Removed add image button */}
 
             <Stack direction={{xs: "column", sm: "row"}} spacing={2} mt={3}>
               <Button

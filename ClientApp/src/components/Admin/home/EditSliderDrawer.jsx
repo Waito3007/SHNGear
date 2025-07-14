@@ -1,19 +1,23 @@
-import React, { useState, useEffect, useCallback, } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Drawer, IconButton, TextField, Button, Typography, Stack, Box, Alert, Snackbar, CircularProgress, FormControlLabel, Switch } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close"
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import { Tabs, Tab } from "@mui/material";
 import axios from "axios";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const initialImageState = { imageUrl: ''};
 const EditSliderDrawer = ({ isOpen, onClose, slider, onUpdateSlider }) => {
   const [formData, setFormData] = useState({
     title: '',
-    images: [initialImageState],
-    link: '',
+    imageUrl: '',
+    linkToProduct: '',
     status: true,
   });
+  const [imagePreview, setImagePreview] = useState("");
+  const [imageError, setImageError] = useState("");
+  const [imageTab, setImageTab] = useState(0); // 0: link, 1: file
+  const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
@@ -23,60 +27,60 @@ const EditSliderDrawer = ({ isOpen, onClose, slider, onUpdateSlider }) => {
       setFormData({
         title: slider.title || "",
         status: !(slider.status ?? false),
-        images:
-          slider.images?.length > 0
-            ? slider.images.map((img) => ({
-                imageUrl: img.imageUrl || "",
-              }))
-            : [initialImageState],
-        // Ưu tiên link, nếu không có thì lấy linkToProduct
-        link: slider.link || slider.linkToProduct || "",
+        imageUrl: slider.imageUrl || "",
         linkToProduct: slider.linkToProduct || slider.link || "",
       });
+      setImagePreview(slider.imageUrl || "");
+      setImageTab(0);
+      setSelectedFile(null);
     } else {
       setFormData({
         title: "",
-        link: "",
+        imageUrl: "",
         linkToProduct: "",
         status: true,
-        images: [initialImageState],
       });
+      setImagePreview("");
+      setImageTab(0);
+      setSelectedFile(null);
     }
+    setImageError("");
   }, [slider]);
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    // Validate file type
+    if (!file.type.match('image.*')) {
+      setImageError("Chỉ chấp nhận file ảnh");
+      return;
+    }
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setImageError("Kích thước ảnh tối đa 5MB");
+      return;
+    }
+    setImageError("");
+    setSelectedFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    // Clear URL nếu đang ở tab upload
+    if (imageTab === 1) {
+      setFormData((prev) => ({ ...prev, imageUrl: "" }));
+    }
+  };
 
-  const handleChange = useCallback((e, index, type) => {
-    const { name, value, checked, type: inputType } = e.target;
-    setFormData((prev) => {
-      if (type === "image" && index !== undefined) {
-        let newImages = prev.images.map((img, i) => {
-          if (i === index) {
-            return {
-              ...img,
-              [name]: inputType === "checkbox" ? checked : value,
-            };
-          }
-          return img;
-        });
-        return { ...prev, images: newImages };
-      } else {
-        return { ...prev, [name]: value };
-      }
-    });
-  }, []);
-
-  const addImage = useCallback(() => {
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      images: [...prev.images, { ...initialImageState }],
+      [name]: value,
     }));
+    if (name === "imageUrl") {
+      setImagePreview(value);
+      setImageError("");
+    }
   }, []);
 
-  const removeImage = useCallback((index) => {
-    setFormData((prev) => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }));
-  }, []);
+  // Removed addImage and removeImage logic
 
   const handleSubmit = useCallback (async (e) => {
     e.preventDefault();
@@ -84,11 +88,44 @@ const EditSliderDrawer = ({ isOpen, onClose, slider, onUpdateSlider }) => {
     setError(null);
     setSuccessMessage(null);
 
-    const hasImages = formData.images.some(img => img.imageUrl && img.imageUrl.trim() !== "");
-    if(hasImages && !formData.images.some(img => img.imageUrl && img.imageUrl.trim() !== "")) {
-      setError("Vui lòng chọn ảnh.");
-    setLoading(false);
-    return;
+    let imageUrl = formData.imageUrl;
+    if (imageTab === 1) {
+      if (!selectedFile) {
+        setError("Vui lòng chọn file ảnh.");
+        setLoading(false);
+        return;
+      }
+      try {
+        const data = new FormData();
+        data.append("file", selectedFile);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+        const res = await fetch(`${API_BASE_URL}/api/upload`, {
+          method: "POST",
+          body: data,
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
+        if (!res.ok) throw new Error("Upload thất bại");
+        const result = await res.json();
+        if (!result.url && !result.imageUrl) throw new Error("Upload thất bại");
+        imageUrl = result.url || result.imageUrl;
+      } catch (err) {
+        setError("Upload ảnh thất bại hoặc quá lâu. Vui lòng thử lại hoặc chọn ảnh khác.");
+        setLoading(false);
+        return;
+      }
+    } else {
+      if (!imageUrl || imageUrl.trim() === "") {
+        setError("Vui lòng nhập URL hình ảnh.");
+        setLoading(false);
+        return;
+      }
+      if (imageError) {
+        setError("URL hình ảnh không hợp lệ hoặc không load được ảnh.");
+        setLoading(false);
+        return;
+      }
     }
 
     if (!slider || !slider.id) {
@@ -96,21 +133,12 @@ const EditSliderDrawer = ({ isOpen, onClose, slider, onUpdateSlider }) => {
       setLoading(false);
       return;
     }
-    
     try{
-      // Nếu formData.link rỗng, fallback sang slider.linkToProduct (nếu có)
-      const linkValue = formData.link || (slider && slider.linkToProduct) || "";
-      const linkToProductValue = formData.linkToProduct || (slider && slider.linkToProduct) || formData.link || "";
       const updatedData = {
         title: formData.title,
-        link: linkValue,
-        linkToProduct: linkToProductValue,
+        linkToProduct: formData.linkToProduct,
         status: !formData.status,
-        images: formData.images
-          .filter(img => img.imageUrl && img.imageUrl.trim() !== "")
-          .map(img => ({
-            imageUrl: img.imageUrl,
-          })),
+        imageUrl: imageUrl,
       };
 
       console.log("Submitting data:", updatedData);
@@ -140,7 +168,7 @@ const EditSliderDrawer = ({ isOpen, onClose, slider, onUpdateSlider }) => {
     } finally {
       setLoading(false);
     }
-  }, [formData, slider, onUpdateSlider]);
+  }, [formData, slider, onUpdateSlider, imageTab, selectedFile, imageError]);
 
     const handleCloseDrawer = useCallback(() => {
     setError(null); // Reset lỗi khi đóng
@@ -188,43 +216,92 @@ const EditSliderDrawer = ({ isOpen, onClose, slider, onUpdateSlider }) => {
             />
 
             <TextField
-              label="Link (URL hoặc route)"
-              name="link"
-              value={formData.link}
+              label="Liên kết đến sản phẩm"
+              name="linkToProduct"
+              value={formData.linkToProduct}
               onChange={handleChange}
               fullWidth
               disabled={loading}
               sx={{ mt: 1 }}
             />
 
-            <Typography variant="h6" component="h2" mt={1} mb={0}> {/* Giảm margin top */}
-              Hình ảnh
-            </Typography>
-            {formData.images.map((image, index) => (
-              <Stack key={`image-${index}`} direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                <TextField
-                  label={`URL Hình ảnh`}
-                  name="imageUrl"
-                  value={image.imageUrl}
-                  onChange={(e) => handleChange(e, index, "image")}
-                  fullWidth
-                  disabled={loading}
-                  variant="outlined"
-                  size="small"
-                />
-                {formData.images.length > 0 && ( // Luôn cho phép xóa nếu có ảnh, có thể để lại 1 ảnh trống
-                  <IconButton
-                    onClick={() => removeImage(index)}
-                    color="error"
+            <Box>
+              <Tabs value={imageTab} onChange={(_, v) => setImageTab(v)} aria-label="Chọn cách thêm ảnh" sx={{ mb: 2 }}>
+                <Tab label="Nhập link ảnh" />
+                <Tab label="Chọn file ảnh" />
+              </Tabs>
+              {imageTab === 0 ? (
+                <>
+                  <TextField
+                    label="URL Hình ảnh"
+                    name="imageUrl"
+                    value={formData.imageUrl}
+                    onChange={handleChange}
+                    fullWidth
                     disabled={loading}
-                    aria-label={`Xóa hình ảnh ${index + 1}`}
+                    variant="outlined"
                     size="small"
+                    required
+                    error={!!imageError}
+                    helperText={imageError}
+                  />
+                  {imagePreview && (
+                    <Box mt={2} display="flex" justifyContent="center">
+                      <img
+                        src={imagePreview.startsWith("http") ? imagePreview : `${API_BASE_URL}${imagePreview}`}
+                        alt="Preview"
+                        style={{ width: 100, height: 100, objectFit: "cover", borderRadius: 8, border: "1px solid #ccc" }}
+                        onError={() => setImageError("Không thể load ảnh từ URL này.")}
+                        onLoad={() => setImageError("")}
+                      />
+                    </Box>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Button
+                    component="label"
+                    variant="outlined"
+                    fullWidth
+                    sx={{ mb: 2 }}
                   >
-                    <DeleteIcon />
-                  </IconButton>
-                )}
-              </Stack>
-            ))}
+                    Chọn file ảnh
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={handleFileChange}
+                    />
+                  </Button>
+                  {imagePreview && (
+                    <Box mt={1} display="flex" flexDirection="column" alignItems="center">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        style={{ width: 100, height: 100, objectFit: "cover", borderRadius: 8, border: "1px solid #ccc", marginBottom: 8 }}
+                      />
+                      <Button
+                        size="small"
+                        color="error"
+                        variant="outlined"
+                        onClick={() => {
+                          setSelectedFile(null);
+                          setImagePreview("");
+                          setImageError("");
+                        }}
+                      >
+                        Xóa ảnh
+                      </Button>
+                    </Box>
+                  )}
+                </>
+              )}
+              {imageError && (
+                <Typography color="error" variant="body2" mt={1}>
+                  {imageError}
+                </Typography>
+              )}
+            </Box>
 
             <FormControlLabel
               control={
@@ -241,16 +318,7 @@ const EditSliderDrawer = ({ isOpen, onClose, slider, onUpdateSlider }) => {
               label={formData.status ? "Hiển thị" : "Ẩn"}
             />
             
-            <Button
-              variant="outlined"
-              startIcon={<AddIcon />}
-              onClick={addImage}
-              disabled={loading}
-              size="small"
-              sx={{ alignSelf: 'flex-start'}}
-            >
-              Thêm ảnh
-            </Button>
+            {/* Removed add image button */}
 
             <Stack direction={{xs: "column", sm: "row"}} spacing={2} mt={3}>
               <Button

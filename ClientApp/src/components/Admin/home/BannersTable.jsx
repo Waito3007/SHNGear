@@ -179,9 +179,9 @@ const BannersTable = () => {
 
             {/* Hình ảnh */}
             <td className="px-6 py-4 text-sm text-gray-100 text-center align-middle">
-              {banner.images && banner.images[0] && banner.images[0].imageUrl ? (
+              {banner.imageUrl ? (
                 <img
-                  src={banner.images[0].imageUrl.startsWith("http") ? banner.images[0].imageUrl : `${process.env.REACT_APP_API_BASE_URL}/${banner.images[0].imageUrl}`}
+                  src={banner.imageUrl.startsWith("http") ? banner.imageUrl : `${process.env.REACT_APP_API_BASE_URL}/${banner.imageUrl}`}
                   alt={banner.title || "banner image"}
                   className="w-16 h-16 rounded-md object-cover border border-gray-600"
                   onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/100?text=Error"; }}

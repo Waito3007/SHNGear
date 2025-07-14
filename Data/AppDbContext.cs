@@ -28,9 +28,7 @@ namespace SHN_Gear.Data
         public DbSet<UserVoucher> UserVouchers { get; set; } // Thêm DbSet cho UserVoucher
         public DbSet<HomepageConfig> HomepageConfigurations { get; set; }
         public DbSet<Slider> Sliders { get; set; }
-        public DbSet<SliderImage> SliderImages { get; set; } // Thêm DbSet cho SliderImage
         public DbSet<Banner> Banners { get; set; }
-        public DbSet<BannerImage> BannerImages { get; set; }
 
         // Chat System DbSets
         public DbSet<ChatSession> ChatSessions { get; set; }
@@ -64,7 +62,7 @@ namespace SHN_Gear.Data
 
             // ✅ Seed dữ liệu mặc định cho SpinConfig
             modelBuilder.Entity<SpinConfig>().HasData(
-                new SpinConfig { Id = 1, SpinCost = 100, UpdatedAt = DateTime.UtcNow }
+                new SpinConfig { Id = 1, SpinCost = 100, UpdatedAt = new DateTime(2024, 7, 12, 0, 0, 0, DateTimeKind.Utc) }
             );
 
             // ✅ Seed dữ liệu mặc định cho SpinItems
@@ -205,10 +203,11 @@ namespace SHN_Gear.Data
                 entity.HasIndex(pv => pv.Price).HasDatabaseName("IX_ProductVariants_Price");
             });
 
-            modelBuilder.Entity<User>().HasData(new User {
-    Id = 1, // Số nguyên
-    CreatedAt = new DateTime(2024, 7, 12, 0, 0, 0, DateTimeKind.Utc)
-});
+            modelBuilder.Entity<User>().HasData(new User
+            {
+                Id = 1, // Số nguyên
+                CreatedAt = new DateTime(2024, 7, 12, 0, 0, 0, DateTimeKind.Utc)
+            });
         }
     }
 }

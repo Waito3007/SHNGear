@@ -1,57 +1,101 @@
-import { Drawer, IconButton, TextField, Button, Typography, CircularProgress, InputBase, Box, Tab, Tabs} from "@mui/material";
+import { Drawer, IconButton, TextField, Button, Typography, CircularProgress, InputBase, Box, Tabs, Tab } from "@mui/material";
+import { useState, useRef } from "react";
 import { Close } from "@mui/icons-material";
 import { useSliderForm } from "hook/sliders/useSliderForm";
-import { useSliderImageManager } from "hook/sliders/useSliderImageManager";
-import { useSliderData } from "hook/sliders/useSliderData";
 
 
 const AddSliderDrawer = ({ isOpen, onClose, onAddSlider }) => {
-  const { loading: dataLoading, error: dataError } = useSliderData();
-  const imageManager = useSliderImageManager();
   const sliderForm = useSliderForm({
     onAddSlider,
-    onClose: () => {
-      onClose();
-      imageManager.resetImageManager();
-    },
+    onClose,
   });
+  const [imagePreview, setImagePreview] = useState("");
+  const [imageError, setImageError] = useState("");
+  const [imageTab, setImageTab] = useState(0); // 0: link, 1: file
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    // Validate file type
+    if (!file.type.match('image.*')) {
+      setImageError("Chỉ chấp nhận file ảnh");
+      return;
+    }
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setImageError("Kích thước ảnh tối đa 5MB");
+      return;
+    }
+    setImageError("");
+    setSelectedFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    // Clear URL nếu đang ở tab upload
+    if (imageTab === 1) {
+      sliderForm.setValue && sliderForm.setValue("imageUrl", "");
+    }
+  };
 
   const handleMainSubmit = async (formData) => {
-    imageManager.setImageError("");
-    const { images: processedImages, error: imageProcessingError } = await imageManager.processImagesForSubmission();
-    if (imageProcessingError) {
-      imageManager.setImageError(imageProcessingError);
-      console.error("Error processing images:", imageProcessingError);
-      return;
+    if (submitting) return;
+    setSubmitting(true);
+    let imageUrl = formData.imageUrl;
+    if (imageTab === 1) {
+      if (!selectedFile) {
+        setImageError("Vui lòng chọn file ảnh.");
+        setSubmitting(false);
+        return;
+      }
+      try {
+        const data = new FormData();
+        data.append("file", selectedFile);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+        const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/upload`, {
+          method: "POST",
+          body: data,
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
+        if (!res.ok) throw new Error("Upload thất bại");
+        const result = await res.json();
+        if (!result.url && !result.imageUrl) throw new Error("Upload thất bại");
+        imageUrl = result.url || result.imageUrl;
+      } catch (err) {
+        setImageError("Upload ảnh thất bại hoặc quá lâu. Vui lòng thử lại hoặc chọn ảnh khác.");
+        setSubmitting(false);
+        return;
+      }
+    } else {
+      if (!imageUrl || imageUrl.trim() === "") {
+        setImageError("Vui lòng nhập URL hình ảnh.");
+        setSubmitting(false);
+        return;
+      }
+      if (imageError) {
+        setImageError("URL hình ảnh không hợp lệ hoặc không load được ảnh.");
+        setSubmitting(false);
+        return;
+      }
     }
-
-    if (!processedImages || processedImages.length === 0) {
-      imageManager.setImageError("Vui lòng tải lên ít nhất một ảnh.");
-      return;
-    }
-
     try {
-      await sliderForm.handleFormSubmit(formData, processedImages);
+      const result = await sliderForm.handleFormSubmit({ ...formData, imageUrl });
+      if (result && result.error) {
+        setImageError(result.error);
+      }
     } catch (error) {
+      setImageError("Lỗi gửi dữ liệu slider.");
       console.error("Error submitting slider data:", error);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleCloseDrawer = () => {
     sliderForm.resetForm();
-    imageManager.resetImageManager();
     onClose();
   };
-
-  if(dataLoading) {
-    return(
-      <Drawer anchor="right" open={isOpen} onClose={handleCloseDrawer}>
-        <Box sx={{ width: 400, p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-          <CircularProgress />
-        </Box>
-      </Drawer>
-    );
-  }
 
   return(
     <Drawer anchor="right" open={isOpen} onClose={handleCloseDrawer} BackdropProps={{ invisible: false }}>
@@ -62,79 +106,93 @@ const AddSliderDrawer = ({ isOpen, onClose, onAddSlider }) => {
             <Close />
           </IconButton>
         </Box>
-        
-        {dataError && <Typography color="error" mb={2}>{dataError}</Typography>}
-
         <form onSubmit={sliderForm.handleSubmit(handleMainSubmit)}>
           <Box mt={2} p={2} border="1px solid #e0e0e0" borderRadius={2}>
             <Typography mb={1} fontWeight="medium">Tiêu đề slider</Typography>
             <InputBase {...sliderForm.register("title", { required: "Tiêu đề Slider là bắt buộc" })} fullWidth required placeholder="Nhập tiêu đề Slider" sx={{ border: '1px solid #ccc', borderRadius: 1, p: '2px 8px' }}/>
           </Box>
-          
           <Box mt={2} p={2} border="1px solid #e0e0e0" borderRadius={2}>
-            <Typography mb={1} fontWeight="medium">Hình ảnh</Typography>
-            <Tabs value={imageManager.tabValue} onChange={(e, newValue) => imageManager.setTabValue(newValue)} indicatorColor="primary" textColor="primary">
-              <Tab label="Tải ảnh lên" />
-              <Tab label="Nhập URL" />
+            <Tabs value={imageTab} onChange={(_, v) => setImageTab(v)} aria-label="Chọn cách thêm ảnh" sx={{ mb: 2 }}>
+              <Tab label="Nhập link ảnh" />
+              <Tab label="Chọn file ảnh" />
             </Tabs>
-
-            {imageManager.tabValue === 0 ? (
-              // Tab Upload ảnh
-              <Box mt={2}>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={imageManager.handleImageUploadFromDevice}
-                  style={{ display: 'block', marginBottom: '16px' }}
+            {imageTab === 0 ? (
+              <Box>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  size="small"
+                  {...sliderForm.register("imageUrl", {
+                    required: "URL hình ảnh là bắt buộc",
+                    onChange: (e) => {
+                      const url = e.target.value;
+                      setImagePreview(url);
+                      setImageError("");
+                      setSelectedFile(null);
+                    }
+                  })}
+                  placeholder="Nhập URL hình ảnh"
+                  required
+                  error={!!imageError}
+                  helperText={imageError}
                 />
-                {imageManager.uploadingImage && <CircularProgress size={24} sx={{my: 1}}/>}
-                <Box mt={1} display="flex" flexWrap="wrap" gap={1}>
-                  {imageManager.localImages.map((img, index) => (
-                    <Box key={index} position="relative" border={img.isPrimary ? "2px solid blue" : "1px solid #ccc"} p={0.5} borderRadius={1}>
-                      <img src={img.preview} alt={`Preview ${index}`} width={80} height={80} style={{ objectFit: 'cover', display: 'block' }} />
-                      <Button
-                        size="small"
-                        color="error"
-                        variant="contained"
-                        onClick={() => imageManager.handleRemoveLocalImage(index)}
-                        sx={{ position: 'absolute', top: -5, right: -5, minWidth: '20px', height: '20px', p:0, borderRadius: '50%' }}
-                      >
-                        X
-                      </Button>
-                    </Box>
-                  ))}
-                </Box>
+                {imagePreview && (
+                  <Box mt={2} display="flex" justifyContent="center">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      style={{ width: 100, height: 100, objectFit: "cover", borderRadius: 8, border: "1px solid #ccc" }}
+                      onError={() => setImageError("Không thể load ảnh từ URL này.")}
+                      onLoad={() => setImageError("")}
+                    />
+                  </Box>
+                )}
               </Box>
             ) : (
-              // Tab URL ảnh
-              <Box mt={2}>
-                {imageManager.imageUrls.map((url, index) => (
-                  <Box key={index} display="flex" alignItems="center" mb={1}>
-                    <TextField
-                      fullWidth
-                      variant="outlined"
-                      size="small"
-                      value={url}
-                      onChange={(e) => imageManager.handleUrlInputChange(index, e.target.value)}
-                      placeholder="Nhập URL ảnh"
+              <Box>
+                <Button
+                  component="label"
+                  variant="outlined"
+                  fullWidth
+                  sx={{ mb: 2 }}
+                >
+                  Chọn file ảnh
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={handleFileChange}
+                  />
+                </Button>
+                {imagePreview && (
+                  <Box mt={1} display="flex" flexDirection="column" alignItems="center">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      style={{ width: 100, height: 100, objectFit: "cover", borderRadius: 8, border: "1px solid #ccc", marginBottom: 8 }}
                     />
-                    {imageManager.imageUrls.length > 1 && (
-                      <IconButton onClick={() => imageManager.handleRemoveUrlInput(index)} size="small" sx={{ml: 0.5}}>
-                        <Close fontSize="small" />
-                      </IconButton>
-                    )}
+                    <Button
+                      size="small"
+                      color="error"
+                      variant="outlined"
+                      onClick={() => {
+                        setSelectedFile(null);
+                        setImagePreview("");
+                        setImageError("");
+                      }}
+                    >
+                      Xóa ảnh
+                    </Button>
                   </Box>
-                ))}
-                 {imageManager.uploadingImage && <CircularProgress size={24} sx={{my: 1}}/>}
+                )}
               </Box>
             )}
-            {imageManager.imageError && (
-              <Typography color="error" mt={1} variant="caption">{imageManager.imageError}</Typography>
+            {imageError && (
+              <Typography color="error" variant="body2" mt={1}>
+                {imageError}
+              </Typography>
             )}
           </Box>
-
-          {/* Tab link tới sản phẩm hoặc danh sách sản phẩm */}
           <Box mt={2} p={2} border="1px solid #e0e0e0" borderRadius={2}>
             <Typography mb={1} fontWeight="medium">Liên kết đến sản phẩm</Typography>
             <InputBase
@@ -144,26 +202,25 @@ const AddSliderDrawer = ({ isOpen, onClose, onAddSlider }) => {
               sx={{ border: '1px solid #ccc', borderRadius: 1, p: '2px 8px' }}
             />
           </Box>
-
           <Box mt={3} display="flex" justifyContent="flex-end">
             <Button 
                 type="button" 
                 variant="outlined" 
                 onClick={handleCloseDrawer} 
                 sx={{ mr: 1, borderRadius: 2 }}
-                disabled={imageManager.uploadingImage || sliderForm.formState?.isSubmitting}
+                disabled={sliderForm.formState?.isSubmitting}
             >
               Hủy
             </Button>
             <Button
                 type="submit"
                 variant="contained"
-                disabled={imageManager.uploadingImage || sliderForm.formState?.isSubmitting} // Vô hiệu hóa khi đang tải ảnh hoặc submit form
+                disabled={submitting}
                 sx={{ bgcolor: "black", color: "white", borderRadius: 2, "&:hover": { bgcolor: "grey.800" }, "&:disabled": { bgcolor: "grey.400"} }}
             >
-              { (imageManager.uploadingImage || sliderForm.formState?.isSubmitting) ? <CircularProgress size={24} color="inherit" /> : "Thêm slider" }
+              { submitting ? <CircularProgress size={24} color="inherit" /> : "Thêm slider" }
             </Button>
-            </Box>
+          </Box>
         </form>
       </Box>
     </Drawer>

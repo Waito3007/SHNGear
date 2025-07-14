@@ -605,5 +605,18 @@ namespace SHN_Gear.Controllers
 
             return Ok(productDtos);
         }
+
+        [HttpPut("{id}/pin")]
+        public async Task<IActionResult> TogglePin(int id, [FromBody] PinnedProductDto pinnedProductDto)
+        {
+            var pinnedProduct = await _context.Products.FindAsync(id);
+            if (pinnedProduct == null)
+                return NotFound();
+
+            pinnedProduct.IsPinned = pinnedProductDto.IsPinned;
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }
