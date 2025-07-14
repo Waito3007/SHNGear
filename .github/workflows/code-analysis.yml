@@ -1,0 +1,24 @@
+
+name: Code Analysis by Suggest Tasks App
+on:
+  push:
+  workflow_dispatch: # Cho phép kích hoạt từ bên ngoài
+
+jobs:
+  analyze:
+    name: Analyze Code
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Super-Linter
+        uses: github/super-linter@v6
+        env:
+          # Bật chế độ xác thực toàn bộ code thay vì chỉ code mới
+          VALIDATE_ALL_CODE_BASE: true
+          # Tắt thông báo lỗi qua GITHUB_STATUS để tránh spam
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
