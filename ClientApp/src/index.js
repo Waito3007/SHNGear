@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/auth/useAuth";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 import reportWebVitals from "./reportWebVitals";
 import "./assets/styles/base.css";
+import "./assets/styles/admin-responsive.css";
 const baseUrl = document.getElementsByTagName("base")[0].getAttribute("href");
 const rootElement = document.getElementById("root");
 const root = createRoot(rootElement);

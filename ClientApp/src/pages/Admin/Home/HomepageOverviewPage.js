@@ -1,5 +1,5 @@
-import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { Zap, LayoutDashboard, Tags, ImageIcon } from 'lucide-react';
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { Zap, LayoutDashboard, Tags, ImageIcon } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -51,17 +51,25 @@ const HomepageOverviewPage = () => {
           justifyContent: "center",
           alignItems: "center",
           height: "100vh",
-          bgcolor: '#1a202c',
+          bgcolor: "#1a202c",
         }}
       >
-        <CircularProgress sx={{ color: '#63b3ed' }} />
+        <CircularProgress sx={{ color: "#63b3ed" }} />
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Alert severity="error" sx={{ m: 2, bgcolor: '#2d3748', color: '#e2e8f0', '& .MuiAlert-icon': { color: '#f56565' } }}>
+      <Alert
+        severity="error"
+        sx={{
+          m: 2,
+          bgcolor: "#2d3748",
+          color: "#e2e8f0",
+          "& .MuiAlert-icon": { color: "#f56565" },
+        }}
+      >
         {error}
       </Alert>
     );
@@ -69,7 +77,15 @@ const HomepageOverviewPage = () => {
 
   if (!config) {
     return (
-      <Alert severity="warning" sx={{ m: 2, bgcolor: '#2d3748', color: '#e2e8f0', '& .MuiAlert-icon': { color: '#ecc94b' } }}>
+      <Alert
+        severity="warning"
+        sx={{
+          m: 2,
+          bgcolor: "#2d3748",
+          color: "#e2e8f0",
+          "& .MuiAlert-icon": { color: "#ecc94b" },
+        }}
+      >
         No homepage configuration found.
       </Alert>
     );
@@ -84,21 +100,24 @@ const HomepageOverviewPage = () => {
   const managementLinks = [
     {
       title: "Bố cục & Nội dung Trang chủ",
-      description: "Quản lý thứ tự và nội dung của các phần chính trên trang chủ.",
+      description:
+        "Quản lý thứ tự và nội dung của các phần chính trên trang chủ.",
       icon: LayoutDashboard,
       href: "/admin/homepage",
       color: "#6366F1",
     },
     {
       title: "Danh mục Sản phẩm",
-      description: "Thêm, chỉnh sửa, xóa và kích hoạt/hủy kích hoạt danh mục sản phẩm.",
+      description:
+        "Thêm, chỉnh sửa, xóa và kích hoạt/hủy kích hoạt danh mục sản phẩm.",
       icon: Tags,
       href: "/admin/categories",
       color: "#8B5CF6",
     },
     {
       title: "Sản phẩm Flash Sale",
-      description: "Đặt và xóa giá flash sale cũng như thời lượng cho sản phẩm.",
+      description:
+        "Đặt và xóa giá flash sale cũng như thời lượng cho sản phẩm.",
       icon: Zap,
       href: "/admin/flash-sale",
       color: "#EC4899",
@@ -127,48 +146,79 @@ const HomepageOverviewPage = () => {
   ];
 
   return (
-    <Box sx={{ flexGrow: 1, bgcolor: '#1a202c', minHeight: '100vh', color: '#e2e8f0' }}>
+    <Box
+      sx={{
+        flexGrow: 1,
+        bgcolor: "#1a202c",
+        minHeight: "100vh",
+        color: "#e2e8f0",
+      }}
+    >
       <Header title="Tổng quan Trang chủ" />
 
-      <Box component="main" sx={{ maxWidth: '7xl', mx: 'auto', py: 6, px: { xs: 2, lg: 8 } }}>
+      <Box
+        component="main"
+        sx={{ maxWidth: "7xl", mx: "auto", py: 3, px: { xs: 2, lg: 4 } }}
+      >
         {/* Overview Stats */}
         <motion.div
-          className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           <Grid item xs={12} md={4}>
-            <Card elevation={0} sx={{ borderRadius: 2, bgcolor: '#2d3748' }}>
+            <Card elevation={0} sx={{ borderRadius: 2, bgcolor: "#2d3748" }}>
               <CardContent>
-                <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
+                <Typography
+                  variant="h6"
+                  color="primary"
+                  sx={{ fontWeight: "bold" }}
+                >
                   Tổng số phần
                 </Typography>
-                <Typography variant="h3" sx={{ fontWeight: "bold", color: "#63b3ed" }}>
+                <Typography
+                  variant="h3"
+                  sx={{ fontWeight: "bold", color: "#63b3ed" }}
+                >
                   {totalSections}
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
           <Grid item xs={12} md={4}>
-            <Card elevation={0} sx={{ borderRadius: 2, bgcolor: '#2d3748' }}>
+            <Card elevation={0} sx={{ borderRadius: 2, bgcolor: "#2d3748" }}>
               <CardContent>
-                <Typography variant="h6" color="success" sx={{ fontWeight: "bold" }}>
+                <Typography
+                  variant="h6"
+                  color="success"
+                  sx={{ fontWeight: "bold" }}
+                >
                   Phần đang hoạt động
                 </Typography>
-                <Typography variant="h3" sx={{ fontWeight: "bold", color: "#48bb78" }}>
+                <Typography
+                  variant="h3"
+                  sx={{ fontWeight: "bold", color: "#48bb78" }}
+                >
                   {enabledSections}
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
           <Grid item xs={12} md={4}>
-            <Card elevation={0} sx={{ borderRadius: 2, bgcolor: '#2d3748' }}>
+            <Card elevation={0} sx={{ borderRadius: 2, bgcolor: "#2d3748" }}>
               <CardContent>
-                <Typography variant="h6" color="error" sx={{ fontWeight: "bold" }}>
+                <Typography
+                  variant="h6"
+                  color="error"
+                  sx={{ fontWeight: "bold" }}
+                >
                   Phần đã tắt
                 </Typography>
-                <Typography variant="h3" sx={{ fontWeight: "bold", color: "#f56565" }}>
+                <Typography
+                  variant="h3"
+                  sx={{ fontWeight: "bold", color: "#f56565" }}
+                >
                   {disabledSections}
                 </Typography>
               </CardContent>
@@ -182,9 +232,15 @@ const HomepageOverviewPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <Card elevation={0} sx={{ borderRadius: 2, mb: 4, bgcolor: '#2d3748' }}>
+          <Card
+            elevation={0}
+            sx={{ borderRadius: 2, mb: 4, bgcolor: "#2d3748" }}
+          >
             <CardContent>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold", color: '#e2e8f0' }}>
+              <Typography
+                variant="h6"
+                sx={{ mb: 2, fontWeight: "bold", color: "#e2e8f0" }}
+              >
                 Trạng thái các phần trang chủ
               </Typography>
               <List>
@@ -193,15 +249,32 @@ const HomepageOverviewPage = () => {
                     key={sectionName}
                     secondaryAction={
                       <Chip
-                        label={config.components[sectionName]?.enabled ? "Đang hoạt động" : "Đã tắt"}
-                        color={config.components[sectionName]?.enabled ? "success" : "error"}
-                        icon={config.components[sectionName]?.enabled ? <Visibility /> : <VisibilityOff />}
+                        label={
+                          config.components[sectionName]?.enabled
+                            ? "Đang hoạt động"
+                            : "Đã tắt"
+                        }
+                        color={
+                          config.components[sectionName]?.enabled
+                            ? "success"
+                            : "error"
+                        }
+                        icon={
+                          config.components[sectionName]?.enabled ? (
+                            <Visibility />
+                          ) : (
+                            <VisibilityOff />
+                          )
+                        }
                       />
                     }
                   >
                     <ListItemText
                       primary={
-                        <Typography variant="body1" sx={{ textTransform: "capitalize", color: '#e2e8f0' }}>
+                        <Typography
+                          variant="body1"
+                          sx={{ textTransform: "capitalize", color: "#e2e8f0" }}
+                        >
                           {sectionName.replace(/_/g, " ")}
                         </Typography>
                       }
@@ -239,7 +312,7 @@ const HomepageOverviewPage = () => {
                     flexDirection: "column",
                     justifyContent: "space-between",
                     transition: "all 0.3s ease-in-out",
-                    bgcolor: '#2d3748',
+                    bgcolor: "#2d3748",
                     "&:hover": {
                       transform: "translateY(-5px)",
                       boxShadow: 6,
@@ -255,8 +328,15 @@ const HomepageOverviewPage = () => {
                         color: item.color,
                       }}
                     >
-                      {React.createElement(item.icon, { size: 30, style: { marginRight: "12px" } })}
-                      <Typography variant="h6" component="h2" sx={{ fontWeight: "bold", color: '#e2e8f0' }}>
+                      {React.createElement(item.icon, {
+                        size: 30,
+                        style: { marginRight: "12px" },
+                      })}
+                      <Typography
+                        variant="h6"
+                        component="h2"
+                        sx={{ fontWeight: "bold", color: "#e2e8f0" }}
+                      >
                         {item.title}
                       </Typography>
                     </Box>

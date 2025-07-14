@@ -27,6 +27,9 @@ module.exports = {
       },
       animation: {
         fadeIn: "fadeIn 0.2s ease-out forwards",
+        slideInRight: "slideInRight 0.3s ease-out",
+        slideInLeft: "slideInLeft 0.3s ease-out",
+        scaleIn: "scaleIn 0.2s ease-out",
       },
       keyframes: {
         fadeIn: {
@@ -37,6 +40,36 @@ module.exports = {
           "100%": {
             opacity: "1",
             transform: "translateY(0)",
+          },
+        },
+        slideInRight: {
+          "0%": {
+            opacity: "0",
+            transform: "translateX(20px)",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateX(0)",
+          },
+        },
+        slideInLeft: {
+          "0%": {
+            opacity: "0",
+            transform: "translateX(-20px)",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateX(0)",
+          },
+        },
+        scaleIn: {
+          "0%": {
+            opacity: "0",
+            transform: "scale(0.95)",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "scale(1)",
           },
         },
       },
