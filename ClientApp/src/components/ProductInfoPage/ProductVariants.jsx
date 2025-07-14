@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -9,7 +9,6 @@ import {
   Snackbar,
   Alert,
   Chip,
-  Fade,
   Tooltip,
   IconButton,
   Divider,
@@ -26,23 +25,32 @@ import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 
 const ProductVariants = ({ variants, onAddToCart }) => {
-  const [selectedColor, setSelectedColor] = useState(variants[0].color);
-  const availableStorages = variants
-    .filter((v) => v.color === selectedColor)
-    .map((v) => v.storage);
-  const [selectedStorage, setSelectedStorage] = useState(availableStorages[0]);
+  // Safe initialization with fallbacks
+  const [selectedColor, setSelectedColor] = useState(
+    variants?.length > 0 ? variants[0].color : ""
+  );
+  
+  const [selectedStorage, setSelectedStorage] = useState("");
+  
+  // Memoize available storages to prevent unnecessary re-calculations
+  const availableStorages = useMemo(() => {
+    return variants
+      .filter((v) => v.color === selectedColor)
+      .map((v) => v.storage);
+  }, [variants, selectedColor]);
+  
+  // Update selected storage when available storages change
+  useEffect(() => {
+    if (availableStorages.length > 0 && !availableStorages.includes(selectedStorage)) {
+      setSelectedStorage(availableStorages[0]);
+    }
+  }, [availableStorages, selectedStorage]);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [quantity, setQuantity] = useState(1);
-  const [showDiscount, setShowDiscount] = useState(false);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setShowDiscount((prev) => !prev);
-    }, 3000);
-    return () => clearInterval(timer);
-  }, []);
+  
+  // Always show discount price, no more blinking effect
 
   const handleSelectColor = (color) => {
     setSelectedColor(color);
@@ -58,21 +66,23 @@ const ProductVariants = ({ variants, onAddToCart }) => {
     }
   };
 
-  const selectedVariant = variants.find(
-    (v) => v.storage === selectedStorage && v.color === selectedColor
-  );
+  const selectedVariant = useMemo(() => {
+    return variants.find(
+      (v) => v.storage === selectedStorage && v.color === selectedColor
+    );
+  }, [variants, selectedStorage, selectedColor]);
 
-  const formatCurrency = (price) => {
+  const formatCurrency = useCallback((price) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
     }).format(price);
-  };
+  }, []);
 
-  const calculateDiscount = (original, discounted) => {
+  const calculateDiscount = useCallback((original, discounted) => {
     if (!original || !discounted) return 0;
     return Math.round(((original - discounted) / original) * 100);
-  };
+  }, []);
 
   const handleQuantityChange = (delta) => {
     const newQuantity = quantity + delta;
@@ -299,7 +309,7 @@ const ProductVariants = ({ variants, onAddToCart }) => {
                   },
                 }}
               >
-                <Box
+                {/* <Box
                   component="img"
                   src={
                     variants.find((v) => v.color === color)?.product
@@ -313,7 +323,7 @@ const ProductVariants = ({ variants, onAddToCart }) => {
                     filter:
                       selectedColor === color ? "contrast(1.1)" : "contrast(1)",
                   }}
-                />
+                /> */}
                 <Box
                   className="color-label"
                   sx={{
@@ -531,21 +541,19 @@ const ProductVariants = ({ variants, onAddToCart }) => {
               }}
             />
             <Box sx={{ textAlign: "center" }}>
-              <Fade in={showDiscount}>
-                <Typography
-                  variant="h4"
-                  component="div"
-                  sx={{
-                    fontWeight: 800,
-                    color: "#000000",
-                    textShadow: "2px 2px 4px rgba(0,0,0,0.1)",
-                    fontFamily: "'Roboto Mono', monospace",
-                    letterSpacing: "1px",
-                  }}
-                >
-                  {formatCurrency(selectedVariant.discountPrice)}
-                </Typography>
-              </Fade>
+              <Typography
+                variant="h4"
+                component="div"
+                sx={{
+                  fontWeight: 800,
+                  color: "#000000",
+                  textShadow: "2px 2px 4px rgba(0,0,0,0.1)",
+                  fontFamily: "'Roboto Mono', monospace",
+                  letterSpacing: "1px",
+                }}
+              >
+                {formatCurrency(selectedVariant.discountPrice)}
+              </Typography>
               <Typography
                 variant="h6"
                 sx={{
@@ -686,6 +694,7 @@ const ProductVariants = ({ variants, onAddToCart }) => {
               Add to Cart
             </Button>
             <Button
+              onClick={handleAddToCart}
               variant="contained"
               sx={{
                 flex: 2,
@@ -724,6 +733,7 @@ const ProductVariants = ({ variants, onAddToCart }) => {
           severity={snackbarSeverity}
           elevation={6}
           variant="filled"
+          sx={{ width: '100%' }}
         >
           {snackbarMessage}
         </Alert>

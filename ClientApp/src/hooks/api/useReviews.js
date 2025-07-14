@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 
 /**
@@ -75,6 +75,167 @@ export const useReviews = (productId) => {
 };
 
 /**
+ * Hook for getting product rating distribution and statistics
+ * Optimized with better error handling and performance
+ */
+export const useProductRatingStats = (productId) => {
+  const [stats, setStats] = useState(null);
+  const [distribution, setDistribution] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchRatingDistribution = useCallback(async () => {
+    if (!productId || isNaN(productId)) return null;
+
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_BASE_URL}/api/Review/product/${productId}/rating-distribution`,
+        {
+          timeout: 10000, // 10 second timeout
+          headers: {
+            'Cache-Control': 'max-age=300' // 5 minute cache
+          }
+        }
+      );
+      return response.data;
+    } catch (err) {
+      if (err.response?.status === 404) {
+        // Product not found or no reviews - not really an error
+        return {
+          ProductId: productId,
+          TotalReviews: 0,
+          AverageRating: 0,
+          RatingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+          RatingPercentage: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+        };
+      }
+      throw new Error(err.response?.data?.message || "Không thể tải phân bố đánh giá");
+    }
+  }, [productId]);
+
+  const fetchProductStats = useCallback(async () => {
+    if (!productId || isNaN(productId)) return null;
+
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_BASE_URL}/api/Review/product/${productId}/stats`,
+        {
+          timeout: 10000,
+          headers: {
+            'Cache-Control': 'max-age=300'
+          }
+        }
+      );
+      return response.data;
+    } catch (err) {
+      if (err.response?.status === 404) {
+        // Product not found or no reviews - return empty stats
+        return {
+          ProductId: productId,
+          TotalApprovedReviews: 0,
+          PendingReviews: 0,
+          AverageRating: 0,
+          RatingStats: { 1: { Count: 0, Percentage: 0 }, 2: { Count: 0, Percentage: 0 }, 3: { Count: 0, Percentage: 0 }, 4: { Count: 0, Percentage: 0 }, 5: { Count: 0, Percentage: 0 } },
+          RecentActivity: { Last7Days: 0, Last30Days: 0 },
+          LatestReviews: []
+        };
+      }
+      throw new Error(err.response?.data?.message || "Không thể tải thống kê đánh giá");
+    }
+  }, [productId]);
+
+  const fetchAll = useCallback(async () => {
+    if (!productId || isNaN(productId)) {
+      setDistribution(null);
+      setStats(null);
+      setError("Product ID không hợp lệ");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Use Promise.allSettled to handle partial failures
+      const [distributionResult, statsResult] = await Promise.allSettled([
+        fetchRatingDistribution(),
+        fetchProductStats()
+      ]);
+
+      let distributionData = null;
+      let statsData = null;
+
+      if (distributionResult.status === 'fulfilled') {
+        distributionData = distributionResult.value;
+      } else {
+        console.warn('Distribution fetch failed:', distributionResult.reason);
+      }
+
+      if (statsResult.status === 'fulfilled') {
+        statsData = statsResult.value;
+      } else {
+        console.warn('Stats fetch failed:', statsResult.reason);
+      }
+
+      // If both failed, show error
+      if (!distributionData && !statsData) {
+        throw new Error("Không thể tải dữ liệu thống kê đánh giá");
+      }
+
+      setDistribution(distributionData);
+      setStats(statsData);
+    } catch (err) {
+      setError(err.message);
+      console.error("Error fetching review statistics:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [productId, fetchRatingDistribution, fetchProductStats]);
+
+  useEffect(() => {
+    // Debounce the fetch to prevent excessive API calls
+    const timeoutId = setTimeout(() => {
+      fetchAll();
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [fetchAll]);
+
+  // Memoized computed values with better error handling
+  const computedData = useMemo(() => {
+    if (!distribution && !stats) return null;
+
+    const totalReviews = distribution?.TotalReviews || stats?.TotalApprovedReviews || 0;
+    const averageRating = distribution?.AverageRating || stats?.AverageRating || 0;
+    const ratingDist = distribution?.RatingDistribution || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+
+    return {
+      hasReviews: totalReviews > 0,
+      averageRatingFormatted: Number(averageRating).toFixed(1),
+      totalReviews,
+      pendingReviews: stats?.PendingReviews || 0,
+      recentActivity: stats?.RecentActivity || { Last7Days: 0, Last30Days: 0 },
+      mostCommonRating: Object.entries(ratingDist)
+        .reduce((a, b) => ratingDist[a[0]] > ratingDist[b[0]] ? a : b, [1, 0])[0],
+      satisfactionRate: totalReviews > 0 
+        ? ((ratingDist[4] + ratingDist[5]) / totalReviews * 100).toFixed(1)
+        : 0
+    };
+  }, [distribution, stats]);
+
+  return {
+    distribution,
+    stats,
+    computed: computedData,
+    loading,
+    error,
+    refetch: fetchAll,
+    fetchRatingDistribution,
+    fetchProductStats,
+  };
+};
+
+/**
  * Hook for submitting reviews
  */
 export const useSubmitReview = (productId, onSuccess) => {
@@ -140,7 +301,7 @@ export const useUserReview = (userId, productId) => {
   const [error, setError] = useState(null);
 
   const fetchUserReview = useCallback(async () => {
-    if (!userId || !productId) {
+    if (!userId || !productId || isNaN(userId) || isNaN(productId)) {
       setUserReview(null);
       return;
     }
@@ -148,17 +309,46 @@ export const useUserReview = (userId, productId) => {
     try {
       setLoading(true);
       setError(null);
-      const token = localStorage.getItem("token");
+      
+      let token = null;
+      try {
+        // Safe token access with fallback
+        token = localStorage.getItem("token");
+      } catch (storageError) {
+        console.warn("Storage access blocked, skipping user review fetch:", storageError);
+        setUserReview(null);
+        return;
+      }
+      
+      // Check if token exists before making request
+      if (!token) {
+        console.log("No token found, user not logged in");
+        setUserReview(null);
+        return;
+      }
+
       const response = await axios.get(
         `${process.env.REACT_APP_API_BASE_URL}/api/Review/user/${userId}/product/${productId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
+          timeout: 8000, // 8 second timeout
         }
       );
       setUserReview(response.data);
     } catch (err) {
       if (err.response && err.response.status === 404) {
         setUserReview(null); // No review found for this user/product
+      } else if (err.response && err.response.status === 401) {
+        console.log("Unauthorized access, token might be invalid");
+        setUserReview(null);
+        // Optionally clear invalid token with try-catch
+        try {
+          localStorage.removeItem("token");
+        } catch (storageError) {
+          console.warn("Cannot clear token from storage:", storageError);
+        }
+      } else if (err.code === 'ECONNABORTED') {
+        setError("Kết nối quá chậm, vui lòng thử lại");
       } else {
         setError(err.response?.data?.message || "Không thể tải đánh giá của bạn");
         console.error("Error fetching user review:", err);
@@ -169,7 +359,12 @@ export const useUserReview = (userId, productId) => {
   }, [userId, productId]);
 
   useEffect(() => {
-    fetchUserReview();
+    // Debounce to prevent excessive API calls
+    const timeoutId = setTimeout(() => {
+      fetchUserReview();
+    }, 200);
+
+    return () => clearTimeout(timeoutId);
   }, [fetchUserReview]);
 
   return { userReview, loading, error, refetchUserReview: fetchUserReview };

@@ -19,8 +19,10 @@ const BannerSlider = () => {
     const fetchBanners = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('/api/banners');
-        setBanners(response.data);
+        const response = await axios.get('/api/Banner');
+        // Filter only active banners (status === false means visible)
+        const activeBanners = response.data.filter(banner => banner.status === false);
+        setBanners(activeBanners);
       } catch (err) {
         setError('Failed to load banners.');
         console.error(err);

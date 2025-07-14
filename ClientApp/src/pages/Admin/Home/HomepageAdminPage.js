@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { motion } from 'framer-motion';
@@ -27,7 +27,6 @@ import PinnedProductKanban from "@/components/Admin/home/PinnedProductKanban";
   Snackbar,
   List,
   ListItem,
-  ListItemText,
   ListItemIcon,
   IconButton,
   Collapse,
@@ -46,11 +45,12 @@ import {
 // Import preview components
 import HeroBanner from '@/components/HeroBanner/HeroBanner';
 import FeaturedCategories from '@/components/FeaturedCategories/FeaturedCategories';
-// import BestSellerSection from '@/components/BestSellers/BestSellers';
+import BestSellerSection from '@/components/BestSellers/BestSellers';
 import FlashSale from '@/components/FlashSale/FlashSale';
 import Commitment from '@/components/Commitment/Commitment';
-import BannerSlider from '@/components/Homepage/BannerSlider';
-// import BestSellerManager from '@/components/BestSellerManager/BestSellerManager';
+import BannerSlider from '@/components/Homepage//HomeBanner';
+import HeroSlider from '@/components/HeroSlider/HeroSlider';
+import PinnedProducts from '@/components/PinnedProducts/PinnedProducts';
 
 // Custom component for section editing (will be refactored in next step)
 const SectionEditor = ({ sectionName, sectionData, onContentChange }) => {
@@ -87,9 +87,41 @@ const SectionEditor = ({ sectionName, sectionData, onContentChange }) => {
             <TextField label="CTA Link" name="cta_link" value={formData.cta_link || ''} onChange={handleInputChange} fullWidth InputProps={inputProps} InputLabelProps={inputLabelProps} />
           </Box>
         );
-      // case 'featured_products':
-      // case 'best_seller':
-      //   return <BestSellerManager sectionData={sectionData} onContentChange={onContentChange} />;
+      case 'hero_slider':
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField label="Title" name="title" value={formData.title || ''} onChange={handleInputChange} fullWidth InputProps={inputProps} InputLabelProps={inputLabelProps} />
+            <TextField label="Description" name="description" value={formData.description || ''} onChange={handleInputChange} fullWidth InputProps={inputProps} InputLabelProps={inputLabelProps} />
+          </Box>
+        );
+      case 'categories':
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField label="Title" name="title" value={formData.title || ''} onChange={handleInputChange} fullWidth InputProps={inputProps} InputLabelProps={inputLabelProps} />
+            <TextField label="Description" name="description" value={formData.description || ''} onChange={handleInputChange} fullWidth InputProps={inputProps} InputLabelProps={inputLabelProps} />
+          </Box>
+        );
+      case 'best_seller':
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField label="Title" name="title" value={formData.title || ''} onChange={handleInputChange} fullWidth InputProps={inputProps} InputLabelProps={inputLabelProps} />
+            <TextField label="Description" name="description" value={formData.description || ''} onChange={handleInputChange} fullWidth InputProps={inputProps} InputLabelProps={inputLabelProps} />
+          </Box>
+        );
+      case 'home_banner':
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField label="Title" name="title" value={formData.title || ''} onChange={handleInputChange} fullWidth InputProps={inputProps} InputLabelProps={inputLabelProps} />
+            <TextField label="Description" name="description" value={formData.description || ''} onChange={handleInputChange} fullWidth InputProps={inputProps} InputLabelProps={inputLabelProps} />
+          </Box>
+        );
+      case 'pinned_products':
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField label="Title" name="title" value={formData.title || ''} onChange={handleInputChange} fullWidth InputProps={inputProps} InputLabelProps={inputLabelProps} />
+            <TextField label="Description" name="description" value={formData.description || ''} onChange={handleInputChange} fullWidth InputProps={inputProps} InputLabelProps={inputLabelProps} />
+          </Box>
+        );
 
       case 'special_offer':
         return (
@@ -193,6 +225,34 @@ const HomepageAdminPage = () => {
     fetchConfig();
   }, []);
 
+  // Function to initialize default layout if not exists
+  const initializeDefaultLayout = useCallback(() => {
+    const defaultLayout = [
+      'hero',
+      'hero_slider', 
+      'home_banner',
+      'categories',
+      'best_seller',
+      'pinned_products',
+      'special_offer',
+      'brand_trust'
+    ];
+    
+    if (!config?.layout || config.layout.length === 0) {
+      setConfig(prevConfig => ({
+        ...prevConfig,
+        layout: defaultLayout
+      }));
+    }
+  }, [config]);
+
+  // Initialize default layout when config is loaded
+  useEffect(() => {
+    if (config) {
+      initializeDefaultLayout();
+    }
+  }, [config, initializeDefaultLayout]);
+
   const handleSave = async () => {
     try {
       await axios.put(`${process.env.REACT_APP_API_BASE_URL}/api/homepage-config`, config);
@@ -208,6 +268,7 @@ const HomepageAdminPage = () => {
   };
 
   const handleToggleSection = (sectionName) => {
+    const currentStatus = config.components[sectionName]?.enabled;
     setConfig(prevConfig => ({
       ...prevConfig,
       components: {
@@ -218,6 +279,13 @@ const HomepageAdminPage = () => {
         },
       },
     }));
+    
+    // Show status message
+    const newStatus = !currentStatus;
+    const statusText = newStatus ? 'Đã bật' : 'Đã tắt';
+    setSnackbarMessage(`${statusText} phần "${sectionName.replace(/_/g, ' ')}"!`);
+    setSnackbarSeverity(newStatus ? 'success' : 'warning');
+    setSnackbarOpen(true);
   };
 
   const handleContentChange = (sectionName, field, value) => {
@@ -238,13 +306,23 @@ const HomepageAdminPage = () => {
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;
+    
+    // Prevent moving if same position
+    if (result.destination.index === result.source.index) return;
+    
     const newLayout = Array.from(config.layout);
     const [removed] = newLayout.splice(result.source.index, 1);
     newLayout.splice(result.destination.index, 0, removed);
+    
     setConfig(prevConfig => ({
       ...prevConfig,
       layout: newLayout
     }));
+    
+    // Show success message
+    setSnackbarMessage(`Đã di chuyển "${removed.replace(/_/g, ' ')}" thành công!`);
+    setSnackbarSeverity('success');
+    setSnackbarOpen(true);
   };
 
   const handlePreview = (sectionName) => {
@@ -255,6 +333,29 @@ const HomepageAdminPage = () => {
   const closePreview = () => {
     setIsPreviewOpen(false);
     setPreviewSection(null);
+  };
+
+  const resetToDefaultLayout = () => {
+    const defaultLayout = [
+      'hero',
+      'hero_slider', 
+      'home_banner',
+      'categories',
+      'best_seller',
+      'pinned_products',
+      'special_offer',
+      'brand_trust'
+    ];
+    
+    setConfig(prevConfig => ({
+      ...prevConfig,
+      layout: defaultLayout
+    }));
+
+    // Show success message
+    setSnackbarMessage('Đã khôi phục layout về thứ tự mặc định!');
+    setSnackbarSeverity('success');
+    setSnackbarOpen(true);
   };
 
   if (loading) {
@@ -283,10 +384,13 @@ const HomepageAdminPage = () => {
 
   const componentMap = {
     hero: HeroBanner,
+    hero_slider: HeroSlider,
+    home_banner: BannerSlider,
     categories: FeaturedCategories,
+    best_seller: BestSellerSection,
+    pinned_products: PinnedProducts,
     special_offer: FlashSale,
     brand_trust: Commitment,
-    banner_slider: BannerSlider,
   };
 
   return (
@@ -303,9 +407,18 @@ const HomepageAdminPage = () => {
           <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold', color: '#e2e8f0' }}>
             Cấu hình Trang chủ
           </Typography>
-          <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSave}>
-            Lưu cấu hình
-          </Button>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button 
+              variant="outlined" 
+              onClick={resetToDefaultLayout}
+              sx={{ color: '#63b3ed', borderColor: '#63b3ed' }}
+            >
+              Reset Layout
+            </Button>
+            <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSave}>
+              Lưu cấu hình
+            </Button>
+          </Box>
         </motion.div>
 
         {/* Tabs Navigation */}
@@ -347,48 +460,154 @@ const HomepageAdminPage = () => {
               >
                 <Card elevation={0} sx={{ borderRadius: 2, bgcolor: '#2d3748', color: '#e2e8f0' }}>
                   <CardContent>
-                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>Thứ tự & Hiển thị Bố cục</Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Thứ tự & Hiển thị Bố cục</Typography>
+                      <Button 
+                        size="small"
+                        variant="outlined"
+                        onClick={resetToDefaultLayout}
+                        sx={{ color: '#63b3ed', borderColor: '#63b3ed', fontSize: '0.75rem' }}
+                      >
+                        Khôi phục mặc định
+                      </Button>
+                    </Box>
+                    
+                    <Alert severity="info" sx={{ mb: 2, bgcolor: '#2a4365', color: '#bee3f8', '& .MuiAlert-icon': { color: '#63b3ed' } }}>
+                      Kéo thả để sắp xếp thứ tự các phần trên trang chủ. Bật/tắt hiển thị bằng switch.
+                    </Alert>
+
+                    {/* Layout Statistics */}
+                    <Box sx={{ mb: 2, p: 2, bgcolor: '#1a202c', borderRadius: 1 }}>
+                      <Typography variant="body2" sx={{ color: '#a0aec0', mb: 1 }}>
+                        Thống kê layout:
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Box sx={{ width: 8, height: 8, bgcolor: '#48bb78', borderRadius: '50%' }}></Box>
+                          <Typography variant="caption" sx={{ color: '#e2e8f0' }}>
+                            Đã bật: {Object.values(config.components).filter(comp => comp.enabled).length}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Box sx={{ width: 8, height: 8, bgcolor: '#f56565', borderRadius: '50%' }}></Box>
+                          <Typography variant="caption" sx={{ color: '#e2e8f0' }}>
+                            Đã tắt: {Object.values(config.components).filter(comp => !comp.enabled).length}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Box sx={{ width: 8, height: 8, bgcolor: '#ecc94b', borderRadius: '50%' }}></Box>
+                          <Typography variant="caption" sx={{ color: '#e2e8f0' }}>
+                            Tổng: {config.layout.length}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+
                     <DragDropContext onDragEnd={handleDragEnd}>
                       <Droppable droppableId="layout-order">
                         {(provided) => (
                           <List {...provided.droppableProps} ref={provided.innerRef}>
-                            {config.layout.map((sectionName, index) => (
-                              <Draggable key={sectionName} draggableId={sectionName} index={index}>
-                                {(provided, snapshot) => (
-                                  <ListItem
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    {...provided.dragHandleProps}
-                                    sx={{
-                                      mb: 1,
-                                      bgcolor: '#4a5568',
-                                      borderRadius: 1,
-                                      boxShadow: 1,
-                                      border: snapshot.isDragging ? '1px solid #63b3ed' : '1px solid transparent',
-                                      transition: 'border 0.2s',
-                                    }}
-                                    secondaryAction={
-                                      <Switch
-                                        edge="end"
-                                        checked={config.components[sectionName]?.enabled || false}
-                                        onChange={() => handleToggleSection(sectionName)}
-                                        size="small"
-                                      />
-                                    }
-                                  >
-                                    <ListItemIcon sx={{ minWidth: 30 }}>
-                                      <DragHandleIcon sx={{ color: '#e2e8f0' }} />
-                                    </ListItemIcon>
-                                    <ListItemText primary={sectionName.replace(/_/g, ' ')} sx={{ textTransform: 'capitalize', color: '#e2e8f0' }} />
-                                  </ListItem>
-                                )}
-                              </Draggable>
-                            ))}
+                            {config.layout.map((sectionName, index) => {
+                              const isEnabled = config.components[sectionName]?.enabled || false;
+                              const sectionTitle = sectionName.replace(/_/g, ' ');
+                              
+                              // Define section types
+                              const alwaysShownSections = ['hero', 'hero_slider', 'special_offer', 'brand_trust'];
+                              const isAlwaysShown = alwaysShownSections.includes(sectionName);
+                              
+                              return (
+                                <Draggable key={sectionName} draggableId={sectionName} index={index}>
+                                  {(provided, snapshot) => (
+                                    <ListItem
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      {...provided.dragHandleProps}
+                                      sx={{
+                                        mb: 1,
+                                        bgcolor: snapshot.isDragging ? '#63b3ed' : (isEnabled ? '#4a5568' : '#2d3748'),
+                                        borderRadius: 1,
+                                        boxShadow: snapshot.isDragging ? 3 : 1,
+                                        border: snapshot.isDragging ? '2px solid #63b3ed' : `1px solid ${isEnabled ? '#48bb78' : '#f56565'}`,
+                                        transition: 'all 0.2s',
+                                        opacity: snapshot.isDragging ? 0.8 : 1,
+                                      }}
+                                      secondaryAction={
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                          {isAlwaysShown && (
+                                            <Typography variant="caption" sx={{ 
+                                              color: '#ecc94b', 
+                                              bgcolor: '#2d3748', 
+                                              px: 1, 
+                                              py: 0.5, 
+                                              borderRadius: 1,
+                                              fontSize: '0.7rem'
+                                            }}>
+                                              Luôn hiển thị
+                                            </Typography>
+                                          )}
+                                          <Switch
+                                            edge="end"
+                                            checked={isEnabled}
+                                            onChange={() => handleToggleSection(sectionName)}
+                                            size="small"
+                                            disabled={isAlwaysShown}
+                                            sx={{
+                                              '& .MuiSwitch-thumb': {
+                                                bgcolor: isEnabled ? '#48bb78' : '#f56565'
+                                              }
+                                            }}
+                                          />
+                                        </Box>
+                                      }
+                                    >
+                                      <ListItemIcon sx={{ minWidth: 30 }}>
+                                        <DragHandleIcon sx={{ color: '#e2e8f0' }} />
+                                      </ListItemIcon>
+                                      <Box sx={{ flex: 1 }}>
+                                        <Typography 
+                                          variant="body2" 
+                                          sx={{ 
+                                            textTransform: 'capitalize', 
+                                            color: '#e2e8f0',
+                                            fontWeight: isEnabled ? 'bold' : 'normal'
+                                          }}
+                                        >
+                                          {index + 1}. {sectionTitle}
+                                        </Typography>
+                                        <Typography 
+                                          variant="caption" 
+                                          sx={{ 
+                                            color: isEnabled ? '#48bb78' : '#f56565',
+                                            fontSize: '0.7rem'
+                                          }}
+                                        >
+                                          {isEnabled ? 'Đang hiển thị' : 'Đã ẩn'} • {isAlwaysShown ? 'Cố định' : 'Có thể tùy chỉnh'}
+                                        </Typography>
+                                      </Box>
+                                    </ListItem>
+                                  )}
+                                </Draggable>
+                              );
+                            })}
                             {provided.placeholder}
                           </List>
                         )}
                       </Droppable>
                     </DragDropContext>
+
+                    {/* Layout Guide */}
+                    <Box sx={{ mt: 2, p: 2, bgcolor: '#1a202c', borderRadius: 1, border: '1px solid #4a5568' }}>
+                      <Typography variant="body2" sx={{ color: '#e2e8f0', fontWeight: 'bold', mb: 1 }}>
+                        📋 Hướng dẫn Layout:
+                      </Typography>
+                      <Box component="ul" sx={{ margin: 0, pl: 2, color: '#a0aec0', fontSize: '0.8rem' }}>
+                        <li>🟡 <strong>Luôn hiển thị:</strong> Hero, Hero Slider, Flash Sale, Commitment</li>
+                        <li>🔵 <strong>Có thể tùy chỉnh:</strong> Home Banner, Categories, Best Seller, Pinned Products</li>
+                        <li>🟢 <strong>Đang hiển thị:</strong> Phần này sẽ xuất hiện trên trang chủ</li>
+                        <li>🔴 <strong>Đã ẩn:</strong> Phần này sẽ bị ẩn khỏi trang chủ</li>
+                        <li>↕️ <strong>Kéo thả:</strong> Thay đổi thứ tự hiển thị trên trang chủ</li>
+                      </Box>
+                    </Box>
                   </CardContent>
                 </Card>
               </motion.div>

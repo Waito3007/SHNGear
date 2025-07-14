@@ -58,6 +58,8 @@ namespace SHN_Gear.Controllers
                             .ThenInclude(pv => pv.Product)
                     .Include(o => o.Address)
                     .Include(o => o.User)
+                    .Include(o => o.Voucher)
+                    .Include(o => o.PaymentMethod)
                     .FirstOrDefaultAsync(o => o.Id == orderId);
 
                 if (order == null)
@@ -72,18 +74,20 @@ namespace SHN_Gear.Controllers
 
                 await _emailService.SendOrderConfirmationEmailAsync(order.User, order);
 
-                return Ok(new { 
-                    Success = true, 
+                return Ok(new
+                {
+                    Success = true,
                     Message = $"Email đã được gửi tới {order.User.Email}",
-                    OrderId = orderId 
+                    OrderId = orderId
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { 
-                    Success = false, 
+                return StatusCode(500, new
+                {
+                    Success = false,
                     Message = $"Lỗi khi gửi email: {ex.Message}",
-                    OrderId = orderId 
+                    OrderId = orderId
                 });
             }
         }
@@ -350,6 +354,12 @@ namespace SHN_Gear.Controllers
                 UserVoucher? userVoucher = null;
                 if (orderDto.VoucherId.HasValue)
                 {
+                    // Voucher requires a valid user
+                    if (!orderDto.UserId.HasValue || orderDto.UserId.Value == 0)
+                    {
+                        return BadRequest("Để sử dụng voucher, bạn cần đăng nhập.");
+                    }
+
                     voucher = await _context.Vouchers.FindAsync(orderDto.VoucherId.Value);
                     if (voucher == null || !voucher.IsActive || voucher.ExpiryDate < DateTime.UtcNow)
                     {
@@ -358,16 +368,33 @@ namespace SHN_Gear.Controllers
 
                     // Kiểm tra xem voucher đã được gán cho người dùng chưa
                     userVoucher = await _context.UserVouchers
-                        .FirstOrDefaultAsync(uv => uv.VoucherId == voucher.Id && uv.UserId == orderDto.UserId.Value);
+                        .FirstOrDefaultAsync(uv => uv.VoucherId == voucher.Id);
+
                     if (userVoucher == null)
                     {
-                        return BadRequest("Bạn chưa sở hữu voucher này.");
+                        // Voucher chưa được gán cho ai, tạo bản ghi mới
+                        userVoucher = new UserVoucher
+                        {
+                            UserId = orderDto.UserId.Value,
+                            VoucherId = voucher.Id,
+                            IsUsed = false,
+                            UsedAt = DateTime.UtcNow
+                        };
+                        _context.UserVouchers.Add(userVoucher);
                     }
-
-                    // Kiểm tra trạng thái IsUsed
-                    if (userVoucher.IsUsed)
+                    else
                     {
-                        return BadRequest("Voucher đã được sử dụng.");
+                        // Voucher đã được gán, kiểm tra quyền sở hữu
+                        if (userVoucher.UserId != orderDto.UserId.Value)
+                        {
+                            return BadRequest("Voucher này chỉ có thể được sử dụng bởi người dùng đã được gán.");
+                        }
+
+                        // Kiểm tra trạng thái IsUsed
+                        if (userVoucher.IsUsed)
+                        {
+                            return BadRequest("Voucher đã được sử dụng.");
+                        }
                     }
                 }
 
@@ -493,6 +520,8 @@ namespace SHN_Gear.Controllers
                                     .ThenInclude(pv => pv.Product)
                             .Include(o => o.Address)
                             .Include(o => o.User)
+                            .Include(o => o.Voucher)
+                            .Include(o => o.PaymentMethod)
                             .FirstOrDefaultAsync(o => o.Id == order.Id);
 
                         if (orderDetailsForEmail != null)
@@ -555,7 +584,12 @@ namespace SHN_Gear.Controllers
 
                 var order = await _context.Orders
                     .Include(o => o.OrderItems)
+                        .ThenInclude(oi => oi.ProductVariant)
+                            .ThenInclude(pv => pv.Product)
+                    .Include(o => o.Address)
                     .Include(o => o.User)
+                    .Include(o => o.Voucher)
+                    .Include(o => o.PaymentMethod)
                     .FirstOrDefaultAsync(o => o.Id == orderId);
 
                 if (order == null)
@@ -580,18 +614,6 @@ namespace SHN_Gear.Controllers
                         {
                             variant.StockQuantity -= item.Quantity;
                         }
-                    }
-
-                    // Mark voucher as used if exists
-                    if (order.VoucherId.HasValue && order.UserId.HasValue)
-                    {
-                        var userVoucher = new UserVoucher
-                        {
-                            UserId = order.UserId.Value,
-                            VoucherId = order.VoucherId.Value,
-                            UsedAt = DateTime.UtcNow
-                        };
-                        _context.UserVouchers.Add(userVoucher);
                     }
 
                     await _context.SaveChangesAsync();

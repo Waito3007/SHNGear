@@ -14,8 +14,12 @@ const BannerSlider = () => {
     const fetchBanners = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('/api/banners');
-        setBanners(response.data);
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/Banner`);
+        // Filter only active banners (status === false means visible)
+        const activeBanners = response.data.filter(banner => 
+          banner.status === false
+        );
+        setBanners(activeBanners);
       } catch (err) {
         setError('Failed to load banners.');
         console.error(err);
@@ -29,23 +33,39 @@ const BannerSlider = () => {
   if (error) return <div className="text-red-500">{error}</div>;
   if (banners.length === 0) return null;
   return (
-    <section className="w-full h-auto overflow-hidden">
-      <Swiper
-        modules={[Navigation, Pagination, Autoplay]}
-        spaceBetween={0}
-        slidesPerView={1}
-        navigation
-        pagination={{ clickable: true }}
-        autoplay={{ delay: 5000, disableOnInteraction: false }}
-        loop={true}
-        className="w-full h-full"
-      >
-        {banners.map((banner) => (
-          <SwiperSlide key={banner.id}>
-            <img src={banner.imageUrl} alt={banner.title} className="w-full h-64 md:h-96 object-cover rounded-xl shadow-lg" />
-          </SwiperSlide>
-        ))}
-      </Swiper>
+    <section className="w-full py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <Swiper
+          modules={[Navigation, Pagination, Autoplay]}
+          spaceBetween={0}
+          slidesPerView={1}
+          navigation
+          pagination={{ clickable: true }}
+          autoplay={{ delay: 5000, disableOnInteraction: false }}
+          loop={true}
+          className="w-full h-full rounded-xl overflow-hidden shadow-lg"
+        >
+          {banners.map((banner) => (
+            <SwiperSlide key={banner.id}>
+              {banner.linkTo ? (
+                <a href={banner.linkTo} target="_blank" rel="noopener noreferrer">
+                  <img 
+                    src={banner.imageUrl} 
+                    alt={banner.title} 
+                    className="w-full h-64 md:h-96 object-cover cursor-pointer hover:opacity-90 transition-opacity" 
+                  />
+                </a>
+              ) : (
+                <img 
+                  src={banner.imageUrl} 
+                  alt={banner.title} 
+                  className="w-full h-64 md:h-96 object-cover" 
+                />
+              )}
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
     </section>
   );
 };

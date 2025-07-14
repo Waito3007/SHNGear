@@ -12,6 +12,10 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
+import { motion } from "framer-motion";
+
+// Import Admin components
+import Header from "@/components/Admin/common/Header";
 
 // Import timezone test utilities for debugging
 import {
@@ -34,48 +38,6 @@ const formatVietnamTime = (dateString) => {
     });
   } catch (error) {
     console.error("Error formatting time:", error);
-    return "";
-  }
-};
-
-const formatVietnamDate = (dateString) => {
-  if (!dateString) return "";
-  try {
-    const date = new Date(dateString);
-    const now = new Date();
-
-    // Convert to Vietnam timezone for comparison
-    const vietnamDate = new Date(
-      date.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
-    );
-    const vietnamNow = new Date(
-      now.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
-    );
-
-    // Check if it's today
-    if (vietnamDate.toDateString() === vietnamNow.toDateString()) {
-      return formatVietnamTime(dateString);
-    }
-
-    // Check if it's yesterday
-    const yesterday = new Date(vietnamNow);
-    yesterday.setDate(yesterday.getDate() - 1);
-    if (vietnamDate.toDateString() === yesterday.toDateString()) {
-      return `Hôm qua ${formatVietnamTime(dateString)}`;
-    }
-
-    // Format as date with time
-    return date.toLocaleDateString("vi-VN", {
-      month: "2-digit",
-      day: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "Asia/Ho_Chi_Minh",
-      hour12: false,
-    });
-  } catch (error) {
-    console.error("Error formatting date:", error);
     return "";
   }
 };
@@ -587,270 +549,275 @@ const AdminChatDashboard = () => {
   }
 
   return (
-    <div className="flex h-full bg-gray-900 text-gray-100 flex-col md:flex-row">
-      {/* Sessions List */}
-      <div className="w-full md:w-1/3 bg-gray-800 border-r border-gray-700 flex flex-col">
-        {/* Header */}
-        <div className="p-4 border-b border-gray-700 bg-gray-800 flex-shrink-0">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-100">
-              Chat Dashboard
-            </h2>
-            <div className="flex space-x-2">
-              <button
-                onClick={debugConnection}
-                className="p-2 text-gray-400 hover:text-gray-200 rounded-md hover:bg-gray-700 transition-colors"
-                title="Debug Connection"
-              >
-                🔍
-              </button>
-              <button
-                onClick={fetchSessions}
-                className="p-2 text-gray-400 hover:text-gray-200 rounded-md hover:bg-gray-700 transition-colors"
-              >
-                <RefreshCw size={18} />
-              </button>
-            </div>
-          </div>
+    <div className="flex-1 overflow-auto relative z-10">
+      <Header title="Chat Hỗ Trợ Khách Hàng" />
 
-          {/* Search */}
-          <div className="relative mb-3">
-            <Search
-              size={18}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-            />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Tìm kiếm khách hàng..."
-              className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 text-gray-100 placeholder-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
+      <main className="max-w-7xl mx-auto py-6 px-4 lg:px-8">
+        <motion.div
+          className="h-[calc(100vh-200px)] bg-gray-800 rounded-lg shadow-xl border border-gray-700 overflow-hidden"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="flex h-full">
+            {/* Sessions List */}
+            <div className="w-1/3 bg-gray-800 border-r border-gray-700 flex flex-col">
+              {/* Sessions Header */}
+              <div className="p-4 border-b border-gray-700 bg-gray-800 flex-shrink-0">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-100">
+                    Cuộc trò chuyện ({sessions.length})
+                  </h3>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={debugConnection}
+                      className="p-2 text-gray-400 hover:text-gray-200 rounded-md hover:bg-gray-700 transition-colors"
+                      title="Debug Connection"
+                    >
+                      🔍
+                    </button>
+                    <button
+                      onClick={fetchSessions}
+                      className="p-2 text-gray-400 hover:text-gray-200 rounded-md hover:bg-gray-700 transition-colors"
+                    >
+                      <RefreshCw size={18} />
+                    </button>
+                  </div>
+                </div>
 
-          {/* Filter */}
-          <div className="flex items-center space-x-2">
-            <Filter size={16} className="text-gray-400" />
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="text-sm bg-gray-700 border border-gray-600 text-gray-100 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">Tất cả</option>
-              <option value="escalated">Đã chuyển</option>
-              <option value="needs-attention">Cần chú ý</option>
-              <option value="active">Hoạt động</option>
-            </select>
-          </div>
-        </div>
+                {/* Search */}
+                <div className="relative mb-3">
+                  <Search
+                    size={18}
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  />
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Tìm kiếm khách hàng..."
+                    className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 text-gray-100 placeholder-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
 
-        {/* Sessions */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
-          {isLoading ? (
-            <div className="text-center text-gray-400 mt-8">
-              <RefreshCw
-                size={24}
-                className="mx-auto mb-4 text-gray-600 animate-spin"
-              />
-              <p>Đang tải...</p>
-            </div>
-          ) : filteredSessions.length === 0 ? (
-            <div className="text-center text-gray-400 mt-8">
-              <MessageSquare size={48} className="mx-auto mb-4 text-gray-600" />
-              <p>Không có cuộc trò chuyện nào</p>
-              <button
-                onClick={fetchSessions}
-                className="mt-2 text-blue-400 hover:text-blue-300 text-sm"
-              >
-                Tải lại
-              </button>
-            </div>
-          ) : (
-            filteredSessions.map((session) => {
-              const status = getSessionStatus(session);
-              const lastMessage =
-                session.messages && session.messages.length > 0
-                  ? session.messages[session.messages.length - 1]
-                  : null;
+                {/* Filter */}
+                <div className="flex items-center space-x-2">
+                  <Filter size={16} className="text-gray-400" />
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="text-sm bg-gray-700 border border-gray-600 text-gray-100 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">Tất cả</option>
+                    <option value="escalated">Đã chuyển</option>
+                    <option value="needs-attention">Cần chú ý</option>
+                    <option value="active">Hoạt động</option>
+                  </select>
+                </div>
+              </div>
 
-              return (
-                <div
-                  key={session.id}
-                  onClick={() => selectSession(session)}
-                  className={`p-4 border-b border-gray-700 cursor-pointer hover:bg-gray-700 transition-colors ${
-                    selectedSession?.id === session.id
-                      ? "bg-blue-800 border-blue-600"
-                      : ""
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2">
-                        <User
-                          size={16}
-                          className="text-gray-400 flex-shrink-0"
-                        />
-                        <span className="font-medium text-gray-100 truncate">
-                          {session.user?.fullName ||
-                            session.guestName ||
-                            "Guest"}
-                        </span>
-                        <div
-                          className={`flex items-center space-x-1 ${getStatusColor(
-                            status
-                          )}`}
-                        >
-                          {getStatusIcon(status)}
+              {/* Sessions */}
+              <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
+                {isLoading ? (
+                  <div className="text-center text-gray-400 mt-8">
+                    <RefreshCw
+                      size={24}
+                      className="mx-auto mb-4 text-gray-600 animate-spin"
+                    />
+                    <p>Đang tải...</p>
+                  </div>
+                ) : filteredSessions.length === 0 ? (
+                  <div className="text-center text-gray-400 mt-8">
+                    <MessageSquare size={48} className="mx-auto mb-4 text-gray-600" />
+                    <p>Không có cuộc trò chuyện nào</p>
+                    <button
+                      onClick={fetchSessions}
+                      className="mt-2 text-blue-400 hover:text-blue-300 text-sm"
+                    >
+                      Tải lại
+                    </button>
+                  </div>
+                ) : (
+                  filteredSessions.map((session) => {
+                    const status = getSessionStatus(session);
+                    const lastMessage =
+                      session.messages && session.messages.length > 0
+                        ? session.messages[session.messages.length - 1]
+                        : null;
+
+                    return (
+                      <div
+                        key={session.id}
+                        onClick={() => selectSession(session)}
+                        className={`p-4 border-b border-gray-700 cursor-pointer hover:bg-gray-700 transition-colors ${
+                          selectedSession?.id === session.id
+                            ? "bg-blue-800 border-blue-600"
+                            : ""
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2">
+                              <User
+                                size={16}
+                                className="text-gray-400 flex-shrink-0"
+                              />
+                              <span className="font-medium text-gray-100 truncate">
+                                {session.user?.fullName ||
+                                  session.guestName ||
+                                  "Guest"}
+                              </span>
+                              <div
+                                className={`flex items-center space-x-1 ${getStatusColor(
+                                  status
+                                )}`}
+                              >
+                                {getStatusIcon(status)}
+                              </div>
+                            </div>
+                            {lastMessage && (
+                              <p className="text-sm text-gray-400 mt-1 truncate">
+                                {lastMessage.content.length > 50
+                                  ? `${lastMessage.content.substring(0, 50)}...`
+                                  : lastMessage.content}
+                              </p>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-400 ml-2 flex-shrink-0">
+                            {formatSessionTime(
+                              lastMessage?.sentAt || session.startedAt
+                            )}
+                          </div>
                         </div>
                       </div>
-
-                      {lastMessage && (
-                        <p className="text-sm text-gray-400 truncate mt-1">
-                          {lastMessage.sender === "AI" && (
-                            <Bot size={12} className="inline mr-1" />
-                          )}
-                          {lastMessage.content}
+                    );
+                  })
+                )}
+              </div>
+            </div>
+            {/* Chat Interface */}
+            {selectedSession ? (
+              <div className="flex-1 flex flex-col bg-gray-900">
+                {/* Chat Header */}
+                <div className="bg-gray-800 border-b border-gray-700 p-4 flex-shrink-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                        <User size={20} color="white" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-100">
+                          {selectedSession.user?.fullName ||
+                            selectedSession.guestName ||
+                            "Guest User"}
+                        </h3>
+                        <p className="text-sm text-gray-400">
+                          {selectedSession.user?.email || "Guest"}
                         </p>
-                      )}
-
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-xs text-gray-400">
-                          {formatSessionTime(session.lastActivityAt)}
-                        </span>
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full font-medium ${
-                            session.type === "AI"
-                              ? "bg-green-800 text-green-200 border border-green-600"
-                              : "bg-blue-800 text-blue-200 border border-blue-600"
-                          }`}
-                        >
-                          {session.type}
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div
+                        className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs ${
+                          getSessionStatus(selectedSession) === "escalated"
+                            ? "bg-red-900 text-red-300"
+                            : getSessionStatus(selectedSession) === "needs-attention"
+                            ? "bg-orange-900 text-orange-300"
+                            : "bg-green-900 text-green-300"
+                        }`}
+                      >
+                        {getStatusIcon(getSessionStatus(selectedSession))}
+                        <span className="ml-1">
+                          {getSessionStatus(selectedSession) === "escalated"
+                            ? "Đã chuyển"
+                            : getSessionStatus(selectedSession) === "needs-attention"
+                            ? "Cần chú ý"
+                            : "Hoạt động"}
                         </span>
                       </div>
                     </div>
                   </div>
                 </div>
-              );
-            })
-          )}
-        </div>
-      </div>
 
-      {/* Chat Area */}
-      <div className="flex-1 flex flex-col bg-gray-900">
-        {selectedSession ? (
-          <>
-            {/* Chat Header */}
-            <div className="bg-gray-800 border-b border-gray-700 p-4 flex-shrink-0">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-gray-100">
-                    {selectedSession.user?.fullName ||
-                      selectedSession.guestName ||
-                      "Guest"}
-                  </h3>
-                  <p className="text-sm text-gray-400">
-                    {(selectedSession.user?.email ||
-                      selectedSession.guestEmail) && (
-                      <>
-                        Email:{" "}
-                        {selectedSession.user?.email ||
-                          selectedSession.guestEmail}{" "}
-                        •{" "}
-                      </>
-                    )}
-                    Session: {selectedSession.sessionId} • Type:{" "}
-                    {selectedSession.type} • Started:{" "}
-                    {formatVietnamDate(selectedSession.createdAt)} (UTC+7)
-                  </p>
-                </div>
-                <div
-                  className={`flex items-center space-x-2 ${getStatusColor(
-                    getSessionStatus(selectedSession)
-                  )}`}
-                >
-                  {getStatusIcon(getSessionStatus(selectedSession))}
-                  <span className="text-sm font-medium text-gray-100">
-                    {getSessionStatus(selectedSession)
-                      .replace("-", " ")
-                      .toUpperCase()}
-                  </span>
-                </div>
-              </div>
-            </div>
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 messages-container scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
+                  {messages.map((message) => {
+                    const isAdmin = message.sender === "Admin";
+                    const isUser = message.sender === "User";
+                    const isAI = message.sender === "AI";
+                    const isSystem = message.sender === "System";
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 bg-gray-900 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
-              {messages.length === 0 ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center text-gray-400">
-                    <MessageSquare
-                      size={48}
-                      className="mx-auto mb-4 text-gray-600"
-                    />
-                    <p>Chưa có tin nhắn nào</p>
-                  </div>
-                </div>
-              ) : (
-                messages.map((message) => {
-                  const isAdmin = message.sender === "Admin";
-                  const isUser = message.sender === "User";
-                  const isAI = message.sender === "AI";
-                  const isSystem = message.sender === "System";
-
-                  return (
-                    <div
-                      key={message.id}
-                      className={`mb-4 flex ${
-                        isAdmin ? "justify-end" : "justify-start"
-                      }`}
-                    >
+                    return (
                       <div
-                        className={`flex items-start space-x-2 max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl ${
-                          isAdmin ? "flex-row-reverse space-x-reverse" : ""
+                        key={message.id}
+                        className={`mb-4 flex ${
+                          isAdmin ? "justify-end" : "justify-start"
                         }`}
                       >
-                        {/* Avatar */}
                         <div
-                          className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                            isAdmin
-                              ? "bg-purple-500"
-                              : isUser
-                              ? "bg-blue-500"
-                              : isAI
-                              ? "bg-green-500"
-                              : "bg-gray-500"
+                          className={`flex items-start space-x-2 max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl ${
+                            isAdmin ? "flex-row-reverse space-x-reverse" : ""
                           }`}
                         >
-                          {isAdmin ? (
-                            "👨‍💼"
-                          ) : isUser ? (
-                            <User size={16} color="white" />
-                          ) : isAI ? (
-                            <Bot size={16} color="white" />
-                          ) : (
-                            "🔔"
-                          )}
-                        </div>
-
-                        {/* Message bubble */}
-                        <div
-                          className={`rounded-lg px-4 py-3 shadow-lg border ${
-                            isAdmin
-                              ? "bg-purple-600 text-white border-purple-500"
-                              : isUser
-                              ? "bg-blue-600 text-white border-blue-500"
-                              : isSystem
-                              ? "bg-gray-700 text-white border-gray-600"
-                              : "bg-green-600 text-white border-green-500"
-                          }`}
-                        >
-                          <div className="whitespace-pre-wrap text-sm font-semibold leading-relaxed">
-                            {message.content}
+                          {/* Avatar */}
+                          <div
+                            className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                              isAdmin
+                                ? "bg-purple-500"
+                                : isUser
+                                ? "bg-blue-500"
+                                : isAI
+                                ? "bg-green-500"
+                                : "bg-gray-500"
+                            }`}
+                          >
+                            {isAdmin ? (
+                              "👨‍💼"
+                            ) : isUser ? (
+                              <User size={16} color="white" />
+                            ) : isAI ? (
+                              <Bot size={16} color="white" />
+                            ) : (
+                              "🔔"
+                            )}
                           </div>
 
-                          {/* AI info */}
-                          {message.aiConfidenceScore && (
+                          {/* Message bubble */}
+                          <div
+                            className={`rounded-lg px-4 py-3 shadow-lg border ${
+                              isAdmin
+                                ? "bg-purple-600 text-white border-purple-500"
+                                : isUser
+                                ? "bg-blue-600 text-white border-blue-500"
+                                : isSystem
+                                ? "bg-gray-700 text-white border-gray-600"
+                                : "bg-green-600 text-white border-green-500"
+                            }`}
+                          >
+                            <div className="whitespace-pre-wrap text-sm font-semibold leading-relaxed">
+                              {message.content}
+                            </div>
+
+                            {/* AI info */}
+                            {message.aiConfidenceScore && (
+                              <div
+                                className={`text-xs mt-2 font-medium ${
+                                  isAdmin
+                                    ? "text-purple-200"
+                                    : isUser
+                                    ? "text-blue-200"
+                                    : isSystem
+                                    ? "text-gray-300"
+                                    : "text-green-200"
+                                }`}
+                              >
+                                Confidence:{" "}
+                                {(message.aiConfidenceScore * 100).toFixed(0)}%
+                                {message.aiIntent &&
+                                  ` • Intent: ${message.aiIntent}`}
+                              </div>
+                            )}
+
                             <div
                               className={`text-xs mt-2 font-medium ${
                                 isAdmin
@@ -862,78 +829,61 @@ const AdminChatDashboard = () => {
                                   : "text-green-200"
                               }`}
                             >
-                              Confidence:{" "}
-                              {(message.aiConfidenceScore * 100).toFixed(0)}%
-                              {message.aiIntent &&
-                                ` • Intent: ${message.aiIntent}`}
+                              {formatVietnamTime(message.sentAt)} (UTC+7)
+                              {message.senderUser &&
+                                ` • ${message.senderUser.fullName}`}
                             </div>
-                          )}
-
-                          <div
-                            className={`text-xs mt-2 font-medium ${
-                              isAdmin
-                                ? "text-purple-200"
-                                : isUser
-                                ? "text-blue-200"
-                                : isSystem
-                                ? "text-gray-300"
-                                : "text-green-200"
-                            }`}
-                          >
-                            {formatVietnamTime(message.sentAt)} (UTC+7)
-                            {message.senderUser &&
-                              ` • ${message.senderUser.fullName}`}
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })
-              )}
-              <div ref={messagesEndRef} />
-            </div>
+                    );
+                  })}
+                  <div ref={messagesEndRef} />
+                </div>
 
-            {/* Message Input */}
-            <div className="bg-gray-800 border-t border-gray-700 p-4 flex-shrink-0">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      sendMessage();
-                    }
-                  }}
-                  placeholder="Nhập tin nhắn..."
-                  className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 text-gray-100 placeholder-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <button
-                  onClick={sendMessage}
-                  disabled={!newMessage.trim()}
-                  className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 disabled:bg-gray-600 disabled:text-gray-400 transition-colors"
-                >
-                  <Send size={16} />
-                </button>
+                {/* Message Input */}
+                <div className="bg-gray-800 border-t border-gray-700 p-4 flex-shrink-0">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          sendMessage();
+                        }
+                      }}
+                      placeholder="Nhập tin nhắn..."
+                      className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 text-gray-100 placeholder-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <button
+                      onClick={sendMessage}
+                      disabled={!newMessage.trim()}
+                      className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 disabled:bg-gray-600 disabled:text-gray-400 transition-colors"
+                    >
+                      <Send size={16} />
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center bg-gray-900">
-            <div className="text-center text-gray-300">
-              <MessageSquare size={64} className="mx-auto mb-4 text-gray-500" />
-              <h3 className="text-lg font-medium mb-2 text-gray-200">
-                Chọn cuộc trò chuyện
-              </h3>
-              <p className="text-gray-400">
-                Chọn một cuộc trò chuyện từ danh sách để bắt đầu hỗ trợ khách
-                hàng
-              </p>
-            </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center bg-gray-900">
+                <div className="text-center text-gray-300">
+                  <MessageSquare size={64} className="mx-auto mb-4 text-gray-500" />
+                  <h3 className="text-lg font-medium mb-2 text-gray-200">
+                    Chọn cuộc trò chuyện
+                  </h3>
+                  <p className="text-gray-400">
+                    Chọn một cuộc trò chuyện từ danh sách để bắt đầu hỗ trợ khách
+                    hàng
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </motion.div>
+      </main>
 
       {/* Notification Toast */}
       {notification && (

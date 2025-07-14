@@ -183,8 +183,8 @@ const ProductGrid = ({
             discountAmount,
             image,
             brand,
-            rating: 4.5,
-            ratingCount: Math.floor(Math.random() * 100) + 50,
+            rating: product.averageRating || 0,
+            ratingCount: product.reviewCount || 0,
             variant,
             category: product.category,
           };
@@ -498,12 +498,22 @@ const ProductGrid = ({
                         <div className="product-rating">
                           <Rating
                             value={product.rating}
-                            precision={0.5}
+                            precision={0.1}
                             size="small"
                             readOnly
+                            sx={{
+                              opacity: product.rating > 0 ? 1 : 0.3,
+                            }}
                           />
-                          <Typography variant="body2" color="text.secondary">
-                            ({product.ratingCount})
+                          <Typography 
+                            variant="body2" 
+                            color="text.secondary"
+                            sx={{
+                              fontSize: '0.75rem',
+                              opacity: product.ratingCount > 0 ? 1 : 0.6,
+                            }}
+                          >
+                            ({product.ratingCount > 0 ? `${product.ratingCount} đánh giá` : 'Chưa có đánh giá'})
                           </Typography>
                         </div>
                         {/* Price */}

@@ -12,10 +12,13 @@ namespace SHN_Gear.DTOs
     public class HomepageComponentsDto
     {
         public HeroSectionDto Hero { get; set; } = new HeroSectionDto();
+        public HeroSliderSectionDto Hero_slider { get; set; } = new HeroSliderSectionDto();
+        public HomeBannerSectionDto Home_banner { get; set; } = new HomeBannerSectionDto();
         public CategoriesSectionDto Categories { get; set; } = new CategoriesSectionDto();
         public FeaturedProductsSectionDto Featured_products { get; set; } = new FeaturedProductsSectionDto();
+        public BestSellerSectionDto Best_seller { get; set; } = new BestSellerSectionDto();
+        public PinnedProductsSectionDto Pinned_products { get; set; } = new PinnedProductsSectionDto();
         public SpecialOfferSectionDto Special_offer { get; set; } = new SpecialOfferSectionDto();
-        public BestSellerSectionDto Best_seller { get; set; } = new BestSellerSectionDto(); // New Best Seller Section
         public BrandTrustSectionDto Brand_trust { get; set; } = new BrandTrustSectionDto();
     }
 
@@ -99,6 +102,28 @@ namespace SHN_Gear.DTOs
     {
         public int Id { get; set; }
         public string Icon { get; set; } = "";
+        public string Title { get; set; } = "";
+        public string Description { get; set; } = "";
+    }
+
+    // New DTO classes for new components
+    public class HeroSliderSectionDto
+    {
+        public bool Enabled { get; set; }
+        public string Title { get; set; } = "";
+        public string Description { get; set; } = "";
+    }
+
+    public class HomeBannerSectionDto
+    {
+        public bool Enabled { get; set; }
+        public string Title { get; set; } = "";
+        public string Description { get; set; } = "";
+    }
+
+    public class PinnedProductsSectionDto
+    {
+        public bool Enabled { get; set; }
         public string Title { get; set; } = "";
         public string Description { get; set; } = "";
     }

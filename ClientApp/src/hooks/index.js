@@ -47,6 +47,11 @@ export {
   useReviewActions,
   useReviewModeration,
   useReviewStatistics,
+  useProductRatingStats,
+  useSubmitReview,
+  useUserReview,
+  useReviewAnalytics,
+  useAllReviews,
 } from "./api/useReviews";
 
 export {

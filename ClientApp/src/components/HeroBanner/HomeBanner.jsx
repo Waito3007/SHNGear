@@ -12,7 +12,7 @@ const HeroBanner = () => {
         const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/Banner`);
         if (!res.ok) throw new Error("Không thể tải banner");
         const data = await res.json();
-        // ✅ Lọc banner có status === false (hiển thị)
+        // ✅ Lọc banner có status === false (hiển thị)  
         const visibleBanners = data.filter(banner => banner.status === false);
         setBanners(visibleBanners);
       } catch (error) {
@@ -64,13 +64,35 @@ const HeroBanner = () => {
               className={`flex-shrink-0 w-full transition-opacity duration-500 ${index === currentIndex ? "opacity-100" : "opacity-0 absolute"}`}
             >
               <div className="relative">
-                <img
-                  src={banner.images?.[0]?.imageUrl.startsWith("http") ? banner.images[0].imageUrl : `${process.env.REACT_APP_API_BASE_URL}/${banner.images?.[0]?.imageUrl}`}
-                  alt={banner.title || `Slide ${index + 1}`}
-                  className="w-full h-auto object-cover"
-                  loading="lazy"
-                  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/1200x500?text=Error"; }}
-                />
+                {banner.linkTo ? (
+                  <div
+                    className="block w-full h-full cursor-pointer group"
+                    onClick={() => {
+                      if (banner.linkTo.startsWith('http')) {
+                        window.open(banner.linkTo, '_blank', 'noopener noreferrer');
+                      } else {
+                        window.location.href = banner.linkTo;
+                      }
+                    }}
+                  >
+                    <img
+                      src={banner.imageUrl?.startsWith("http") ? banner.imageUrl : `${process.env.REACT_APP_API_BASE_URL}/${banner.imageUrl}`}
+                      alt={banner.title || `Slide ${index + 1}`}
+                      className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                      onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/1200x500?text=Error"; }}
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
+                  </div>
+                ) : (
+                  <img
+                    src={banner.imageUrl?.startsWith("http") ? banner.imageUrl : `${process.env.REACT_APP_API_BASE_URL}/${banner.imageUrl}`}
+                    alt={banner.title || `Slide ${index + 1}`}
+                    className="w-full h-auto object-cover"
+                    loading="lazy"
+                    onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/1200x500?text=Error"; }}
+                  />
+                )}
                 <div
                   className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-black/20 pointer-events-none"
                   style={{

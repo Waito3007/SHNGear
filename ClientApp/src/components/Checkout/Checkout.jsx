@@ -176,18 +176,18 @@ const Checkout = () => {
     }
 
     const orderDto = {
-      userId: userId || null,
-      orderDate: new Date().toISOString(),
-      totalAmount: finalAmount,
-      orderStatus: "Pending",
-      addressId: addressId,
-      paymentMethodId: parseInt(paymentMethod),
-      orderItems: selectedItems.map((item) => ({
-        productVariantId: item.productVariantId,
-        quantity: item.quantity,
-        price: item.productDiscountPrice || item.productPrice,
+      UserId: userId || null,
+      OrderDate: new Date().toISOString(),
+      TotalAmount: finalAmount,
+      OrderStatus: "Pending",
+      AddressId: addressId,
+      PaymentMethodId: parseInt(paymentMethod),
+      OrderItems: selectedItems.map((item) => ({
+        ProductVariantId: item.productVariantId,
+        Quantity: item.quantity,
+        Price: item.productDiscountPrice || item.productPrice,
       })),
-      voucherId: voucherId || null,
+      VoucherId: voucherId || null,
     };
 
     try {

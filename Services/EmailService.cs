@@ -103,16 +103,37 @@ namespace SHN_Gear.Services
         private string GenerateOrderConfirmationHtml(Models.User user, Models.Order order)
         {
             var itemsHtml = new StringBuilder();
+            decimal subtotal = 0;
+
             foreach (var item in order.OrderItems)
             {
+                decimal itemTotal = item.Quantity * item.Price;
+                subtotal += itemTotal;
+
                 itemsHtml.Append($@"
                 <tr>
                     <td style=""padding: 10px; border-bottom: 1px solid #eee;"">{item.ProductVariant.Product.Name} ({item.ProductVariant.Color}, {item.ProductVariant.Storage})</td>
                     <td style=""padding: 10px; border-bottom: 1px solid #eee; text-align: center;"">{item.Quantity}</td>
                     <td style=""padding: 10px; border-bottom: 1px solid #eee; text-align: right;"">{item.Price:N0} VNĐ</td>
-                    <td style=""padding: 10px; border-bottom: 1px solid #eee; text-align: right;"">{(item.Quantity * item.Price):N0} VNĐ</td>
+                    <td style=""padding: 10px; border-bottom: 1px solid #eee; text-align: right;"">{itemTotal:N0} VNĐ</td>
                 </tr>");
             }
+
+            // Tính toán voucher discount và final amount
+            decimal voucherDiscount = 0;
+            string voucherInfo = "";
+
+            if (order.VoucherId.HasValue && order.Voucher != null)
+            {
+                voucherDiscount = order.Voucher.DiscountAmount;
+                voucherInfo = $@"
+                <tr>
+                    <td colspan=""3"" style=""padding: 10px; text-align: right; font-weight: bold; color: #28a745;"">Voucher giảm giá:</td>
+                    <td style=""padding: 10px; text-align: right; font-weight: bold; color: #28a745;"">-{voucherDiscount:N0} VNĐ</td>
+                </tr>";
+            }
+
+            decimal finalAmount = order.TotalAmount;
 
             var html = $@"
 <!DOCTYPE html>
@@ -124,48 +145,83 @@ namespace SHN_Gear.Services
         .header {{ background-color: #00466a; color: white; padding: 10px; text-align: center; border-radius: 8px 8px 0 0; }}
         .footer {{ margin-top: 20px; text-align: center; font-size: 0.8em; color: #888; }}
         .button {{ background-color: #00466a; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block; }}
+        .alert {{ background-color: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 15px; margin: 20px 0; border-radius: 5px; }}
+        .highlight {{ background-color: #e8f5e8; padding: 10px; border-radius: 5px; margin: 10px 0; }}
     </style>
 </head>
 <body>
     <div class=""container"">
         <div class=""header"">
-            <h2>Cảm ơn bạn đã mua hàng tại SHN Gear!</h2>
+            <h2>🎉 Cảm ơn bạn đã mua hàng tại SHN Gear!</h2>
         </div>
         <div style=""padding: 20px;"">
-            <p>Chào {user.FullName},</p>
-            <p>Chúng tôi đã nhận được đơn hàng của bạn. Dưới đây là chi tiết đơn hàng:</p>
-            <p><strong>Mã đơn hàng:</strong> #{order.Id}</p>
-            <p><strong>Ngày đặt:</strong> {order.OrderDate:dd/MM/yyyy HH:mm}</p>
-            <p><strong>Trạng thái:</strong> {order.OrderStatus}</p>
+            <p>Chào <strong>{user.FullName}</strong>,</p>
+            <p>Chúng tôi đã nhận được đơn hàng của bạn và sẽ xử lý trong thời gian sớm nhất. Dưới đây là chi tiết đơn hàng:</p>
+            
+            <div class=""highlight"">
+                <p><strong>📦 Mã đơn hàng:</strong> #{order.Id}</p>
+                <p><strong>📅 Ngày đặt:</strong> {order.OrderDate:dd/MM/yyyy HH:mm}</p>
+                <p><strong>🔄 Trạng thái:</strong> {order.OrderStatus}</p>
+                <p><strong>💳 Phương thức thanh toán:</strong> {order.PaymentMethod?.Name ?? "N/A"}</p>
+            </div>
+            
+            <div class=""alert"">
+                <strong>⏰ Lưu ý quan trọng:</strong> Đơn hàng của bạn sẽ được <strong>xác nhận và xử lý sau 2 giờ</strong> kể từ thời điểm đặt hàng. 
+                Vui lòng kiên nhẫn chờ đợi hoặc liên hệ hotline nếu cần hỗ trợ.
+            </div>
+            
             <hr>
-            <h3>Chi tiết sản phẩm</h3>
+            <h3>📋 Chi tiết sản phẩm</h3>
             <table style=""width: 100%; border-collapse: collapse;"">
                 <thead>
-                    <tr>
-                        <th style=""padding: 10px; border-bottom: 2px solid #ddd; text-align: left;"">Sản phẩm</th>
-                        <th style=""padding: 10px; border-bottom: 2px solid #ddd; text-align: center;"">Số lượng</th>
-                        <th style=""padding: 10px; border-bottom: 2px solid #ddd; text-align: right;"">Đơn giá</th>
-                        <th style=""padding: 10px; border-bottom: 2px solid #ddd; text-align: right;"">Tổng</th>
+                    <tr style=""background-color: #f8f9fa;"">
+                        <th style=""padding: 12px; border-bottom: 2px solid #ddd; text-align: left;"">Sản phẩm</th>
+                        <th style=""padding: 12px; border-bottom: 2px solid #ddd; text-align: center;"">SL</th>
+                        <th style=""padding: 12px; border-bottom: 2px solid #ddd; text-align: right;"">Đơn giá</th>
+                        <th style=""padding: 12px; border-bottom: 2px solid #ddd; text-align: right;"">Thành tiền</th>
                     </tr>
                 </thead>
                 <tbody>
                     {itemsHtml}
                 </tbody>
+                <tfoot>
+                    <tr style=""background-color: #f8f9fa;"">
+                        <td colspan=""3"" style=""padding: 12px; text-align: right; font-weight: bold;"">Tổng tiền hàng:</td>
+                        <td style=""padding: 12px; text-align: right; font-weight: bold;"">{subtotal:N0} VNĐ</td>
+                    </tr>
+                    {voucherInfo}
+                    <tr style=""background-color: #d4edda; border-top: 2px solid #28a745;"">
+                        <td colspan=""3"" style=""padding: 15px; text-align: right; font-weight: bold; font-size: 1.1em; color: #155724;"">💰 TỔNG THANH TOÁN:</td>
+                        <td style=""padding: 15px; text-align: right; font-weight: bold; font-size: 1.2em; color: #d9534f;"">{finalAmount:N0} VNĐ</td>
+                    </tr>
+                </tfoot>
             </table>
-            <h3 style=""text-align: right; margin-top: 20px;"">Tổng cộng: <span style=""color: #d9534f;"">{order.TotalAmount:N0} VNĐ</span></h3>
+            
             <hr>
-            <h3>Thông tin giao hàng</h3>
-            <p>
-                <strong>Người nhận:</strong> {order.Address?.FullName ?? "N/A"}<br>
-                <strong>Địa chỉ:</strong> {order.Address?.AddressLine1 ?? "N/A"}, {order.Address?.City ?? "N/A"}<br>
-                <strong>Điện thoại:</strong> {order.Address?.PhoneNumber ?? "N/A"}
-            </p>
+            <h3>🚚 Thông tin giao hàng</h3>
+            <div style=""background-color: #f8f9fa; padding: 15px; border-radius: 5px;"">
+                <p><strong>👤 Người nhận:</strong> {order.Address?.FullName ?? "N/A"}</p>
+                <p><strong>📍 Địa chỉ:</strong> {order.Address?.AddressLine1 ?? "N/A"}, {order.Address?.City ?? "N/A"}</p>
+                <p><strong>📞 Điện thoại:</strong> {order.Address?.PhoneNumber ?? "N/A"}</p>
+            </div>
+            
+            <div style=""background-color: #e3f2fd; padding: 15px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #2196f3;"">
+                <h4 style=""margin: 0 0 10px 0; color: #1976d2;"">📋 Quy trình xử lý đơn hàng:</h4>
+                <ol style=""margin: 0; padding-left: 20px;"">
+                    <li>✅ Đơn hàng đã được tiếp nhận</li>
+                    <li>⏳ Xác nhận và chuẩn bị hàng (sau 2 giờ)</li>
+                    <li>🚚 Giao hàng và nhận tiền</li>
+                    <li>🎉 Hoàn tất đơn hàng</li>
+                </ol>
+            </div>
+            
             <div style=""text-align: center; margin-top: 30px;"">
-                <a href=""{_config["WebAppBaseUrl"]}/profile/orders"" class=""button"">Xem đơn hàng của bạn</a>
+                <a href=""{_config["WebAppBaseUrl"]}/profile/orders"" class=""button"">🔍 Theo dõi đơn hàng</a>
             </div>
         </div>
         <div class=""footer"">
-            <p>SHN Gear &copy; {DateTime.Now.Year}</p>
+            <p><strong>SHN Gear</strong> &copy; {DateTime.Now.Year} - Công nghệ hàng đầu</p>
+            <p>📧 Email: support@shngear.com | 📞 Hotline: 0123-456-789</p>
             <p>Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.</p>
         </div>
     </div>

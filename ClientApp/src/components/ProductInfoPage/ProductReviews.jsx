@@ -34,7 +34,7 @@ import {
 } from "@/hooks/api/useReviews";
 import { jwtDecode } from "jwt-decode";
 
-const ProductReviews = ({ productId }) => {
+const ProductReviews = ({ productId, onReviewUpdate }) => {
   const [showForm, setShowForm] = useState(false);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
@@ -48,9 +48,11 @@ const ProductReviews = ({ productId }) => {
   if (token) {
     try {
       const decoded = jwtDecode(token);
-      currentUserId = decoded.nameid || decoded.sub || decoded.UserId || null;
+      // The user ID is stored in the 'sub' claim as per JWT standard
+      currentUserId = parseInt(decoded.sub, 10) || null;
     } catch (err) {
       console.error("Token decode error:", err);
+      currentUserId = null;
     }
   }
 
@@ -63,13 +65,17 @@ const ProductReviews = ({ productId }) => {
     fetchAverageRating,
   } = useReviews(productId);
   const { userReview, refetchUserReview } = useUserReview(
-    currentUserId,
+    currentUserId && !isNaN(currentUserId) ? currentUserId : null,
     productId
   );
   const { submitReview } = useSubmitReview(productId, () => {
     fetchReviews();
     fetchAverageRating();
     refetchUserReview();
+    // Cập nhật product data trong parent component
+    if (onReviewUpdate) {
+      onReviewUpdate();
+    }
   });
 
   // Xử lý khi không có dữ liệu hoặc API trả về rỗng
@@ -590,6 +596,7 @@ const ProductReviews = ({ productId }) => {
           onClose={() => setSnackbar({ ...snackbar, open: false })}
           severity={snackbar.severity}
           variant="filled"
+          sx={{ width: '100%' }}
         >
           {snackbar.message}
         </Alert>

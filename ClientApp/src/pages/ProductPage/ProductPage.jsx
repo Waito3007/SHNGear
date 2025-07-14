@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { Container, Grid, Box, Alert, CircularProgress } from "@mui/material";
 import Navbar from "@/components/Navbar/Navbar";
@@ -17,27 +17,27 @@ const ProductPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(
-          `${process.env.REACT_APP_API_BASE_URL}/api/Products/${id}`
-        );
-        if (!response.ok) {
-          throw new Error("Không thể tải dữ liệu sản phẩm.");
-        }
-        const data = await response.json();
-        setProduct(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+  const fetchProduct = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${process.env.REACT_APP_API_BASE_URL}/api/Products/${id}`
+      );
+      if (!response.ok) {
+        throw new Error("Không thể tải dữ liệu sản phẩm.");
       }
-    };
-
-    fetchProduct();
+      const data = await response.json();
+      setProduct(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
+
+  useEffect(() => {
+    fetchProduct();
+  }, [fetchProduct]);
 
   if (loading) {
     return (
@@ -124,7 +124,10 @@ const ProductPage = () => {
                 boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
               }}
             >
-              <ProductReviews productId={product.id} />
+              <ProductReviews 
+                productId={product.id} 
+                onReviewUpdate={fetchProduct}
+              />
             </Box>
           </Grid>
           {/* Related Products Section */}

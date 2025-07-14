@@ -99,6 +99,25 @@
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
   }
+
+  /* Fix for potential Bootstrap/Tailwind conflicts */
+  .bg-black {
+    background-color: rgb(0 0 0) !important;
+  }
+  
+  .bg-opacity-0 {
+    --tw-bg-opacity: 0 !important;
+  }
+  
+  .bg-opacity-10 {
+    --tw-bg-opacity: 0.1 !important;
+  }
+  
+  /* Ensure images display properly */
+  .hero-slider-full img {
+    display: block !important;
+    background-color: transparent !important;
+  }
 }
 
 @keyframes fadeIn {

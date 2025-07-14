@@ -29,6 +29,14 @@ namespace SHN_Gear.Controllers
                                  product.FlashSaleStartDate.HasValue && product.FlashSaleStartDate.Value <= now &&
                                  product.FlashSaleEndDate.HasValue && product.FlashSaleEndDate.Value >= now;
 
+            // Calculate review statistics
+            var approvedReviews = _context.Reviews
+                .Where(r => r.ProductId == product.Id && r.IsApproved)
+                .ToList();
+            
+            var reviewCount = approvedReviews.Count;
+            var averageRating = reviewCount > 0 ? approvedReviews.Average(r => r.Rating) : 0;
+
             return new ProductDto
             {
                 Id = product.Id,
@@ -36,6 +44,15 @@ namespace SHN_Gear.Controllers
                 Description = product.Description,
                 CategoryId = product.CategoryId,
                 BrandId = product.BrandId,
+                Brand = product.Brand != null ? new BrandDto
+                {
+                    Id = product.Brand.Id,
+                    Name = product.Brand.Name,
+                    Description = product.Brand.Description,
+                    Logo = product.Brand.Logo
+                } : null,
+                AverageRating = Math.Round(averageRating, 2),
+                ReviewCount = reviewCount,
                 Images = product.Images.Select(img => new ProductImageDto
                 {
                     ImageUrl = img.ImageUrl,
@@ -432,7 +449,7 @@ namespace SHN_Gear.Controllers
 
             foreach (var product in products)
             {
-                object specifications = null;
+                object? specifications = null;
 
                 // Fetch specifications based on category
                 var categoryName = product.Category?.Name?.ToLower();
@@ -578,32 +595,11 @@ namespace SHN_Gear.Controllers
             var pinnedProducts = await _context.Products
                 .Include(p => p.Images)
                 .Include(p => p.Variants)
+                .Include(p => p.Brand)
                 .Where(p => p.IsPinned)
                 .ToListAsync();
 
-            var productDtos = pinnedProducts.Select(p => new ProductDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                CategoryId = p.CategoryId,
-                BrandId = p.BrandId,
-                Images = p.Images.Select(img => new ProductImageDto
-                {
-                    ImageUrl = img.ImageUrl,
-                    IsPrimary = img.IsPrimary
-                }).ToList(),
-                Variants = p.Variants.Select(v => new ProductVariantDto
-                {
-                    Id = v.Id,
-                    Color = v.Color,
-                    Storage = v.Storage,
-                    Price = v.Price,
-                    DiscountPrice = v.DiscountPrice,
-                    StockQuantity = v.StockQuantity,
-
-                }).ToList()
-            });
+            var productDtos = pinnedProducts.Select(p => MapProductToDto(p));
 
             return Ok(productDtos);
         }

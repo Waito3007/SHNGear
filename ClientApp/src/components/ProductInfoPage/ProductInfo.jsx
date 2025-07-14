@@ -3,6 +3,10 @@ import { Box, Typography, Divider, Paper, Rating } from "@mui/material";
 import { Award, Shield, Truck, Gift } from "lucide-react";
 
 const ProductInfo = ({ product }) => {
+  // Debug: Log product data để kiểm tra brand
+  console.log("ProductInfo - product data:", product);
+  console.log("ProductInfo - brand data:", product?.brand);
+  
   return (
     <Paper
       elevation={0}
@@ -133,7 +137,7 @@ const ProductInfo = ({ product }) => {
             zIndex: 2,
           }}
         >
-          <Box
+          {/* <Box
             sx={{
               display: "flex",
               alignItems: "center",
@@ -157,7 +161,7 @@ const ProductInfo = ({ product }) => {
             >
               {product?.price?.toLocaleString("vi-VN")} VNĐ
             </Typography>
-          </Box>
+          </Box> */}
           <Box
             sx={{
               display: "flex",
@@ -220,13 +224,15 @@ const ProductInfo = ({ product }) => {
               },
             }}
           >
-            {product?.brand?.logo && (
+            {(product?.brand?.logo || !product?.brand) && (
               <Box
                 component="img"
                 src={
-                  product.brand.logo?.startsWith("http")
-                    ? product.brand.logo
-                    : `${process.env.REACT_APP_API_BASE_URL}/${product.brand.logo}`
+                  product?.brand?.logo 
+                    ? (product.brand.logo?.startsWith("http")
+                        ? product.brand.logo
+                        : `${process.env.REACT_APP_API_BASE_URL}/${product.brand.logo}`)
+                    : "https://via.placeholder.com/50?text=Brand"
                 }
                 alt={product?.brand?.name || "Brand Logo"}
                 sx={{
@@ -261,35 +267,7 @@ const ProductInfo = ({ product }) => {
                   fontFamily: "'Roboto Mono', monospace",
                 }}
               >
-                {product?.brand?.name}
-              </Typography>
-            </Box>
-          </Box>
-
-          {/* Stock Status */}
-          <Box sx={{ ml: "auto" }}>
-            <Box
-              sx={{
-                bgcolor:
-                  product?.stock > 0
-                    ? "rgba(76, 175, 80, 0.9)"
-                    : "rgba(244, 67, 54, 0.9)",
-                color: "#ffffff",
-                p: 1.5,
-                borderRadius: 2,
-                border: `2px solid ${
-                  product?.stock > 0 ? "#4CAF50" : "#F44336"
-                }`,
-                boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
-                backdropFilter: "blur(5px)",
-                fontFamily: "'Roboto Mono', monospace",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "1px",
-              }}
-            >
-              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                {product?.stock > 0 ? "IN STOCK" : "OUT OF STOCK"}
+                {product?.brand?.name || "Unknown Brand"}
               </Typography>
             </Box>
           </Box>

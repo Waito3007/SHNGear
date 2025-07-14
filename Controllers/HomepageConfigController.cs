@@ -30,7 +30,16 @@ namespace SHN_Gear.Controllers
                 // Create a default configuration if none exists using DTOs
                 var defaultHomepageConfig = new HomepageConfigDto
                 {
-                    Layout = new List<string> { "hero", "categories", "featured_products", "special_offer", "best_seller", "brand_trust" },
+                    Layout = new List<string> {
+                        "hero",
+                        "hero_slider",
+                        "home_banner",
+                        "categories",
+                        "best_seller",
+                        "pinned_products",
+                        "special_offer",
+                        "brand_trust"
+                    },
                     Components = new HomepageComponentsDto
                     {
                         Hero = new HeroSectionDto
@@ -53,6 +62,24 @@ namespace SHN_Gear.Controllers
                                 new HomepageCategoryItemDto { CategoryId = 3, DisplayOrder = 3, Name = "Mice", Image_url = "/images/categories/mice.png", Link = "/products/mice" },
                                 new HomepageCategoryItemDto { CategoryId = 4, DisplayOrder = 4, Name = "Headsets", Image_url = "/images/categories/headsets.png", Link = "/products/headsets" }
                             }
+                        },
+                        Hero_slider = new HeroSliderSectionDto
+                        {
+                            Enabled = true,
+                            Title = "Featured Products",
+                            Description = "Discover our latest gaming gear"
+                        },
+                        Home_banner = new HomeBannerSectionDto
+                        {
+                            Enabled = true,
+                            Title = "Special Promotions",
+                            Description = "Don't miss our amazing deals"
+                        },
+                        Pinned_products = new PinnedProductsSectionDto
+                        {
+                            Enabled = true,
+                            Title = "Staff Picks",
+                            Description = "Our team's favorite products"
                         },
                         Featured_products = new FeaturedProductsSectionDto
                         {
@@ -135,7 +162,7 @@ namespace SHN_Gear.Controllers
             config.ConfigJson = JsonConvert.SerializeObject(newConfigDto, Formatting.Indented);
             config.LastUpdated = DateTime.UtcNow;
             // You might want to get the current user's name here for UpdatedBy
-            config.UpdatedBy = User.Identity?.Name ?? "Admin"; 
+            config.UpdatedBy = User.Identity?.Name ?? "Admin";
 
             await _context.SaveChangesAsync();
 
