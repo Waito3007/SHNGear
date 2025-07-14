@@ -115,7 +115,7 @@ const BrandTrustSection = ({ data }) => {
             <div className="relative z-10">
               <div className="flex items-center justify-center mb-6">
                 <div className="bg-black text-white px-4 py-2 font-mono text-sm font-bold tracking-wider">
-                  ĐANG ĐỒNG BỘ DỮ LIỆU THƯƠNG HIỆU
+                  CÁC THƯƠNG HIỆU ĐỐI TÁC
                 </div>
               </div>
 
@@ -238,7 +238,7 @@ const BrandTrustSection = ({ data }) => {
 
         {/* Tech Footer */}
         <div className="mt-16 pt-8 border-t border-gray-200">
-          <div className="flex justify-between items-center text-xs font-mono text-gray-500 mb-4">
+          {/* <div className="flex justify-between items-center text-xs font-mono text-gray-500 mb-4">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
               <span>HỆ THỐNG HOẠT ĐỘNG</span>
@@ -247,10 +247,10 @@ const BrandTrustSection = ({ data }) => {
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
               <span>ĐỐI TÁC SẴN SÀNG</span>
             </div>
-          </div>
+          </div> */}
 
           {/* System Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <div className="bg-gray-50 border border-gray-300 p-3 text-center">
               <div className="text-black font-bold text-xs font-mono">
                 THƯƠNG HIỆU
@@ -283,7 +283,7 @@ const BrandTrustSection = ({ data }) => {
                 v2.1.0
               </div>
             </div>
-          </div>
+          </div> */}
 
           <div className="text-center text-xs font-mono text-gray-400">
             © SHN_GEAR_PARTNERS_v2.1.0

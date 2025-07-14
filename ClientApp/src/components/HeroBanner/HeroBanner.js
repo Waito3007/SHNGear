@@ -81,7 +81,7 @@ const HeroBanner = ({ data }) => {
       <div className="relative flex flex-col items-center justify-center h-full px-4 text-center">
         {/* System Indicator */}
         <div className="mb-8 text-xs uppercase tracking-widest text-white text-opacity-60 border border-white border-opacity-20 px-4 py-2">
-          [[ KHOI DONG HE THONG ]]
+          [[ BẮT ĐẦU MUA SẮM ]]
         </div>
 
         {/* Main Title */}
@@ -107,16 +107,16 @@ const HeroBanner = ({ data }) => {
 
         {/* Subtitle */}
         <div className="mb-8 max-w-3xl">
-          <div className="text-xs uppercase tracking-widest text-white text-opacity-60 mb-2">
+          {/* <div className="text-xs uppercase tracking-widest text-white text-opacity-60 mb-2">
             --- MO TA HE THONG ---
-          </div>
+          </div> */}
           <p className="text-lg md:text-xl text-white text-opacity-80 leading-relaxed">
             {data.slogan || "CONG NGHE TIEN TIEN - CHAT LUONG VUOT TROI"}
           </p>
         </div>
 
         {/* Tech Stats Bar */}
-        <div className="mb-8 flex flex-wrap justify-center gap-6 text-xs uppercase tracking-wider">
+        {/* <div className="mb-8 flex flex-wrap justify-center gap-6 text-xs uppercase tracking-wider">
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-green-400"></div>
             <span>CPU: 99.9%</span>
@@ -129,7 +129,7 @@ const HeroBanner = ({ data }) => {
             <div className="w-2 h-2 bg-blue-400"></div>
             <span>NET: 1GB/S</span>
           </div>
-        </div>
+        </div> */}
 
         {/* CTA Button */}
         <div className="relative group">

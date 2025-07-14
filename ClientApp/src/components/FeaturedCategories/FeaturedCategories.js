@@ -178,12 +178,12 @@ const FeaturedCategories = ({ data }) => {
             <div className="w-3 h-1 bg-gray-300" />
           </div>
 
-          <div className="text-xs font-mono text-gray-500 flex justify-between">
+          {/* <div className="text-xs font-mono text-gray-500 flex justify-between">
             <span>HỆ THỐNG THỜI GIAN:</span>
             <span>
               {currentTime.toLocaleTimeString("vi-VN", { hour12: false })}
             </span>
-          </div>
+          </div> */}
         </div>
 
         {/* Categories Container */}
@@ -207,10 +207,10 @@ const FeaturedCategories = ({ data }) => {
           <div className="relative z-10">
             {/* Status Header */}
             <div className="flex items-center justify-between mb-8">
-              <div className="bg-black text-white px-4 py-2 font-mono text-sm font-bold tracking-wider">
+              {/* <div className="bg-black text-white px-4 py-2 font-mono text-sm font-bold tracking-wider">
                 HIỂN THỊ {categories.length} DANH MỤC
-              </div>
-              <div className="flex items-center space-x-4">
+              </div> */}
+              {/* <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-1">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                   <span className="text-xs font-mono text-gray-600">
@@ -223,7 +223,7 @@ const FeaturedCategories = ({ data }) => {
                     CẬP NHẬT
                   </span>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -278,9 +278,9 @@ const FeaturedCategories = ({ data }) => {
                         </h3>
 
                         {/* Tech ID */}
-                        <div className="text-xs font-mono text-gray-400 bg-gray-100 px-2 py-1 border border-gray-300 inline-block">
+                        {/* <div className="text-xs font-mono text-gray-400 bg-gray-100 px-2 py-1 border border-gray-300 inline-block">
                           ID: {category.id}
-                        </div>
+                        </div> */}
                       </div>
 
                       {/* Hover Effect Bar */}
@@ -301,8 +301,8 @@ const FeaturedCategories = ({ data }) => {
         </div>
 
         {/* Tech Footer Stats */}
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <div className="flex justify-between items-center text-xs font-mono text-gray-500 mb-4">
+         <div className="mt-8 pt-6 border-t border-gray-200">
+          {/*<div className="flex justify-between items-center text-xs font-mono text-gray-500 mb-4">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
               <span>HỆ THỐNG HOẠT ĐỘNG</span>
@@ -311,10 +311,10 @@ const FeaturedCategories = ({ data }) => {
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
               <span>DANH MỤC SẴN SÀNG</span>
             </div>
-          </div>
+          </div> */}
 
           {/* System Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <div className="bg-gray-50 border border-gray-300 p-3 text-center">
               <div className="text-black font-bold text-xs font-mono">
                 TỔNG DANH MỤC
@@ -347,7 +347,7 @@ const FeaturedCategories = ({ data }) => {
                 v2.1.0
               </div>
             </div>
-          </div>
+          </div> */}
 
           <div className="text-center text-xs font-mono text-gray-400">
             © SHN GEAR CATEGORIES v2.1.0
