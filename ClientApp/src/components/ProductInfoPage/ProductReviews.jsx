@@ -13,15 +13,19 @@ import {
   Avatar, 
   Chip,
   Divider,
-  LinearProgress
+  LinearProgress,
+  Paper,
+  Fade
 } from "@mui/material";
 import { 
   Star, 
-  CheckCircle, // For verified purchase
+  CheckCircle,
   Person, 
   RateReview, 
   Send,
-  Close 
+  Close,
+  TrendingUp,
+  BarChart
 } from "@mui/icons-material";
 import { useReviews, useSubmitReview, useUserReview } from "@/hooks/api/useReviews";
 import { jwtDecode } from "jwt-decode";
@@ -47,7 +51,7 @@ const ProductReviews = ({ productId }) => {
   const { submitReview } = useSubmitReview(productId, () => {
     fetchReviews();
     fetchAverageRating();
-    refetchUserReview(); // Refetch user's specific review after submission
+    refetchUserReview();
   });
 
   // Xử lý khi không có dữ liệu hoặc API trả về rỗng
@@ -94,378 +98,433 @@ const ProductReviews = ({ productId }) => {
   const ratingDistribution = getRatingDistribution();
   const totalReviews = safeReviews.length;
 
+  // Tech-style Review Section
   return (
-    <Box sx={{ p: 0 }}>
+    <Box
+      sx={{
+        bgcolor: '#ffffff',
+        borderRadius: 2,
+        border: '2px solid #000000',
+        background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+        overflow: 'hidden',
+        position: 'relative',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '4px',
+          background: 'linear-gradient(90deg, #000000 0%, #333333 50%, #000000 100%)',
+          zIndex: 1,
+        },
+        '&:hover': {
+          transform: 'translateY(-2px)',
+          boxShadow: '0 16px 48px rgba(0, 0, 0, 0.12)',
+        },
+        transition: 'all 0.3s ease',
+      }}
+    >
       {/* Header Section */}
-      <Box sx={{ textAlign: 'center', mb: 4 }}>
-        <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2, color: '#1976d2' }}>
-          <RateReview sx={{ mr: 1, verticalAlign: 'middle' }} />
-          Đánh giá & Bình luận
-        </Typography>
-        
-        {/* Average Rating Display */}
-        <Card sx={{ maxWidth: 400, mx: 'auto', mb: 3 }}>
-          <CardContent sx={{ textAlign: 'center', py: 3 }}>
-            <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#ff9800', mb: 1 }}>
+      <Box
+        sx={{
+          p: 4,
+          background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 100%)',
+          color: '#ffffff',
+          position: 'relative',
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: '1px',
+            background: 'linear-gradient(90deg, transparent 0%, #ffffff 50%, transparent 100%)',
+          },
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+          <Box
+            sx={{
+              width: 6,
+              height: 40,
+              bgcolor: '#ffffff',
+              borderRadius: 1,
+            }}
+          />
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 800,
+              fontFamily: "'Roboto Mono', monospace",
+              textTransform: 'uppercase',
+              letterSpacing: '2px',
+              color: '#ffffff',
+            }}
+          >
+            # Reviews & Ratings
+          </Typography>
+          <Box
+            sx={{
+              bgcolor: 'rgba(255,255,255,0.1)',
+              borderRadius: 2,
+              px: 2,
+              py: 1,
+              border: '1px solid rgba(255,255,255,0.2)',
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{
+                fontFamily: "'Roboto Mono', monospace",
+                fontWeight: 'bold',
+              }}
+            >
+              {totalReviews} Reviews
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Rating Statistics */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography
+              variant="h2"
+              sx={{
+                fontWeight: 900,
+                fontFamily: "'Roboto Mono', monospace",
+                color: '#ffffff',
+              }}
+            >
               {safeAverageRating.toFixed(1)}
             </Typography>
-            <Rating value={safeAverageRating} readOnly precision={0.1} size="large" sx={{ mb: 1 }} />
-            <Typography variant="body2" color="text.secondary">
-              Dựa trên {totalReviews} đánh giá
-            </Typography>
-          </CardContent>
-        </Card>
-
-        {/* Rating Distribution */}
-        {totalReviews > 0 && (
-          <Card sx={{ maxWidth: 500, mx: 'auto', mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2, textAlign: 'center' }}>
-                Phân bố đánh giá
+            <Box>
+              <Rating
+                value={safeAverageRating}
+                precision={0.1}
+                readOnly
+                size="large"
+                sx={{
+                  color: '#ffffff',
+                  '& .MuiRating-iconFilled': {
+                    color: '#ffffff',
+                  },
+                  '& .MuiRating-iconEmpty': {
+                    color: 'rgba(255,255,255,0.3)',
+                  },
+                }}
+              />
+              <Typography
+                variant="body2"
+                sx={{
+                  color: 'rgba(255,255,255,0.8)',
+                  fontFamily: "'Roboto Mono', monospace",
+                  mt: 0.5,
+                }}
+              >
+                Based on {totalReviews} reviews
               </Typography>
-              {[5, 4, 3, 2, 1].map((star) => (
-                <Box key={star} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <Typography sx={{ minWidth: 20 }}>{star}</Typography>
-                  <Star sx={{ color: '#ff9800', fontSize: 16, mx: 0.5 }} />
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={totalReviews > 0 ? (ratingDistribution[star] / totalReviews) * 100 : 0}
-                    sx={{ 
-                      flexGrow: 1, 
-                      mx: 1, 
-                      height: 8, 
-                      borderRadius: 4,
-                      bgcolor: '#f5f5f5',
-                      '& .MuiLinearProgress-bar': { bgcolor: '#ff9800' }
-                    }} 
-                  />
-                  <Typography sx={{ minWidth: 30, fontSize: '0.875rem', color: 'text.secondary' }}>
-                    {ratingDistribution[star]}
-                  </Typography>
-                </Box>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-      </Box>
+            </Box>
+          </Box>
 
-      {/* Loading State */}
-      {loading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
-          <CircularProgress size={24} sx={{ mr: 2 }} />
-          <Typography color="text.secondary">Đang tải đánh giá...</Typography>
-        </Box>
-      )}
-
-      {/* Error State */}
-      {error && (
-        <Alert severity="warning" sx={{ mb: 3 }}>
-          <Typography variant="body2">
-            {error.includes('404') || error.includes('Not Found') 
-              ? 'Chức năng đánh giá đang được phát triển. Vui lòng quay lại sau!'
-              : `Lỗi khi tải đánh giá: ${error}`
-            }
-          </Typography>
-        </Alert>
-      )}
-
-      {/* User's Own Review (if exists) */}
-      {userReview && (
-        <Card sx={{ mb: 2, boxShadow: 3, borderRadius: 2, border: '2px solid #1976d2', bgcolor: '#e3f2fd' }}>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-              <Avatar sx={{ bgcolor: '#1976d2', mr: 2, width: 48, height: 48, fontSize: '1.5rem' }}>
-                {userReview.userName ? userReview.userName[0].toUpperCase() : '?'}
-              </Avatar>
-              <Box sx={{ flexGrow: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-                    Đánh giá của bạn
-                  </Typography>
-                  <Chip 
-                    icon={<Star sx={{ fontSize: 16 }} />}
-                    label={`${userReview.rating}`}
-                    size="small"
-                    sx={{
-                      bgcolor: '#ffeb3b',
-                      color: '#333',
-                      fontWeight: 'bold',
-                      px: 1,
-                    }}
-                  />
-                </Box>
-                <Rating value={userReview.rating} readOnly size="small" sx={{ mb: 1 }} />
-                <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.6, color: '#333' }}>
-                  {userReview.comment}
+          {/* Rating Distribution */}
+          <Box sx={{ flex: 1, minWidth: 300 }}>
+            {[5, 4, 3, 2, 1].map((star) => (
+              <Box key={star} sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    minWidth: 60,
+                    fontFamily: "'Roboto Mono', monospace",
+                    color: '#ffffff',
+                  }}
+                >
+                  {star} Stars
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {new Date(userReview.createdAt).toLocaleDateString('vi-VN', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                  {userReview.hasPurchased && (
-                    <Chip
-                      icon={<CheckCircle />}
-                      label="Đã xác minh mua hàng"
-                      size="small"
-                      color="success"
-                      sx={{ ml: 1, height: 20, fontSize: '0.75rem' }}
-                    />
-                  )}
-                  {!userReview.isApproved && (
-                    <Chip
-                      label="Đang chờ duyệt"
-                      size="small"
-                      color="info"
-                      sx={{ ml: 1, height: 20, fontSize: '0.75rem' }}
-                    />
-                  )}
+                <LinearProgress
+                  variant="determinate"
+                  value={totalReviews > 0 ? (ratingDistribution[star] / totalReviews) * 100 : 0}
+                  sx={{
+                    flex: 1,
+                    height: 8,
+                    borderRadius: 1,
+                    bgcolor: 'rgba(255,255,255,0.2)',
+                    '& .MuiLinearProgress-bar': {
+                      bgcolor: '#ffffff',
+                      borderRadius: 1,
+                    },
+                  }}
+                />
+                <Typography
+                  variant="body2"
+                  sx={{
+                    minWidth: 30,
+                    fontFamily: "'Roboto Mono', monospace",
+                    color: '#ffffff',
+                  }}
+                >
+                  {ratingDistribution[star]}
                 </Typography>
               </Box>
+            ))}
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Review Form Section */}
+      {!hasReviewed && token && (
+        <Box sx={{ p: 4, borderBottom: '1px solid #e0e0e0' }}>
+          <Button
+            onClick={() => setShowForm(!showForm)}
+            variant="outlined"
+            startIcon={<RateReview />}
+            sx={{
+              borderColor: '#000000',
+              color: '#000000',
+              borderWidth: 2,
+              fontFamily: "'Roboto Mono', monospace",
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              '&:hover': {
+                borderWidth: 2,
+                borderColor: '#000000',
+                bgcolor: 'rgba(0, 0, 0, 0.05)',
+              },
+            }}
+          >
+            {showForm ? 'Cancel Review' : 'Write a Review'}
+          </Button>
+
+          <Fade in={showForm}>
+            <Box sx={{ mt: 3, display: showForm ? 'block' : 'none' }}>
+              <Paper
+                sx={{
+                  p: 3,
+                  border: '2px solid #000000',
+                  borderRadius: 2,
+                  background: 'linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%)',
+                }}
+              >
+                <Typography
+                  variant="h6"
+                  sx={{
+                    mb: 2,
+                    fontFamily: "'Roboto Mono', monospace",
+                    fontWeight: 'bold',
+                    color: '#000000',
+                  }}
+                >
+                  Share Your Experience
+                </Typography>
+                <Box component="form" onSubmit={handleSubmitReview}>
+                  <Box sx={{ mb: 3 }}>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        mb: 1,
+                        fontFamily: "'Roboto Mono', monospace",
+                        fontWeight: 'bold',
+                        color: '#000000',
+                      }}
+                    >
+                      Rating:
+                    </Typography>
+                    <Rating
+                      value={rating}
+                      onChange={(event, newValue) => setRating(newValue)}
+                      size="large"
+                      sx={{
+                        color: '#000000',
+                        '& .MuiRating-iconFilled': {
+                          color: '#000000',
+                        },
+                      }}
+                    />
+                  </Box>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={4}
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="Write your review here..."
+                    variant="outlined"
+                    sx={{
+                      mb: 3,
+                      '& .MuiOutlinedInput-root': {
+                        borderColor: '#000000',
+                        '&:hover fieldset': {
+                          borderColor: '#000000',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#000000',
+                        },
+                      },
+                    }}
+                  />
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    startIcon={<Send />}
+                    sx={{
+                      bgcolor: '#000000',
+                      color: '#ffffff',
+                      fontFamily: "'Roboto Mono', monospace",
+                      fontWeight: 'bold',
+                      textTransform: 'uppercase',
+                      '&:hover': {
+                        bgcolor: '#333333',
+                      },
+                    }}
+                  >
+                    Submit Review
+                  </Button>
+                </Box>
+              </Paper>
             </Box>
-          </CardContent>
-        </Card>
+          </Fade>
+        </Box>
       )}
 
       {/* Reviews List */}
-      {!loading && !error && (
-        <Box sx={{ mb: 4 }}>
-          {safeReviews.length > 0 ? (
-            <Box>
-              {safeReviews.map((review, index) => (
-                <Card key={review.id} sx={{ mb: 2, boxShadow: 2, borderRadius: 2, transition: 'all 0.3s ease', '&:hover': { boxShadow: 4 } }}>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-                      <Avatar sx={{ bgcolor: '#d32f2f', mr: 2, width: 48, height: 48, fontSize: '1.5rem' }}>
-                        {review.userName ? review.userName[0].toUpperCase() : '?'}
-                      </Avatar>
-                      <Box sx={{ flexGrow: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#333' }}>
-                            {review.userName}
-                          </Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Chip 
-                              icon={<Star sx={{ fontSize: 16 }} />}
-                              label={`${review.rating}`}
-                              size="small"
-                              sx={{
-                                bgcolor: '#ffeb3b',
-                                color: '#333',
-                                fontWeight: 'bold',
-                                px: 1,
-                              }}
-                            />
-                            {review.hasPurchased && (
-                              <Chip
-                                icon={<CheckCircle />}
-                                label="Đã xác minh mua hàng"
-                                size="small"
-                                color="success"
-                                sx={{ height: 20, fontSize: '0.75rem' }}
-                              />
-                            )}
-                          </Box>
-                        </Box>
-                        <Rating value={review.rating} readOnly size="small" sx={{ mb: 1 }} />
-                        <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.6, color: '#555' }}>
-                          {review.comment}
+      <Box sx={{ p: 4 }}>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress sx={{ color: '#000000' }} />
+          </Box>
+        ) : error ? (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        ) : safeReviews.length === 0 ? (
+          <Paper
+            sx={{
+              p: 4,
+              textAlign: 'center',
+              border: '2px dashed #e0e0e0',
+              borderRadius: 2,
+            }}
+          >
+            <RateReview sx={{ fontSize: 48, color: '#cccccc', mb: 2 }} />
+            <Typography
+              variant="h6"
+              sx={{
+                color: '#666666',
+                fontFamily: "'Roboto Mono', monospace",
+              }}
+            >
+              No reviews yet. Be the first to review!
+            </Typography>
+          </Paper>
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {safeReviews.map((review, index) => (
+              <Card
+                key={review.id || index}
+                sx={{
+                  border: '1px solid #e0e0e0',
+                  borderRadius: 2,
+                  background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+                  '&:hover': {
+                    borderColor: '#000000',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+                  },
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 3 }}>
+                    <Avatar
+                      sx={{
+                        bgcolor: '#000000',
+                        color: '#ffffff',
+                        width: 50,
+                        height: 50,
+                        fontFamily: "'Roboto Mono', monospace",
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {review.userName?.charAt(0)?.toUpperCase() || 'U'}
+                    </Avatar>
+                    <Box sx={{ flex: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontFamily: "'Roboto Mono', monospace",
+                            fontWeight: 'bold',
+                            color: '#000000',
+                          }}
+                        >
+                          {review.userName || 'Anonymous User'}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {new Date(review.createdAt).toLocaleDateString('vi-VN', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
+                        <Chip
+                          icon={<CheckCircle />}
+                          label="Verified"
+                          size="small"
+                          sx={{
+                            bgcolor: '#000000',
+                            color: '#ffffff',
+                            fontFamily: "'Roboto Mono', monospace",
+                            fontSize: '0.75rem',
+                          }}
+                        />
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                        <Rating
+                          value={review.rating}
+                          readOnly
+                          size="small"
+                          sx={{
+                            color: '#000000',
+                          }}
+                        />
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: '#666666',
+                            fontFamily: "'Roboto Mono', monospace",
+                          }}
+                        >
+                          {new Date(review.createdAt).toLocaleDateString()}
                         </Typography>
                       </Box>
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          color: '#333333',
+                          lineHeight: 1.6,
+                          fontFamily: "'Roboto', sans-serif",
+                        }}
+                      >
+                        {review.comment}
+                      </Typography>
                     </Box>
-                  </CardContent>
-                </Card>
-              ))}
-            </Box>
-          ) : (
-            <Card sx={{ textAlign: 'center', py: 6, boxShadow: 2, borderRadius: 2 }}>
-              <CardContent>
-                <RateReview sx={{ fontSize: 60, color: '#bdbdbd', mb: 2 }} />
-                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
-                  {error ? 'Không thể tải đánh giá' : 'Chưa có đánh giá nào'}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {error 
-                    ? 'Hệ thống đang bảo trì, vui lòng thử lại sau'
-                    : 'Hãy là người đầu tiên đánh giá sản phẩm này'
-                  }
-                </Typography>
-              </CardContent>
-            </Card>
-          )}
-        </Box>
-      )}
+                  </Box>
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
+        )}
+      </Box>
 
+      {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={4000}
+        autoHideDuration={6000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        TransitionProps={{ appear: true }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert 
-          severity={snackbar.severity} 
-          variant="filled" 
-          sx={{ width: '100%', fontWeight: 500, fontSize: '1rem', display: 'flex', alignItems: 'center' }}
-          iconMapping={{
-            success: <CheckCircle fontSize="inherit" sx={{ color: '#43a047' }} />,
-            error: <Close fontSize="inherit" sx={{ color: '#d32f2f' }} />,
-            warning: <RateReview fontSize="inherit" sx={{ color: '#ffa726' }} />,
-            info: <Person fontSize="inherit" sx={{ color: '#1976d2' }} />,
-          }}
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          variant="filled"
         >
           {snackbar.message}
         </Alert>
       </Snackbar>
-
-      {/* Add Review Button */}
-      {!hasReviewed && currentUserId && !error && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-          <Button
-            variant="contained"
-            size="large"
-            startIcon={showForm ? <Close /> : <RateReview />}
-            onClick={() => setShowForm(!showForm)}
-            sx={{
-              borderRadius: 3,
-              px: 4,
-              py: 1.5,
-              textTransform: 'none',
-              fontSize: '1rem',
-              boxShadow: 3,
-              bgcolor: '#d32f2f',
-              position: 'relative',
-              zIndex: 2,
-              transition: 'all 0.2s',
-              '&:hover': { boxShadow: 5, bgcolor: '#b71c1c' }
-            }}
-            title={showForm ? "Đóng form đánh giá" : "Viết đánh giá về sản phẩm này"}
-          >
-            {showForm ? "Đóng form đánh giá" : "Viết đánh giá"}
-          </Button>
-        </Box>
-      )}
-
-      {/* Review Form */}
-      {showForm && (
-        <Card sx={{ mb: 3, boxShadow: 3, borderRadius: 2, animation: 'fadeInUp 0.3s' }}>
-          <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
-            <Typography variant="h6" sx={{ mb: 3, textAlign: 'center', color: '#d32f2f', fontWeight: 'bold' }}>
-              Chia sẻ đánh giá của bạn
-            </Typography>
-            <Box component="form" onSubmit={handleSubmitReview} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography component="legend" sx={{ mb: 1, fontWeight: 'medium', color: '#555' }}>
-                  Đánh giá của bạn:
-                </Typography>
-                <Rating
-                  value={rating}
-                  onChange={(event, newValue) => setRating(newValue || 1)}
-                  size="large"
-                  sx={{ fontSize: { xs: '2rem', sm: '2.5rem' }, color: '#ffeb3b' }}
-                />
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  {rating === 5 && "Tuyệt vời! 🌟"}
-                  {rating === 4 && "Rất tốt! 👍"}
-                  {rating === 3 && "Bình thường 😐"}
-                  {rating === 2 && "Không tốt 👎"}
-                  {rating === 1 && "Rất tệ 😞"}
-                </Typography>
-              </Box>
-              <TextField
-                fullWidth
-                multiline
-                rows={4}
-                variant="outlined"
-                label="Nhận xét của bạn"
-                placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                required
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                  },
-                }}
-              />
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-                <Button
-                  type="button"
-                  variant="outlined"
-                  size="large"
-                  onClick={() => setShowForm(false)}
-                  sx={{ px: 4, borderRadius: 2, borderColor: '#d32f2f', color: '#d32f2f', '&:hover': { borderColor: '#b71c1c', bgcolor: 'rgba(211, 47, 47, 0.04)' } }}
-                  title="Hủy đánh giá"
-                >
-                  Hủy
-                </Button>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  size="large"
-                  startIcon={<Send />}
-                  sx={{
-                    px: 4,
-                    borderRadius: 2,
-                    boxShadow: 3,
-                    bgcolor: '#d32f2f',
-                    position: 'relative',
-                    '&:hover': { boxShadow: 5, bgcolor: '#b71c1c' }
-                  }}
-                  title="Gửi đánh giá"
-                  disabled={snackbar.severity === 'success' && snackbar.open}
-                >
-                  Gửi đánh giá
-                </Button>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Hiệu ứng chuyển động cho form đánh giá */}
-      <style>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
-
-      {/* Login prompt for non-logged in users */}
-      {!currentUserId && (
-        <Card sx={{ textAlign: 'center', bgcolor: '#f5f5f5', borderRadius: 2, boxShadow: 1 }}>
-          <CardContent sx={{ py: 3 }}>
-            <Typography variant="body1" color="text.secondary">
-              Đăng nhập để có thể đánh giá và bình luận sản phẩm
-            </Typography>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Already reviewed message */}
-      {hasReviewed && !userReview && (
-        <Alert severity="info" sx={{ textAlign: 'center', borderRadius: 2, boxShadow: 1 }}>
-          Bạn đã đánh giá sản phẩm này rồi. Cảm ơn phản hồi của bạn!
-        </Alert>
-      )}
     </Box>
   );
 };

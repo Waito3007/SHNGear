@@ -29,9 +29,19 @@ const ProductImage = ({ images, name }) => {
     <Box
       sx={{
         position: "relative",
+        background: "linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%)",
+        borderRadius: 3,
+        padding: 2,
+        border: "1px solid #e0e0e0",
+        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.08)",
         "&:hover .image-controls": {
           opacity: 1,
         },
+        "&:hover": {
+          transform: "translateY(-2px)",
+          boxShadow: "0 12px 40px rgba(0, 0, 0, 0.12)",
+        },
+        transition: "all 0.3s ease",
       }}
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(false)}
@@ -40,11 +50,23 @@ const ProductImage = ({ images, name }) => {
       <Paper
         elevation={0}
         sx={{
-          borderRadius: 3,
+          borderRadius: 2,
           overflow: "hidden",
-          bgcolor: "white",
+          bgcolor: "#ffffff",
           position: "relative",
-          border: "1px solid #e0e0e0", // Subtle border
+          border: "2px solid #000000",
+          background: "linear-gradient(145deg, #ffffff 0%, #f5f5f5 100%)",
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)",
+            zIndex: 1,
+            pointerEvents: "none",
+          }
         }}
       >
         <Swiper
@@ -60,15 +82,27 @@ const ProductImage = ({ images, name }) => {
           className="product-main-slider"
         >
           {images.map((image, index) => (
-            <SwiperSlide key={index}>
-              <Box
-                sx={{
-                  position: "relative",
-                  paddingTop: "100%",
-                  cursor: "zoom-in",
-                  bgcolor: "#f8f8f8",
-                }}
-              >
+            <SwiperSlide key={index}>                <Box
+                  sx={{
+                    position: "relative",
+                    paddingTop: "100%",
+                    cursor: "zoom-in",
+                    bgcolor: "#ffffff",
+                    border: "1px solid #000000",
+                    borderRadius: 1,
+                    overflow: "hidden",
+                    "&::after": {
+                      content: '""',
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: "radial-gradient(circle at center, transparent 60%, rgba(0,0,0,0.02) 100%)",
+                      zIndex: 1,
+                    }
+                  }}
+                >
                 <Fade in timeout={500}>
                   <Box
                     component="img"
@@ -85,11 +119,14 @@ const ProductImage = ({ images, name }) => {
                       width: "100%",
                       height: "100%",
                       objectFit: "contain",
-                      padding: 2,
-                      transition: "transform 0.3s ease",
+                      padding: 3,
+                      transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                      filter: "contrast(1.1) brightness(1.02)",
                       "&:hover": {
-                        transform: "scale(1.05)",
+                        transform: "scale(1.03)",
+                        filter: "contrast(1.15) brightness(1.05)",
                       },
+                      zIndex: 2,
                     }}
                     onError={(e) => {
                       e.target.onerror = null;

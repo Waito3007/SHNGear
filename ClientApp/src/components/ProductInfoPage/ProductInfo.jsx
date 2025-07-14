@@ -7,24 +7,55 @@ const ProductInfo = ({ product }) => {
     <Paper
       elevation={0}
       sx={{
-        bgcolor: "white",
-        borderRadius: 3,
+        bgcolor: "#ffffff",
+        borderRadius: 2,
         overflow: "hidden",
+        border: "2px solid #000000",
+        background: "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
         transition: "all 0.3s ease",
+        position: "relative",
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "4px",
+          background: "linear-gradient(90deg, #000000 0%, #333333 50%, #000000 100%)",
+          zIndex: 1,
+        },
+        "&:hover": {
+          transform: "translateY(-4px)",
+          boxShadow: "0 16px 48px rgba(0, 0, 0, 0.15)",
+        },
       }}
     >
-      {/* Hero Section với Gradient Background */}
+      {/* Hero Section với Tech Style */}
       <Box
         sx={{
-          background: "linear-gradient(135deg, #d32f2f 0%, #f44336 100%)",
+          background: "linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)",
           py: 4,
           px: 3,
           color: "white",
           position: "relative",
           overflow: "hidden",
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: `
+              linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.03) 50%, transparent 70%),
+              radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 0%, transparent 50%)
+            `,
+            zIndex: 1,
+          },
         }}
       >
-        {/* Animated Background Pattern */}
+        {/* Animated Circuit Pattern */}
         <Box
           sx={{
             position: "absolute",
@@ -32,13 +63,28 @@ const ProductInfo = ({ product }) => {
             left: 0,
             right: 0,
             bottom: 0,
-            opacity: 0.1,
-            background:
-              'url(\'data:image/svg+xml,%3Csvg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="%23ffffff" fill-opacity="0.4" fill-rule="evenodd"%3E%3Ccircle cx="3" cy="3" r="3"/%3E%3Ccircle cx="13" cy="13" r="3"/%3E%3C/g%3E%3C/svg%3E\')',
+            opacity: 0.08,
+            background: `
+              repeating-linear-gradient(
+                0deg,
+                transparent 0px,
+                transparent 40px,
+                rgba(255,255,255,0.1) 40px,
+                rgba(255,255,255,0.1) 41px
+              ),
+              repeating-linear-gradient(
+                90deg,
+                transparent 0px,
+                transparent 40px,
+                rgba(255,255,255,0.1) 40px,
+                rgba(255,255,255,0.1) 41px
+              )
+            `,
+            zIndex: 1,
           }}
         />
 
-        {/* Product Name với Typography Hierarchy */}
+        {/* Product Name với Modern Typography */}
         <Typography
           variant="h3"
           component="h1"
@@ -46,16 +92,27 @@ const ProductInfo = ({ product }) => {
             fontWeight: 800,
             mb: 2,
             position: "relative",
-            textShadow: "2px 2px 4px rgba(0,0,0,0.2)",
+            zIndex: 2,
+            textShadow: "2px 2px 8px rgba(0,0,0,0.5)",
+            fontFamily: "'Roboto Mono', monospace",
+            letterSpacing: "0.5px",
             "&::after": {
               content: '""',
               position: "absolute",
               bottom: -8,
               left: 0,
-              width: 60,
-              height: 4,
-              bgcolor: "white",
+              width: 80,
+              height: 3,
+              bgcolor: "#ffffff",
               borderRadius: 2,
+              boxShadow: "0 0 10px rgba(255,255,255,0.5)",
+            },
+            "&::before": {
+              content: '"> "',
+              color: "#ffffff",
+              opacity: 0.7,
+              marginRight: 1,
+              fontFamily: "'Courier New', monospace",
             },
           }}
         >
@@ -70,26 +127,60 @@ const ProductInfo = ({ product }) => {
             justifyContent: "space-between",
             mt: 2,
             mb: 3,
+            position: "relative",
+            zIndex: 2,
           }}
         >
-          <Typography
-            variant="h4"
+          <Box
             sx={{
-              fontWeight: 700,
-              color: "#FFEB3B", // A vibrant yellow for price
-              textShadow: "1px 1px 3px rgba(0,0,0,0.3)",
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+              bgcolor: "rgba(255,255,255,0.1)",
+              borderRadius: 2,
+              p: 2,
+              border: "1px solid rgba(255,255,255,0.2)",
+              backdropFilter: "blur(10px)",
             }}
           >
-            {product?.price?.toLocaleString("vi-VN")} VNĐ
-          </Typography>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: "#ffffff",
+                textShadow: "1px 1px 3px rgba(0,0,0,0.5)",
+                fontFamily: "'Roboto Mono', monospace",
+                letterSpacing: "0.5px",
+              }}
+            >
+              {product?.price?.toLocaleString("vi-VN")} VNĐ
+            </Typography>
+          </Box>
+          <Box 
+            sx={{ 
+              display: "flex", 
+              alignItems: "center",
+              bgcolor: "rgba(255,255,255,0.1)",
+              borderRadius: 2,
+              p: 1.5,
+              border: "1px solid rgba(255,255,255,0.2)",
+            }}
+          >
             <Rating
               value={product?.averageRating || 0}
               precision={0.5}
               readOnly
-              sx={{ color: "#FFEB3B" }}
+              sx={{ 
+                color: "#ffffff",
+                "& .MuiRating-iconFilled": {
+                  color: "#ffffff",
+                },
+                "& .MuiRating-iconEmpty": {
+                  color: "rgba(255,255,255,0.3)",
+                },
+              }}
             />
-            <Typography variant="caption" sx={{ color: "white", ml: 1 }}>
+            <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.8)", ml: 1 }}>
               ({product?.reviewCount || 0} đánh giá)
             </Typography>
           </Box>
@@ -103,17 +194,25 @@ const ProductInfo = ({ product }) => {
             gap: 2,
             mt: 3,
             position: "relative",
+            zIndex: 2,
           }}
         >
           <Box
             sx={{
-              bgcolor: "white",
-              p: 1.5,
+              bgcolor: "rgba(255,255,255,0.95)",
+              p: 2,
               borderRadius: 2,
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+              border: "1px solid rgba(255,255,255,0.1)",
               display: "flex",
               alignItems: "center",
               gap: 2,
+              backdropFilter: "blur(10px)",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                transform: "translateY(-2px)",
+                boxShadow: "0 12px 40px rgba(0,0,0,0.3)",
+              },
             }}
           >
             {product?.brand?.logo && (
@@ -126,13 +225,14 @@ const ProductInfo = ({ product }) => {
                 }
                 alt={product?.brand?.name || "Brand Logo"}
                 sx={{
-                  width: 40,
-                  height: 40,
+                  width: 50,
+                  height: 50,
                   objectFit: "contain",
+                  filter: "contrast(1.1)",
                 }}
                 onError={(e) => {
                   e.target.onerror = null;
-                  e.target.src = "https://via.placeholder.com/40?text=No+Logo";
+                  e.target.src = "https://via.placeholder.com/50?text=No+Logo";
                 }}
               />
             )}
@@ -140,17 +240,20 @@ const ProductInfo = ({ product }) => {
               <Typography
                 variant="overline"
                 sx={{
-                  color: "text.secondary",
+                  color: "#666666",
                   letterSpacing: 2,
+                  fontWeight: 600,
+                  fontFamily: "'Roboto Mono', monospace",
                 }}
               >
-                Thương hiệu
+                BRAND
               </Typography>
               <Typography
                 variant="subtitle1"
                 sx={{
                   fontWeight: 700,
-                  color: "text.primary",
+                  color: "#000000",
+                  fontFamily: "'Roboto Mono', monospace",
                 }}
               >
                 {product?.brand?.name}
@@ -160,93 +263,141 @@ const ProductInfo = ({ product }) => {
 
           {/* Stock Status */}
           <Box sx={{ ml: "auto" }}>
-            <Typography
-              variant="subtitle1"
+            <Box
               sx={{
+                bgcolor: product?.stock > 0 ? "rgba(76, 175, 80, 0.9)" : "rgba(244, 67, 54, 0.9)",
+                color: "#ffffff",
+                p: 1.5,
+                borderRadius: 2,
+                border: `2px solid ${product?.stock > 0 ? "#4CAF50" : "#F44336"}`,
+                boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
+                backdropFilter: "blur(5px)",
+                fontFamily: "'Roboto Mono', monospace",
                 fontWeight: 700,
-                color: product?.stock > 0 ? "#4CAF50" : "#F44336", // Green for in stock, Red for out of stock
-                bgcolor: "white",
-                p: 1,
-                borderRadius: 1,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                textTransform: "uppercase",
+                letterSpacing: "1px",
               }}
             >
-              {product?.stock > 0 ? "Còn hàng" : "Hết hàng"}
-            </Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                {product?.stock > 0 ? "IN STOCK" : "OUT OF STOCK"}
+              </Typography>
+            </Box>
           </Box>
         </Box>
       </Box>
 
       {/* Main Content Section */}
-      <Box sx={{ p: 3 }}>
-        {/* Benefits Grid */}
+      <Box sx={{ p: 3, position: "relative", zIndex: 2 }}>
+        {/* Benefits Grid with Tech Style */}
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-            gap: 2,
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: 3,
             mb: 4,
           }}
         >
           {[
             {
               icon: Shield,
-              label: "Chính hãng",
-              desc: "100% sản phẩm chính hãng",
+              label: "100% Authentic",
+              desc: "Certified original products",
             },
             {
               icon: Award,
-              label: "Bảo hành 24 tháng",
-              desc: "Hỗ trợ đổi trả miễn phí",
+              label: "24-Month Warranty",
+              desc: "Comprehensive protection plan",
             },
             {
               icon: Truck,
-              label: "Giao hàng trong 2h",
-              desc: "Với đơn hàng nội thành",
+              label: "2-Hour Delivery",
+              desc: "Express shipping available",
             },
             {
               icon: Gift,
-              label: "Quà tặng hấp dẫn",
-              desc: "Nhiều phần quà giá trị",
+              label: "Premium Gifts",
+              desc: "Exclusive bonus items",
             },
           ].map((item, index) => (
             <Paper
               key={index}
               elevation={0}
               sx={{
-                p: 2,
+                p: 3,
                 borderRadius: 2,
-                border: "1px solid",
-                borderColor: "divider",
+                border: "2px solid #000000",
                 display: "flex",
                 alignItems: "center",
-                gap: 2,
+                gap: 3,
                 transition: "all 0.3s ease",
+                background: "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
+                position: "relative",
+                overflow: "hidden",
+                "&::before": {
+                  content: '""',
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "4px",
+                  height: "100%",
+                  bgcolor: "#000000",
+                  transition: "all 0.3s ease",
+                },
                 "&:hover": {
-                  transform: "translateY(-2px)",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  transform: "translateY(-4px) translateX(4px)",
+                  boxShadow: "0 12px 32px rgba(0,0,0,0.15)",
+                  "&::before": {
+                    width: "8px",
+                    bgcolor: "#333333",
+                  },
                 },
               }}
             >
               <Box
                 sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 2,
-                  bgcolor: "primary.main",
+                  width: 50,
+                  height: 50,
+                  borderRadius: 1,
+                  bgcolor: "#000000",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   color: "white",
+                  border: "2px solid #333333",
+                  position: "relative",
+                  "&::after": {
+                    content: '""',
+                    position: "absolute",
+                    top: -2,
+                    left: -2,
+                    right: -2,
+                    bottom: -2,
+                    border: "1px solid rgba(0,0,0,0.1)",
+                    borderRadius: 1,
+                  },
                 }}
               >
                 <item.icon size={24} />
               </Box>
               <Box>
-                <Typography variant="subtitle2" fontWeight="bold">
+                <Typography 
+                  variant="subtitle1" 
+                  fontWeight="bold"
+                  sx={{
+                    color: "#000000",
+                    fontFamily: "'Roboto Mono', monospace",
+                    letterSpacing: "0.5px",
+                  }}
+                >
                   {item.label}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary"
+                  sx={{
+                    fontFamily: "'Roboto', sans-serif",
+                  }}
+                >
                   {item.desc}
                 </Typography>
               </Box>
@@ -254,57 +405,88 @@ const ProductInfo = ({ product }) => {
           ))}
         </Box>
 
-        <Divider sx={{ my: 3 }} />
+        <Divider 
+          sx={{ 
+            my: 4,
+            borderColor: "#000000",
+            borderWidth: "1px",
+            "&::before, &::after": {
+              borderColor: "#000000",
+            },
+          }} 
+        />
 
         {/* Product Description */}
         <Paper
           elevation={0}
           sx={{
             position: "relative",
-            p: 3,
+            p: 4,
             borderRadius: 2,
-            bgcolor: "#f8f9fa",
-            border: "1px solid",
-            borderColor: "divider",
+            bgcolor: "#ffffff",
+            border: "2px solid #000000",
+            background: "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
+            overflow: "hidden",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "3px",
+              background: "linear-gradient(90deg, #000000 0%, #333333 50%, #000000 100%)",
+            },
           }}
         >
           <Typography
-            variant="h6"
+            variant="h5"
             sx={{
               mb: 3,
-              fontWeight: 600,
+              fontWeight: 700,
               display: "flex",
               alignItems: "center",
-              gap: 1,
-              color: "#1a1a1a",
+              gap: 2,
+              color: "#000000",
               position: "relative",
+              fontFamily: "'Roboto Mono', monospace",
+              letterSpacing: "1px",
+              textTransform: "uppercase",
               "&::before": {
+                content: '"# "',
+                color: "#000000",
+                fontWeight: 900,
+                fontSize: "1.2em",
+              },
+              "&::after": {
                 content: '""',
-                width: 4,
-                height: 24,
-                bgcolor: "primary.main",
-                borderRadius: 1,
+                flex: 1,
+                height: "2px",
+                bgcolor: "#000000",
+                marginLeft: 2,
               },
             }}
           >
-            Mô tả sản phẩm
+            Product Description
           </Typography>
           <Typography
             variant="body1"
             sx={{
-              color: "#2c3e50",
+              color: "#1a1a1a",
               lineHeight: 2,
               textAlign: "justify",
               letterSpacing: "0.3px",
-              maxHeight: 300,
+              maxHeight: 400,
               overflowY: "auto",
               pr: 2,
+              fontFamily: "'Roboto', sans-serif",
+              fontSize: "1rem",
               "& strong": {
-                color: "#1a1a1a",
+                color: "#000000",
                 fontWeight: 700,
-                backgroundColor: "rgba(211, 47, 47, 0.1)",
-                padding: "0 4px",
+                backgroundColor: "rgba(0, 0, 0, 0.05)",
+                padding: "2px 6px",
                 borderRadius: 1,
+                border: "1px solid rgba(0, 0, 0, 0.1)",
               },
               "&::-webkit-scrollbar": {
                 width: "8px",
@@ -312,12 +494,14 @@ const ProductInfo = ({ product }) => {
               "&::-webkit-scrollbar-track": {
                 background: "#f1f1f1",
                 borderRadius: "4px",
+                border: "1px solid #e0e0e0",
               },
               "&::-webkit-scrollbar-thumb": {
-                background: "#d32f2f",
+                background: "#000000",
                 borderRadius: "4px",
+                border: "1px solid #333333",
                 "&:hover": {
-                  background: "#b71c1c",
+                  background: "#333333",
                 },
               },
             }}
