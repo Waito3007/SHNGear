@@ -583,6 +583,7 @@ namespace SHN_Gear.Controllers
 
             var productDtos = pinnedProducts.Select(p => new ProductDto
             {
+                Id = p.Id,
                 Name = p.Name,
                 Description = p.Description,
                 CategoryId = p.CategoryId,
@@ -594,6 +595,7 @@ namespace SHN_Gear.Controllers
                 }).ToList(),
                 Variants = p.Variants.Select(v => new ProductVariantDto
                 {
+                    Id = v.Id,
                     Color = v.Color,
                     Storage = v.Storage,
                     Price = v.Price,

@@ -45,7 +45,7 @@ import BestSellerSection from '@/components/BestSellers/BestSellers';
 import FlashSale from '@/components/FlashSale/FlashSale';
 import Commitment from '@/components/Commitment/Commitment';
 import BannerSlider from '@/components/Homepage/BannerSlider';
-import BestSellerManager from '@/components/BestSellerManager/BestSellerManager';
+// import BestSellerManager from '@/components/BestSellerManager/BestSellerManager';
 
 // Custom component for section editing (will be refactored in next step)
 const SectionEditor = ({ sectionName, sectionData, onContentChange }) => {
@@ -82,9 +82,10 @@ const SectionEditor = ({ sectionName, sectionData, onContentChange }) => {
             <TextField label="CTA Link" name="cta_link" value={formData.cta_link || ''} onChange={handleInputChange} fullWidth InputProps={inputProps} InputLabelProps={inputLabelProps} />
           </Box>
         );
-      case 'featured_products':
-      case 'best_seller':
-        return <BestSellerManager sectionData={sectionData} onContentChange={onContentChange} />;
+      // case 'featured_products':
+      // case 'best_seller':
+      //   return <BestSellerManager sectionData={sectionData} onContentChange={onContentChange} />;
+
       case 'special_offer':
         const priceOptions = [100000, 500000, 1000000, 2000000];
         return (
@@ -94,7 +95,7 @@ const SectionEditor = ({ sectionName, sectionData, onContentChange }) => {
             <TextField label="CTA Text" name="cta_text" value={formData.cta_text || ''} onChange={handleInputChange} fullWidth InputProps={inputProps} InputLabelProps={inputLabelProps} />
             <TextField label="CTA Link" name="cta_link" value={formData.cta_link || ''} onChange={handleInputChange} fullWidth InputProps={inputProps} InputLabelProps={inputLabelProps} />
             <TextField label="Image URL" name="image_url" value={formData.image_url || ''} onChange={handleInputChange} fullWidth InputProps={inputProps} InputLabelProps={inputLabelProps} />
-            <TextField
+            {/* <TextField
               label="Original Price"
               name="originalPrice"
               value={formData.originalPrice || ''}
@@ -106,8 +107,8 @@ const SectionEditor = ({ sectionName, sectionData, onContentChange }) => {
                 ...inputProps
               }}
               InputLabelProps={inputLabelProps}
-            />
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            /> */}
+            {/* <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               {priceOptions.map(price => (
                 <Button key={price} variant="outlined" onClick={() => onContentChange(sectionName, 'originalPrice', price)} sx={{ borderColor: '#63b3ed', color: '#63b3ed' }}>
                   {price.toLocaleString('vi-VN')}đ
@@ -139,7 +140,7 @@ const SectionEditor = ({ sectionName, sectionData, onContentChange }) => {
               control={<Switch checked={formData.countdown_enabled || false} onChange={handleInputChange} name="countdown_enabled" />}
               label="Countdown Enabled"
               sx={{ color: '#e2e8f0' }}
-            />
+            /> */}
           </Box>
         );
       case 'brand_trust':

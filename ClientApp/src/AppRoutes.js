@@ -23,6 +23,9 @@ import BestSellerAdminPage from "@/pages/Admin/Home/BestSellerAdminPage";
 import BlogPostEditor from "@/components/Admin/blog/BlogPostEditor";
 import BlogList from "@/components/Admin/blog/BlogList";
 import BlogPostDetail from "./components/Admin/blog/BlogPostDetail";
+import PinnedProductKanban from "@/components/Admin/home/PinnedProductKanban";
+import SliderAdminPage from "@/pages/Admin/Home/SliderAdminPage";
+import BannerAdminPage from "@/pages/Admin/Home/BannerAdminPage";
 const AppRoutes = [
 
   {
@@ -132,6 +135,21 @@ const AppRoutes = [
   {
     path: "/admin/homepage-dashboard",
     element: <HomepageOverviewPage />,
+    requiresAdmin: true,
+  },
+  {
+    path: "/admin/pinned-products",
+    element: <PinnedProductKanban />,
+    requiresAdmin: true,
+  },
+  {
+    path: "/admin/sliders",
+    element: <SliderAdminPage />,
+    requiresAdmin: true,
+  },
+  {
+    path: "/admin/banners",
+    element: <BannerAdminPage />,
     requiresAdmin: true,
   },
   {

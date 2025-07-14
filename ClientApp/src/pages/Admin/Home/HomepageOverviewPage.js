@@ -110,6 +110,20 @@ const HomepageOverviewPage = () => {
       href: "/admin/banners",
       color: "#10B981",
     },
+    {
+      title: "Slider Trang chủ",
+      description: "Quản lý các slider hiển thị trên trang chủ.",
+      icon: ImageIcon,
+      href: "/admin/sliders",
+      color: "#F59E42",
+    },
+    {
+      title: "Sản phẩm ghim (Kanban)",
+      description: "Quản lý sản phẩm ghim với giao diện Kanban hiện đại.",
+      icon: LayoutDashboard,
+      href: "/admin/pinned-products",
+      color: "#3B82F6",
+    },
   ];
 
   return (
@@ -246,7 +260,7 @@ const HomepageOverviewPage = () => {
                         {item.title}
                       </Typography>
                     </Box>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="white">
                       {item.description}
                     </Typography>
                   </CardContent>
