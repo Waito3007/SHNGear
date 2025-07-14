@@ -130,18 +130,23 @@ const ProductPage = () => {
               />
             </Box>
           </Grid>
+
           {/* Related Products Section */}
-          {/* <Grid item xs={12}>
-            <Box sx={{ mt: 4 }}>
-              <RelatedProducts
-                productId={product.id}
-                brandId={product.brandId}
-                categoryId={product.categoryId}
-              />
-            </Box>
-          </Grid> */}
+          <Grid item xs={12}>
+            <RelatedProducts 
+              currentProductId={product.id}
+              categoryId={product.categoryId}
+              brandId={product.brandId}
+            />
+          </Grid>
         </Grid>
       </Container>
+
+      {/* Commitment Section */}
+      <Commitment />
+
+      {/* Footer */}
+      <Footer />
     </Box>
   );
 };

@@ -1,204 +1,513 @@
-import React, { useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/navigation";
-import { useProducts } from "@/hooks/api/useProducts";
-import { useBrands } from "@/hooks/api/useBrands";
-import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  CardMedia,
+import { 
+  Box, 
+  Typography, 
+  Card, 
+  CardContent, 
+  CardActionArea,
+  Grid,
+  Rating,
+  Chip,
   Button,
   CircularProgress,
-  Alert,
-  Chip,
-  IconButton,
+  Alert
 } from "@mui/material";
-import { ChevronLeft, ChevronRight } from "@mui/icons-material";
+import { 
+  ShoppingCart, 
+  Visibility, 
+  LocalOffer,
+  TrendingUp
+} from "@mui/icons-material";
 
-const RelatedProducts = ({ productId, brandId, categoryId }) => {
-  const { products: productsArray, loading: loadingProducts, error: errorProducts } = useProducts();
-  const { brands: brandsArray, loading: loadingBrands, error: errorBrands } = useBrands(true);
-  const [error, setError] = React.useState("");
+const RelatedProducts = ({ currentProductId, categoryId, brandId }) => {
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const relatedProducts = useMemo(() => {
-    if (loadingProducts || loadingBrands) return [];
-    if (errorProducts || errorBrands) {
-      setError(errorProducts || errorBrands);
-      return [];
-    }
-    if (!productsArray.length || !brandsArray.length) return [];
+  useEffect(() => {
+    const fetchRelatedProducts = async () => {
+      if (!categoryId) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
 
-    return productsArray
-      .filter(
-        (product) =>
-          product.id !== productId &&
-          (product.brandId === brandId || product.categoryId === categoryId)
-      )
-      .map((product) => {
-        const variant = product.variants?.[0] || {};
-        const image = product.images?.[0]?.imageUrl || "/images/placeholder.jpg";
-        const oldPrice = variant.price || 0;
-        const newPrice = variant.discountPrice || oldPrice;
-        const discountAmount = oldPrice - newPrice;
-        const discount =
-          oldPrice > 0
-            ? `-${Math.round((discountAmount / oldPrice) * 100)}%`
-            : "0%";
+        // Fetch products in the same category
+        const response = await fetch(
+          `${process.env.REACT_APP_API_BASE_URL}/api/Products?categoryId=${categoryId}`
+        );
 
-        const brand = brandsArray.find((b) => b.id === product.brandId);
+        if (!response.ok) {
+          throw new Error("Không thể tải sản phẩm liên quan");
+        }
 
-        return {
+        const data = await response.json();
+        const productsData = data.$values || data || [];
+
+        // Filter out current product and limit to 8 products
+        const filteredProducts = productsData
+          .filter(product => product.id !== currentProductId)
+          .slice(0, 8);
+
+        setRelatedProducts(filteredProducts);
+      } catch (err) {
+        setError(err.message);
+        console.error("Error fetching related products:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRelatedProducts();
+  }, [currentProductId, categoryId]);
+
+  const formatCurrency = (price) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
+  };
+
+  const calculateDiscount = (originalPrice, discountPrice) => {
+    if (!originalPrice || !discountPrice || originalPrice <= discountPrice) return 0;
+    return Math.round(((originalPrice - discountPrice) / originalPrice) * 100);
+  };
+
+  const getProductPrice = (product) => {
+    const variant = product.variants?.[0];
+    if (!variant) return { displayPrice: 0, originalPrice: 0, hasDiscount: false };
+
+    const originalPrice = variant.price || 0;
+    const displayPrice = variant.discountPrice || originalPrice;
+    const hasDiscount = displayPrice < originalPrice;
+
+    return { displayPrice, originalPrice, hasDiscount };
+  };
+
+  const handleAddToCart = async (e, product) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      // Get existing cart from localStorage
+      const existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
+      const priceInfo = getProductPrice(product);
+
+      // Check if product already exists in cart
+      const existingItemIndex = existingCart.findIndex(
+        (item) => item.id === product.id
+      );
+
+      if (existingItemIndex > -1) {
+        // Update quantity if product already exists
+        existingCart[existingItemIndex].quantity += 1;
+      } else {
+        // Add new product to cart
+        const cartItem = {
           id: product.id,
           name: product.name,
-          oldPrice,
-          newPrice,
-          discount,
-          discountAmount,
-          image,
-          features: [
-            variant.storage || "Không xác định",
-            brand?.name || "Không có thương hiệu",
-          ],
+          price: priceInfo.displayPrice,
+          image: product.images?.[0]?.imageUrl || "",
+          brand: product.brand?.name || "",
+          quantity: 1,
+          variant: product.variants?.[0],
         };
-      });
-  }, [productsArray, brandsArray, loadingProducts, loadingBrands, errorProducts, errorBrands, productId, brandId, categoryId]);
+        existingCart.push(cartItem);
+      }
 
-  if (loadingProducts || loadingBrands) {
+      // Save updated cart to localStorage
+      localStorage.setItem("cart", JSON.stringify(existingCart));
+
+      // Dispatch event to update cart count
+      window.dispatchEvent(new Event("cartChanged"));
+
+      // Show success feedback (you can replace with your toast system)
+      console.log(`Đã thêm "${product.name}" vào giỏ hàng!`);
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+    }
+  };
+
+  if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-        <CircularProgress />
+      <Box sx={{ py: 6 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", mb: 4 }}>
+          <CircularProgress sx={{ color: "#000000" }} />
+        </Box>
+        <Typography 
+          variant="h5" 
+          sx={{ 
+            textAlign: "center", 
+            color: "#666666",
+            fontFamily: "'Roboto Mono', monospace"
+          }}
+        >
+          Đang tải sản phẩm liên quan...
+        </Typography>
       </Box>
     );
   }
+
   if (error) {
     return (
-      <Alert severity="error" sx={{ my: 4 }}>
-        {error}
-      </Alert>
+      <Box sx={{ py: 6 }}>
+        <Alert severity="error" sx={{ borderRadius: 2 }}>
+          {error}
+        </Alert>
+      </Box>
     );
   }
 
   if (relatedProducts.length === 0) {
-    return null; // Or a message indicating no related products
+    return (
+      <Box sx={{ py: 6, textAlign: "center" }}>
+        <TrendingUp sx={{ fontSize: 48, color: "#cccccc", mb: 2 }} />
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            color: "#666666",
+            fontFamily: "'Roboto Mono', monospace"
+          }}
+        >
+          Không có sản phẩm liên quan nào
+        </Typography>
+      </Box>
+    );
   }
 
   return (
-    <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 3 }}>
-      <Box sx={{ maxWidth: 1200, width: '100%', px: 2, bgcolor: 'white', borderRadius: 2, boxShadow: 3, p: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3, color: '#333' }}>
-          Sản phẩm liên quan
-        </Typography>
-        <Box sx={{ position: 'relative' }}>
-          <Swiper
-            modules={[Navigation]}
-            navigation={{
-              prevEl: '.swiper-button-prev-related',
-              nextEl: '.swiper-button-next-related',
+    <Box
+      sx={{
+        bgcolor: "#ffffff",
+        borderRadius: 2,
+        border: "2px solid #000000",
+        background: "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
+        overflow: "hidden",
+        position: "relative",
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "4px",
+          background:
+            "linear-gradient(90deg, #000000 0%, #333333 50%, #000000 100%)",
+          zIndex: 1,
+        },
+        "&:hover": {
+          transform: "translateY(-2px)",
+          boxShadow: "0 16px 48px rgba(0, 0, 0, 0.12)",
+        },
+        transition: "all 0.3s ease",
+      }}
+    >
+      {/* Header Section */}
+      <Box
+        sx={{
+          p: 4,
+          background: "linear-gradient(135deg, #000000 0%, #1a1a1a 100%)",
+          color: "#ffffff",
+          position: "relative",
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: "1px",
+            background:
+              "linear-gradient(90deg, transparent 0%, #ffffff 50%, transparent 100%)",
+          },
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+          <Box
+            sx={{
+              width: 6,
+              height: 40,
+              bgcolor: "#ffffff",
+              borderRadius: 1,
             }}
-            spaceBetween={20}
-            slidesPerView={1}
-            breakpoints={{
-              640: { slidesPerView: 2 },
-              768: { slidesPerView: 3 },
-              1024: { slidesPerView: 4 },
+          />
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 800,
+              fontFamily: "'Roboto Mono', monospace",
+              textTransform: "uppercase",
+              letterSpacing: "2px",
+              color: "#ffffff",
             }}
-            className="pb-6"
           >
-            {relatedProducts.map((product) => (
-              <SwiperSlide key={product.id}>
+            Sản Phẩm Liên Quan
+          </Typography>
+        </Box>
+        <Typography
+          variant="body1"
+          sx={{
+            color: "rgba(255,255,255,0.8)",
+            fontFamily: "'Roboto', sans-serif",
+            ml: 3.5,
+          }}
+        >
+          Khám phá thêm những sản phẩm tương tự trong cùng danh mục
+        </Typography>
+      </Box>
+
+      {/* Products Grid */}
+      <Box sx={{ p: 4 }}>
+        <Grid container spacing={3}>
+          {relatedProducts.map((product) => {
+            const priceInfo = getProductPrice(product);
+            const discountPercentage = calculateDiscount(
+              priceInfo.originalPrice,
+              priceInfo.displayPrice
+            );
+
+            return (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
                 <Card
                   sx={{
-                    maxWidth: 280,
-                    mx: 'auto',
+                    height: "100%",
+                    border: "1px solid #e0e0e0",
                     borderRadius: 2,
-                    boxShadow: 2,
-                    transition: 'all 0.3s ease',
-                    '&:hover': { boxShadow: 6, transform: 'translateY(-5px)' },
-                    cursor: 'pointer',
+                    background: "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
+                    transition: "all 0.3s ease",
+                    cursor: "pointer",
+                    "&:hover": {
+                      borderColor: "#000000",
+                      transform: "translateY(-4px)",
+                      boxShadow: "0 12px 28px rgba(0,0,0,0.15)",
+                    },
                   }}
-                  onClick={() => navigate(`/product/${product.id}`)}
                 >
-                  <CardMedia
-                    component="img"
-                    height="180"
-                    image={
-                      product.image?.startsWith("http")
-                        ? product.image
-                        : `${process.env.REACT_APP_API_BASE_URL}/${product.image}`
-                    }
-                    alt={product.name}
-                    sx={{ objectFit: 'contain', p: 2 }}
-                    onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/180"; }}
-                  />
-                  <CardContent sx={{ p: 2 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1, minHeight: 50 }}>
-                      {product.name}
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ textDecoration: 'line-through' }}>
-                        {product.oldPrice.toLocaleString('vi-VN')} đ
-                      </Typography>
-                      {product.discount !== "0%" && (
-                        <Chip label={product.discount} color="error" size="small" sx={{ fontWeight: 'bold' }} />
+                  <CardActionArea
+                    onClick={() => navigate(`/product/${product.id}`)}
+                    sx={{ height: "100%" }}
+                  >
+                    <Box sx={{ position: "relative" }}>
+                      {/* Discount Badge */}
+                      {priceInfo.hasDiscount && discountPercentage > 0 && (
+                        <Chip
+                          icon={<LocalOffer />}
+                          label={`-${discountPercentage}%`}
+                          sx={{
+                            position: "absolute",
+                            top: 12,
+                            left: 12,
+                            zIndex: 2,
+                            bgcolor: "#000000",
+                            color: "#ffffff",
+                            fontWeight: "bold",
+                            "& .MuiChip-icon": {
+                              color: "#ffffff",
+                            },
+                          }}
+                        />
                       )}
+
+                      {/* Product Image */}
+                      <Box
+                        sx={{
+                          height: 200,
+                          bgcolor: "#f5f5f5",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          overflow: "hidden",
+                          borderRadius: "8px 8px 0 0",
+                          position: "relative",
+                        }}
+                      >
+                        <img
+                          src={
+                            product.images?.[0]?.imageUrl?.startsWith("http")
+                              ? product.images[0].imageUrl
+                              : `${process.env.REACT_APP_API_BASE_URL}/${product.images?.[0]?.imageUrl || ""}`
+                          }
+                          alt={product.name}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "contain",
+                            objectPosition: "center",
+                            padding: "8px",
+                            transition: "transform 0.3s ease",
+                          }}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "https://via.placeholder.com/200x200/f5f5f5/666666?text=No+Image";
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.transform = "scale(1.05)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.transform = "scale(1)";
+                          }}
+                        />
+                      </Box>
                     </Box>
-                    <Typography variant="h6" color="primary.main" sx={{ fontWeight: 'bold', mb: 1 }}>
-                      {product.newPrice.toLocaleString('vi-VN')} đ
-                    </Typography>
-                    {product.discountAmount > 0 && (
-                      <Typography variant="caption" color="success.main" sx={{ fontWeight: 'medium' }}>
-                        Giảm {product.discountAmount.toLocaleString('vi-VN')} đ
-                      </Typography>
-                    )}
-                    <Box sx={{ mt: 1 }}>
-                      {product.features.map((feature, index) => (
-                        <Typography key={index} variant="caption" color="text.secondary" display="block">
-                          • {feature}
+
+                    <CardContent sx={{ p: 3, height: "calc(100% - 200px)" }}>
+                      {/* Brand */}
+                      {product.brand && (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: "#666666",
+                            fontWeight: 600,
+                            textTransform: "uppercase",
+                            letterSpacing: "1px",
+                            mb: 1,
+                            display: "block",
+                          }}
+                        >
+                          {product.brand.name}
                         </Typography>
-                      ))}
-                    </Box>
-                  </CardContent>
+                      )}
+
+                      {/* Product Name */}
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 700,
+                          color: "#000000",
+                          mb: 2,
+                          lineHeight: 1.3,
+                          height: "3em",
+                          overflow: "hidden",
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                        }}
+                      >
+                        {product.name}
+                      </Typography>
+
+                      {/* Rating */}
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                        <Rating
+                          value={product.averageRating || 0}
+                          precision={0.1}
+                          size="small"
+                          readOnly
+                          sx={{
+                            color: "#000000",
+                          }}
+                        />
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: "#666666",
+                            fontFamily: "'Roboto Mono', monospace",
+                          }}
+                        >
+                          ({product.reviewCount || 0})
+                        </Typography>
+                      </Box>
+
+                      {/* Price */}
+                      <Box sx={{ mb: 2 }}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 800,
+                            color: "#000000",
+                            fontFamily: "'Roboto Mono', monospace",
+                          }}
+                        >
+                          {formatCurrency(priceInfo.displayPrice)}
+                        </Typography>
+                        {priceInfo.hasDiscount && (
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              textDecoration: "line-through",
+                              color: "#666666",
+                              fontFamily: "'Roboto Mono', monospace",
+                            }}
+                          >
+                            {formatCurrency(priceInfo.originalPrice)}
+                          </Typography>
+                        )}
+                      </Box>
+
+                      {/* Action Buttons */}
+                      <Box sx={{ display: "flex", gap: 1, mt: "auto" }}>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<Visibility />}
+                          sx={{
+                            flex: 1,
+                            borderColor: "#000000",
+                            color: "#000000",
+                            "&:hover": {
+                              borderColor: "#000000",
+                              bgcolor: "rgba(0,0,0,0.04)",
+                            },
+                          }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            navigate(`/product/${product.id}`);
+                          }}
+                        >
+                          Xem
+                        </Button>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          startIcon={<ShoppingCart />}
+                          sx={{
+                            bgcolor: "#000000",
+                            color: "#ffffff",
+                            "&:hover": {
+                              bgcolor: "#333333",
+                            },
+                          }}
+                          onClick={(e) => handleAddToCart(e, product)}
+                        >
+                          Mua
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </CardActionArea>
                 </Card>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-          <IconButton
-            className="swiper-button-prev-related"
-            sx={{
-              position: 'absolute',
-              left: -10,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              zIndex: 10,
-              bgcolor: 'rgba(255,255,255,0.8)',
-              boxShadow: 1,
-              '&:hover': { bgcolor: 'rgba(255,255,255,1)', boxShadow: 3 },
-            }}
-          >
-            <ChevronLeft />
-          </IconButton>
-          <IconButton
-            className="swiper-button-next-related"
-            sx={{
-              position: 'absolute',
-              right: -10,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              zIndex: 10,
-              bgcolor: 'rgba(255,255,255,0.8)',
-              boxShadow: 1,
-              '&:hover': { bgcolor: 'rgba(255,255,255,1)', boxShadow: 3 },
-            }}
-          >
-            <ChevronRight />
-          </IconButton>
-        </Box>
+              </Grid>
+            );
+          })}
+        </Grid>
+
+        {/* View More Button */}
+        {relatedProducts.length >= 8 && (
+          <Box sx={{ textAlign: "center", mt: 4 }}>
+            <Button
+              variant="outlined"
+              size="large"
+              onClick={() => navigate(`/productlist?category=${categoryId}`)}
+              sx={{
+                borderColor: "#000000",
+                color: "#000000",
+                px: 4,
+                py: 1.5,
+                fontWeight: "bold",
+                textTransform: "uppercase",
+                letterSpacing: "1px",
+                "&:hover": {
+                  borderColor: "#000000",
+                  bgcolor: "#000000",
+                  color: "#ffffff",
+                },
+              }}
+            >
+              Xem Thêm Sản Phẩm
+            </Button>
+          </Box>
+        )}
       </Box>
     </Box>
   );
