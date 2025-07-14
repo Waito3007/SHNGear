@@ -98,7 +98,10 @@ const ProductVariants = ({ variants, onAddToCart }) => {
       console.log("🔍 Debug selectedVariant.id:", selectedVariant.id);
       console.log("🔍 Debug all variants:", variants);
       console.log("🔍 Debug first variant structure:", variants[0]);
-      console.log("🔍 Debug selectedVariant keys:", Object.keys(selectedVariant));
+      console.log(
+        "🔍 Debug selectedVariant keys:",
+        Object.keys(selectedVariant)
+      );
 
       if (selectedVariant.stockQuantity <= 0) {
         showSnackbar("❌ Sản phẩm này đã hết hàng!", "error");
@@ -119,7 +122,7 @@ const ProductVariants = ({ variants, onAddToCart }) => {
       if (token) {
         const decoded = jwtDecode(token);
         const userId = parseInt(decoded.sub, 10);
-        
+
         console.log("🔄 Đang gửi request thêm vào giỏ hàng:", {
           productVariantId: selectedVariant.id,
           quantity: quantity,
@@ -135,7 +138,7 @@ const ProductVariants = ({ variants, onAddToCart }) => {
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        
+
         console.log("✅ Response từ server:", response.data);
       } else {
         const sessionCart = JSON.parse(sessionStorage.getItem("cart")) || [];
@@ -166,16 +169,18 @@ const ProductVariants = ({ variants, onAddToCart }) => {
       if (onAddToCart) onAddToCart();
     } catch (error) {
       console.error("❌ Lỗi khi thêm vào giỏ hàng:", error);
-      
+
       if (error.response) {
         // Server responded with error status
         console.error("❌ Response error:", {
           status: error.response.status,
           data: error.response.data,
-          headers: error.response.headers
+          headers: error.response.headers,
         });
         showSnackbar(
-          `❌ Lỗi ${error.response.status}: ${error.response.data || error.message}`, 
+          `❌ Lỗi ${error.response.status}: ${
+            error.response.data || error.message
+          }`,
           "error"
         );
       } else if (error.request) {
@@ -217,7 +222,8 @@ const ProductVariants = ({ variants, onAddToCart }) => {
           left: 0,
           right: 0,
           height: "4px",
-          background: "linear-gradient(90deg, #000000 0%, #333333 50%, #000000 100%)",
+          background:
+            "linear-gradient(90deg, #000000 0%, #333333 50%, #000000 100%)",
           zIndex: 1,
         },
         "&:hover": {
@@ -228,9 +234,9 @@ const ProductVariants = ({ variants, onAddToCart }) => {
       }}
     >
       {/* Color Selection Section */}
-      <Typography 
-        variant="h6" 
-        fontWeight="bold" 
+      <Typography
+        variant="h6"
+        fontWeight="bold"
         gutterBottom
         sx={{
           color: "#000000",
@@ -266,10 +272,14 @@ const ProductVariants = ({ variants, onAddToCart }) => {
                 borderRadius: 2,
                 transform: selectedColor === color ? "scale(1.02)" : "scale(1)",
                 transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                border: selectedColor === color ? "3px solid #000000" : "2px solid #e0e0e0",
-                background: selectedColor === color 
-                  ? "linear-gradient(145deg, #f0f0f0 0%, #ffffff 100%)" 
-                  : "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
+                border:
+                  selectedColor === color
+                    ? "3px solid #000000"
+                    : "2px solid #e0e0e0",
+                background:
+                  selectedColor === color
+                    ? "linear-gradient(145deg, #f0f0f0 0%, #ffffff 100%)"
+                    : "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
                 "&:hover": {
                   transform: "scale(1.02)",
                   borderColor: "#000000",
@@ -300,7 +310,8 @@ const ProductVariants = ({ variants, onAddToCart }) => {
                     width: "100%",
                     height: "100%",
                     objectFit: "cover",
-                    filter: selectedColor === color ? "contrast(1.1)" : "contrast(1)",
+                    filter:
+                      selectedColor === color ? "contrast(1.1)" : "contrast(1)",
                   }}
                 />
                 <Box
@@ -310,7 +321,10 @@ const ProductVariants = ({ variants, onAddToCart }) => {
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    bgcolor: selectedColor === color ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.95)",
+                    bgcolor:
+                      selectedColor === color
+                        ? "rgba(0,0,0,0.9)"
+                        : "rgba(255,255,255,0.95)",
                     color: selectedColor === color ? "#ffffff" : "#000000",
                     p: 1.5,
                     display: "flex",
@@ -321,8 +335,8 @@ const ProductVariants = ({ variants, onAddToCart }) => {
                     transition: "all 0.3s ease",
                   }}
                 >
-                  <Typography 
-                    variant="subtitle2" 
+                  <Typography
+                    variant="subtitle2"
                     fontWeight="bold"
                     sx={{
                       fontFamily: "'Roboto Mono', monospace",
@@ -343,9 +357,9 @@ const ProductVariants = ({ variants, onAddToCart }) => {
       </Grid>
 
       {/* Storage Selection Section */}
-      <Typography 
-        variant="h6" 
-        fontWeight="bold" 
+      <Typography
+        variant="h6"
+        fontWeight="bold"
         gutterBottom
         sx={{
           color: "#000000",
@@ -389,28 +403,37 @@ const ProductVariants = ({ variants, onAddToCart }) => {
                   minWidth: 140,
                   opacity: availableStorages.includes(storage) ? 1 : 0.4,
                   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                  transform: selectedStorage === storage ? "translateY(-2px)" : "none",
-                  border: selectedStorage === storage
-                    ? "3px solid #000000"
-                    : availableStorages.includes(storage) 
-                      ? "2px solid #e0e0e0" 
+                  transform:
+                    selectedStorage === storage ? "translateY(-2px)" : "none",
+                  border:
+                    selectedStorage === storage
+                      ? "3px solid #000000"
+                      : availableStorages.includes(storage)
+                      ? "2px solid #e0e0e0"
                       : "2px solid #f0f0f0",
-                  background: selectedStorage === storage
-                    ? "linear-gradient(145deg, #000000 0%, #333333 100%)"
-                    : availableStorages.includes(storage)
+                  background:
+                    selectedStorage === storage
+                      ? "linear-gradient(145deg, #000000 0%, #333333 100%)"
+                      : availableStorages.includes(storage)
                       ? "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)"
                       : "linear-gradient(145deg, #f5f5f5 0%, #e0e0e0 100%)",
                   "&:hover": {
-                    borderColor: availableStorages.includes(storage) ? "#000000" : "#f0f0f0",
-                    transform: availableStorages.includes(storage) ? "translateY(-2px)" : "none",
-                    boxShadow: availableStorages.includes(storage) ? "0 8px 24px rgba(0,0,0,0.12)" : "none",
+                    borderColor: availableStorages.includes(storage)
+                      ? "#000000"
+                      : "#f0f0f0",
+                    transform: availableStorages.includes(storage)
+                      ? "translateY(-2px)"
+                      : "none",
+                    boxShadow: availableStorages.includes(storage)
+                      ? "0 8px 24px rgba(0,0,0,0.12)"
+                      : "none",
                   },
                 }}
               >
                 <CardActionArea
                   onClick={() => handleSelectStorage(storage)}
                   disabled={!availableStorages.includes(storage)}
-                  sx={{ 
+                  sx={{
                     p: 3,
                     display: "flex",
                     flexDirection: "column",
@@ -424,10 +447,11 @@ const ProductVariants = ({ variants, onAddToCart }) => {
                     align="center"
                     sx={{
                       fontWeight: "bold",
-                      color: selectedStorage === storage 
-                        ? "#ffffff" 
-                        : availableStorages.includes(storage) 
-                          ? "#000000" 
+                      color:
+                        selectedStorage === storage
+                          ? "#ffffff"
+                          : availableStorages.includes(storage)
+                          ? "#000000"
                           : "#999999",
                       fontFamily: "'Roboto Mono', monospace",
                       letterSpacing: "1px",
@@ -437,7 +461,9 @@ const ProductVariants = ({ variants, onAddToCart }) => {
                     {storage}
                   </Typography>
                   {selectedStorage === storage && (
-                    <CheckCircle sx={{ color: "#ffffff", width: 20, height: 20, mt: 0.5 }} />
+                    <CheckCircle
+                      sx={{ color: "#ffffff", width: 20, height: 20, mt: 0.5 }}
+                    />
                   )}
                 </CardActionArea>
               </Card>
@@ -469,19 +495,28 @@ const ProductVariants = ({ variants, onAddToCart }) => {
               left: 0,
               right: 0,
               height: "3px",
-              background: "linear-gradient(90deg, #000000 0%, #333333 50%, #000000 100%)",
+              background:
+                "linear-gradient(90deg, #000000 0%, #333333 50%, #000000 100%)",
             },
           }}
         >
           {/* Price Display */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 3, flexWrap: "wrap", justifyContent: "center" }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 3,
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
             <Chip
               icon={<LocalOffer />}
               label={`-${calculateDiscount(
                 selectedVariant.price,
                 selectedVariant.discountPrice
               )}%`}
-              sx={{ 
+              sx={{
                 fontSize: "1.1rem",
                 fontWeight: "bold",
                 bgcolor: "#000000",
@@ -525,18 +560,18 @@ const ProductVariants = ({ variants, onAddToCart }) => {
             </Box>
           </Box>
 
-          <Divider 
-            flexItem 
-            sx={{ 
+          <Divider
+            flexItem
+            sx={{
               my: 2,
               borderColor: "#000000",
               borderWidth: "1px",
-            }} 
+            }}
           />
 
           {/* Quantity Selector */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-            <Typography 
+            <Typography
               variant="h6"
               sx={{
                 fontFamily: "'Roboto Mono', monospace",
@@ -548,9 +583,9 @@ const ProductVariants = ({ variants, onAddToCart }) => {
             >
               Quantity:
             </Typography>
-            <Box 
-              sx={{ 
-                display: "flex", 
+            <Box
+              sx={{
+                display: "flex",
                 alignItems: "center",
                 border: "2px solid #000000",
                 borderRadius: 2,
@@ -573,10 +608,10 @@ const ProductVariants = ({ variants, onAddToCart }) => {
               >
                 <RemoveCircle />
               </IconButton>
-              <Typography 
-                sx={{ 
-                  mx: 3, 
-                  minWidth: 40, 
+              <Typography
+                sx={{
+                  mx: 3,
+                  minWidth: 40,
                   textAlign: "center",
                   fontFamily: "'Roboto Mono', monospace",
                   fontSize: "1.2rem",

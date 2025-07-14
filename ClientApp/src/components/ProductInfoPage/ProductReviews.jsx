@@ -1,40 +1,48 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { 
-  Snackbar, 
-  Alert, 
-  CircularProgress, 
-  Box, 
-  Typography, 
-  Card, 
-  CardContent, 
-  Button, 
-  TextField, 
-  Rating, 
-  Avatar, 
+import {
+  Snackbar,
+  Alert,
+  CircularProgress,
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Button,
+  TextField,
+  Rating,
+  Avatar,
   Chip,
   Divider,
   LinearProgress,
   Paper,
-  Fade
+  Fade,
 } from "@mui/material";
-import { 
-  Star, 
+import {
+  Star,
   CheckCircle,
-  Person, 
-  RateReview, 
+  Person,
+  RateReview,
   Send,
   Close,
   TrendingUp,
-  BarChart
+  BarChart,
 } from "@mui/icons-material";
-import { useReviews, useSubmitReview, useUserReview } from "@/hooks/api/useReviews";
+import {
+  useReviews,
+  useSubmitReview,
+  useUserReview,
+} from "@/hooks/api/useReviews";
 import { jwtDecode } from "jwt-decode";
 
 const ProductReviews = ({ productId }) => {
   const [showForm, setShowForm] = useState(false);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
   const token = localStorage.getItem("token");
   let currentUserId = null;
   if (token) {
@@ -46,8 +54,18 @@ const ProductReviews = ({ productId }) => {
     }
   }
 
-  const { reviews, loading, error, averageRating, fetchReviews, fetchAverageRating } = useReviews(productId);
-  const { userReview, refetchUserReview } = useUserReview(currentUserId, productId);
+  const {
+    reviews,
+    loading,
+    error,
+    averageRating,
+    fetchReviews,
+    fetchAverageRating,
+  } = useReviews(productId);
+  const { userReview, refetchUserReview } = useUserReview(
+    currentUserId,
+    productId
+  );
   const { submitReview } = useSubmitReview(productId, () => {
     fetchReviews();
     fetchAverageRating();
@@ -56,18 +74,29 @@ const ProductReviews = ({ productId }) => {
 
   // Xử lý khi không có dữ liệu hoặc API trả về rỗng
   const safeReviews = Array.isArray(reviews) ? reviews : [];
-  const safeAverageRating = typeof averageRating === 'number' && !isNaN(averageRating) ? averageRating : 0;
+  const safeAverageRating =
+    typeof averageRating === "number" && !isNaN(averageRating)
+      ? averageRating
+      : 0;
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
 
     if (!token || !currentUserId) {
-      setSnackbar({ open: true, message: "Vui lòng đăng nhập để đánh giá", severity: "warning" });
+      setSnackbar({
+        open: true,
+        message: "Vui lòng đăng nhập để đánh giá",
+        severity: "warning",
+      });
       return;
     }
 
     if (!comment.trim() || rating < 1 || rating > 5) {
-      setSnackbar({ open: true, message: "Vui lòng nhập đầy đủ thông tin đánh giá", severity: "warning" });
+      setSnackbar({
+        open: true,
+        message: "Vui lòng nhập đầy đủ thông tin đánh giá",
+        severity: "warning",
+      });
       return;
     }
 
@@ -76,20 +105,26 @@ const ProductReviews = ({ productId }) => {
       setShowForm(false);
       setComment("");
       setRating(5);
-      setSnackbar({ open: true, message: "Đánh giá của bạn đã được gửi và đang chờ kiểm duyệt!", severity: "success" });
+      setSnackbar({
+        open: true,
+        message: "Đánh giá của bạn đã được gửi và đang chờ kiểm duyệt!",
+        severity: "success",
+      });
     } catch (err) {
       // Hiển thị thông báo chi tiết từ backend nếu có
-      const errorMsg = err?.response?.data?.message || err?.message || "Gửi đánh giá thất bại";
+      const errorMsg =
+        err?.response?.data?.message || err?.message || "Gửi đánh giá thất bại";
       setSnackbar({ open: true, message: errorMsg, severity: "error" });
     }
   };
-  
+
   // Check if user has reviewed, considering both general reviews and their specific review
-  const hasReviewed = safeReviews.some((r) => r.userId === Number(currentUserId)) || !!userReview;
+  const hasReviewed =
+    safeReviews.some((r) => r.userId === Number(currentUserId)) || !!userReview;
 
   const getRatingDistribution = () => {
     const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-    safeReviews.forEach(review => {
+    safeReviews.forEach((review) => {
       distribution[review.rating] = (distribution[review.rating] || 0) + 1;
     });
     return distribution;
@@ -102,53 +137,55 @@ const ProductReviews = ({ productId }) => {
   return (
     <Box
       sx={{
-        bgcolor: '#ffffff',
+        bgcolor: "#ffffff",
         borderRadius: 2,
-        border: '2px solid #000000',
-        background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
-        overflow: 'hidden',
-        position: 'relative',
-        '&::before': {
+        border: "2px solid #000000",
+        background: "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
+        overflow: "hidden",
+        position: "relative",
+        "&::before": {
           content: '""',
-          position: 'absolute',
+          position: "absolute",
           top: 0,
           left: 0,
           right: 0,
-          height: '4px',
-          background: 'linear-gradient(90deg, #000000 0%, #333333 50%, #000000 100%)',
+          height: "4px",
+          background:
+            "linear-gradient(90deg, #000000 0%, #333333 50%, #000000 100%)",
           zIndex: 1,
         },
-        '&:hover': {
-          transform: 'translateY(-2px)',
-          boxShadow: '0 16px 48px rgba(0, 0, 0, 0.12)',
+        "&:hover": {
+          transform: "translateY(-2px)",
+          boxShadow: "0 16px 48px rgba(0, 0, 0, 0.12)",
         },
-        transition: 'all 0.3s ease',
+        transition: "all 0.3s ease",
       }}
     >
       {/* Header Section */}
       <Box
         sx={{
           p: 4,
-          background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 100%)',
-          color: '#ffffff',
-          position: 'relative',
-          '&::after': {
+          background: "linear-gradient(135deg, #000000 0%, #1a1a1a 100%)",
+          color: "#ffffff",
+          position: "relative",
+          "&::after": {
             content: '""',
-            position: 'absolute',
+            position: "absolute",
             bottom: 0,
             left: 0,
             right: 0,
-            height: '1px',
-            background: 'linear-gradient(90deg, transparent 0%, #ffffff 50%, transparent 100%)',
+            height: "1px",
+            background:
+              "linear-gradient(90deg, transparent 0%, #ffffff 50%, transparent 100%)",
           },
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
           <Box
             sx={{
               width: 6,
               height: 40,
-              bgcolor: '#ffffff',
+              bgcolor: "#ffffff",
               borderRadius: 1,
             }}
           />
@@ -157,27 +194,27 @@ const ProductReviews = ({ productId }) => {
             sx={{
               fontWeight: 800,
               fontFamily: "'Roboto Mono', monospace",
-              textTransform: 'uppercase',
-              letterSpacing: '2px',
-              color: '#ffffff',
+              textTransform: "uppercase",
+              letterSpacing: "2px",
+              color: "#ffffff",
             }}
           >
             # Reviews & Ratings
           </Typography>
           <Box
             sx={{
-              bgcolor: 'rgba(255,255,255,0.1)',
+              bgcolor: "rgba(255,255,255,0.1)",
               borderRadius: 2,
               px: 2,
               py: 1,
-              border: '1px solid rgba(255,255,255,0.2)',
+              border: "1px solid rgba(255,255,255,0.2)",
             }}
           >
             <Typography
               variant="h6"
               sx={{
                 fontFamily: "'Roboto Mono', monospace",
-                fontWeight: 'bold',
+                fontWeight: "bold",
               }}
             >
               {totalReviews} Reviews
@@ -186,14 +223,21 @@ const ProductReviews = ({ productId }) => {
         </Box>
 
         {/* Rating Statistics */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            flexWrap: "wrap",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <Typography
               variant="h2"
               sx={{
                 fontWeight: 900,
                 fontFamily: "'Roboto Mono', monospace",
-                color: '#ffffff',
+                color: "#ffffff",
               }}
             >
               {safeAverageRating.toFixed(1)}
@@ -205,19 +249,19 @@ const ProductReviews = ({ productId }) => {
                 readOnly
                 size="large"
                 sx={{
-                  color: '#ffffff',
-                  '& .MuiRating-iconFilled': {
-                    color: '#ffffff',
+                  color: "#ffffff",
+                  "& .MuiRating-iconFilled": {
+                    color: "#ffffff",
                   },
-                  '& .MuiRating-iconEmpty': {
-                    color: 'rgba(255,255,255,0.3)',
+                  "& .MuiRating-iconEmpty": {
+                    color: "rgba(255,255,255,0.3)",
                   },
                 }}
               />
               <Typography
                 variant="body2"
                 sx={{
-                  color: 'rgba(255,255,255,0.8)',
+                  color: "rgba(255,255,255,0.8)",
                   fontFamily: "'Roboto Mono', monospace",
                   mt: 0.5,
                 }}
@@ -230,27 +274,34 @@ const ProductReviews = ({ productId }) => {
           {/* Rating Distribution */}
           <Box sx={{ flex: 1, minWidth: 300 }}>
             {[5, 4, 3, 2, 1].map((star) => (
-              <Box key={star} sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+              <Box
+                key={star}
+                sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}
+              >
                 <Typography
                   variant="body2"
                   sx={{
                     minWidth: 60,
                     fontFamily: "'Roboto Mono', monospace",
-                    color: '#ffffff',
+                    color: "#ffffff",
                   }}
                 >
                   {star} Stars
                 </Typography>
                 <LinearProgress
                   variant="determinate"
-                  value={totalReviews > 0 ? (ratingDistribution[star] / totalReviews) * 100 : 0}
+                  value={
+                    totalReviews > 0
+                      ? (ratingDistribution[star] / totalReviews) * 100
+                      : 0
+                  }
                   sx={{
                     flex: 1,
                     height: 8,
                     borderRadius: 1,
-                    bgcolor: 'rgba(255,255,255,0.2)',
-                    '& .MuiLinearProgress-bar': {
-                      bgcolor: '#ffffff',
+                    bgcolor: "rgba(255,255,255,0.2)",
+                    "& .MuiLinearProgress-bar": {
+                      bgcolor: "#ffffff",
                       borderRadius: 1,
                     },
                   }}
@@ -260,7 +311,7 @@ const ProductReviews = ({ productId }) => {
                   sx={{
                     minWidth: 30,
                     fontFamily: "'Roboto Mono', monospace",
-                    color: '#ffffff',
+                    color: "#ffffff",
                   }}
                 >
                   {ratingDistribution[star]}
@@ -273,37 +324,38 @@ const ProductReviews = ({ productId }) => {
 
       {/* Review Form Section */}
       {!hasReviewed && token && (
-        <Box sx={{ p: 4, borderBottom: '1px solid #e0e0e0' }}>
+        <Box sx={{ p: 4, borderBottom: "1px solid #e0e0e0" }}>
           <Button
             onClick={() => setShowForm(!showForm)}
             variant="outlined"
             startIcon={<RateReview />}
             sx={{
-              borderColor: '#000000',
-              color: '#000000',
+              borderColor: "#000000",
+              color: "#000000",
               borderWidth: 2,
               fontFamily: "'Roboto Mono', monospace",
-              fontWeight: 'bold',
-              textTransform: 'uppercase',
-              letterSpacing: '1px',
-              '&:hover': {
+              fontWeight: "bold",
+              textTransform: "uppercase",
+              letterSpacing: "1px",
+              "&:hover": {
                 borderWidth: 2,
-                borderColor: '#000000',
-                bgcolor: 'rgba(0, 0, 0, 0.05)',
+                borderColor: "#000000",
+                bgcolor: "rgba(0, 0, 0, 0.05)",
               },
             }}
           >
-            {showForm ? 'Cancel Review' : 'Write a Review'}
+            {showForm ? "Cancel Review" : "Write a Review"}
           </Button>
 
           <Fade in={showForm}>
-            <Box sx={{ mt: 3, display: showForm ? 'block' : 'none' }}>
+            <Box sx={{ mt: 3, display: showForm ? "block" : "none" }}>
               <Paper
                 sx={{
                   p: 3,
-                  border: '2px solid #000000',
+                  border: "2px solid #000000",
                   borderRadius: 2,
-                  background: 'linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%)',
+                  background:
+                    "linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%)",
                 }}
               >
                 <Typography
@@ -311,8 +363,8 @@ const ProductReviews = ({ productId }) => {
                   sx={{
                     mb: 2,
                     fontFamily: "'Roboto Mono', monospace",
-                    fontWeight: 'bold',
-                    color: '#000000',
+                    fontWeight: "bold",
+                    color: "#000000",
                   }}
                 >
                   Share Your Experience
@@ -324,8 +376,8 @@ const ProductReviews = ({ productId }) => {
                       sx={{
                         mb: 1,
                         fontFamily: "'Roboto Mono', monospace",
-                        fontWeight: 'bold',
-                        color: '#000000',
+                        fontWeight: "bold",
+                        color: "#000000",
                       }}
                     >
                       Rating:
@@ -335,9 +387,9 @@ const ProductReviews = ({ productId }) => {
                       onChange={(event, newValue) => setRating(newValue)}
                       size="large"
                       sx={{
-                        color: '#000000',
-                        '& .MuiRating-iconFilled': {
-                          color: '#000000',
+                        color: "#000000",
+                        "& .MuiRating-iconFilled": {
+                          color: "#000000",
                         },
                       }}
                     />
@@ -352,13 +404,13 @@ const ProductReviews = ({ productId }) => {
                     variant="outlined"
                     sx={{
                       mb: 3,
-                      '& .MuiOutlinedInput-root': {
-                        borderColor: '#000000',
-                        '&:hover fieldset': {
-                          borderColor: '#000000',
+                      "& .MuiOutlinedInput-root": {
+                        borderColor: "#000000",
+                        "&:hover fieldset": {
+                          borderColor: "#000000",
                         },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#000000',
+                        "&.Mui-focused fieldset": {
+                          borderColor: "#000000",
                         },
                       },
                     }}
@@ -368,13 +420,13 @@ const ProductReviews = ({ productId }) => {
                     variant="contained"
                     startIcon={<Send />}
                     sx={{
-                      bgcolor: '#000000',
-                      color: '#ffffff',
+                      bgcolor: "#000000",
+                      color: "#ffffff",
                       fontFamily: "'Roboto Mono', monospace",
-                      fontWeight: 'bold',
-                      textTransform: 'uppercase',
-                      '&:hover': {
-                        bgcolor: '#333333',
+                      fontWeight: "bold",
+                      textTransform: "uppercase",
+                      "&:hover": {
+                        bgcolor: "#333333",
                       },
                     }}
                   >
@@ -390,8 +442,8 @@ const ProductReviews = ({ productId }) => {
       {/* Reviews List */}
       <Box sx={{ p: 4 }}>
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress sx={{ color: '#000000' }} />
+          <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+            <CircularProgress sx={{ color: "#000000" }} />
           </Box>
         ) : error ? (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -401,16 +453,16 @@ const ProductReviews = ({ productId }) => {
           <Paper
             sx={{
               p: 4,
-              textAlign: 'center',
-              border: '2px dashed #e0e0e0',
+              textAlign: "center",
+              border: "2px dashed #e0e0e0",
               borderRadius: 2,
             }}
           >
-            <RateReview sx={{ fontSize: 48, color: '#cccccc', mb: 2 }} />
+            <RateReview sx={{ fontSize: 48, color: "#cccccc", mb: 2 }} />
             <Typography
               variant="h6"
               sx={{
-                color: '#666666',
+                color: "#666666",
                 fontFamily: "'Roboto Mono', monospace",
               }}
             >
@@ -418,73 +470,90 @@ const ProductReviews = ({ productId }) => {
             </Typography>
           </Paper>
         ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
             {safeReviews.map((review, index) => (
               <Card
                 key={review.id || index}
                 sx={{
-                  border: '1px solid #e0e0e0',
+                  border: "1px solid #e0e0e0",
                   borderRadius: 2,
-                  background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
-                  '&:hover': {
-                    borderColor: '#000000',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+                  background:
+                    "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
+                  "&:hover": {
+                    borderColor: "#000000",
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
                   },
-                  transition: 'all 0.3s ease',
+                  transition: "all 0.3s ease",
                 }}
               >
                 <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 3 }}>
+                  <Box
+                    sx={{ display: "flex", alignItems: "flex-start", gap: 3 }}
+                  >
                     <Avatar
                       sx={{
-                        bgcolor: '#000000',
-                        color: '#ffffff',
+                        bgcolor: "#000000",
+                        color: "#ffffff",
                         width: 50,
                         height: 50,
                         fontFamily: "'Roboto Mono', monospace",
-                        fontWeight: 'bold',
+                        fontWeight: "bold",
                       }}
                     >
-                      {review.userName?.charAt(0)?.toUpperCase() || 'U'}
+                      {review.userName?.charAt(0)?.toUpperCase() || "U"}
                     </Avatar>
                     <Box sx={{ flex: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 2,
+                          mb: 1,
+                        }}
+                      >
                         <Typography
                           variant="h6"
                           sx={{
                             fontFamily: "'Roboto Mono', monospace",
-                            fontWeight: 'bold',
-                            color: '#000000',
+                            fontWeight: "bold",
+                            color: "#000000",
                           }}
                         >
-                          {review.userName || 'Anonymous User'}
+                          {review.userName || "Anonymous User"}
                         </Typography>
                         <Chip
                           icon={<CheckCircle />}
                           label="Verified"
                           size="small"
                           sx={{
-                            bgcolor: '#000000',
-                            color: '#ffffff',
+                            bgcolor: "#000000",
+                            color: "#ffffff",
                             fontFamily: "'Roboto Mono', monospace",
-                            fontSize: '0.75rem',
+                            fontSize: "0.75rem",
                           }}
                         />
                       </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 2,
+                          mb: 2,
+                        }}
+                      >
                         <Rating
                           value={review.rating}
                           readOnly
                           size="small"
                           sx={{
-                            color: '#000000',
+                            color: "#000000",
                           }}
                         />
                         <Typography
                           variant="caption"
                           sx={{
-                            color: '#666666',
+                            color: "#666666",
                             fontFamily: "'Roboto Mono', monospace",
                           }}
                         >
@@ -494,7 +563,7 @@ const ProductReviews = ({ productId }) => {
                       <Typography
                         variant="body1"
                         sx={{
-                          color: '#333333',
+                          color: "#333333",
                           lineHeight: 1.6,
                           fontFamily: "'Roboto', sans-serif",
                         }}
@@ -515,7 +584,7 @@ const ProductReviews = ({ productId }) => {
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
           onClose={() => setSnackbar({ ...snackbar, open: false })}
@@ -530,4 +599,3 @@ const ProductReviews = ({ productId }) => {
 };
 
 export default ProductReviews;
-

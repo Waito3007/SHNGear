@@ -63,10 +63,11 @@ const ProductImage = ({ images, name }) => {
             left: 0,
             right: 0,
             bottom: 0,
-            background: "linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)",
+            background:
+              "linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)",
             zIndex: 1,
             pointerEvents: "none",
-          }
+          },
         }}
       >
         <Swiper
@@ -82,27 +83,30 @@ const ProductImage = ({ images, name }) => {
           className="product-main-slider"
         >
           {images.map((image, index) => (
-            <SwiperSlide key={index}>                <Box
-                  sx={{
-                    position: "relative",
-                    paddingTop: "100%",
-                    cursor: "zoom-in",
-                    bgcolor: "#ffffff",
-                    border: "1px solid #000000",
-                    borderRadius: 1,
-                    overflow: "hidden",
-                    "&::after": {
-                      content: '""',
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      background: "radial-gradient(circle at center, transparent 60%, rgba(0,0,0,0.02) 100%)",
-                      zIndex: 1,
-                    }
-                  }}
-                >
+            <SwiperSlide key={index}>
+              {" "}
+              <Box
+                sx={{
+                  position: "relative",
+                  paddingTop: "100%",
+                  cursor: "zoom-in",
+                  bgcolor: "#ffffff",
+                  border: "1px solid #000000",
+                  borderRadius: 1,
+                  overflow: "hidden",
+                  "&::after": {
+                    content: '""',
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background:
+                      "radial-gradient(circle at center, transparent 60%, rgba(0,0,0,0.02) 100%)",
+                    zIndex: 1,
+                  },
+                }}
+              >
                 <Fade in timeout={500}>
                   <Box
                     component="img"

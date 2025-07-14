@@ -21,7 +21,8 @@ const ProductInfo = ({ product }) => {
           left: 0,
           right: 0,
           height: "4px",
-          background: "linear-gradient(90deg, #000000 0%, #333333 50%, #000000 100%)",
+          background:
+            "linear-gradient(90deg, #000000 0%, #333333 50%, #000000 100%)",
           zIndex: 1,
         },
         "&:hover": {
@@ -33,7 +34,8 @@ const ProductInfo = ({ product }) => {
       {/* Hero Section với Tech Style */}
       <Box
         sx={{
-          background: "linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)",
+          background:
+            "linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)",
           py: 4,
           px: 3,
           color: "white",
@@ -156,9 +158,9 @@ const ProductInfo = ({ product }) => {
               {product?.price?.toLocaleString("vi-VN")} VNĐ
             </Typography>
           </Box>
-          <Box 
-            sx={{ 
-              display: "flex", 
+          <Box
+            sx={{
+              display: "flex",
               alignItems: "center",
               bgcolor: "rgba(255,255,255,0.1)",
               borderRadius: 2,
@@ -170,7 +172,7 @@ const ProductInfo = ({ product }) => {
               value={product?.averageRating || 0}
               precision={0.5}
               readOnly
-              sx={{ 
+              sx={{
                 color: "#ffffff",
                 "& .MuiRating-iconFilled": {
                   color: "#ffffff",
@@ -180,7 +182,10 @@ const ProductInfo = ({ product }) => {
                 },
               }}
             />
-            <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.8)", ml: 1 }}>
+            <Typography
+              variant="caption"
+              sx={{ color: "rgba(255,255,255,0.8)", ml: 1 }}
+            >
               ({product?.reviewCount || 0} đánh giá)
             </Typography>
           </Box>
@@ -265,11 +270,16 @@ const ProductInfo = ({ product }) => {
           <Box sx={{ ml: "auto" }}>
             <Box
               sx={{
-                bgcolor: product?.stock > 0 ? "rgba(76, 175, 80, 0.9)" : "rgba(244, 67, 54, 0.9)",
+                bgcolor:
+                  product?.stock > 0
+                    ? "rgba(76, 175, 80, 0.9)"
+                    : "rgba(244, 67, 54, 0.9)",
                 color: "#ffffff",
                 p: 1.5,
                 borderRadius: 2,
-                border: `2px solid ${product?.stock > 0 ? "#4CAF50" : "#F44336"}`,
+                border: `2px solid ${
+                  product?.stock > 0 ? "#4CAF50" : "#F44336"
+                }`,
                 boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
                 backdropFilter: "blur(5px)",
                 fontFamily: "'Roboto Mono', monospace",
@@ -380,8 +390,8 @@ const ProductInfo = ({ product }) => {
                 <item.icon size={24} />
               </Box>
               <Box>
-                <Typography 
-                  variant="subtitle1" 
+                <Typography
+                  variant="subtitle1"
                   fontWeight="bold"
                   sx={{
                     color: "#000000",
@@ -391,8 +401,8 @@ const ProductInfo = ({ product }) => {
                 >
                   {item.label}
                 </Typography>
-                <Typography 
-                  variant="body2" 
+                <Typography
+                  variant="body2"
                   color="text.secondary"
                   sx={{
                     fontFamily: "'Roboto', sans-serif",
@@ -405,15 +415,15 @@ const ProductInfo = ({ product }) => {
           ))}
         </Box>
 
-        <Divider 
-          sx={{ 
+        <Divider
+          sx={{
             my: 4,
             borderColor: "#000000",
             borderWidth: "1px",
             "&::before, &::after": {
               borderColor: "#000000",
             },
-          }} 
+          }}
         />
 
         {/* Product Description */}
@@ -434,7 +444,8 @@ const ProductInfo = ({ product }) => {
               left: 0,
               right: 0,
               height: "3px",
-              background: "linear-gradient(90deg, #000000 0%, #333333 50%, #000000 100%)",
+              background:
+                "linear-gradient(90deg, #000000 0%, #333333 50%, #000000 100%)",
             },
           }}
         >
