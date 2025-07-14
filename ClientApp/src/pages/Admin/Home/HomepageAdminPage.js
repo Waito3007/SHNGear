@@ -4,6 +4,11 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { motion } from 'framer-motion';
 import Header from "@/components/Admin/common/Header";
 
+// Import management components
+import BannersTable from "@/components/Admin/home/BannersTable";
+import SlidersTable from "@/components/Admin/home/SlidersTable";
+import PinnedProductKanban from "@/components/Admin/home/PinnedProductKanban";
+
   import {
   Box,
   Button,
@@ -25,9 +30,9 @@ import Header from "@/components/Admin/common/Header";
   ListItemText,
   ListItemIcon,
   IconButton,
-  InputAdornment,
   Collapse,
-  FormControlLabel,
+  Tabs,
+  Tab,
 } from '@mui/material';
 
 import {
@@ -41,7 +46,7 @@ import {
 // Import preview components
 import HeroBanner from '@/components/HeroBanner/HeroBanner';
 import FeaturedCategories from '@/components/FeaturedCategories/FeaturedCategories';
-import BestSellerSection from '@/components/BestSellers/BestSellers';
+// import BestSellerSection from '@/components/BestSellers/BestSellers';
 import FlashSale from '@/components/FlashSale/FlashSale';
 import Commitment from '@/components/Commitment/Commitment';
 import BannerSlider from '@/components/Homepage/BannerSlider';
@@ -87,7 +92,6 @@ const SectionEditor = ({ sectionName, sectionData, onContentChange }) => {
       //   return <BestSellerManager sectionData={sectionData} onContentChange={onContentChange} />;
 
       case 'special_offer':
-        const priceOptions = [100000, 500000, 1000000, 2000000];
         return (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField label="Headline" name="headline" value={formData.headline || ''} onChange={handleInputChange} fullWidth InputProps={inputProps} InputLabelProps={inputLabelProps} />
@@ -95,52 +99,6 @@ const SectionEditor = ({ sectionName, sectionData, onContentChange }) => {
             <TextField label="CTA Text" name="cta_text" value={formData.cta_text || ''} onChange={handleInputChange} fullWidth InputProps={inputProps} InputLabelProps={inputLabelProps} />
             <TextField label="CTA Link" name="cta_link" value={formData.cta_link || ''} onChange={handleInputChange} fullWidth InputProps={inputProps} InputLabelProps={inputLabelProps} />
             <TextField label="Image URL" name="image_url" value={formData.image_url || ''} onChange={handleInputChange} fullWidth InputProps={inputProps} InputLabelProps={inputLabelProps} />
-            {/* <TextField
-              label="Original Price"
-              name="originalPrice"
-              value={formData.originalPrice || ''}
-              onChange={handleInputChange}
-              fullWidth
-              type="number"
-              InputProps={{
-                startAdornment: <InputAdornment position="start" sx={{ color: '#a0aec0' }}>VNĐ</InputAdornment>,
-                ...inputProps
-              }}
-              InputLabelProps={inputLabelProps}
-            /> */}
-            {/* <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              {priceOptions.map(price => (
-                <Button key={price} variant="outlined" onClick={() => onContentChange(sectionName, 'originalPrice', price)} sx={{ borderColor: '#63b3ed', color: '#63b3ed' }}>
-                  {price.toLocaleString('vi-VN')}đ
-                </Button>
-              ))}
-            </Box>
-            <TextField
-              label="Discount Price"
-              name="discountPrice"
-              value={formData.discountPrice || ''}
-              onChange={handleInputChange}
-              fullWidth
-              type="number"
-              InputProps={{
-                startAdornment: <InputAdornment position="start" sx={{ color: '#a0aec0' }}>VNĐ</InputAdornment>,
-                ...inputProps
-              }}
-              InputLabelProps={inputLabelProps}
-            />
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              {priceOptions.map(price => (
-                <Button key={price} variant="outlined" onClick={() => onContentChange(sectionName, 'discountPrice', price)} sx={{ borderColor: '#63b3ed', color: '#63b3ed' }}>
-                  {price.toLocaleString('vi-VN')}đ
-                </Button>
-              ))}
-            </Box>
-            <TextField label="Countdown End Date" name="countdown_end_date" value={formData.countdown_end_date || ''} onChange={handleInputChange} fullWidth helperText="Format: YYYY-MM-DDTHH:MM:SS" InputProps={inputProps} InputLabelProps={inputLabelProps} FormHelperTextProps={{ style: { color: '#a0aec0' } }} />
-            <FormControlLabel
-              control={<Switch checked={formData.countdown_enabled || false} onChange={handleInputChange} name="countdown_enabled" />}
-              label="Countdown Enabled"
-              sx={{ color: '#e2e8f0' }}
-            /> */}
           </Box>
         );
       case 'brand_trust':
@@ -190,6 +148,25 @@ const SectionEditor = ({ sectionName, sectionData, onContentChange }) => {
   );
 };
 
+// TabPanel component để hiển thị nội dung của từng tab
+const TabPanel = ({ children, value, index, ...other }) => {
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`homepage-tabpanel-${index}`}
+      aria-labelledby={`homepage-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          {children}
+        </Box>
+      )}
+    </div>
+  );
+};
+
 const HomepageAdminPage = () => {
   const [config, setConfig] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -199,6 +176,7 @@ const HomepageAdminPage = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -306,9 +284,7 @@ const HomepageAdminPage = () => {
   const componentMap = {
     hero: HeroBanner,
     categories: FeaturedCategories,
-    featured_products: BestSellerSection,
     special_offer: FlashSale,
-    best_seller: BestSellerSection,
     brand_trust: Commitment,
     banner_slider: BannerSlider,
   };
@@ -332,111 +308,171 @@ const HomepageAdminPage = () => {
           </Button>
         </motion.div>
 
-        <Grid container spacing={3}>
-          <Grid item xs={12} lg={4}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
+        {/* Tabs Navigation */}
+        <Card elevation={0} sx={{ borderRadius: 2, bgcolor: '#2d3748', mb: 3 }}>
+          <Box sx={{ borderBottom: 1, borderColor: '#4a5568' }}>
+            <Tabs 
+              value={activeTab} 
+              onChange={(e, newValue) => setActiveTab(newValue)}
+              textColor="inherit"
+              indicatorColor="primary"
+              sx={{
+                '& .MuiTab-root': {
+                  color: '#a0aec0',
+                  '&.Mui-selected': {
+                    color: '#63b3ed',
+                  },
+                },
+                '& .MuiTabs-indicator': {
+                  backgroundColor: '#63b3ed',
+                },
+              }}
             >
-              <Card elevation={0} sx={{ borderRadius: 2, bgcolor: '#2d3748', color: '#e2e8f0' }}>
-                <CardContent>
-                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>Thứ tự & Hiển thị Bố cục</Typography>
-                  <DragDropContext onDragEnd={handleDragEnd}>
-                    <Droppable droppableId="layout-order">
-                      {(provided) => (
-                        <List {...provided.droppableProps} ref={provided.innerRef}>
-                          {config.layout.map((sectionName, index) => (
-                            <Draggable key={sectionName} draggableId={sectionName} index={index}>
-                              {(provided, snapshot) => (
-                                <ListItem
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  sx={{
-                                    mb: 1,
-                                    bgcolor: '#4a5568',
-                                    borderRadius: 1,
-                                    boxShadow: 1,
-                                    border: snapshot.isDragging ? '1px solid #63b3ed' : '1px solid transparent',
-                                    transition: 'border 0.2s',
-                                  }}
-                                  secondaryAction={
-                                    <Switch
-                                      edge="end"
-                                      checked={config.components[sectionName]?.enabled || false}
-                                      onChange={() => handleToggleSection(sectionName)}
-                                      size="small"
-                                    />
-                                  }
-                                >
-                                  <ListItemIcon sx={{ minWidth: 30 }}>
-                                    <DragHandleIcon sx={{ color: '#e2e8f0' }} />
-                                  </ListItemIcon>
-                                  <ListItemText primary={sectionName.replace(/_/g, ' ')} sx={{ textTransform: 'capitalize', color: '#e2e8f0' }} />
-                                </ListItem>
-                              )}
-                            </Draggable>
-                          ))}
-                          {provided.placeholder}
-                        </List>
-                      )}
-                    </Droppable>
-                  </DragDropContext>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </Grid>
+              <Tab label="Cấu hình Layout" />
+              <Tab label="Quản lý Banner" />
+              <Tab label="Quản lý Slider" />
+              <Tab label="Sản phẩm nổi bật" />
+            </Tabs>
+          </Box>
+        </Card>
 
-          <Grid item xs={12} lg={8}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <Card elevation={0} sx={{ borderRadius: 2, bgcolor: '#2d3748', color: '#e2e8f0' }}>
-                <CardContent>
-                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>Nội dung Phần</Typography>
-                  <Box>
-                    {Object.entries(config.components).map(([sectionName, sectionData]) => (
-                      <Collapse key={sectionName} in={true} timeout="auto" unmountOnExit>
-                        <Card variant="outlined" sx={{ mb: 2, borderRadius: 1, borderColor: '#4a5568', bgcolor: '#1a202c' }}>
-                          <CardContent>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                              <Typography variant="subtitle1" sx={{ fontWeight: 'bold', textTransform: 'capitalize', color: '#e2e8f0' }}>
-                                {sectionName.replace(/_/g, ' ')}
-                              </Typography>
-                              <Box>
-                                <Button
-                                  size="small"
-                                  startIcon={<EyeIcon />}
-                                  onClick={() => handlePreview(sectionName)}
-                                  sx={{ mr: 1, color: '#63b3ed' }}
-                                >
-                                  Xem trước
-                                </Button>
-                                <Switch
-                                  checked={sectionData?.enabled || false}
-                                  onChange={() => handleToggleSection(sectionName)}
-                                  size="small"
-                                />
+        {/* Tab Content */}
+        <TabPanel value={activeTab} index={0}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} lg={4}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                <Card elevation={0} sx={{ borderRadius: 2, bgcolor: '#2d3748', color: '#e2e8f0' }}>
+                  <CardContent>
+                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>Thứ tự & Hiển thị Bố cục</Typography>
+                    <DragDropContext onDragEnd={handleDragEnd}>
+                      <Droppable droppableId="layout-order">
+                        {(provided) => (
+                          <List {...provided.droppableProps} ref={provided.innerRef}>
+                            {config.layout.map((sectionName, index) => (
+                              <Draggable key={sectionName} draggableId={sectionName} index={index}>
+                                {(provided, snapshot) => (
+                                  <ListItem
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    sx={{
+                                      mb: 1,
+                                      bgcolor: '#4a5568',
+                                      borderRadius: 1,
+                                      boxShadow: 1,
+                                      border: snapshot.isDragging ? '1px solid #63b3ed' : '1px solid transparent',
+                                      transition: 'border 0.2s',
+                                    }}
+                                    secondaryAction={
+                                      <Switch
+                                        edge="end"
+                                        checked={config.components[sectionName]?.enabled || false}
+                                        onChange={() => handleToggleSection(sectionName)}
+                                        size="small"
+                                      />
+                                    }
+                                  >
+                                    <ListItemIcon sx={{ minWidth: 30 }}>
+                                      <DragHandleIcon sx={{ color: '#e2e8f0' }} />
+                                    </ListItemIcon>
+                                    <ListItemText primary={sectionName.replace(/_/g, ' ')} sx={{ textTransform: 'capitalize', color: '#e2e8f0' }} />
+                                  </ListItem>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </List>
+                        )}
+                      </Droppable>
+                    </DragDropContext>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </Grid>
+
+            <Grid item xs={12} lg={8}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <Card elevation={0} sx={{ borderRadius: 2, bgcolor: '#2d3748', color: '#e2e8f0' }}>
+                  <CardContent>
+                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>Nội dung Phần</Typography>
+                    <Box>
+                      {Object.entries(config.components).map(([sectionName, sectionData]) => (
+                        <Collapse key={sectionName} in={true} timeout="auto" unmountOnExit>
+                          <Card variant="outlined" sx={{ mb: 2, borderRadius: 1, borderColor: '#4a5568', bgcolor: '#1a202c' }}>
+                            <CardContent>
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', textTransform: 'capitalize', color: '#e2e8f0' }}>
+                                  {sectionName.replace(/_/g, ' ')}
+                                </Typography>
+                                <Box>
+                                  <Button
+                                    size="small"
+                                    startIcon={<EyeIcon />}
+                                    onClick={() => handlePreview(sectionName)}
+                                    sx={{ mr: 1, color: '#63b3ed' }}
+                                  >
+                                    Xem trước
+                                  </Button>
+                                  <Switch
+                                    checked={sectionData?.enabled || false}
+                                    onChange={() => handleToggleSection(sectionName)}
+                                    size="small"
+                                  />
+                                </Box>
                               </Box>
-                            </Box>
-                            <SectionEditor
-                              sectionName={sectionName}
-                              sectionData={sectionData}
-                              onContentChange={handleContentChange}
-                            />
-                          </CardContent>
-                        </Card>
-                      </Collapse>
-                    ))}
-                  </Box>
-                </CardContent>
-              </Card>
-            </motion.div>
+                              <SectionEditor
+                                sectionName={sectionName}
+                                sectionData={sectionData}
+                                onContentChange={handleContentChange}
+                              />
+                            </CardContent>
+                          </Card>
+                        </Collapse>
+                      ))}
+                    </Box>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </Grid>
           </Grid>
-        </Grid>
+        </TabPanel>
+
+        <TabPanel value={activeTab} index={1}>
+          <Card elevation={0} sx={{ borderRadius: 2, bgcolor: '#2d3748', color: '#e2e8f0' }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 'bold' }}>Quản lý Banner</Typography>
+              <BannersTable />
+            </CardContent>
+          </Card>
+        </TabPanel>
+
+        <TabPanel value={activeTab} index={2}>
+          <Card elevation={0} sx={{ borderRadius: 2, bgcolor: '#2d3748', color: '#e2e8f0' }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 'bold' }}>Quản lý Slider</Typography>
+              <SlidersTable />
+            </CardContent>
+          </Card>
+        </TabPanel>
+
+        <TabPanel value={activeTab} index={3}>
+          <Card elevation={0} sx={{ borderRadius: 2, bgcolor: '#2d3748', color: '#e2e8f0' }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 'bold' }}>Sản phẩm nổi bật</Typography>
+              <PinnedProductKanban />
+            </CardContent>
+          </Card>
+        </TabPanel>
+
+      
 
         <Dialog open={isPreviewOpen} onClose={closePreview} maxWidth="md" fullWidth PaperProps={{ sx: { bgcolor: '#2d3748', color: '#e2e8f0' } }}>
           <DialogTitle sx={{ bgcolor: '#1a202c', color: '#e2e8f0' }}>Xem trước: {previewSection?.replace(/_/g, ' ')}</DialogTitle>
