@@ -111,6 +111,21 @@ namespace SHN_Gear.Controllers
             return NoContent();
         }
 
+        [HttpGet("product-count")]
+        public async Task<ActionResult<IEnumerable<object>>> GetCategoryProductCount()
+        {
+            var categoryData = await _context.Categories
+                .Select(c => new
+                {
+                    name = c.Name,
+                    value = c.Products.Count()
+                })
+                .Where(x => x.value > 0) // Only include categories with products
+                .ToListAsync();
+
+            return Ok(categoryData);
+        }
+
         private bool CategoryExists(int id)
         {
             return _context.Categories.Any(e => e.Id == id);

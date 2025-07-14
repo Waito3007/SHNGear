@@ -6,19 +6,13 @@ import { RateReview } from "@mui/icons-material";
 
 const SIDEBAR_ITEMS = [
 	{
-		name: "Quản lý Vòng Quay",
-		icon: DollarSign,
-		color: "#F43F5E",
-		href: "/admin/lucky-spin",
-	},
-	{
 		name: "Tổng quan",
 		icon: BarChart2,
 		color: "#6366f1",
 		href: "/admin/overview",
 	},
 	{
-		name: "Quản lý Trang chủ",
+		name: "Trang chủ",
 		icon: LayoutDashboard,
 		color: "#F97316",
 		href: "/admin/homepage-dashboard",
@@ -27,11 +21,16 @@ const SIDEBAR_ITEMS = [
 	{ name: "Người Dùng", icon: Users, color: "#EC4899", href: "/admin/users" },
 	{ name: "Bán Hàng", icon: DollarSign, color: "#10B981", href: "/admin/sales" },
 	{ name: "Đơn Hàng", icon: ShoppingCart, color: "#F59E0B", href: "/admin/orders" },
-	{ name: "Quản lý Đánh giá", icon: RateReview, color: "#FFD700", href: "/admin/reviews" },
-	{ name: "Quản lý Blog", icon: FileText, color: "#34D399", href: "/admin/blog" },
-	{ name: "Chat AI", icon: MessageCircle, color: "#06B6D4", href: "/admin/chat" },
+	{ name: "Đánh giá", icon: RateReview, color: "#FFD700", href: "/admin/reviews" },
+	{ name: "Blog", icon: FileText, color: "#34D399", href: "/admin/blog" },
+	{ name: "Chăm sóc khách hàng", icon: MessageCircle, color: "#06B6D4", href: "/admin/chat" },
 	// { name: "Phân tích", icon: TrendingUp, color: "#3B82F6", href: "/admin/analytics" },
-	{ name: "Trang chủ", icon: Home, color: "#3B82F6", href: "/admin/home" },
+	{
+		name: "Khách hàng thân thiết",
+		icon: DollarSign,
+		color: "#F43F5E",
+		href: "/admin/lucky-spin",
+	},
 	// { name: "Settings", icon: Settings, color: "#6EE7B7", href: "/admin/settings" },
 ];
 

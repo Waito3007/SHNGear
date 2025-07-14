@@ -334,53 +334,51 @@ const ReviewManagementPage = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {safeAllReviews.length > 0 ? (
-                    safeAllReviews.map((review) => (
-                      <TableRow key={review.id} sx={{ '&:nth-of-type(odd)': { bgcolor: '#2d3748' }, '&:nth-of-type(even)': { bgcolor: '#1a202c' } }}>
-                        <TableCell sx={{ color: '#e2e8f0' }}>{review.id}</TableCell>
-                        <TableCell sx={{ color: '#e2e8f0' }}>{review.productName || review.productId}</TableCell> {/* Display product name or ID as fallback */}
-                        <TableCell sx={{ color: '#e2e8f0' }}>{review.userName}</TableCell>
-                        <TableCell><Rating value={review.rating} readOnly size="small" sx={{ color: '#ecc94b' }} /></TableCell>
-                        <TableCell sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#e2e8f0' }}>{review.comment}</TableCell>
-                        <TableCell sx={{ color: '#e2e8f0' }}>{new Date(review.createdAt).toLocaleDateString('vi-VN')}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={review.isApproved ? "Đã duyệt" : "Chờ duyệt"}
-                            color={review.isApproved ? "success" : "warning"}
-                            size="small"
-                            icon={review.isApproved ? <CheckCircleOutline /> : <PendingActions />}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {!review.isApproved && (
-                            <Button 
-                              variant="contained" 
-                              color="success" 
-                              size="small" 
-                              onClick={() => handleApprove(review.id)} 
-                              disabled={moderationLoading}
-                              startIcon={<CheckCircleOutline />}
-                              sx={{ mr: 1 }}
-                            >
-                              Duyệt
-                            </Button>
-                          )}
-                          {review.isApproved && (
-                            <Button 
-                              variant="outlined" 
-                              color="warning" 
-                              size="small" 
-                              onClick={() => handleReject(review.id)} 
-                              disabled={moderationLoading}
-                              startIcon={<HighlightOff />}
-                            >
-                              Từ chối
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
+                  {safeAllReviews.length > 0 ? safeAllReviews.map((review) => (
+                    <TableRow key={review.id} sx={{ '&:nth-of-type(odd)': { bgcolor: '#2d3748' }, '&:nth-of-type(even)': { bgcolor: '#1a202c' } }}>
+                      <TableCell sx={{ color: '#e2e8f0' }}>{review.id}</TableCell>
+                      <TableCell sx={{ color: '#e2e8f0' }}>{review.productName || review.productId}</TableCell>
+                      <TableCell sx={{ color: '#e2e8f0' }}>{review.userName}</TableCell>
+                      <TableCell><Rating value={review.rating} readOnly size="small" sx={{ color: '#ecc94b' }} /></TableCell>
+                      <TableCell sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#e2e8f0' }}>{review.comment}</TableCell>
+                      <TableCell sx={{ color: '#e2e8f0' }}>{new Date(review.createdAt).toLocaleDateString('vi-VN')}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={review.isApproved ? "Đã duyệt" : "Chờ duyệt"}
+                          color={review.isApproved ? "success" : "warning"}
+                          size="small"
+                          icon={review.isApproved ? <CheckCircleOutline /> : <PendingActions />}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {!review.isApproved && (
+                          <Button 
+                            variant="contained" 
+                            color="success" 
+                            size="small" 
+                            onClick={() => handleApprove(review.id)} 
+                            disabled={moderationLoading}
+                            startIcon={<CheckCircleOutline />}
+                            sx={{ mr: 1 }}
+                          >
+                            Duyệt
+                          </Button>
+                        )}
+                        {review.isApproved && (
+                          <Button 
+                            variant="outlined" 
+                            color="warning" 
+                            size="small" 
+                            onClick={() => handleReject(review.id)} 
+                            disabled={moderationLoading}
+                            startIcon={<HighlightOff />}
+                          >
+                            Từ chối
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  )) : (
                     <TableRow>
                       <TableCell colSpan={8} sx={{ textAlign: 'center', py: 4, color: '#e2e8f0' }}>
                         Không có đánh giá nào để hiển thị.

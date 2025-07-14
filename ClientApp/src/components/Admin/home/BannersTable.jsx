@@ -172,46 +172,38 @@ const BannersTable = () => {
                 transition={{ duration: 0.3 }}
                 className="hover:bg-gray-700/60"
               >
-            {/* Tiêu đề */}
-            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100 text-left">
-              <span className="truncate max-w-xs" title={banner.title}>{banner.title || "Chưa có tên"}</span>
-            </td>
-
-            {/* Hình ảnh */}
-            <td className="px-6 py-4 text-sm text-gray-100 text-center align-middle">
-              {banner.imageUrl ? (
-                <img
-                  src={banner.imageUrl.startsWith("http") ? banner.imageUrl : `${process.env.REACT_APP_API_BASE_URL}/${banner.imageUrl}`}
-                  alt={banner.title || "banner image"}
-                  className="w-16 h-16 rounded-md object-cover border border-gray-600"
-                  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/100?text=Error"; }}
-                />
-              ) : (
-                <span className="italic text-gray-400">Không có ảnh</span>
-              )}
-          </td>
-
-
-            {/* Trạng thái */}
-            <td className="px-6 py-4 whitespace-nowrap text-center">
-              <span
-                className={`px-3 py-1.5 inline-flex text-xs leading-5 font-semibold rounded-md shadow-sm ${
-                  !banner.status
-                    ? "bg-green-600 text-green-100 shadow-green-500/30"
-                    : "bg-rose-600 text-rose-100 shadow-rose-500/30"
-                  }`}
-                  title={!banner.status ? "Đang hiển thị" : "Đã ẩn"}
-                >
-                {!banner.status ? "Hiển thị" : "Ẩn"}
-              </span>
-            </td>
-            
-            {/* Hành động */}
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
-              <button onClick={() => handleEditBanner(banner)} className="text-sky-400 hover:text-sky-300 p-1.5 rounded-full hover:bg-gray-600/50" title="Sửa Banner"><Edit size={18} /></button>
-              <button onClick={() => handleDeleteBanner(banner)} className="text-rose-400 hover:text-rose-300 p-1.5 ml-1.5 rounded-full hover:bg-gray-600/50" title="Xóa Banner"><Trash2 size={18} /></button>
-            </td>
-            </motion.tr>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100 text-left">
+                  <span className="truncate max-w-xs" title={banner.title}>{banner.title || "Chưa có tên"}</span>
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-100 text-center align-middle">
+                  {banner.imageUrl ? (
+                    <img
+                      src={banner.imageUrl.startsWith("http") ? banner.imageUrl : `${process.env.REACT_APP_API_BASE_URL}/${banner.imageUrl}`}
+                      alt={banner.title || "banner image"}
+                      className="w-16 h-16 rounded-md object-cover border border-gray-600"
+                      onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/100?text=Error"; }}
+                    />
+                  ) : (
+                    <span className="italic text-gray-400">Không có ảnh</span>
+                  )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <span
+                    className={`px-3 py-1.5 inline-flex text-xs leading-5 font-semibold rounded-md shadow-sm ${
+                      !banner.status
+                        ? "bg-green-600 text-green-100 shadow-green-500/30"
+                        : "bg-rose-600 text-rose-100 shadow-rose-500/30"
+                      }`}
+                      title={!banner.status ? "Đang hiển thị" : "Đã ẩn"}
+                    >
+                    {!banner.status ? "Hiển thị" : "Ẩn"}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
+                  <button onClick={() => handleEditBanner(banner)} className="text-sky-400 hover:text-sky-300 p-1.5 rounded-full hover:bg-gray-600/50" title="Sửa Banner"><Edit size={18} /></button>
+                  <button onClick={() => handleDeleteBanner(banner)} className="text-rose-400 hover:text-rose-300 p-1.5 ml-1.5 rounded-full hover:bg-gray-600/50" title="Xóa Banner"><Trash2 size={18} /></button>
+                </td>
+              </motion.tr>
             ))}
           </tbody>
         </table>
