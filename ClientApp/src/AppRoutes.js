@@ -15,19 +15,18 @@ import ProfilePage from "@/pages/ProfilePage/ProfilePage";
 import ProductList from "@/pages/ProductList/ProductList";
 import Shoppingcart from "@/pages/shoppingcart/shoppingcart";
 import Unauthorized from "@/pages/Unauthorized/Unauthorized";
-import ManageHomePage from "./pages/Admin/ManageHomePage";
+import ManageHomePage from "@/pages/Admin/ManageHomePage";
 import ReviewManagementPage from "@/pages/Admin/ReviewManagementPage";
 import LuckySpinPage from "@/pages/Admin/LuckySpinPage";
 import LoyaltyPage from "@/pages/Loyalty/LoyaltyPage";
 import BestSellerAdminPage from "@/pages/Admin/Home/BestSellerAdminPage";
 import BlogPostEditor from "@/components/Admin/blog/BlogPostEditor";
 import BlogList from "@/components/Admin/blog/BlogList";
-import BlogPostDetail from "./components/Admin/blog/BlogPostDetail";
+import BlogPostDetail from "@/components/Admin/blog/BlogPostDetail";
 import PinnedProductKanban from "@/components/Admin/home/PinnedProductKanban";
 import SliderAdminPage from "@/pages/Admin/Home/SliderAdminPage";
 import BannerAdminPage from "@/pages/Admin/Home/BannerAdminPage";
 const AppRoutes = [
-
   {
     path: "/admin/reviews",
     element: <ReviewManagementPage />,
@@ -110,12 +109,12 @@ const AppRoutes = [
   {
     path: "/admin/settings",
     element: <SettingsPage />,
-    requiresAdmin: true 
+    requiresAdmin: true,
   },
   {
     path: "/admin/home",
-    element: <ManageHomePage/>,
-    requiresAdmin: true
+    element: <ManageHomePage />,
+    requiresAdmin: true,
   },
   {
     path: "/admin/homepage",
@@ -159,8 +158,8 @@ const AppRoutes = [
   },
   {
     path: "/admin/home",
-    element: <ManageHomePage/>,
-    requiresAdmin: true
+    element: <ManageHomePage />,
+    requiresAdmin: true,
   },
   // Public routes
   {
