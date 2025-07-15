@@ -71,12 +71,6 @@ const HeroBanner = ({ data }) => {
         </div>
       </div>
 
-      {/* Corner Tech Elements */}
-      <div className="absolute top-6 left-6 w-8 h-8 border-l-2 border-t-2 border-white border-opacity-40"></div>
-      <div className="absolute top-6 right-6 w-8 h-8 border-r-2 border-t-2 border-white border-opacity-40"></div>
-      <div className="absolute bottom-6 left-6 w-8 h-8 border-l-2 border-b-2 border-white border-opacity-40"></div>
-      <div className="absolute bottom-6 right-6 w-8 h-8 border-r-2 border-b-2 border-white border-opacity-40"></div>
-
       {/* Main Content */}
       <div className="relative flex flex-col items-center justify-center h-full px-4 text-center">
         {/* System Indicator */}

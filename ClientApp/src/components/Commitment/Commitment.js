@@ -23,12 +23,6 @@ const BrandTrustSection = ({ data }) => {
         }}
       />
 
-      {/* Tech Corner Indicators */}
-      <div className="absolute top-8 left-8 w-8 h-8 border-l-2 border-t-2 border-black" />
-      <div className="absolute top-8 right-8 w-8 h-8 border-r-2 border-t-2 border-black" />
-      <div className="absolute bottom-8 left-8 w-8 h-8 border-l-2 border-b-2 border-black" />
-      <div className="absolute bottom-8 right-8 w-8 h-8 border-r-2 border-b-2 border-black" />
-
       <div className="container mx-auto px-4 relative">
         {/* Tech Header */}
         <div className="relative mb-16 pb-8 border-b-2 border-gray-200">

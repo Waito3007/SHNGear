@@ -6,7 +6,7 @@ const ProductInfo = ({ product }) => {
   // Debug: Log product data để kiểm tra brand
   console.log("ProductInfo - product data:", product);
   console.log("ProductInfo - brand data:", product?.brand);
-  
+
   return (
     <Paper
       elevation={0}
@@ -228,10 +228,10 @@ const ProductInfo = ({ product }) => {
               <Box
                 component="img"
                 src={
-                  product?.brand?.logo 
-                    ? (product.brand.logo?.startsWith("http")
-                        ? product.brand.logo
-                        : `${process.env.REACT_APP_API_BASE_URL}/${product.brand.logo}`)
+                  product?.brand?.logo
+                    ? product.brand.logo?.startsWith("http")
+                      ? product.brand.logo
+                      : `${process.env.REACT_APP_API_BASE_URL}/${product.brand.logo}`
                     : "https://via.placeholder.com/50?text=Brand"
                 }
                 alt={product?.brand?.name || "Brand Logo"}
@@ -257,7 +257,7 @@ const ProductInfo = ({ product }) => {
                   fontFamily: "'Roboto Mono', monospace",
                 }}
               >
-                BRAND
+                THƯƠNG HIỆU
               </Typography>
               <Typography
                 variant="subtitle1"
@@ -267,7 +267,7 @@ const ProductInfo = ({ product }) => {
                   fontFamily: "'Roboto Mono', monospace",
                 }}
               >
-                {product?.brand?.name || "Unknown Brand"}
+                {product?.brand?.name || "Thương hiệu không xác định"}
               </Typography>
             </Box>
           </Box>
@@ -288,23 +288,23 @@ const ProductInfo = ({ product }) => {
           {[
             {
               icon: Shield,
-              label: "100% Authentic",
-              desc: "Certified original products",
+              label: "100% Chính Hãng",
+              desc: "Sản phẩm được chứng nhận chính hãng",
             },
             {
               icon: Award,
-              label: "24-Month Warranty",
-              desc: "Comprehensive protection plan",
+              label: "Bảo Hành 24 Tháng",
+              desc: "Gói bảo hành toàn diện",
             },
             {
               icon: Truck,
-              label: "2-Hour Delivery",
-              desc: "Express shipping available",
+              label: "Giao Hàng 2 Giờ",
+              desc: "Dịch vụ giao hàng siêu tốc",
             },
             {
               icon: Gift,
-              label: "Premium Gifts",
-              desc: "Exclusive bonus items",
+              label: "Quà Tặng Cao Cấp",
+              desc: "Các món quà độc quyền kèm theo",
             },
           ].map((item, index) => (
             <Paper
@@ -455,7 +455,7 @@ const ProductInfo = ({ product }) => {
               },
             }}
           >
-            Product Description
+            Mô Tả Sản Phẩm
           </Typography>
           <Typography
             variant="body1"

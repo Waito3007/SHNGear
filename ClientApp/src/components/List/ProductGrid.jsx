@@ -8,6 +8,106 @@ import CompareModal from "../CompareProduct/CompareModal";
 import "./ProductCard.css";
 import "./ProductActions.css";
 
+// Add CSS animations
+const styles = `
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  @keyframes slideInFromRight {
+    0% {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  
+  .tech-grid-pattern {
+    background-image: 
+      linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 32px;
+    margin-bottom: 48px;
+  }
+  
+  .skeleton-card {
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    border: 3px solid #000000;
+    border-radius: 20px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .skeleton-image {
+    width: 100%;
+    height: 280px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 16px;
+    margin-bottom: 20px;
+  }
+  
+  .skeleton-content {
+    space-y: 12px;
+  }
+  
+  .skeleton-text {
+    height: 16px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+  
+  .skeleton-text.title {
+    height: 24px;
+    width: 80%;
+  }
+  
+  .skeleton-text.price {
+    height: 20px;
+    width: 60%;
+  }
+  
+  @keyframes loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+`;
+
+// Inject styles
+if (typeof document !== "undefined") {
+  const styleSheet = document.createElement("style");
+  styleSheet.innerText = styles;
+  document.head.appendChild(styleSheet);
+}
+
 const container = {
   hidden: { opacity: 0 },
   show: {
@@ -368,22 +468,99 @@ const ProductGrid = ({
 
     setCompareModalOpen(true);
   };
-
   if (loading) {
     return (
-      <div className="products-grid">
-        {[...Array(8)].map((_, index) => (
-          <motion.div key={index} variants={item}>
-            <div className="skeleton-card">
-              <div className="skeleton-image" />
-              <div className="skeleton-content">
-                <div className="skeleton-text title" />
-                <div className="skeleton-text" />
-                <div className="skeleton-text price" />
-              </div>
-            </div>
-          </motion.div>
-        ))}
+      <div
+        className="w-full min-h-screen"
+        style={{
+          background:
+            "linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%)",
+          position: "relative",
+        }}
+      >
+        {/* Tech Grid Pattern Background */}
+        <div
+          className="tech-grid-pattern"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            pointerEvents: "none",
+            zIndex: 1,
+          }}
+        />
+
+        <div className="max-w-7xl mx-auto px-4 py-8 relative z-10">
+          <div className="products-grid">
+            {[...Array(9)].map((_, index) => (
+              <motion.div
+                key={index}
+                variants={item}
+                initial="hidden"
+                animate="show"
+                transition={{ delay: index * 0.1 }}
+              >
+                <div className="skeleton-card">
+                  {/* Tech Header Line */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: "4px",
+                      background:
+                        "linear-gradient(90deg, #000000 0%, #404040 25%, #808080 50%, #404040 75%, #000000 100%)",
+                      zIndex: 2,
+                    }}
+                  />
+
+                  <div className="skeleton-image" />
+                  <div className="skeleton-content">
+                    <div className="skeleton-text title" />
+                    <div className="skeleton-text" />
+                    <div className="skeleton-text" />
+                    <div className="skeleton-text price" />
+
+                    {/* Skeleton buttons */}
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "12px",
+                        marginTop: "20px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          flex: "1",
+                          height: "40px",
+                          background:
+                            "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                          backgroundSize: "200% 100%",
+                          animation: "loading 1.5s infinite",
+                          borderRadius: "12px",
+                        }}
+                      />
+                      <div
+                        style={{
+                          flex: "2",
+                          height: "40px",
+                          background:
+                            "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                          backgroundSize: "200% 100%",
+                          animation: "loading 1.5s infinite",
+                          borderRadius: "12px",
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -391,20 +568,117 @@ const ProductGrid = ({
   if (error) {
     return <div className="text-red-500 text-center p-4">{error}</div>;
   }
-
   return (
-    <div className="w-full py-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
-      <div className="max-w-7xl mx-auto px-4">
+    <div
+      className="w-full min-h-screen"
+      style={{
+        background:
+          "linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%)",
+        position: "relative",
+      }}
+    >
+      {/* Tech Grid Pattern Background */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: `
+            linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px)
+          `,
+          backgroundSize: "40px 40px",
+          pointerEvents: "none",
+          zIndex: 1,
+        }}
+      />
+
+      <div className="max-w-7xl mx-auto px-4 py-8 relative z-10">
         {" "}
         {allProducts.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="text-6xl mb-4">📱</div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">
-              Không có sản phẩm phù hợp
-            </h3>
-            <p className="text-gray-500">
-              Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm
-            </p>
+          <div
+            className="text-center py-24"
+            style={{
+              background: "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
+              borderRadius: "24px",
+              border: "3px solid #000000",
+              position: "relative",
+              overflow: "hidden",
+              boxShadow: `
+                0 0 0 1px rgba(0,0,0,0.05),
+                0 20px 60px rgba(0,0,0,0.1),
+                0 30px 80px rgba(0,0,0,0.15)
+              `,
+            }}
+          >
+            {/* Tech Header Line */}
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                height: "6px",
+                background:
+                  "linear-gradient(90deg, #000000 0%, #404040 25%, #808080 50%, #404040 75%, #000000 100%)",
+                zIndex: 2,
+              }}
+            />
+
+            {/* Tech Circuit Pattern */}
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: `
+                  radial-gradient(circle at 20% 80%, rgba(0,0,0,0.03) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 20%, rgba(0,0,0,0.03) 0%, transparent 50%)
+                `,
+                pointerEvents: "none",
+              }}
+            />
+
+            <div className="relative z-10 py-12">
+              <div
+                className="text-8xl mb-6"
+                style={{
+                  fontFamily: "'Roboto Mono', monospace",
+                  background:
+                    "linear-gradient(135deg, #000000 0%, #333333 50%, #000000 100%)",
+                  backgroundClip: "text",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
+                ⚠
+              </div>
+              <h3
+                className="text-2xl font-bold mb-4"
+                style={{
+                  fontFamily: "'Roboto Mono', monospace",
+                  textTransform: "uppercase",
+                  letterSpacing: "2px",
+                  color: "#000000",
+                }}
+              >
+                KHÔNG CÓ SẢN PHẨM PHÙ HỢP
+              </h3>
+              <p
+                className="text-lg"
+                style={{
+                  fontFamily: "'Roboto Mono', monospace",
+                  color: "#666666",
+                  letterSpacing: "1px",
+                }}
+              >
+                HÃY THỬ THAY ĐỔI BỘ LỌC HOẶC TỪ KHÓA TÌM KIẾM
+              </p>
+            </div>
           </div>
         ) : (
           <motion.div variants={container} initial="hidden" animate="show">
@@ -413,7 +687,6 @@ const ProductGrid = ({
                 const isInCompare = JSON.parse(
                   localStorage.getItem("compareList") || "[]"
                 ).includes(product.id);
-
                 return (
                   <motion.div
                     key={product.id}
@@ -421,28 +694,139 @@ const ProductGrid = ({
                     onMouseEnter={(e) => handleMouseEnter(product, e)}
                     onMouseLeave={handleMouseLeave}
                     onMouseMove={handleMouseMove}
+                    style={{
+                      perspective: "1000px",
+                    }}
                   >
                     <div
                       className="product-card"
                       onClick={() => navigate(`/product/${product.id}`)}
+                      style={{
+                        background:
+                          "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
+                        borderRadius: "20px",
+                        border: "3px solid #000000",
+                        padding: "24px",
+                        cursor: "pointer",
+                        position: "relative",
+                        overflow: "hidden",
+                        transition:
+                          "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                        transformStyle: "preserve-3d",
+                        boxShadow: `
+                          0 0 0 1px rgba(0,0,0,0.05),
+                          0 10px 40px rgba(0,0,0,0.08),
+                          0 20px 60px rgba(0,0,0,0.12)
+                        `,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform =
+                          "translateY(-12px) scale(1.02) rotateX(2deg)";
+                        e.currentTarget.style.boxShadow = `
+                          0 0 0 1px rgba(0,0,0,0.08),
+                          0 25px 80px rgba(0,0,0,0.15),
+                          0 35px 100px rgba(0,0,0,0.20)
+                        `;
+                        e.currentTarget.style.borderColor = "#333333";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform =
+                          "translateY(0) scale(1) rotateX(0deg)";
+                        e.currentTarget.style.boxShadow = `
+                          0 0 0 1px rgba(0,0,0,0.05),
+                          0 10px 40px rgba(0,0,0,0.08),
+                          0 20px 60px rgba(0,0,0,0.12)
+                        `;
+                        e.currentTarget.style.borderColor = "#000000";
+                      }}
                     >
+                      {/* Tech Header Line */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: "4px",
+                          background:
+                            "linear-gradient(90deg, #000000 0%, #404040 25%, #808080 50%, #404040 75%, #000000 100%)",
+                          zIndex: 2,
+                        }}
+                      />
+
+                      {/* Circuit Pattern Overlay */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          background: `
+                            radial-gradient(circle at 10% 90%, rgba(0,0,0,0.02) 0%, transparent 50%),
+                            radial-gradient(circle at 90% 10%, rgba(0,0,0,0.02) 0%, transparent 50%)
+                          `,
+                          pointerEvents: "none",
+                          zIndex: 1,
+                        }}
+                      />
+
                       {/* Product Image */}
-                      <div className="product-image">
+                      <div
+                        className="product-image"
+                        style={{
+                          position: "relative",
+                          marginBottom: "20px",
+                          borderRadius: "16px",
+                          overflow: "hidden",
+                          border: "2px solid #000000",
+                          background:
+                            "linear-gradient(145deg, #ffffff 0%, #f0f0f0 100%)",
+                        }}
+                      >
                         {/* Discount Badge */}
                         {product.discount > 0 && (
-                          <div className="absolute top-2 left-2 z-10">
-                            <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                              -{product.discount}%
-                            </span>
+                          <div
+                            className="absolute top-3 left-3 z-20"
+                            style={{
+                              background:
+                                "linear-gradient(135deg, #ff0000 0%, #cc0000 100%)",
+                              color: "#ffffff",
+                              fontSize: "12px",
+                              fontWeight: "bold",
+                              padding: "6px 12px",
+                              borderRadius: "20px",
+                              border: "2px solid #ffffff",
+                              fontFamily: "'Roboto Mono', monospace",
+                              textTransform: "uppercase",
+                              letterSpacing: "1px",
+                              boxShadow: "0 4px 12px rgba(255,0,0,0.3)",
+                            }}
+                          >
+                            -{product.discount}%
                           </div>
                         )}
 
                         {/* Compare Badge */}
                         {isInCompare && (
-                          <div className="absolute top-2 right-2 z-10">
-                            <span className="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                              ✓ Đã chọn
-                            </span>
+                          <div
+                            className="absolute top-3 right-3 z-20"
+                            style={{
+                              background:
+                                "linear-gradient(135deg, #0066ff 0%, #0044cc 100%)",
+                              color: "#ffffff",
+                              fontSize: "12px",
+                              fontWeight: "bold",
+                              padding: "6px 12px",
+                              borderRadius: "20px",
+                              border: "2px solid #ffffff",
+                              fontFamily: "'Roboto Mono', monospace",
+                              textTransform: "uppercase",
+                              letterSpacing: "1px",
+                              boxShadow: "0 4px 12px rgba(0,102,255,0.3)",
+                            }}
+                          >
+                            ✓ ĐÃ CHỌN
                           </div>
                         )}
 
@@ -453,6 +837,18 @@ const ProductGrid = ({
                               : `${process.env.REACT_APP_API_BASE_URL}/${product.image}`
                           }
                           alt={product.name}
+                          style={{
+                            width: "100%",
+                            height: "280px",
+                            objectFit: "cover",
+                            transition: "transform 0.4s ease",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.transform = "scale(1.08)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.transform = "scale(1)";
+                          }}
                           onError={(e) => {
                             e.target.onerror = null;
                             e.target.src =
@@ -462,10 +858,29 @@ const ProductGrid = ({
                       </div>
 
                       {/* Product Content */}
-                      <div className="product-content">
+                      <div
+                        className="product-content"
+                        style={{
+                          position: "relative",
+                          zIndex: 10,
+                        }}
+                      >
                         {/* Brand */}
                         {product.brand && (
-                          <div className="product-brand">
+                          <div
+                            className="product-brand"
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                              marginBottom: "12px",
+                              padding: "8px 12px",
+                              background:
+                                "linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%)",
+                              borderRadius: "12px",
+                              border: "1px solid #e0e0e0",
+                            }}
+                          >
                             {product.brand.logo && (
                               <img
                                 src={
@@ -474,7 +889,12 @@ const ProductGrid = ({
                                     : `${process.env.REACT_APP_API_BASE_URL}/${product.brand.logo}`
                                 }
                                 alt={product.brand.name}
-                                className="brand-logo"
+                                style={{
+                                  width: "24px",
+                                  height: "24px",
+                                  objectFit: "contain",
+                                  borderRadius: "4px",
+                                }}
                                 onError={(e) => {
                                   e.target.onerror = null;
                                   e.target.style.display = "none";
@@ -484,18 +904,93 @@ const ProductGrid = ({
                             <Typography
                               variant="caption"
                               sx={{
-                                color: "text.secondary",
-                                fontWeight: 500,
+                                color: "#666666",
+                                fontWeight: 700,
+                                fontFamily: "'Roboto Mono', monospace",
+                                textTransform: "uppercase",
+                                letterSpacing: "1px",
                               }}
                             >
                               {product.brand.name}
                             </Typography>
                           </div>
-                        )}
+                        )}{" "}
                         {/* Product Name */}
-                        <h3 className="product-name">{product.name}</h3>
+                        <h3
+                          className="product-name"
+                          style={{
+                            fontFamily: "'Roboto Mono', monospace",
+                            fontSize: "18px",
+                            fontWeight: 700,
+                            color: "#000000",
+                            marginBottom: "16px",
+                            lineHeight: "1.4",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.5px",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }}
+                        >
+                          {product.name}
+                        </h3>
+                        {/* Price - Moved to center */}
+                        <div
+                          className="product-price"
+                          style={{
+                            marginBottom: "20px",
+                            padding: "16px",
+                            background:
+                              "linear-gradient(145deg, #000000 0%, #333333 100%)",
+                            borderRadius: "16px",
+                            border: "2px solid #000000",
+                            textAlign: "center",
+                          }}
+                        >
+                          {product.oldPrice > product.newPrice && (
+                            <div
+                              className="old-price"
+                              style={{
+                                fontSize: "14px",
+                                textDecoration: "line-through",
+                                color: "#cccccc",
+                                marginBottom: "4px",
+                                fontFamily: "'Roboto Mono', monospace",
+                                fontWeight: 500,
+                              }}
+                            >
+                              {product.oldPrice.toLocaleString()}đ
+                            </div>
+                          )}
+                          <div
+                            className="current-price"
+                            style={{
+                              fontSize: "20px",
+                              fontWeight: 700,
+                              color: "#ffffff",
+                              fontFamily: "'Roboto Mono', monospace",
+                              letterSpacing: "1px",
+                            }}
+                          >
+                            {product.newPrice.toLocaleString()}đ
+                          </div>
+                        </div>
                         {/* Rating */}
-                        <div className="product-rating">
+                        <div
+                          className="product-rating"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            marginBottom: "16px",
+                            padding: "8px 12px",
+                            background:
+                              "linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%)",
+                            borderRadius: "12px",
+                            border: "1px solid #e0e0e0",
+                          }}
+                        >
                           <Rating
                             value={product.rating}
                             precision={0.1}
@@ -503,34 +998,40 @@ const ProductGrid = ({
                             readOnly
                             sx={{
                               opacity: product.rating > 0 ? 1 : 0.3,
+                              "& .MuiRating-iconFilled": {
+                                color: "#000000",
+                              },
+                              "& .MuiRating-iconEmpty": {
+                                color: "#cccccc",
+                              },
                             }}
                           />
-                          <Typography 
-                            variant="body2" 
-                            color="text.secondary"
+                          <Typography
+                            variant="body2"
                             sx={{
-                              fontSize: '0.75rem',
+                              fontSize: "12px",
                               opacity: product.ratingCount > 0 ? 1 : 0.6,
+                              fontFamily: "'Roboto Mono', monospace",
+                              fontWeight: 600,
+                              color: "#666666",
                             }}
                           >
-                            ({product.ratingCount > 0 ? `${product.ratingCount} đánh giá` : 'Chưa có đánh giá'})
+                            (
+                            {product.ratingCount > 0
+                              ? `${product.ratingCount} đánh giá`
+                              : "Chưa có đánh giá"}
+                            )
                           </Typography>
                         </div>
-                        {/* Price */}
-                        <div className="product-price">
-                          {product.oldPrice > product.newPrice && (
-                            <div className="old-price">
-                              {product.oldPrice.toLocaleString()}đ
-                            </div>
-                          )}
-                          <div className="current-price">
-                            {product.newPrice.toLocaleString()}đ
-                          </div>
-                        </div>{" "}
                         {/* Action Buttons */}
                         <div
                           className="product-actions"
                           data-product-id={product.id}
+                          style={{
+                            display: "flex",
+                            gap: "12px",
+                            marginTop: "20px",
+                          }}
                         >
                           <button
                             className={`compare-btn ${
@@ -545,12 +1046,60 @@ const ProductGrid = ({
                               toggleCompare(product.id, product.name);
                             }}
                             disabled={loadingStates[`${product.id}-compare`]}
+                            style={{
+                              flex: "1",
+                              padding: "12px 16px",
+                              borderRadius: "12px",
+                              border: "2px solid #000000",
+                              background: isInCompare
+                                ? "linear-gradient(135deg, #0066ff 0%, #0044cc 100%)"
+                                : "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
+                              color: isInCompare ? "#ffffff" : "#000000",
+                              fontSize: "12px",
+                              fontWeight: 700,
+                              fontFamily: "'Roboto Mono', monospace",
+                              textTransform: "uppercase",
+                              letterSpacing: "1px",
+                              cursor: "pointer",
+                              transition: "all 0.3s ease",
+                              position: "relative",
+                              overflow: "hidden",
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!isInCompare) {
+                                e.target.style.background =
+                                  "linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%)";
+                                e.target.style.transform = "translateY(-2px)";
+                                e.target.style.boxShadow =
+                                  "0 6px 20px rgba(0,0,0,0.15)";
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isInCompare) {
+                                e.target.style.background =
+                                  "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)";
+                                e.target.style.transform = "translateY(0)";
+                                e.target.style.boxShadow = "none";
+                              }
+                            }}
                           >
-                            {loadingStates[`${product.id}-compare`]
-                              ? ""
-                              : isInCompare
-                              ? "✓ Đã chọn"
-                              : "So sánh"}
+                            {loadingStates[`${product.id}-compare`] ? (
+                              <div
+                                style={{
+                                  width: "16px",
+                                  height: "16px",
+                                  border: "2px solid #cccccc",
+                                  borderTop: "2px solid #000000",
+                                  borderRadius: "50%",
+                                  animation: "spin 1s linear infinite",
+                                  margin: "0 auto",
+                                }}
+                              />
+                            ) : isInCompare ? (
+                              "✓ ĐÃ CHỌN"
+                            ) : (
+                              "SO SÁNH"
+                            )}
                           </button>
 
                           <button
@@ -564,10 +1113,53 @@ const ProductGrid = ({
                               addToCart(product);
                             }}
                             disabled={loadingStates[`${product.id}-cart`]}
+                            style={{
+                              flex: "2",
+                              padding: "12px 16px",
+                              borderRadius: "12px",
+                              border: "2px solid #000000",
+                              background:
+                                "linear-gradient(135deg, #000000 0%, #333333 100%)",
+                              color: "#ffffff",
+                              fontSize: "12px",
+                              fontWeight: 700,
+                              fontFamily: "'Roboto Mono', monospace",
+                              textTransform: "uppercase",
+                              letterSpacing: "1px",
+                              cursor: "pointer",
+                              transition: "all 0.3s ease",
+                              position: "relative",
+                              overflow: "hidden",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.background =
+                                "linear-gradient(135deg, #333333 0%, #555555 100%)";
+                              e.target.style.transform = "translateY(-2px)";
+                              e.target.style.boxShadow =
+                                "0 8px 25px rgba(0,0,0,0.3)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.background =
+                                "linear-gradient(135deg, #000000 0%, #333333 100%)";
+                              e.target.style.transform = "translateY(0)";
+                              e.target.style.boxShadow = "none";
+                            }}
                           >
-                            {loadingStates[`${product.id}-cart`]
-                              ? ""
-                              : "Thêm vào giỏ"}
+                            {loadingStates[`${product.id}-cart`] ? (
+                              <div
+                                style={{
+                                  width: "16px",
+                                  height: "16px",
+                                  border: "2px solid #666666",
+                                  borderTop: "2px solid #ffffff",
+                                  borderRadius: "50%",
+                                  animation: "spin 1s linear infinite",
+                                  margin: "0 auto",
+                                }}
+                              />
+                            ) : (
+                              "THÊM VÀO GIỎ"
+                            )}
                           </button>
                         </div>
                       </div>
@@ -587,33 +1179,134 @@ const ProductGrid = ({
               loading={loading}
             />
           </motion.div>
-        )}
+        )}{" "}
         {/* Floating Compare Button */}
         {compareCount > 0 && (
-          <div className="fixed bottom-8 left-8 z-[9998]">
+          <div
+            className="fixed bottom-8 left-8 z-[9998]"
+            style={{
+              perspective: "1000px",
+            }}
+          >
             <button
               onClick={openCompareModal}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-full shadow-2xl transition-all duration-300 flex items-center space-x-3 transform hover:scale-105"
+              style={{
+                background: "linear-gradient(135deg, #000000 0%, #333333 100%)",
+                color: "#ffffff",
+                padding: "20px 24px",
+                borderRadius: "24px",
+                border: "3px solid #000000",
+                boxShadow: `
+                  0 0 0 1px rgba(0,0,0,0.1),
+                  0 20px 60px rgba(0,0,0,0.3),
+                  0 30px 80px rgba(0,0,0,0.4)
+                `,
+                transition: "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                display: "flex",
+                alignItems: "center",
+                gap: "16px",
+                cursor: "pointer",
+                fontFamily: "'Roboto Mono', monospace",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "1px",
+                fontSize: "14px",
+                position: "relative",
+                overflow: "hidden",
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform =
+                  "translateY(-8px) scale(1.05) rotateX(5deg)";
+                e.target.style.boxShadow = `
+                  0 0 0 1px rgba(0,0,0,0.15),
+                  0 30px 80px rgba(0,0,0,0.4),
+                  0 40px 100px rgba(0,0,0,0.5)
+                `;
+                e.target.style.background =
+                  "linear-gradient(135deg, #333333 0%, #555555 100%)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform =
+                  "translateY(0) scale(1) rotateX(0deg)";
+                e.target.style.boxShadow = `
+                  0 0 0 1px rgba(0,0,0,0.1),
+                  0 20px 60px rgba(0,0,0,0.3),
+                  0 30px 80px rgba(0,0,0,0.4)
+                `;
+                e.target.style.background =
+                  "linear-gradient(135deg, #000000 0%, #333333 100%)";
+              }}
             >
-              <div className="relative">
+              {/* Tech Circuit Background */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: `
+                    radial-gradient(circle at 20% 80%, rgba(255,255,255,0.05) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 20%, rgba(255,255,255,0.05) 0%, transparent 50%)
+                  `,
+                  pointerEvents: "none",
+                }}
+              />
+
+              <div
+                className="relative"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
                 <svg
-                  className="w-6 h-6"
+                  className="w-8 h-8"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  style={{
+                    filter: "drop-shadow(0 2px 4px rgba(255,255,255,0.2))",
+                  }}
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                     d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                   />
                 </svg>
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                <span
+                  className="absolute -top-3 -right-3"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #ff0000 0%, #cc0000 100%)",
+                    color: "#ffffff",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    borderRadius: "50%",
+                    width: "24px",
+                    height: "24px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "2px solid #ffffff",
+                    fontFamily: "'Roboto Mono', monospace",
+                    boxShadow: "0 4px 12px rgba(255,0,0,0.4)",
+                  }}
+                >
                   {compareCount}
                 </span>
               </div>
-              <span className="font-semibold">So sánh</span>
+              <span
+                className="font-semibold relative z-10"
+                style={{
+                  textShadow: "0 2px 4px rgba(0,0,0,0.3)",
+                }}
+              >
+                SO SÁNH
+              </span>
             </button>
           </div>
         )}
@@ -632,11 +1325,77 @@ const ProductGrid = ({
         <CompareModal
           isOpen={compareModalOpen}
           onClose={() => setCompareModalOpen(false)}
-        />
+        />{" "}
         {/* Toast Notification */}
         {toastNotification && (
-          <div className={`toast-notification ${toastNotification.type}`}>
-            <div className={`toast-icon ${toastNotification.type}`}>
+          <div
+            className={`toast-notification ${toastNotification.type}`}
+            style={{
+              position: "fixed",
+              top: "24px",
+              right: "24px",
+              zIndex: 10000,
+              background: "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
+              border: "3px solid #000000",
+              borderRadius: "16px",
+              padding: "20px",
+              maxWidth: "400px",
+              boxShadow: `
+                0 0 0 1px rgba(0,0,0,0.1),
+                0 20px 60px rgba(0,0,0,0.15),
+                0 30px 80px rgba(0,0,0,0.2)
+              `,
+              display: "flex",
+              alignItems: "center",
+              gap: "16px",
+              animation:
+                "slideInFromRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+            }}
+          >
+            {/* Tech Header Line */}
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                height: "4px",
+                background:
+                  toastNotification.type === "success"
+                    ? "linear-gradient(90deg, #00ff00 0%, #00cc00 100%)"
+                    : toastNotification.type === "error"
+                    ? "linear-gradient(90deg, #ff0000 0%, #cc0000 100%)"
+                    : toastNotification.type === "warning"
+                    ? "linear-gradient(90deg, #ffaa00 0%, #cc8800 100%)"
+                    : "linear-gradient(90deg, #0066ff 0%, #0044cc 100%)",
+                zIndex: 2,
+              }}
+            />
+
+            <div
+              className={`toast-icon ${toastNotification.type}`}
+              style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "20px",
+                fontWeight: "bold",
+                color: "#ffffff",
+                background:
+                  toastNotification.type === "success"
+                    ? "linear-gradient(135deg, #00ff00 0%, #00cc00 100%)"
+                    : toastNotification.type === "error"
+                    ? "linear-gradient(135deg, #ff0000 0%, #cc0000 100%)"
+                    : toastNotification.type === "warning"
+                    ? "linear-gradient(135deg, #ffaa00 0%, #cc8800 100%)"
+                    : "linear-gradient(135deg, #0066ff 0%, #0044cc 100%)",
+                border: "2px solid #000000",
+                flexShrink: 0,
+              }}
+            >
               {toastNotification.type === "success"
                 ? "✓"
                 : toastNotification.type === "error"
@@ -645,11 +1404,40 @@ const ProductGrid = ({
                 ? "⚠"
                 : "ℹ"}
             </div>
-            <div className="toast-content">
+            <div
+              className="toast-content"
+              style={{
+                flex: 1,
+              }}
+            >
               {toastNotification.title && (
-                <div className="toast-title">{toastNotification.title}</div>
+                <div
+                  className="toast-title"
+                  style={{
+                    fontFamily: "'Roboto Mono', monospace",
+                    fontSize: "16px",
+                    fontWeight: 700,
+                    color: "#000000",
+                    textTransform: "uppercase",
+                    letterSpacing: "1px",
+                    marginBottom: "4px",
+                  }}
+                >
+                  {toastNotification.title}
+                </div>
               )}
-              <div className="toast-message">{toastNotification.message}</div>
+              <div
+                className="toast-message"
+                style={{
+                  fontFamily: "'Roboto Mono', monospace",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  color: "#666666",
+                  lineHeight: "1.4",
+                }}
+              >
+                {toastNotification.message}
+              </div>
             </div>
           </div>
         )}

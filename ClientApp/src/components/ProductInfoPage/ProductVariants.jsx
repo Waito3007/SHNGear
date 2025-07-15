@@ -29,19 +29,22 @@ const ProductVariants = ({ variants, onAddToCart }) => {
   const [selectedColor, setSelectedColor] = useState(
     variants?.length > 0 ? variants[0].color : ""
   );
-  
+
   const [selectedStorage, setSelectedStorage] = useState("");
-  
+
   // Memoize available storages to prevent unnecessary re-calculations
   const availableStorages = useMemo(() => {
     return variants
       .filter((v) => v.color === selectedColor)
       .map((v) => v.storage);
   }, [variants, selectedColor]);
-  
+
   // Update selected storage when available storages change
   useEffect(() => {
-    if (availableStorages.length > 0 && !availableStorages.includes(selectedStorage)) {
+    if (
+      availableStorages.length > 0 &&
+      !availableStorages.includes(selectedStorage)
+    ) {
       setSelectedStorage(availableStorages[0]);
     }
   }, [availableStorages, selectedStorage]);
@@ -49,7 +52,7 @@ const ProductVariants = ({ variants, onAddToCart }) => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [quantity, setQuantity] = useState(1);
-  
+
   // Always show discount price, no more blinking effect
 
   const handleSelectColor = (color) => {
@@ -271,7 +274,7 @@ const ProductVariants = ({ variants, onAddToCart }) => {
           },
         }}
       >
-        Color Options
+        TÙY CHỌN MÀU SẮC
       </Typography>
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {[...new Set(variants.map((v) => v.color))].map((color) => (
@@ -394,7 +397,7 @@ const ProductVariants = ({ variants, onAddToCart }) => {
           },
         }}
       >
-        Storage Options
+        TÙY CHỌN DUNG LƯỢNG
       </Typography>
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {[...new Set(variants.map((v) => v.storage))].map((storage) => (
@@ -402,7 +405,7 @@ const ProductVariants = ({ variants, onAddToCart }) => {
             <Tooltip
               title={
                 !availableStorages.includes(storage)
-                  ? "Not available with selected color"
+                  ? "Không có sẵn với màu đã chọn"
                   : ""
               }
               arrow
@@ -589,7 +592,7 @@ const ProductVariants = ({ variants, onAddToCart }) => {
                 letterSpacing: "1px",
               }}
             >
-              Quantity:
+              SỐ LƯỢNG:
             </Typography>
             <Box
               sx={{
@@ -646,10 +649,10 @@ const ProductVariants = ({ variants, onAddToCart }) => {
                 <AddCircle />
               </IconButton>
             </Box>
-            <Tooltip title="Stock information" arrow>
+            <Tooltip title="Thông tin kho hàng" arrow>
               <Chip
                 icon={<Info />}
-                label={`Stock: ${selectedVariant.stockQuantity}`}
+                label={`Kho: ${selectedVariant.stockQuantity}`}
                 variant="outlined"
                 sx={{
                   borderColor: "#000000",
@@ -691,7 +694,7 @@ const ProductVariants = ({ variants, onAddToCart }) => {
                 transition: "all 0.3s ease",
               }}
             >
-              Add to Cart
+              THÊM VÀO GIỎ
             </Button>
             <Button
               onClick={handleAddToCart}
@@ -715,7 +718,7 @@ const ProductVariants = ({ variants, onAddToCart }) => {
                 transition: "all 0.3s ease",
               }}
             >
-              Buy Now
+              MUA NGAY
             </Button>
           </Box>
         </Box>
@@ -733,7 +736,7 @@ const ProductVariants = ({ variants, onAddToCart }) => {
           severity={snackbarSeverity}
           elevation={6}
           variant="filled"
-          sx={{ width: '100%' }}
+          sx={{ width: "100%" }}
         >
           {snackbarMessage}
         </Alert>

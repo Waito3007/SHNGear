@@ -18,11 +18,12 @@ const BestSellers = ({ data }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [productsResponse, categoriesResponse, brandsResponse] = await Promise.all([
-          fetch(`${process.env.REACT_APP_API_BASE_URL}/api/products`),
-          fetch(`${process.env.REACT_APP_API_BASE_URL}/api/categories`),
-          fetch(`${process.env.REACT_APP_API_BASE_URL}/api/brands`)
-        ]);
+        const [productsResponse, categoriesResponse, brandsResponse] =
+          await Promise.all([
+            fetch(`${process.env.REACT_APP_API_BASE_URL}/api/products`),
+            fetch(`${process.env.REACT_APP_API_BASE_URL}/api/categories`),
+            fetch(`${process.env.REACT_APP_API_BASE_URL}/api/brands`),
+          ]);
 
         if (!productsResponse.ok) throw new Error("Không thể tải sản phẩm");
         if (!categoriesResponse.ok) throw new Error("Không thể tải danh mục");
@@ -31,29 +32,34 @@ const BestSellers = ({ data }) => {
         const [productsData, categoriesData, brandsData] = await Promise.all([
           productsResponse.json(),
           categoriesResponse.json(),
-          brandsResponse.json()
+          brandsResponse.json(),
         ]);
 
         const categoriesArray = categoriesData.$values || categoriesData || [];
         const brandsArray = brandsData.$values || brandsData || [];
         const productsArray = productsData.$values || productsData || [];
 
-        const phoneCategory = categoriesArray.find(cat => cat.name === "Điện Thoại");
-        if (!phoneCategory) throw new Error("Không tìm thấy danh mục 'Điện Thoại'");
+        const phoneCategory = categoriesArray.find(
+          (cat) => cat.name === "Điện Thoại"
+        );
+        if (!phoneCategory)
+          throw new Error("Không tìm thấy danh mục 'Điện Thoại'");
 
         const pinnedPhoneProducts = productsArray
-          .filter(p => p.categoryId === phoneCategory.id && p.isPinned) // ✅ chỉ lấy sản phẩm ghim
-          .map(product => {
+          .filter((p) => p.categoryId === phoneCategory.id && p.isPinned) // ✅ chỉ lấy sản phẩm ghim
+          .map((product) => {
             const variant = product.variants?.[0] || {};
-            const image = product.images?.[0]?.imageUrl || "/images/placeholder.jpg";
+            const image =
+              product.images?.[0]?.imageUrl || "/images/placeholder.jpg";
             const oldPrice = variant.price || 0;
             const newPrice = variant.discountPrice || oldPrice;
             const discountAmount = oldPrice - newPrice;
-            const discount = oldPrice > 0
-              ? `-${Math.round((discountAmount / oldPrice) * 100)}%`
-              : "0%";
+            const discount =
+              oldPrice > 0
+                ? `-${Math.round((discountAmount / oldPrice) * 100)}%`
+                : "0%";
 
-            const brand = brandsArray.find(b => b.id === product.brandId);
+            const brand = brandsArray.find((b) => b.id === product.brandId);
 
             return {
               id: product.id,
@@ -93,8 +99,14 @@ const BestSellers = ({ data }) => {
     return (
       <div className="flex justify-center items-center py-12 space-x-2">
         <div className="animate-bounce w-4 h-4 bg-red-500 rounded-full"></div>
-        <div className="animate-bounce w-4 h-4 bg-red-500 rounded-full" style={{ animationDelay: '0.1s' }}></div>
-        <div className="animate-bounce w-4 h-4 bg-red-500 rounded-full" style={{ animationDelay: '0.2s' }}></div>
+        <div
+          className="animate-bounce w-4 h-4 bg-red-500 rounded-full"
+          style={{ animationDelay: "0.1s" }}
+        ></div>
+        <div
+          className="animate-bounce w-4 h-4 bg-red-500 rounded-full"
+          style={{ animationDelay: "0.2s" }}
+        ></div>
       </div>
     );
   }
@@ -142,7 +154,12 @@ const BestSellers = ({ data }) => {
               >
                 {product.discount !== "0%" && (
                   <div className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-2 py-1 transform rotate-12 translate-x-2 -translate-y-1 z-10">
-                    -{((product.discountAmount / product.oldPrice) * 100).toFixed(0)}%
+                    -
+                    {(
+                      (product.discountAmount / product.oldPrice) *
+                      100
+                    ).toFixed(0)}
+                    %
                   </div>
                 )}
 
@@ -162,11 +179,11 @@ const BestSellers = ({ data }) => {
                   <div className="flex justify-between items-center">
                     {product.oldPrice && (
                       <span className="text-gray-500 line-through">
-                        {product.oldPrice.toLocaleString('vi-VN')}đ
+                        {product.oldPrice.toLocaleString("vi-VN")}đ
                       </span>
                     )}
                     <span className="text-red-500 font-semibold ml-auto">
-                      {product.newPrice.toLocaleString('vi-VN')}đ
+                      {product.newPrice.toLocaleString("vi-VN")}đ
                     </span>
                   </div>
 
@@ -185,7 +202,7 @@ const BestSellers = ({ data }) => {
                         <span>{feature}</span>
                       </li>
                     ))}
-                  </ul> */}
+                  </ul>
                 </div>
               </div>
             </SwiperSlide>

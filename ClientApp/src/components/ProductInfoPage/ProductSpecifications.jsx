@@ -147,12 +147,12 @@ const SpecificationDisplay = ({ productId }) => {
                         fontStyle: "italic",
                       }}
                     >
-                      Updating...
+                      Đang cập nhật...
                     </Typography>
                     <Box
                       component="span"
                       sx={{ cursor: "pointer" }}
-                      title="This specification will be updated soon."
+                      title="Thông số kỹ thuật này sẽ được cập nhật sớm."
                     >
                       <Minimize2 size={16} color="#999999" />
                     </Box>
@@ -194,7 +194,7 @@ const SpecificationDisplay = ({ productId }) => {
                 transition: "all 0.3s ease",
               }}
             >
-              {showAllSpecs ? "Show Less" : "Show More Specs"}
+              {showAllSpecs ? "Ẩn bớt" : "Xem thêm thông số"}
             </Button>
           </ListItem>
         )}
@@ -303,7 +303,7 @@ const SpecificationDisplay = ({ productId }) => {
               letterSpacing: "2px",
             }}
           >
-            # Technical Specifications
+            # Thông Số Kỹ Thuật
           </Typography>
         </Box>
         <Box

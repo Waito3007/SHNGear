@@ -49,12 +49,6 @@ const FeaturedCategories = ({ data }) => {
           }}
         />
 
-        {/* Tech Corner Indicators */}
-        <div className="absolute top-8 left-8 w-8 h-8 border-l-2 border-t-2 border-black" />
-        <div className="absolute top-8 right-8 w-8 h-8 border-r-2 border-t-2 border-black" />
-        <div className="absolute bottom-8 left-8 w-8 h-8 border-l-2 border-b-2 border-black" />
-        <div className="absolute bottom-8 right-8 w-8 h-8 border-r-2 border-b-2 border-black" />
-
         <div className="container mx-auto px-4 relative">
           {/* Loading Header */}
           <div className="text-center mb-16">
@@ -113,12 +107,6 @@ const FeaturedCategories = ({ data }) => {
           backgroundSize: "20px 20px",
         }}
       />
-
-      {/* Tech Corner Indicators */}
-      <div className="absolute top-8 left-8 w-8 h-8 border-l-2 border-t-2 border-black" />
-      <div className="absolute top-8 right-8 w-8 h-8 border-r-2 border-t-2 border-black" />
-      <div className="absolute bottom-8 left-8 w-8 h-8 border-l-2 border-b-2 border-black" />
-      <div className="absolute bottom-8 right-8 w-8 h-8 border-r-2 border-b-2 border-black" />
 
       <div className="container mx-auto px-4 relative">
         {/* Tech Header */}
@@ -301,7 +289,7 @@ const FeaturedCategories = ({ data }) => {
         </div>
 
         {/* Tech Footer Stats */}
-         <div className="mt-8 pt-6 border-t border-gray-200">
+        <div className="mt-8 pt-6 border-t border-gray-200">
           {/*<div className="flex justify-between items-center text-xs font-mono text-gray-500 mb-4">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />

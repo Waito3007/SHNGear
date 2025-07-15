@@ -124,8 +124,8 @@ const ProductPage = () => {
                 boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
               }}
             >
-              <ProductReviews 
-                productId={product.id} 
+              <ProductReviews
+                productId={product.id}
                 onReviewUpdate={fetchProduct}
               />
             </Box>
@@ -133,7 +133,7 @@ const ProductPage = () => {
 
           {/* Related Products Section */}
           <Grid item xs={12}>
-            <RelatedProducts 
+            <RelatedProducts
               currentProductId={product.id}
               categoryId={product.categoryId}
               brandId={product.brandId}
@@ -146,7 +146,6 @@ const ProductPage = () => {
       <Commitment />
 
       {/* Footer */}
-      <Footer />
     </Box>
   );
 };

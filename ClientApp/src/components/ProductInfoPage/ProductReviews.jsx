@@ -205,7 +205,7 @@ const ProductReviews = ({ productId, onReviewUpdate }) => {
               color: "#ffffff",
             }}
           >
-            # Reviews & Ratings
+            # Đánh Giá & Xếp Hạng
           </Typography>
           <Box
             sx={{
@@ -223,7 +223,7 @@ const ProductReviews = ({ productId, onReviewUpdate }) => {
                 fontWeight: "bold",
               }}
             >
-              {totalReviews} Reviews
+              {totalReviews} Đánh giá
             </Typography>
           </Box>
         </Box>
@@ -272,7 +272,7 @@ const ProductReviews = ({ productId, onReviewUpdate }) => {
                   mt: 0.5,
                 }}
               >
-                Based on {totalReviews} reviews
+                Dựa trên {totalReviews} đánh giá
               </Typography>
             </Box>
           </Box>
@@ -292,7 +292,7 @@ const ProductReviews = ({ productId, onReviewUpdate }) => {
                     color: "#ffffff",
                   }}
                 >
-                  {star} Stars
+                  {star} Sao
                 </Typography>
                 <LinearProgress
                   variant="determinate"
@@ -350,7 +350,7 @@ const ProductReviews = ({ productId, onReviewUpdate }) => {
               },
             }}
           >
-            {showForm ? "Cancel Review" : "Write a Review"}
+            {showForm ? "Hủy đánh giá" : "Viết đánh giá"}
           </Button>
 
           <Fade in={showForm}>
@@ -373,7 +373,7 @@ const ProductReviews = ({ productId, onReviewUpdate }) => {
                     color: "#000000",
                   }}
                 >
-                  Share Your Experience
+                  Chia sẻ trải nghiệm của bạn
                 </Typography>
                 <Box component="form" onSubmit={handleSubmitReview}>
                   <Box sx={{ mb: 3 }}>
@@ -386,7 +386,7 @@ const ProductReviews = ({ productId, onReviewUpdate }) => {
                         color: "#000000",
                       }}
                     >
-                      Rating:
+                      Đánh giá:
                     </Typography>
                     <Rating
                       value={rating}
@@ -406,7 +406,7 @@ const ProductReviews = ({ productId, onReviewUpdate }) => {
                     rows={4}
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    placeholder="Write your review here..."
+                    placeholder="Viết đánh giá của bạn tại đây..."
                     variant="outlined"
                     sx={{
                       mb: 3,
@@ -436,7 +436,7 @@ const ProductReviews = ({ productId, onReviewUpdate }) => {
                       },
                     }}
                   >
-                    Submit Review
+                    Gửi đánh giá
                   </Button>
                 </Box>
               </Paper>
@@ -472,7 +472,7 @@ const ProductReviews = ({ productId, onReviewUpdate }) => {
                 fontFamily: "'Roboto Mono', monospace",
               }}
             >
-              No reviews yet. Be the first to review!
+              Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá!
             </Typography>
           </Paper>
         ) : (
@@ -526,11 +526,11 @@ const ProductReviews = ({ productId, onReviewUpdate }) => {
                             color: "#000000",
                           }}
                         >
-                          {review.userName || "Anonymous User"}
+                          {review.userName || "Người dùng ẩn danh"}
                         </Typography>
                         <Chip
                           icon={<CheckCircle />}
-                          label="Verified"
+                          label="Đã xác minh"
                           size="small"
                           sx={{
                             bgcolor: "#000000",
@@ -596,7 +596,7 @@ const ProductReviews = ({ productId, onReviewUpdate }) => {
           onClose={() => setSnackbar({ ...snackbar, open: false })}
           severity={snackbar.severity}
           variant="filled"
-          sx={{ width: '100%' }}
+          sx={{ width: "100%" }}
         >
           {snackbar.message}
         </Alert>

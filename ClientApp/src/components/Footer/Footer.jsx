@@ -39,12 +39,6 @@ const Footer = () => {
         }}
       />
 
-      {/* Corner Tech Indicators */}
-      <div className="absolute top-4 left-4 w-6 h-6 border-l-2 border-t-2 border-black z-10" />
-      <div className="absolute top-4 right-4 w-6 h-6 border-r-2 border-t-2 border-black z-10" />
-      <div className="absolute bottom-4 left-4 w-6 h-6 border-l-2 border-b-2 border-black z-10" />
-      <div className="absolute bottom-4 right-4 w-6 h-6 border-r-2 border-b-2 border-black z-10" />
-
       {/* Top Section with Tech Header */}
       <div className="relative border-b-2 border-black p-6">
         {/* Animated scan line */}
