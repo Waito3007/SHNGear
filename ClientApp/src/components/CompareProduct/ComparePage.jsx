@@ -44,11 +44,13 @@ const ComparePage = () => {
     fetchCompareProducts();
   };
 
-    return (
+  return (
     <>
       <Navbar />
-      <div className="min-h-[600px] max-w-7xl mx-auto px-4 py-6">
-        <h2 className="text-2xl font-bold text-center mb-6">So sánh sản phẩm</h2>
+      <div className="min-h-[600px] max-w-7xl mx-auto px-4 py-6 pt-24 md:pt-32">
+        <h2 className="text-2xl font-bold text-center mb-6">
+          So sánh sản phẩm
+        </h2>
 
         {products.length < 2 ? (
           <div className="text-center text-gray-500 text-lg mt-12">
@@ -80,20 +82,33 @@ const ComparePage = () => {
                   onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/150"; }}
                 /> */}
                 <img
-                  src={product.images?.[0]?.imageUrl?.startsWith("http") ? product.images[0].imageUrl : `${process.env.REACT_APP_API_BASE_URL}/${product.images?.[0]?.imageUrl}`}
+                  src={
+                    product.images?.[0]?.imageUrl?.startsWith("http")
+                      ? product.images[0].imageUrl
+                      : `${process.env.REACT_APP_API_BASE_URL}/${product.images?.[0]?.imageUrl}`
+                  }
                   alt={product.name || "product image"}
                   className="w-12 h-12 rounded-md object-cover border border-gray-600"
-                  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/100?text=Error"; }}
-                  />
-                
-                <p><strong>Thương hiệu:</strong> {product.brand}</p>
-                <p><strong>Danh mục:</strong> {product.category}</p>
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "https://via.placeholder.com/100?text=Error";
+                  }}
+                />
+
+                <p>
+                  <strong>Thương hiệu:</strong> {product.brand}
+                </p>
+                <p>
+                  <strong>Danh mục:</strong> {product.category}
+                </p>
                 <p className="text-sm mt-2">{product.description}</p>
 
                 <h4 className="font-semibold mt-4">Biến thể:</h4>
                 {product.variants.map((variant, i) => (
                   <div key={i} className="mt-2 text-sm border-t pt-2">
-                    <p>Màu: {variant.color} - Dung lượng: {variant.storage}</p>
+                    <p>
+                      Màu: {variant.color} - Dung lượng: {variant.storage}
+                    </p>
                     <p>Giá: {variant.price.toLocaleString()}đ</p>
                     {variant.discountPrice && (
                       <p>Giá KM: {variant.discountPrice.toLocaleString()}đ</p>

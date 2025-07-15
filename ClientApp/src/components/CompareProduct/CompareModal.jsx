@@ -462,17 +462,18 @@ const CompareModal = ({ isOpen, onClose }) => {
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 transition-all duration-300 ${
+      className={`fixed inset-0 z-[99999] flex items-center justify-center p-4 transition-all duration-300 ${
         isOpen ? "animate-fadeIn" : "opacity-0 pointer-events-none"
       }`}
       style={{
         background: "rgba(0,0,0,0.8)",
         backdropFilter: "blur(8px)",
+        paddingTop: "80px", // Add top padding to avoid navbar overlap
       }}
       onClick={handleBackgroundClick}
     >
       <div
-        className={`w-full max-h-[95vh] overflow-hidden transform transition-all duration-300 tech-grid-bg ${
+        className={`w-full max-h-[calc(95vh-80px)] overflow-hidden transform transition-all duration-300 tech-grid-bg ${
           products.length <= 2
             ? "max-w-5xl"
             : products.length === 3
@@ -485,6 +486,7 @@ const CompareModal = ({ isOpen, onClose }) => {
           borderRadius: "24px",
           boxShadow: "0 25px 80px rgba(0,0,0,0.3)",
           position: "relative",
+          marginTop: "20px", // Additional margin from top
         }}
       >
         {/* Tech Modal Header */}
@@ -629,7 +631,7 @@ const CompareModal = ({ isOpen, onClose }) => {
 
         {/* Tech Content Area */}
         <div
-          className="p-6 overflow-y-auto max-h-[calc(95vh-120px)] tech-grid-bg"
+          className="p-6 overflow-y-auto max-h-[calc(90vh-200px)] tech-grid-bg"
           style={{
             background: "linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)",
           }}

@@ -1,6 +1,228 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Star, ShoppingCart, Eye } from "lucide-react";
+import { Star, ShoppingCart, Eye, Cpu, Monitor, Zap } from "lucide-react";
+
+// Tech-style CSS animations
+const techStyles = `
+  @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;600;700&display=swap');
+  
+  @keyframes techGlow {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(0,0,0,0.2), 0 0 40px rgba(0,0,0,0.1);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(0,0,0,0.4), 0 0 60px rgba(0,0,0,0.2);
+    }
+  }
+  
+  @keyframes techSlide {
+    0% {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes techPulse {
+    0%, 100% {
+      opacity: 0.6;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.02);
+    }
+  }
+  
+  @keyframes techScan {
+    0% {
+      transform: translateX(-100%) scaleX(0);
+    }
+    50% {
+      transform: translateX(0) scaleX(1);
+    }
+    100% {
+      transform: translateX(100%) scaleX(0);
+    }
+  }
+  
+  @keyframes techMatrix {
+    0% {
+      transform: scale(0.98);
+      opacity: 0.8;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  
+  .tech-grid-bg {
+    background-image: 
+      linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+    background-size: 25px 25px;
+  }
+  
+  .tech-circuit-pattern {
+    background-image: 
+      radial-gradient(circle at 20% 20%, rgba(0,0,0,0.02) 0%, transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(0,0,0,0.02) 0%, transparent 40%),
+      radial-gradient(circle at 60% 20%, rgba(0,0,0,0.01) 0%, transparent 30%);
+  }
+  
+  .tech-scanline {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .tech-scanline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.7) 50%, transparent 100%);
+    animation: techScan 4s ease-in-out infinite;
+  }
+  
+  .tech-hover-glow:hover {
+    animation: techGlow 2s ease-in-out infinite;
+  }
+  
+  .roboto-mono {
+    font-family: 'Roboto Mono', monospace;
+  }
+  
+  .tech-loading-spinner {
+    width: 80px;
+    height: 80px;
+    border: 4px solid #000000;
+    border-radius: 12px;
+    position: relative;
+    animation: spin 1.2s linear infinite;
+  }
+  
+  .tech-loading-spinner::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    border: 3px solid transparent;
+    border-top: 3px solid #000000;
+    border-radius: 8px;
+    animation: spin 1.8s linear infinite reverse;
+  }
+  
+  .tech-loading-spinner::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    background: #000000;
+    border-radius: 2px;
+    transform: translate(-50%, -50%);
+    animation: techPulse 1s ease-in-out infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .tech-card {
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    border: 3px solid #000000;
+    box-shadow: 
+      0 10px 25px rgba(0,0,0,0.1),
+      inset 0 1px 0 rgba(255,255,255,0.9);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .tech-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.02) 50%, transparent 100%);
+    transition: left 0.5s ease;
+    z-index: 1;
+  }
+  
+  .tech-card:hover::before {
+    left: 100%;
+  }
+  
+  .tech-price-tag {
+    background: linear-gradient(135deg, #000000 0%, #333333 100%);
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 8px 12px;
+    position: relative;
+  }
+  
+  .tech-price-tag::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #ffffff 0%, #cccccc 50%, #ffffff 100%);
+  }
+  
+  .tech-button {
+    background: linear-gradient(135deg, #000000 0%, #333333 100%);
+    color: #ffffff;
+    border: 2px solid #000000;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .tech-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+    transition: left 0.3s ease;
+  }
+  
+  .tech-button:hover::before {
+    left: 100%;
+  }
+  
+  .tech-button:hover {
+    background: linear-gradient(135deg, #333333 0%, #555555 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  }
+`;
+
+// Inject tech styles
+if (
+  typeof document !== "undefined" &&
+  !document.getElementById("tech-pinned-styles")
+) {
+  const styleSheet = document.createElement("style");
+  styleSheet.id = "tech-pinned-styles";
+  styleSheet.innerText = techStyles;
+  document.head.appendChild(styleSheet);
+}
 
 const PinnedProducts = () => {
   const [pinnedProducts, setPinnedProducts] = useState([]);
@@ -38,7 +260,8 @@ const PinnedProducts = () => {
   };
 
   const calculateDiscountPercentage = (originalPrice, discountPrice) => {
-    if (!originalPrice || !discountPrice || originalPrice <= discountPrice) return 0;
+    if (!originalPrice || !discountPrice || originalPrice <= discountPrice)
+      return 0;
     return Math.round(((originalPrice - discountPrice) / originalPrice) * 100);
   };
 
@@ -48,38 +271,174 @@ const PinnedProducts = () => {
       return {
         displayPrice: product.flashSalePrice,
         originalPrice: product.variants?.[0]?.price || 0,
-        isFlashSale: true
+        isFlashSale: true,
       };
     }
-    
+
     // Nếu không có Flash Sale, lấy từ variant đầu tiên
     const variant = product.variants?.[0];
     if (variant) {
       return {
         displayPrice: variant.discountPrice || variant.price,
         originalPrice: variant.price,
-        isFlashSale: false
+        isFlashSale: false,
       };
     }
-    
+
     return {
       displayPrice: 0,
       originalPrice: 0,
-      isFlashSale: false
+      isFlashSale: false,
     };
   };
 
   const getStockQuantity = (product) => {
-    return product.variants?.reduce((total, variant) => total + (variant.stockQuantity || 0), 0) || 0;
+    return (
+      product.variants?.reduce(
+        (total, variant) => total + (variant.stockQuantity || 0),
+        0
+      ) || 0
+    );
   };
 
   if (loading) {
     return (
-      <div className="bg-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Đang tải sản phẩm nổi bật...</p>
+      <div
+        className="py-20 tech-grid-bg"
+        style={{
+          background:
+            "linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%)",
+          position: "relative",
+        }}
+      >
+        {/* Tech Circuit Pattern */}
+        <div
+          className="tech-circuit-pattern"
+          style={{ position: "absolute", inset: 0 }}
+        />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div
+            className="text-center p-16 tech-scanline"
+            style={{
+              background: "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
+              border: "4px solid #000000",
+              borderRadius: "24px",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            {/* Tech Header Lines */}
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                height: "6px",
+                background:
+                  "linear-gradient(90deg, #000000 0%, #404040 25%, #808080 50%, #404040 75%, #000000 100%)",
+                zIndex: 2,
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: "6px",
+                background:
+                  "linear-gradient(90deg, #000000 0%, #404040 25%, #808080 50%, #404040 75%, #000000 100%)",
+                zIndex: 2,
+              }}
+            />
+
+            {/* Side Tech Lines */}
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                bottom: 0,
+                left: 0,
+                width: "6px",
+                background:
+                  "linear-gradient(180deg, #000000 0%, #404040 25%, #808080 50%, #404040 75%, #000000 100%)",
+                zIndex: 2,
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                bottom: 0,
+                right: 0,
+                width: "6px",
+                background:
+                  "linear-gradient(180deg, #000000 0%, #404040 25%, #808080 50%, #404040 75%, #000000 100%)",
+                zIndex: 2,
+              }}
+            />
+
+            <div className="relative z-10">
+              {/* Tech Loading Animation */}
+              <div className="tech-loading-spinner mx-auto mb-8" />
+
+              <h3
+                className="text-2xl font-bold mb-4 roboto-mono"
+                style={{
+                  color: "#000000",
+                  textTransform: "uppercase",
+                  letterSpacing: "3px",
+                }}
+              >
+                ĐANG TẢI DỮ LIỆU HỆ THỐNG
+              </h3>
+              <div
+                className="text-center mb-4"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "12px",
+                }}
+              >
+                <Cpu size={20} style={{ color: "#000000" }} />
+                <p
+                  className="roboto-mono"
+                  style={{
+                    color: "#666666",
+                    fontSize: "16px",
+                    letterSpacing: "2px",
+                  }}
+                >
+                  SẢN PHẨM NỔI BẬT
+                </p>
+                <Monitor size={20} style={{ color: "#000000" }} />
+              </div>
+
+              {/* Tech Progress Bar */}
+              <div
+                style={{
+                  width: "200px",
+                  height: "4px",
+                  background: "#e0e0e0",
+                  margin: "0 auto",
+                  borderRadius: "2px",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    background:
+                      "linear-gradient(90deg, #000000 0%, #666666 50%, #000000 100%)",
+                    animation: "techSlide 2s ease-in-out infinite",
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -88,10 +447,23 @@ const PinnedProducts = () => {
 
   if (error) {
     return (
-      <div className="bg-white py-12">
+      <div
+        className="py-16"
+        style={{
+          background: "linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)",
+        }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center text-red-600">
-            <p>{error}</p>
+          <div
+            className="text-center p-12"
+            style={{
+              background: "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
+              border: "3px solid #ff0000",
+              borderRadius: "16px",
+              color: "#ff0000",
+            }}
+          >
+            <p className="text-lg font-bold roboto-mono">{error}</p>
           </div>
         </div>
       </div>
@@ -103,21 +475,78 @@ const PinnedProducts = () => {
   }
 
   return (
-    <section className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section
+      className="py-12 tech-grid-bg tech-scanline"
+      style={{
+        background:
+          "linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%)",
+        position: "relative",
+      }}
+    >
+      {/* Tech Circuit Pattern Background */}
+      <div
+        className="tech-circuit-pattern"
+        style={{ position: "absolute", inset: 0 }}
+      />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header - Tech Style */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center p-2 bg-blue-100 rounded-full mb-4">
-            <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
-              <Star className="w-4 h-4 text-white fill-current" />
+          <div
+            className="inline-flex items-center justify-center p-3 mb-4"
+            style={{
+              background: "linear-gradient(145deg, #ffffff 0%, #f0f0f0 100%)",
+              border: "3px solid #000000",
+              borderRadius: "50%",
+              animation: "techPulse 3s ease-in-out infinite",
+            }}
+          >
+            <div
+              className="flex items-center justify-center w-10 h-10"
+              style={{
+                background: "linear-gradient(135deg, #000000 0%, #333333 100%)",
+                borderRadius: "50%",
+              }}
+            >
+              <Star className="w-5 h-5 text-white fill-current" />
             </div>
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-            Sản Phẩm Nổi Bật
+
+          <h2
+            className="text-2xl md:text-3xl font-bold mb-4 roboto-mono"
+            style={{
+              background:
+                "linear-gradient(135deg, #000000 0%, #333333 50%, #000000 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              textTransform: "uppercase",
+              letterSpacing: "3px",
+            }}
+          >
+            SẢN PHẨM NỔI BẬT
           </h2>
-          <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto rounded-full mb-4"></div>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Khám phá những sản phẩm công nghệ hàng đầu được khách hàng yêu thích nhất
+
+          <div
+            style={{
+              width: "80px",
+              height: "3px",
+              background:
+                "linear-gradient(90deg, #000000 0%, #666666 50%, #000000 100%)",
+              margin: "0 auto 16px auto",
+              borderRadius: "2px",
+            }}
+          />
+
+          <p
+            className="text-sm max-w-2xl mx-auto roboto-mono"
+            style={{
+              color: "#666666",
+              letterSpacing: "0.5px",
+            }}
+          >
+            KHÁM PHÁ NHỮNG SẢN PHẨM CÔNG NGHỆ HÀNG ĐẦU ĐƯỢC KHÁCH HÀNG YÊU THÍCH
+            NHẤT
           </p>
         </div>
 
@@ -135,181 +564,436 @@ const PinnedProducts = () => {
             return (
               <div
                 key={product.id}
-                className="group relative bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 hover:bg-white"
+                className="group tech-card tech-hover-glow"
+                style={{
+                  borderRadius: "20px",
+                  transition: "all 0.4s ease",
+                  animation: "techMatrix 0.6s ease-out",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform =
+                    "translateY(-8px) scale(1.02)";
+                  e.currentTarget.style.boxShadow =
+                    "0 20px 40px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.9)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0) scale(1)";
+                  e.currentTarget.style.boxShadow =
+                    "0 10px 25px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.9)";
+                }}
               >
-                {/* Tech Glow Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-purple-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:via-purple-500/5 group-hover:to-blue-500/5 transition-all duration-500 rounded-2xl"></div>
-                
                 {/* Flash Sale Badge */}
                 {priceInfo.isFlashSale && (
-                  <div className="absolute top-3 left-3 z-20 bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1.5 rounded-full text-xs font-bold animate-pulse shadow-lg">
-                    🔥 FLASH SALE
+                  <div
+                    className="absolute top-3 left-3 z-20 px-2 py-1 rounded-lg text-xs font-bold roboto-mono"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #ff0000 0%, #cc0000 100%)",
+                      color: "#ffffff",
+                      border: "2px solid #ffffff",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                      animation: "techPulse 1.5s ease-in-out infinite",
+                    }}
+                  >
+                    ⚡ FLASH SALE
                   </div>
                 )}
-                
+
                 {/* Discount Badge */}
                 {!priceInfo.isFlashSale && hasDiscount && (
-                  <div className="absolute top-3 left-3 z-20 bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg">
+                  <div
+                    className="absolute top-4 left-4 z-20 px-3 py-2 rounded-lg text-xs font-bold roboto-mono"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #000000 0%, #333333 100%)",
+                      color: "#ffffff",
+                      border: "2px solid #ffffff",
+                      textTransform: "uppercase",
+                      letterSpacing: "1px",
+                    }}
+                  >
                     -{discountPercentage}%
                   </div>
                 )}
 
                 {/* Stock Badge */}
-                <div className="absolute top-3 right-3 z-20">
+                <div className="absolute top-4 right-4 z-20">
                   {stockQuantity > 0 ? (
-                    <div className="bg-green-500/90 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-medium">
-                      {stockQuantity} sản phẩm
+                    <div
+                      className="px-3 py-1 rounded-lg text-xs font-medium roboto-mono"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #00aa00 0%, #008800 100%)",
+                        color: "#ffffff",
+                        border: "2px solid #ffffff",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {stockQuantity} SP
                     </div>
                   ) : (
-                    <div className="bg-red-500/90 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-medium">
-                      Hết hàng
+                    <div
+                      className="px-3 py-1 rounded-lg text-xs font-medium roboto-mono"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #ff0000 0%, #cc0000 100%)",
+                        color: "#ffffff",
+                        border: "2px solid #ffffff",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      HẾT HÀNG
                     </div>
                   )}
                 </div>
 
                 {/* Product Image */}
-                <div className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 aspect-square">
+                <div
+                  className="relative overflow-hidden aspect-square"
+                  style={{
+                    background:
+                      "linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%)",
+                    borderRadius: "16px 16px 0 0",
+                    border: "2px solid #000000",
+                    borderBottom: "none",
+                  }}
+                >
                   <img
-                    src={
-                      (() => {
-                        const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
-                        if (!primaryImage) return "/placeholder-image.jpg";
-                        
-                        const imageUrl = primaryImage.imageUrl;
-                        if (imageUrl?.startsWith('http')) return imageUrl;
-                        return `${process.env.REACT_APP_API_BASE_URL}${imageUrl?.startsWith('/') ? '' : '/'}${imageUrl}`;
-                      })()
-                    }
+                    src={(() => {
+                      const primaryImage =
+                        product.images?.find((img) => img.isPrimary) ||
+                        product.images?.[0];
+                      if (!primaryImage) return "/placeholder-image.jpg";
+
+                      const imageUrl = primaryImage.imageUrl;
+                      if (imageUrl?.startsWith("http")) return imageUrl;
+                      return `${process.env.REACT_APP_API_BASE_URL}${
+                        imageUrl?.startsWith("/") ? "" : "/"
+                      }${imageUrl}`;
+                    })()}
                     alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    className="w-full h-full object-cover"
+                    style={{
+                      transition: "transform 0.6s ease",
+                      filter: "contrast(1.1) brightness(0.95)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.transform = "scale(1.1)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.transform = "scale(1)";
+                    }}
                     onError={(e) => {
-                      if (!e.target.src.includes('/placeholder-image.jpg')) {
-                        e.target.src = '/placeholder-image.jpg';
+                      if (!e.target.src.includes("/placeholder-image.jpg")) {
+                        e.target.src = "/placeholder-image.jpg";
                       }
                     }}
                   />
-                  
+
                   {/* Tech Border Effect */}
-                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-center"></div>
-                  
+                  <div
+                    className="absolute bottom-0 left-0 right-0"
+                    style={{
+                      height: "3px",
+                      background:
+                        "linear-gradient(90deg, #000000 0%, #666666 50%, #000000 100%)",
+                      transform: "scaleX(0)",
+                      transition: "transform 0.4s ease",
+                      transformOrigin: "center",
+                    }}
+                    ref={(el) => {
+                      if (el) {
+                        const card = el.closest(".group");
+                        if (card) {
+                          card.addEventListener("mouseenter", () => {
+                            el.style.transform = "scaleX(1)";
+                          });
+                          card.addEventListener("mouseleave", () => {
+                            el.style.transform = "scaleX(0)";
+                          });
+                        }
+                      }
+                    }}
+                  />
+
                   {/* Overlay Actions */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
-                    <div className="flex space-x-3 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                  <div
+                    className="absolute inset-0 flex items-center justify-center"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 100%)",
+                      opacity: 0,
+                      transition: "opacity 0.3s ease",
+                    }}
+                    ref={(el) => {
+                      if (el) {
+                        const card = el.closest(".group");
+                        if (card) {
+                          card.addEventListener("mouseenter", () => {
+                            el.style.opacity = "1";
+                          });
+                          card.addEventListener("mouseleave", () => {
+                            el.style.opacity = "0";
+                          });
+                        }
+                      }
+                    }}
+                  >
+                    <div
+                      className="flex space-x-4"
+                      style={{
+                        transform: "translateY(20px)",
+                        transition: "transform 0.3s ease",
+                      }}
+                      ref={(el) => {
+                        if (el) {
+                          const card = el.closest(".group");
+                          if (card) {
+                            card.addEventListener("mouseenter", () => {
+                              el.style.transform = "translateY(0)";
+                            });
+                            card.addEventListener("mouseleave", () => {
+                              el.style.transform = "translateY(20px)";
+                            });
+                          }
+                        }
+                      }}
+                    >
                       <Link
                         to={`/product/${product.id}`}
-                        className="bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-blue-50 transition-all duration-200 hover:scale-110"
+                        className="tech-button p-3 rounded-lg"
+                        style={{ borderRadius: "12px" }}
                       >
-                        <Eye size={18} className="text-gray-700" />
+                        <Eye size={18} />
                       </Link>
-                      <button className="bg-blue-600/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-200 hover:scale-110">
-                        <ShoppingCart size={18} className="text-white" />
+                      <button
+                        className="tech-button p-3 rounded-lg"
+                        style={{ borderRadius: "12px" }}
+                      >
+                        <ShoppingCart size={18} />
                       </button>
                     </div>
                   </div>
                 </div>
 
-                {/* Product Info - Enhanced Design */}
-                <div className="p-4 md:p-5 relative z-10">
-                  <div className="mb-3">
-                    <h3 className="font-bold text-gray-900 text-sm md:text-base line-clamp-2 group-hover:text-blue-600 transition-colors duration-300 leading-tight">
-                      <Link to={`/product/${product.id}`}>
-                        {product.name}
-                      </Link>
+                {/* Product Info - Improved Design */}
+                <div
+                  className="p-3 relative z-10"
+                  style={{
+                    borderRadius: "0 0 16px 16px",
+                  }}
+                >
+                  {/* Product Name */}
+                  <div className="mb-2">
+                    <h3
+                      className="font-bold text-sm line-clamp-2 roboto-mono"
+                      style={{
+                        color: "#000000",
+                        transition: "color 0.3s ease",
+                        letterSpacing: "0.5px",
+                        lineHeight: "1.2",
+                        minHeight: "2.4em",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.color = "#333333";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.color = "#000000";
+                      }}
+                    >
+                      <Link to={`/product/${product.id}`}>{product.name}</Link>
                     </h3>
                   </div>
 
                   {/* Brand */}
                   {product.brand && (
                     <div className="flex items-center mb-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                      <p className="text-xs text-gray-600 font-medium">
+                      <div
+                        style={{
+                          width: "4px",
+                          height: "4px",
+                          background: "#000000",
+                          borderRadius: "1px",
+                          marginRight: "6px",
+                        }}
+                      />
+                      <p
+                        className="text-xs font-medium roboto-mono"
+                        style={{
+                          color: "#666666",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                        }}
+                      >
                         {product.brand.name}
                       </p>
                     </div>
                   )}
 
-                  {/* Variants info - Tech Style */}
+                  {/* Variants info - Compact Tech Style */}
                   {product.variants?.[0] && (
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-50 text-blue-700 border border-blue-200">
+                    <div className="flex items-center gap-1 mb-2">
+                      <span
+                        className="inline-flex items-center px-1 py-0.5 rounded-md text-xs roboto-mono"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
+                          color: "#000000",
+                          border: "1px solid #000000",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                          fontSize: "10px",
+                        }}
+                      >
                         {product.variants[0].color}
                       </span>
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-50 text-purple-700 border border-purple-200">
+                      <span
+                        className="inline-flex items-center px-1 py-0.5 rounded-md text-xs roboto-mono"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #000000 0%, #333333 100%)",
+                          color: "#ffffff",
+                          border: "1px solid #000000",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                          fontSize: "10px",
+                        }}
+                      >
                         {product.variants[0].storage}
                       </span>
                     </div>
                   )}
 
-                  {/* Rating - Enhanced */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center">
-                      <div className={`flex items-center px-2 py-1 rounded-full border ${
-                        (product.averageRating || 0) > 0 
-                          ? 'bg-yellow-50 border-yellow-200' 
-                          : 'bg-gray-50 border-gray-200'
-                      }`}>
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            size={12}
-                            className={`${
-                              i < Math.floor(product.averageRating || 0)
-                                ? "text-yellow-500 fill-current"
-                                : "text-gray-300"
-                            }`}
-                          />
-                        ))}
-                        <span className={`text-xs ml-1 font-medium ${
-                          (product.averageRating || 0) > 0 
-                            ? 'text-yellow-700' 
-                            : 'text-gray-500'
-                        }`}>
-                          {(product.averageRating || 0).toFixed(1)}
-                        </span>
-                      </div>
+                  <div className="flex items-center justify-center mb-2">
+                    <div
+                      className="flex items-center px-2 py-1 rounded-lg"
+                      style={{
+                        background:
+                          (product.averageRating || 0) > 0
+                            ? "linear-gradient(135deg, #ffd700 0%, #ffed4a 100%)"
+                            : "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
+                        border: "2px solid #000000",
+                      }}
+                    >
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          size={10}
+                          className={`${
+                            i < Math.floor(product.averageRating || 0)
+                              ? "text-black fill-current"
+                              : "text-gray-400"
+                          }`}
+                        />
+                      ))}
+                      <span
+                        className="text-xs ml-1 font-bold roboto-mono"
+                        style={{
+                          color:
+                            (product.averageRating || 0) > 0
+                              ? "#000000"
+                              : "#666666",
+                          fontSize: "10px",
+                        }}
+                      >
+                        {(product.averageRating || 0).toFixed(1)}
+                      </span>
                     </div>
-                    <span className="text-xs text-gray-500">
-                      ({(product.reviewCount || 0) > 0 ? `${product.reviewCount} đánh giá` : 'Chưa có đánh giá'})
-                    </span>
                   </div>
 
-                  {/* Price - Premium Design */}
+                  {/* Price - Clean Tech Design */}
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <span className={`text-lg md:text-xl font-bold ${
-                          priceInfo.isFlashSale ? 'text-red-600' : 'text-blue-600'
-                        }`}>
+                    <div className="text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <span
+                          className={`text-lg md:text-xl font-bold roboto-mono ${
+                            priceInfo.isFlashSale
+                              ? "text-red-600"
+                              : "text-black"
+                          }`}
+                          style={{
+                            letterSpacing: "1px",
+                          }}
+                        >
                           {formatPrice(priceInfo.displayPrice)}
                         </span>
                         {hasDiscount && (
-                          <span className="text-sm text-gray-500 line-through">
+                          <span
+                            className="text-xs line-through roboto-mono"
+                            style={{
+                              color: "#999999",
+                              letterSpacing: "0.5px",
+                            }}
+                          >
                             {formatPrice(priceInfo.originalPrice)}
                           </span>
                         )}
                       </div>
-                      {hasDiscount && (
-                        <div className="text-right">
-                          <div className="text-xs text-green-600 font-bold">
-                            Tiết kiệm
-                          </div>
-                          <div className="text-sm font-bold text-green-600">
-                            {formatPrice(priceInfo.originalPrice - priceInfo.displayPrice)}
-                          </div>
-                        </div>
-                      )}
                     </div>
-                    
-                    {/* Quick Action Bar */}
-                    <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                    {/* Action Buttons - Improved Design */}
+                    <div
+                      className="flex gap-1 pt-2"
+                      style={{
+                        borderTop: "2px solid #e0e0e0",
+                      }}
+                    >
                       <Link
                         to={`/product/${product.id}`}
-                        className="flex-1 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 py-2 px-3 rounded-lg text-xs font-medium text-center hover:from-blue-100 hover:to-indigo-100 transition-all duration-200 border border-blue-200"
+                        className="flex-1 py-2 px-2 rounded-xl text-xs font-bold text-center roboto-mono"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
+                          color: "#000000",
+                          border: "2px solid #000000",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                          textDecoration: "none",
+                          transition: "all 0.3s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.background =
+                            "linear-gradient(135deg, #000000 0%, #333333 100%)";
+                          e.target.style.color = "#ffffff";
+                          e.target.style.transform = "translateY(-2px)";
+                          e.target.style.boxShadow =
+                            "0 8px 20px rgba(0,0,0,0.15)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.background =
+                            "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)";
+                          e.target.style.color = "#000000";
+                          e.target.style.transform = "translateY(0)";
+                          e.target.style.boxShadow = "none";
+                        }}
                       >
-                        Xem chi tiết
+                        XEM CHI TIẾT
                       </Link>
-                      <button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-2 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md">
-                        <ShoppingCart size={14} />
+                      <button
+                        className="p-2 rounded-xl"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #000000 0%, #333333 100%)",
+                          color: "#ffffff",
+                          border: "2px solid #000000",
+                          transition: "all 0.3s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.background =
+                            "linear-gradient(135deg, #333333 0%, #555555 100%)";
+                          e.target.style.transform =
+                            "translateY(-2px) scale(1.05)";
+                          e.target.style.boxShadow =
+                            "0 8px 20px rgba(0,0,0,0.2)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.background =
+                            "linear-gradient(135deg, #000000 0%, #333333 100%)";
+                          e.target.style.transform = "translateY(0) scale(1)";
+                          e.target.style.boxShadow = "none";
+                        }}
+                      >
+                        <ShoppingCart size={16} />
                       </button>
                     </div>
                   </div>
@@ -320,20 +1004,35 @@ const PinnedProducts = () => {
         </div>
 
         {/* View All Button - Tech Style */}
-        <div className="text-center mt-16">
+        <div className="text-center mt-12">
           <div className="inline-flex flex-col items-center">
             <Link
               to="/productlist"
-              className="group relative inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+              className="group relative inline-flex items-center px-8 py-4 tech-button roboto-mono"
+              style={{
+                borderRadius: "16px",
+                fontSize: "14px",
+                fontWeight: "bold",
+                textTransform: "uppercase",
+                letterSpacing: "1px",
+                textDecoration: "none",
+                overflow: "hidden",
+              }}
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <span className="relative z-10 mr-2">Khám Phá Tất Cả Sản Phẩm</span>
-              <svg className="relative z-10 w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
+              <span className="relative z-10 mr-2">
+                KHÁM PHÁ TẤT CẢ SẢN PHẨM
+              </span>
+              <Zap size={20} className="relative z-10" />
             </Link>
-            <p className="text-sm text-gray-500 mt-3">
-              Hơn {pinnedProducts.length} sản phẩm công nghệ đang chờ bạn
+            <p
+              className="text-xs mt-3 roboto-mono"
+              style={{
+                color: "#666666",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+              }}
+            >
+              HƠN {pinnedProducts.length} SẢN PHẨM CÔNG NGHỆ ĐANG CHỜ BẠN
             </p>
           </div>
         </div>
