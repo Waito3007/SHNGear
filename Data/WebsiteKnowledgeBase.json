@@ -320,7 +320,11 @@
       "name": "iPhone 11 Pro Max",
       "category": "Điện Thoại",
       "brand": "Apple",
+<<<<<<< HEAD
       "price": "34,000,000đ",
+=======
+      "price": null,
+>>>>>>> c79cf67 (Update product prices format and correct target framework version in project file)
       "warranty": "12 tháng"
     },
     {
