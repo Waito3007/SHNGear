@@ -4,6 +4,47 @@
     ViewData["Title"] = "Blog";
 }
 <link rel="stylesheet" href="/css/blog-list.css" />
+<style>
+body, .container {
+    background: #181818 !important;
+    color: #fff;
+    font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+}
+h2 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #fff;
+}
+.card-title a {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #fff !important;
+}
+.card-text {
+    font-size: 1.15rem;
+    color: #eee;
+}
+.card, .card-body {
+    background: #222 !important;
+    border: none;
+    color: #fff;
+}
+.btn-outline-primary {
+    border-color: #fff;
+    color: #fff;
+}
+.btn-outline-primary:hover {
+    background: #fff;
+    color: #181818;
+}
+.container.py-5 {
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 32px;
+    padding-right: 32px;
+}
+</style>
 
 <div class="container py-5">
     <h2 class="mb-4 text-center">BÀI VIẾT BLOG</h2>
@@ -14,26 +55,6 @@
             {
                 <div class="col">
                     <div class="card h-100 shadow-sm">
-                        @if (post.Images != null && post.Images.Count > 0 && !string.IsNullOrEmpty(post.Images[0]))
-                        {
-                            var img0 = post.Images[0];
-                            var src0 = (img0.StartsWith("http://") || img0.StartsWith("https://")) ? img0 : (img0.StartsWith("/") ? img0 : "/" + img0);
-                            <img src="@src0" class="card-img-top" alt="@post.Title" />
-                        }
-                        @if (post.Images != null && post.Images.Count > 1)
-                        {
-                            <div class="blog-thumbs">
-                                @for (int i = 1; i < post.Images.Count; i++)
-                                {
-                                    var img = post.Images[i];
-                                    if (!string.IsNullOrEmpty(img))
-                                    {
-                                        var src = (img.StartsWith("http://") || img.StartsWith("https://")) ? img : (img.StartsWith("/") ? img : "/" + img);
-                                        <img src="@src" alt="Ảnh phụ @i" title="Ảnh phụ @i" />
-                                    }
-                                }
-                            </div>
-                        }
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title">
                                 <a href="/Blog/DetailBlog/@post.Id" class="text-decoration-none text-dark">@post.Title</a>

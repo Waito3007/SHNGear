@@ -20,28 +20,6 @@ else
                     <span><i class="bi bi-person"></i> @Model.BlogPost.AuthorName</span> &nbsp;|&nbsp;
                     <span><i class="bi bi-calendar"></i> @Model.BlogPost.CreatedAt.ToString("dd/MM/yyyy")</span>
                 </div>
-                @if (Model.BlogPost.Images != null && Model.BlogPost.Images.Count > 0)
-                {
-                    var img0 = Model.BlogPost.Images[0];
-                    var src0 = (img0.StartsWith("http://") || img0.StartsWith("https://")) ? img0 : (img0.StartsWith("/") ? img0 : "/" + img0);
-                    <div class="mb-4">
-                        <img src="@src0" class="img-fluid rounded shadow" alt="Ảnh chính" style="max-height:400px;object-fit:cover;">
-                    </div>
-                    @if (Model.BlogPost.Images.Count > 1)
-                    {
-                        <div class="blog-thumbs mb-4">
-                            @for (int i = 1; i < Model.BlogPost.Images.Count; i++)
-                            {
-                                var img = Model.BlogPost.Images[i];
-                                if (!string.IsNullOrEmpty(img))
-                                {
-                                    var src = (img.StartsWith("http://") || img.StartsWith("https://")) ? img : (img.StartsWith("/") ? img : "/" + img);
-                                    <img src="@src" alt="Ảnh phụ @i" title="Ảnh phụ @i" />
-                                }
-                            }
-                        </div>
-                    }
-                }
                 <div class="blog-content mb-5">
                     @Html.Raw(Model.BlogPost.Content)
                 </div>
@@ -51,3 +29,34 @@ else
     </div>
 }
 <link rel="stylesheet" href="/css/blog-list.css" />
+<style>
+body, .container, .blog-detail {
+    background: #181818 !important;
+    color: #fff;
+    font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+}
+.blog-detail {
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 32px;
+    padding-right: 32px;
+}
+h1 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #fff;
+}
+.blog-content {
+    font-size: 1.15rem;
+    color: #eee;
+}
+.btn-outline-secondary {
+    border-color: #fff;
+    color: #fff;
+}
+.btn-outline-secondary:hover {
+    background: #fff;
+    color: #181818;
+}
+</style>

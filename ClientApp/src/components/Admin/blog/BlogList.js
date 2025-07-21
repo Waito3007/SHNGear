@@ -37,17 +37,8 @@ const BlogList = () => {
             </Link>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {blogPosts.map((post) => {
-                    // Xử lý ảnh đầu tiên (nếu có)
-                    let imgSrc = null;
-                    if (post.images && post.images.length > 0 && post.images[0]) {
-                        const img = post.images[0];
-                        imgSrc = (img.startsWith('http://') || img.startsWith('https://')) ? img : (img.startsWith('/') ? img : '/'+img);
-                    }
                     return (
                         <div key={post.id} className="bg-white rounded-lg shadow-md p-6">
-                            {imgSrc && (
-                                <img src={imgSrc} alt={post.title} className="w-full h-48 object-cover rounded mb-3 border-b-4 border-teal-400" />
-                            )}
                             <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
                             <p className="text-gray-600 text-sm mb-2">By {post.authorName} on {new Date(post.createdAt).toLocaleDateString()}</p>
                             <div className="text-gray-800 mb-4" dangerouslySetInnerHTML={{ __html: post.content.substring(0, 150) + '...' }}></div>
