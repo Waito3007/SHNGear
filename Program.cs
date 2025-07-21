@@ -64,7 +64,8 @@ builder.Services.AddScoped<BlogPostService>();
 
 // 🔹 Chat & AI Services
 builder.Services.AddScoped<ContextManager>();
-// builder.Services.AddScoped<AIService>(); // Tạm thời vô hiệu hóa AI
+builder.Services.AddScoped<KnowledgeBaseService>();
+builder.Services.AddScoped<AIService>();
 
 // Đăng ký KnowledgeExportService để export tri thức từ DB
 // Ensure KnowledgeExportService exists in your project and the correct namespace is used above.

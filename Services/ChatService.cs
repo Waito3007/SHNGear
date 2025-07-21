@@ -11,14 +11,14 @@ namespace SHN_Gear.Services
     public class ChatService
     {
         private readonly AppDbContext _context;
-        // private readonly AIService _aiService; // Tạm thời bỏ AI
+        private readonly AIService _aiService;
         private readonly ILogger<ChatService> _logger;
         private readonly IHubContext<ChatHub> _hubContext;
 
-        public ChatService(AppDbContext context, ILogger<ChatService> logger, IHubContext<ChatHub> hubContext)
+        public ChatService(AppDbContext context, AIService aiService, ILogger<ChatService> logger, IHubContext<ChatHub> hubContext)
         {
             _context = context;
-            // _aiService = aiService; // Tạm thời bỏ AI
+            _aiService = aiService;
             _logger = logger;
             _hubContext = hubContext;
         }
@@ -157,10 +157,10 @@ namespace SHN_Gear.Services
                 await NotifyNewMessage(messageWithUser ?? userMessage, session.SessionId);
 
                 // Process with AI (if session type is AI or Mixed)
-                // if (session.Type == ChatType.AI || session.Type == ChatType.Mixed)
-                // {
-                //     await ProcessAIResponse(session, messageDto.Content, userId, messageDto.Context);
-                // }
+                if (session.Type == ChatType.AI || session.Type == ChatType.Mixed)
+                {
+                    await ProcessAIResponse(session, messageDto.Content, userId, messageDto.Context);
+                }
 
                 // Update session activity
                 session.LastActivityAt = DateTime.UtcNow;
@@ -178,8 +178,38 @@ namespace SHN_Gear.Services
 
         private async Task ProcessAIResponse(ChatSession session, string userMessage, int? userId, object? context)
         {
-            // Tạm thời bỏ AI xử lý
-            // (method intentionally left blank)
+            try
+            {
+                if (string.IsNullOrEmpty(session.SessionId))
+                {
+                    _logger.LogError("Session {SessionId} has a null or empty SessionId, cannot process AI response.", session.Id);
+                    return;
+                }
+
+                var aiResponse = await _aiService.ProcessMessageAsync(userMessage, session.SessionId, userId);
+
+                var aiMessage = new ChatMessage
+                {
+                    ChatSessionId = session.Id,
+                    Content = aiResponse.Response,
+                    Type = MessageType.Text,
+                    Sender = MessageSender.AI,
+                    SentAt = DateTime.UtcNow,
+                    AIConfidenceScore = aiResponse.ConfidenceScore,
+                    AIIntent = aiResponse.Intent,
+                    RequiresEscalation = aiResponse.RequiresEscalation,
+                    SuggestedActionsJson = aiResponse.SuggestedActions != null ? JsonSerializer.Serialize(aiResponse.SuggestedActions) : null
+                };
+
+                _context.ChatMessages.Add(aiMessage);
+                await _context.SaveChangesAsync();
+
+                await NotifyNewMessage(aiMessage, session.SessionId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing AI response for session {SessionId}", session.Id);
+            }
         }
 
         public async Task<ChatMessageDto> SendAdminMessageAsync(string sessionId, string content, int adminId)

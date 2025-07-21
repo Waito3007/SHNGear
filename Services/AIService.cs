@@ -14,14 +14,16 @@ namespace SHN_Gear.Services
         private readonly ContextManager _contextManager;
         private readonly GeminiService _geminiService;
         private readonly IConfiguration _configuration;
+        private readonly KnowledgeBaseService _knowledgeBaseService;
 
-        public AIService(AppDbContext context, ILogger<AIService> logger, ContextManager contextManager, GeminiService geminiService, IConfiguration configuration)
+        public AIService(AppDbContext context, ILogger<AIService> logger, ContextManager contextManager, GeminiService geminiService, IConfiguration configuration, KnowledgeBaseService knowledgeBaseService)
         {
             _context = context;
             _logger = logger;
             _contextManager = contextManager;
             _geminiService = geminiService;
             _configuration = configuration;
+            _knowledgeBaseService = knowledgeBaseService;
         }
 
         public async Task<AIResponseDto> ProcessMessageAsync(string userMessage, string sessionId, int? userId = null)
@@ -43,8 +45,12 @@ namespace SHN_Gear.Services
                     throw new ArgumentException("SessionId cannot be null or empty", nameof(sessionId));
                 }
 
-                // 1. Get conversation context
+                // 1. Get conversation context & history
                 var context = await _contextManager.GetOrCreateContextAsync(sessionId, userId);
+                var session = await _context.ChatSessions
+                    .Include(s => s.Messages.OrderBy(m => m.SentAt))
+                    .FirstOrDefaultAsync(s => s.SessionId == sessionId);
+                var history = session?.Messages ?? new List<ChatMessage>();
 
                 // 2. Detect intent và extract keywords với context
                 intent = DetectIntentWithContext(userMessage, context);
@@ -106,7 +112,7 @@ namespace SHN_Gear.Services
                         break;
                     default:
                         // Use Gemini AI for general queries
-                        response = await HandleWithGeminiAI(userMessage, intent, context, keywords);
+                        response = await HandleWithGeminiAI(userMessage, intent, context, keywords, history.ToList());
                         break;
                 }
 
@@ -749,17 +755,53 @@ namespace SHN_Gear.Services
         }
 
         // Enhanced handlers with Gemini AI
-        private async Task<AIResponseDto> HandleWithGeminiAI(string userMessage, string intent, ConversationContext context, List<string> keywords)
+        private async Task<AIResponseDto> HandleWithGeminiAI(string userMessage, string intent, ConversationContext context, List<string> keywords, List<ChatMessage> history)
         {
             try
             {
-                // Build context for Gemini
+                const int historyThreshold = 10; // Ngưỡng để bắt đầu tóm tắt
+                const int recentMessagesCount = 6; // Số tin nhắn gần nhất để đưa vào context
+
+                var contextBuilder = new System.Text.StringBuilder();
+
+                // 1. Lấy kiến thức sản phẩm từ DB
+                var productKnowledge = await _knowledgeBaseService.GetProductKnowledgeAsync();
+                contextBuilder.AppendLine("--- KIẾN THỨC SẢN PHẨM ---");
+                contextBuilder.AppendLine(productKnowledge);
+
+                // 2. Xử lý lịch sử trò chuyện (tóm tắt nếu cần)
+                if (history.Count > historyThreshold)
+                {
+                    _logger.LogInformation("Conversation history exceeds threshold ({Threshold}). Summarizing...", historyThreshold);
+                    var conversationToSummarize = string.Join("\n", history
+                        .Take(history.Count - recentMessagesCount)
+                        .Select(m => $"{m.Sender}: {m.Content}"));
+
+                    var summary = await _geminiService.SummarizeConversationAsync(conversationToSummarize);
+                    if (!string.IsNullOrWhiteSpace(summary))
+                    {
+                        contextBuilder.AppendLine("--- TÓM TẮT CUỘC TRÒ CHUYỆN TRƯỚC ĐÓ ---");
+                        contextBuilder.AppendLine(summary);
+                    }
+                }
+
+                // 3. Thêm các tin nhắn gần đây
+                contextBuilder.AppendLine("--- CUỘC TRÒ CHUYỆN GẦN ĐÂY ---");
+                var recentMessages = history.TakeLast(recentMessagesCount);
+                foreach (var message in recentMessages)
+                {
+                    contextBuilder.AppendLine($"{message.Sender}: {message.Content}");
+                }
+
+                // 4. Build context cho Gemini
                 var contextInfo = BuildContextInfo(context, keywords);
+                contextBuilder.AppendLine("--- BỐI CẢNH HIỆN TẠI ---");
+                contextBuilder.AppendLine(contextInfo);
 
-                // Generate AI response using Gemini
-                var aiResponse = await _geminiService.GenerateResponseAsync(userMessage, contextInfo, intent);
+                // 5. Generate AI response using Gemini
+                var aiResponse = await _geminiService.GenerateResponseAsync(userMessage, contextBuilder.ToString(), intent);
 
-                // Calculate confidence score
+                // 6. Calculate confidence score
                 var confidence = await _geminiService.CalculateConfidenceScoreAsync(userMessage, intent);
 
                 return new AIResponseDto
@@ -774,7 +816,6 @@ namespace SHN_Gear.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generating AI response with Gemini");
-                // Return intelligent fallback instead of basic fallback
                 var basicIntent = DetectIntent(userMessage);
                 return CreateIntelligentFallbackResponse(userMessage, basicIntent);
             }
