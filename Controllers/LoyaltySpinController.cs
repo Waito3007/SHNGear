@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using SHN_Gear.Services;
 using System.Threading.Tasks;
 using SHN_Gear.Models;
+using SHN_Gear.DTOs;
 using System.Collections.Generic;
 
 namespace SHN_Gear.Controllers
@@ -58,7 +59,7 @@ namespace SHN_Gear.Controllers
 
         // POST: api/LoyaltySpin/spin/{userId}
         [HttpPost("spin/{userId}")]
-        public async Task<ActionResult<SpinHistory>> Spin(int userId)
+        public async Task<ActionResult<SpinResultDto>> Spin(int userId)
         {
             try
             {
