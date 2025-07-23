@@ -14,8 +14,8 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import useDebounce from "utils/useDebounce";
 import MuiPagination from "@mui/material/Pagination";
-import "@/assets/styles/admin-responsive.css";
-import "@/assets/styles/admin-tables.css";
+import "@/Assets/styles/admin-responsive.css";
+import "@/Assets/styles/admin-tables.css";
 
 const SlidersTable = () => {
   const [masterSliders, setMasterSliders] = useState([]);

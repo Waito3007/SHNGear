@@ -16,7 +16,7 @@ import { useCategories } from "@/hooks/api/useCategories";
 import { useBrands } from "@/hooks/api/useBrands";
 import { useSearch } from "@/hooks/api/useSearch";
 import { useAuthModal } from "@/contexts/AuthModalContext";
-import menuIcon from "@/assets/icon/menu.svg";
+import menuIcon from "@/Assets/icon/menu.svg";
 // import logo from "@/assets/img/Phone/logo.png";
 import CartDrawer from "@/components/shoppingcart/CartDrawer"; // Import Drawer
 
