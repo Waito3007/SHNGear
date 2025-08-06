@@ -1,0 +1,280 @@
+/* LoyaltyExchange.css */
+.exchange-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.points-display {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.points-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    display: inline-block;
+    min-width: 200px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.points-card h3 {
+    margin: 0 0 15px 0;
+    color: #4c51bf;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.points-value {
+    font-size: 36px;
+    font-weight: 800;
+    color: #667eea;
+    margin-bottom: 5px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.points-label {
+    color: #6b7280;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.error-message {
+    background: linear-gradient(135deg, #fee 0%, #fcc 100%);
+    color: #dc2626;
+    padding: 15px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    font-weight: 500;
+    text-align: center;
+}
+
+.history-section {
+    margin-bottom: 30px;
+}
+
+.history-section h2 {
+    color: white;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+
+.loading-message {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 16px;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
+}
+
+.empty-history {
+    text-align: center;
+    padding: 60px 20px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    border: 2px dashed rgba(102, 126, 234, 0.3);
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+}
+
+.empty-history h3 {
+    color: #4c51bf;
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.empty-history p {
+    color: #6b7280;
+    font-size: 16px;
+    margin: 0;
+}
+
+.history-list {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.history-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+.history-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    border-color: #667eea;
+}
+
+.history-item:last-child {
+    margin-bottom: 0;
+}
+
+.history-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+}
+
+.history-details {
+    flex: 1;
+}
+
+.history-title {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 4px;
+    font-size: 16px;
+}
+
+.history-time {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.history-points {
+    color: #dc2626;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.history-status {
+    flex-shrink: 0;
+}
+
+.status-badge {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.exchange-info {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 25px;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.exchange-info h3 {
+    color: #4c51bf;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.info-card {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+.info-card p {
+    margin: 0 0 12px 0;
+    color: #4a5568;
+    font-size: 15px;
+    line-height: 1.6;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.info-card p:last-child {
+    margin-bottom: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .exchange-container {
+        padding: 15px;
+    }
+    
+    .points-card {
+        padding: 20px;
+        min-width: 180px;
+    }
+    
+    .points-value {
+        font-size: 28px;
+    }
+    
+    .history-section h2 {
+        font-size: 20px;
+    }
+    
+    .history-item {
+        gap: 12px;
+        padding: 12px;
+    }
+    
+    .history-icon {
+        font-size: 24px;
+    }
+    
+    .empty-history {
+        padding: 40px 15px;
+    }
+    
+    .empty-icon {
+        font-size: 48px;
+    }
+    
+    .empty-history h3 {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .points-card {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .history-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+    
+    .history-details {
+        text-align: center;
+    }
+    
+    .info-card p {
+        font-size: 14px;
+    }
+    
+    .exchange-info {
+        padding: 20px;
+    }
+}

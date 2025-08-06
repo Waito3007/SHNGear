@@ -1,0 +1,124 @@
+@page
+@model SHNGear.Pages.Spin.IndexModel
+@{
+    ViewData["Title"] = "Quay May Mắn";
+}
+
+<div class="container mt-5" id="spinContainer">
+    <h2 class="mb-4">Vòng Quay May Mắn</h2>
+    <div class="mb-3">
+        <strong>Điểm Loyalty của bạn:</strong> <span id="loyaltyPoints">@Model.LoyaltyPoints</span>
+    </div>
+    <div class="mb-4">
+        <strong>Giá mỗi lượt quay:</strong> <span id="spinCost">@Model.SpinConfig?.SpinCost ?? 0</span> điểm
+    </div>
+    <div class="mb-4">
+        <strong>Phần thưởng có thể nhận:</strong>
+        <ul>
+            @foreach (var item in Model.SpinItems)
+            {
+                <li>@item.Name (@item.DropRate%)</li>
+            }
+        </ul>
+    </div>
+    <button class="btn btn-danger" id="spinBtn" onclick="spin()" @(Model.CanSpin ? "" : "disabled")>Quay ngay</button>
+    <div class="mt-4" id="spinResult"></div>
+</div>
+<div class="mt-3" id="loginAlert" style="display:none">
+    <div class="alert alert-warning">Bạn cần đăng nhập để sử dụng tính năng quay may mắn!</div>
+    <form id="loginForm" class="mt-3" style="max-width:400px;display:none">
+        <div class="mb-2">
+            <input type="email" id="loginEmail" class="form-control" placeholder="Email" required />
+        </div>
+        <div class="mb-2">
+            <input type="password" id="loginPassword" class="form-control" placeholder="Mật khẩu" required />
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
+        <div id="loginError" class="text-danger mt-2"></div>
+    </form>
+</div>
+</div>
+
+@section Scripts {
+    <script>
+        // Kiểm tra token trong localStorage (giống React)
+        function getToken() {
+            try {
+                return localStorage.getItem('token');
+            } catch { return null; }
+        }
+
+        // Nếu chưa đăng nhập, disable nút quay và hiện cảnh báo
+
+        window.addEventListener('DOMContentLoaded', function() {
+            const token = getToken();
+            if (!token) {
+                // Ẩn toàn bộ giao diện quay, chỉ hiện login
+                document.getElementById('spinContainer').style.display = 'none';
+                document.getElementById('loginAlert').style.display = '';
+                document.getElementById('loginForm').style.display = '';
+            } else {
+                document.getElementById('spinContainer').style.display = '';
+                document.getElementById('loginAlert').style.display = 'none';
+            }
+        });
+
+        // Định nghĩa biến API_BASE_URL (ưu tiên lấy từ window, nếu không thì mặc định là "")
+        window.API_BASE_URL = window.API_BASE_URL || (window.location.origin || "");
+
+        // Xử lý đăng nhập trực tiếp trên Razor Page
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const email = document.getElementById('loginEmail').value;
+                    const password = document.getElementById('loginPassword').value;
+                    document.getElementById('loginError').innerText = '';
+                    try {
+                        const res = await fetch(window.API_BASE_URL + '/api/Auth/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email, password })
+                        });
+                        const data = await res.json();
+                        if (res.ok && data.token) {
+                            localStorage.setItem('token', data.token);
+                            location.reload();
+                        } else {
+                            document.getElementById('loginError').innerText = data.message || 'Đăng nhập thất bại!';
+                        }
+                    } catch (err) {
+                        document.getElementById('loginError').innerText = 'Lỗi kết nối máy chủ!';
+                    }
+                });
+            }
+        });
+
+        async function spin() {
+            const token = getToken();
+            if (!token) {
+                document.getElementById('spinResult').innerHTML = `<div class='alert alert-warning'>Bạn cần đăng nhập để quay!</div>`;
+                return;
+            }
+            document.getElementById('spinBtn').disabled = true;
+            document.getElementById('spinResult').innerText = 'Đang quay...';
+            try {
+                const res = await fetch(window.API_BASE_URL + '/api/LoyaltySpin/spin', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('spinResult').innerHTML = `<div class='alert alert-success'>Chúc mừng! Bạn nhận được: <b>${data.itemName}</b></div>`;
+                    document.getElementById('loyaltyPoints').innerText = data.updatedPoints;
+                } else {
+                    document.getElementById('spinResult').innerHTML = `<div class='alert alert-danger'>${data.message || 'Có lỗi xảy ra!'}</div>`;
+                }
+            } catch (e) {
+                document.getElementById('spinResult').innerHTML = `<div class='alert alert-danger'>Lỗi kết nối máy chủ!</div>`;
+            }
+            document.getElementById('spinBtn').disabled = false;
+        }
+    </script>
+}

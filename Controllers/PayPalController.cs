@@ -19,6 +19,7 @@ namespace SHN_Gear.Controllers
         private readonly PayPalService _payPalService;
         private readonly ILogger<PayPalController> _logger;
         private const decimal VND_TO_USD_RATE = 25000m;
+        private const string CLIENT_URL = "https://localhost:44479";
 
         public PayPalController(
             AppDbContext context,
@@ -56,9 +57,9 @@ namespace SHN_Gear.Controllers
                 var payPalOrderId = await _payPalService.CreateOrder(
                     amountInUSD,
                     "USD",
-                    $"SHN{order.Id}",
-                    $"{Request.Scheme}://{Request.Host}/api/paypal/capture-order?orderId={order.Id}",
-                    $"{Request.Scheme}://{Request.Host}/payment-canceled?orderId={order.Id}"
+                    $"SHN{order.Id}-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString("N")[..8]}",
+                    $"https://localhost:7107/api/paypal/capture-order?orderId={order.Id}",
+                    $"{CLIENT_URL}/payment-canceled?orderId={order.Id}"
                 );
 
                 if (string.IsNullOrEmpty(payPalOrderId))
@@ -186,16 +187,29 @@ namespace SHN_Gear.Controllers
                 var order = await _context.Orders.FindAsync(orderId);
                 if (order is null || order.PayPalOrderId != token)
                 {
-                    return NotFound(new { Message = "Order not found or invalid PayPal token" });
+                    _logger.LogWarning($"Order not found or token mismatch. OrderId: {orderId}, Token: {token}");
+                    return BadRequest(new { Message = "Order not found or invalid PayPal token" });
+                }
+
+                // Check if order is already processed
+                if (order.OrderStatus == "Paid")
+                {
+                    _logger.LogInformation($"Order {orderId} is already paid, redirecting to success page");
+                    await transaction.CommitAsync();
+                    return new RedirectResult($"{CLIENT_URL}/payment-success?orderId={order.Id}", true);
                 }
 
                 var captureResult = await _payPalService.CaptureOrder(token);
 
                 if (!captureResult.Success)
                 {
+                    _logger.LogWarning($"PayPal capture failed for order {orderId}: {captureResult.ErrorMessage}");
                     order.OrderStatus = "PaymentFailed";
                     await _context.SaveChangesAsync();
-                    return Redirect($"{Request.Scheme}://{Request.Host}/payment-failed?orderId={order.Id}");
+                    await transaction.CommitAsync();
+                    
+                    var errorMessage = Uri.EscapeDataString(captureResult.ErrorMessage ?? "Payment capture failed");
+                    return new RedirectResult($"{CLIENT_URL}/payment-failed?orderId={order.Id}&error={errorMessage}", true);
                 }
 
                 // Update order status
@@ -206,15 +220,18 @@ namespace SHN_Gear.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                string apiBaseUrl = Environment.GetEnvironmentVariable("${process.env.REACT_APP_API_BASE_URL}") ?? "localhost:44479";
-                return Redirect($"{Request.Scheme}://{apiBaseUrl}/payment-success");
-                // return Redirect($"{Request.Scheme}://{Request.Host}/payment-success?orderId={order.Id}");
+                _logger.LogInformation($"Successfully processed payment for order {orderId}, transaction: {captureResult.TransactionId}");
+
+                // Redirect to payment success page
+                var redirectUrl = $"{CLIENT_URL}/payment-success?orderId={order.Id}";
+                return new RedirectResult(redirectUrl, true);
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
                 _logger.LogError(ex, $"Failed to capture PayPal payment for order {orderId}");
-                return Redirect($"{Request.Scheme}://{Request.Host}/payment-error?message={Uri.EscapeDataString(ex.Message)}");
+                var errorMessage = Uri.EscapeDataString(ex.Message);
+                return Redirect($"{CLIENT_URL}/payment-error?orderId={orderId}&message={errorMessage}");
             }
         }
     }

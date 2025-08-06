@@ -1,7 +1,9 @@
 using PayPalCheckoutSdk.Core;
 using PayPalCheckoutSdk.Orders;
+using PayPalHttp;
 using System.Text.Json;
 using System.Globalization;
+using SHN_Gear.Configuration;
 
 namespace SHN_Gear.Services
 {
@@ -16,10 +18,12 @@ namespace SHN_Gear.Services
             _config = config;
             _logger = logger;
 
-            var clientId = _config["PayPal:ClientId"];
-            var secret = _config["PayPal:Secret"];
+            // Sử dụng environment variables hoặc fallback về appsettings
+            var clientId = EnvironmentConfig.PayPal.ClientId ?? _config["PayPal:ClientId"] ?? throw new InvalidOperationException("PayPal ClientId not configured");
+            var secret = EnvironmentConfig.PayPal.Secret ?? _config["PayPal:Secret"] ?? throw new InvalidOperationException("PayPal Secret not configured");
+            var mode = EnvironmentConfig.PayPal.Mode ?? _config["PayPal:Mode"] ?? "Sandbox";
 
-            PayPalEnvironment environment = _config["PayPal:Mode"] == "Sandbox"
+            PayPalEnvironment environment = mode == "Sandbox"
                 ? new SandboxEnvironment(clientId, secret)
                 : new LiveEnvironment(clientId, secret);
 
@@ -93,6 +97,8 @@ namespace SHN_Gear.Services
         {
             try
             {
+                _logger.LogInformation($"Attempting to capture PayPal order: {orderId}");
+                
                 var request = new OrdersCaptureRequest(orderId);
                 request.RequestBody(new OrderActionRequest());
                 request.Prefer("return=representation");
@@ -101,18 +107,40 @@ namespace SHN_Gear.Services
                 var result = response.Result<Order>();
 
                 var transactionId = result.PurchaseUnits?[0]?.Payments?.Captures?[0]?.Id;
-                _logger.LogInformation($"Captured PayPal Order: {orderId}, Transaction ID: {transactionId}");
+                _logger.LogInformation($"Successfully captured PayPal Order: {orderId}, Transaction ID: {transactionId}, Status: {result.Status}");
 
                 return new PayPalCaptureResult
                 {
                     Success = result.Status == "COMPLETED",
                     TransactionId = transactionId,
-                    RawResponse = JsonSerializer.Serialize(result)
+                    RawResponse = System.Text.Json.JsonSerializer.Serialize(result)
+                };
+            }
+            catch (PayPalHttp.HttpException httpEx)
+            {
+                _logger.LogError(httpEx, $"PayPal HTTP error when capturing order {orderId}: {httpEx.Message}");
+                
+                // Parse error details from PayPal response
+                var errorDetails = "";
+                try
+                {
+                    // Use Headers or Message for error information since ResponseBody may not be available
+                    errorDetails = httpEx.Message;
+                }
+                catch (Exception parseEx)
+                {
+                    _logger.LogWarning(parseEx, "Failed to parse PayPal error response");
+                }
+
+                return new PayPalCaptureResult
+                {
+                    Success = false,
+                    ErrorMessage = $"PayPal HTTP Error: {httpEx.Message}. Details: {errorDetails}"
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Failed to capture PayPal order {orderId}");
+                _logger.LogError(ex, $"Unexpected error when capturing PayPal order {orderId}");
                 return new PayPalCaptureResult
                 {
                     Success = false,

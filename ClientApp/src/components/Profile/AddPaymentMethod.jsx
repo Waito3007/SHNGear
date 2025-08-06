@@ -1,34 +1,17 @@
 import React, { useState } from "react";
+import { usePaymentMethod } from "@/hooks/api/usePaymentMethod";
 
 const AddPaymentMethod = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [message, setMessage] = useState("");
+  const { addPaymentMethod, loading, message, setMessage } = usePaymentMethod();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const paymentMethod = { name, description };
-
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/PaymentMethod`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(paymentMethod),
-      });
-
-      if (!response.ok) {
-        throw new Error("Không thể thêm phương thức thanh toán");
-      }
-
-      const data = await response.json();
-      setMessage(`Thêm thành công: ${data.name}`);
+    const result = await addPaymentMethod(name, description);
+    if (result) {
       setName("");
       setDescription("");
-    } catch (error) {
-      setMessage("Lỗi: " + error.message);
     }
   };
 
@@ -58,27 +41,23 @@ const AddPaymentMethod = () => {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#cb1c22] focus:border-transparent transition-all duration-200"
-            rows="4"
-            required
+            rows={3}
           />
         </div>
+        {message && (
+          <div className="mb-4 text-center text-green-600 font-semibold">
+            {message}
+            <button type="button" className="ml-2 text-red-500" onClick={() => setMessage("")}>x</button>
+          </div>
+        )}
         <button
           type="submit"
-          className="w-full bg-[#cb1c22] text-white p-3 rounded-md hover:bg-[#a1161b] transition-colors duration-300 font-semibold"
+          className="w-full bg-[#cb1c22] text-white font-bold py-3 rounded-md hover:bg-[#a3151a] transition-all duration-200"
+          disabled={loading}
         >
-          Thêm
+          {loading ? "Đang thêm..." : "Thêm phương thức"}
         </button>
       </form>
-      {message && (
-        <p
-          className={`mt-5 text-center font-medium ${
-            message.includes("Lỗi") ? "text-red-600" : "text-green-600"
-          }`}
-        >
-          {message}
-        </p>
-      )}
-      
     </div>
   );
 };

@@ -17,8 +17,10 @@ using iTextSharp.text.pdf;
 using iTextSharp.tool.xml;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Drawing.Drawing2D;
 using System.Globalization; // Cho hàm ConvertToUnsigned
 using System.Text;         // Cho NormalizationForm
+using System.Text.RegularExpressions; // For Regex
 using OfficeOpenXml.Style;
 using Microsoft.AspNetCore.JsonPatch;
 namespace SHN_Gear.Controllers
@@ -30,16 +32,67 @@ namespace SHN_Gear.Controllers
         private readonly AppDbContext _context;
         private readonly MoMoPaymentService _momoService;
         private readonly IConfiguration _configuration;
+        private readonly EmailService _emailService; // Thêm dòng này
 
         public OrderController(
             AppDbContext context,
             MoMoPaymentService momoService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            EmailService emailService) // Thêm tham số này
         {
             _context = context;
             _momoService = momoService;
             _configuration = configuration;
+            _emailService = emailService; // Thêm dòng này
         }
+
+        // Test endpoint for email functionality
+        [HttpPost("test-email/{orderId}")]
+        public async Task<IActionResult> TestEmailForOrder(int orderId)
+        {
+            try
+            {
+                var order = await _context.Orders
+                    .Include(o => o.OrderItems)
+                        .ThenInclude(oi => oi.ProductVariant)
+                            .ThenInclude(pv => pv.Product)
+                    .Include(o => o.Address)
+                    .Include(o => o.User)
+                    .Include(o => o.Voucher)
+                    .Include(o => o.PaymentMethod)
+                    .FirstOrDefaultAsync(o => o.Id == orderId);
+
+                if (order == null)
+                {
+                    return NotFound("Đơn hàng không tồn tại");
+                }
+
+                if (order.User == null || string.IsNullOrEmpty(order.User.Email))
+                {
+                    return BadRequest("Đơn hàng không có thông tin email người dùng");
+                }
+
+                await _emailService.SendOrderConfirmationEmailAsync(order.User, order);
+
+                return Ok(new
+                {
+                    Success = true,
+                    Message = $"Email đã được gửi tới {order.User.Email}",
+                    OrderId = orderId
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    Success = false,
+                    Message = $"Lỗi khi gửi email: {ex.Message}",
+                    OrderId = orderId
+                });
+            }
+        }
+
+
 
 
         // Lấy thông tin đơn hàng
@@ -301,6 +354,12 @@ namespace SHN_Gear.Controllers
                 UserVoucher? userVoucher = null;
                 if (orderDto.VoucherId.HasValue)
                 {
+                    // Voucher requires a valid user
+                    if (!orderDto.UserId.HasValue || orderDto.UserId.Value == 0)
+                    {
+                        return BadRequest("Để sử dụng voucher, bạn cần đăng nhập.");
+                    }
+
                     voucher = await _context.Vouchers.FindAsync(orderDto.VoucherId.Value);
                     if (voucher == null || !voucher.IsActive || voucher.ExpiryDate < DateTime.UtcNow)
                     {
@@ -309,16 +368,33 @@ namespace SHN_Gear.Controllers
 
                     // Kiểm tra xem voucher đã được gán cho người dùng chưa
                     userVoucher = await _context.UserVouchers
-                        .FirstOrDefaultAsync(uv => uv.VoucherId == voucher.Id && uv.UserId == orderDto.UserId.Value);
+                        .FirstOrDefaultAsync(uv => uv.VoucherId == voucher.Id);
+
                     if (userVoucher == null)
                     {
-                        return BadRequest("Bạn chưa sở hữu voucher này.");
+                        // Voucher chưa được gán cho ai, tạo bản ghi mới
+                        userVoucher = new UserVoucher
+                        {
+                            UserId = orderDto.UserId.Value,
+                            VoucherId = voucher.Id,
+                            IsUsed = false,
+                            UsedAt = DateTime.UtcNow
+                        };
+                        _context.UserVouchers.Add(userVoucher);
                     }
-
-                    // Kiểm tra trạng thái IsUsed
-                    if (userVoucher.IsUsed)
+                    else
                     {
-                        return BadRequest("Voucher đã được sử dụng.");
+                        // Voucher đã được gán, kiểm tra quyền sở hữu
+                        if (userVoucher.UserId != orderDto.UserId.Value)
+                        {
+                            return BadRequest("Voucher này chỉ có thể được sử dụng bởi người dùng đã được gán.");
+                        }
+
+                        // Kiểm tra trạng thái IsUsed
+                        if (userVoucher.IsUsed)
+                        {
+                            return BadRequest("Voucher đã được sử dụng.");
+                        }
                     }
                 }
 
@@ -432,6 +508,34 @@ namespace SHN_Gear.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
+                // Gửi email xác nhận cho tất cả đơn hàng (không chỉ COD)
+                if (user != null && !string.IsNullOrEmpty(user.Email))
+                {
+                    try
+                    {
+                        // Lấy lại thông tin đầy đủ của đơn hàng để gửi mail
+                        var orderDetailsForEmail = await _context.Orders
+                            .Include(o => o.OrderItems)
+                                .ThenInclude(oi => oi.ProductVariant)
+                                    .ThenInclude(pv => pv.Product)
+                            .Include(o => o.Address)
+                            .Include(o => o.User)
+                            .Include(o => o.Voucher)
+                            .Include(o => o.PaymentMethod)
+                            .FirstOrDefaultAsync(o => o.Id == order.Id);
+
+                        if (orderDetailsForEmail != null)
+                        {
+                            await _emailService.SendOrderConfirmationEmailAsync(user, orderDetailsForEmail);
+                        }
+                    }
+                    catch (Exception emailEx)
+                    {
+                        // Log email error but don't fail the order
+                        Console.WriteLine($"Lỗi gửi email xác nhận đơn hàng {order.Id}: {emailEx.Message}");
+                    }
+                }
+
                 return Ok(new
                 {
                     Message = "Đơn hàng đã được tạo.",
@@ -480,7 +584,12 @@ namespace SHN_Gear.Controllers
 
                 var order = await _context.Orders
                     .Include(o => o.OrderItems)
+                        .ThenInclude(oi => oi.ProductVariant)
+                            .ThenInclude(pv => pv.Product)
+                    .Include(o => o.Address)
                     .Include(o => o.User)
+                    .Include(o => o.Voucher)
+                    .Include(o => o.PaymentMethod)
                     .FirstOrDefaultAsync(o => o.Id == orderId);
 
                 if (order == null)
@@ -507,20 +616,14 @@ namespace SHN_Gear.Controllers
                         }
                     }
 
-                    // Mark voucher as used if exists
-                    if (order.VoucherId.HasValue && order.UserId.HasValue)
-                    {
-                        var userVoucher = new UserVoucher
-                        {
-                            UserId = order.UserId.Value,
-                            VoucherId = order.VoucherId.Value,
-                            UsedAt = DateTime.UtcNow
-                        };
-                        _context.UserVouchers.Add(userVoucher);
-                    }
-
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
+
+                    // Gửi email xác nhận
+                    if (order.User != null)
+                    {
+                        await _emailService.SendOrderConfirmationEmailAsync(order.User, order);
+                    }
 
                     // Trả về URL xác nhận
                     return Ok(new
@@ -630,6 +733,24 @@ namespace SHN_Gear.Controllers
                     if (order.UserId.HasValue && order.User != null)
                     {
                         order.User.Points += 500;
+
+                        // Đồng bộ điểm loyalty
+                        var loyaltyPoint = await _context.LoyaltyPoints.FirstOrDefaultAsync(lp => lp.UserId == order.UserId.Value);
+                        if (loyaltyPoint == null)
+                        {
+                            loyaltyPoint = new LoyaltyPoint
+                            {
+                                UserId = order.UserId.Value,
+                                Points = 500,
+                                LastUpdated = DateTime.UtcNow
+                            };
+                            _context.LoyaltyPoints.Add(loyaltyPoint);
+                        }
+                        else
+                        {
+                            loyaltyPoint.Points += 500;
+                            loyaltyPoint.LastUpdated = DateTime.UtcNow;
+                        }
                     }
                 }
 
@@ -714,6 +835,8 @@ namespace SHN_Gear.Controllers
                 PaymentMethodId = order.PaymentMethodId,
                 Items = order.OrderItems.Select(oi => new
                 {
+                    ProductId = oi.ProductVariant.Product.Id, // Thêm ProductId
+                    ProductVariantId = oi.ProductVariantId,
                     ProductName = oi.ProductVariant.Product.Name,
                     ProductDescription = oi.ProductVariant.Product.Description,
                     ProductImage = oi.ProductVariant.Product.Images
@@ -869,15 +992,19 @@ namespace SHN_Gear.Controllers
                 PaymentMethodId = order.PaymentMethodId,
                 Items = order.OrderItems.Select(oi => new
                 {
+                    Id = oi.Id,
                     VariantId = oi.ProductVariantId,
                     Quantity = oi.Quantity,
-                    Price = oi.Price,
-                    // ProductImage = oi.ProductVariant?.Product?.Images, // Lấy ảnh từ Product
+                    Price = oi.Price, // Giá đã thanh toán (có thể là giá flash sale hoặc giá giảm)
+                    OriginalPrice = oi.ProductVariant?.Price, // Giá gốc của variant
+                    DiscountPrice = oi.ProductVariant?.DiscountPrice, // Giá giảm của variant
                     ProductImage = oi.ProductVariant.Product.Images
                                 .OrderByDescending(img => img.IsPrimary)
                                 .ThenBy(img => img.Id)
                                 .FirstOrDefault()?.ImageUrl ?? "/images/default-product.png",
-                    ProductName = oi.ProductVariant?.Product?.Name // Có thể thêm tên sản phẩm nếu cần
+                    ProductName = oi.ProductVariant?.Product?.Name,
+                    VariantColor = oi.ProductVariant?.Color,
+                    VariantStorage = oi.ProductVariant?.Storage
                 }).ToList()
             };
 
@@ -979,201 +1106,521 @@ namespace SHN_Gear.Controllers
             }
         }
 
+        // Hàm chuyển đổi số thành chữ tiếng Việt (CẦN TRIỂN KHAI HOẶC DÙNG THƯ VIỆN)
+        private string ConvertNumberToWords_VI(decimal number)
+        {
+            if (number == 0) return "Không đồng";
+            // Hàm NumberToTextVN.DocSo chịu trách nhiệm chính cho việc chuyển đổi.
+            // Thêm "(... đồng chẵn./.)" là một quy ước thường thấy trên hóa đơn.
+            return $"({NumberToTextVN.DocSo((long)Math.Round(number))} đồng chẵn./.)";
+        }
+
+
+        private async Task<OrderInvoiceViewModel> PrepareInvoiceViewModel(int orderId)
+        {
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.ProductVariant)
+                        .ThenInclude(pv => pv.Product)
+                            .ThenInclude(p => p.Images) // Đảm bảo include cả Images nếu cần
+                .Include(o => o.Address)
+                .Include(o => o.PaymentMethod)
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            if (order == null)
+            {
+                return null;
+            }
+
+            var sellerInfo = new SellerInfo();
+
+            decimal subtotal = order.OrderItems.Sum(oi => oi.Quantity * oi.Price);
+            decimal vatRate = 0.1m;
+            decimal vatAmount = subtotal * vatRate;
+            decimal finalTotal = subtotal + vatAmount;
+
+            // Không còn lấy BuyerTaxCode nữa
+            // string buyerTaxCode = order.User?.TaxCode; 
+            // if (string.IsNullOrEmpty(buyerTaxCode) && order.Address is ExtendedAddress extAddr)
+            // {
+            //     buyerTaxCode = extAddr.TaxCode;
+            // }
+
+            var viewModel = new OrderInvoiceViewModel
+            {
+                OrderId = order.Id,
+                OrderDate = order.OrderDate,
+                Seller = sellerInfo,
+                BuyerFullName = order.Address?.FullName ?? "N/A",
+                BuyerAddress = order.Address?.AddressLine1 ?? "N/A",
+                // BuyerTaxCode = buyerTaxCode ?? "N/A", // <<<< LOẠI BỎ DÒNG NÀY
+                PaymentMethodName = order.PaymentMethod?.Name ?? "Tiền mặt",
+                Items = order.OrderItems.Select((item, index) =>
+                {
+                    var now = DateTime.UtcNow;
+                    var product = item.ProductVariant?.Product;
+                    var variant = item.ProductVariant;
+
+                    // Check flash sale status
+                    bool isProductFlashSale = product != null && product.IsFlashSale &&
+                                            product.FlashSaleStartDate.HasValue &&
+                                            product.FlashSaleStartDate.Value <= now &&
+                                            product.FlashSaleEndDate.HasValue &&
+                                            product.FlashSaleEndDate.Value >= now;
+
+                    bool isVariantFlashSale = variant != null &&
+                                             variant.FlashSaleStart.HasValue &&
+                                             variant.FlashSaleEnd.HasValue &&
+                                             variant.FlashSaleStart.Value <= now &&
+                                             variant.FlashSaleEnd.Value >= now;
+
+                    decimal originalPrice = variant?.Price ?? 0;
+                    decimal discountPrice = variant?.DiscountPrice ?? originalPrice;
+                    decimal? flashSalePrice = null;
+
+                    if (isVariantFlashSale)
+                    {
+                        flashSalePrice = discountPrice; // Variant flash sale uses discount price
+                    }
+                    else if (isProductFlashSale && product?.FlashSalePrice.HasValue == true)
+                    {
+                        flashSalePrice = product.FlashSalePrice.Value;
+                    }
+
+                    Console.WriteLine($"Order Item {index}: Product={product?.Name ?? "NULL"}, Variant={variant?.Color}-{variant?.Storage}, Price={item.Price}");
+                    Console.WriteLine($"  - ProductVariant: {item.ProductVariant?.Id}, Product: {item.ProductVariant?.Product?.Name ?? "NULL"}");
+                    Console.WriteLine($"  - IsProductFlashSale: {isProductFlashSale}, IsVariantFlashSale: {isVariantFlashSale}");
+
+                    return new InvoiceItemViewModel
+                    {
+                        Index = index + 1,
+                        ProductName = !string.IsNullOrEmpty(product?.Name) ? product.Name : $"Sản phẩm không xác định (Variant ID: {item.ProductVariantId})",
+                        VariantInfo = $"{variant?.Color ?? "N/A"} - {variant?.Storage ?? "N/A"}".Trim(' ', '-'),
+                        Quantity = item.Quantity,
+                        Price = item.Price, // This is the actual price paid
+                        OriginalPrice = originalPrice,
+                        DiscountPrice = discountPrice != originalPrice ? discountPrice : (decimal?)null,
+                        FlashSalePrice = flashSalePrice,
+                        IsFlashSale = isProductFlashSale || isVariantFlashSale
+                    };
+                }).ToList(),
+                SubtotalAmount = subtotal,
+                VatRate = vatRate,
+                VatAmount = vatAmount,
+                FinalTotalAmount = finalTotal,
+                TotalAmountInWords = ConvertNumberToWords_VI(finalTotal)
+            };
+
+            return viewModel;
+        }
+
         [HttpGet("{id}/export/image")]
         public async Task<IActionResult> ExportOrderToImage(int id)
         {
             try
             {
-                // Lấy thông tin đơn hàng từ database
-                var order = await _context.Orders
-                    .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.ProductVariant)
-                    .ThenInclude(pv => pv.Product)
-                    .Include(o => o.Address)
-                    .FirstOrDefaultAsync(o => o.Id == id);
-
-                if (order == null)
+                var invoiceData = await PrepareInvoiceViewModel(id);
+                if (invoiceData == null)
                 {
-                    return NotFound("Không tìm thấy đơn hàng");
+                    return NotFound("Không tìm thấy đơn hàng hoặc không thể chuẩn bị dữ liệu hóa đơn.");
                 }
 
-                // Tính toán kích thước hình ảnh dựa trên số lượng sản phẩm
                 int width = 800;
-                int itemHeight = 30;
-                int headerHeight = 200;
-                int footerHeight = 50;
-                int height = headerHeight + (order.OrderItems.Count * itemHeight) + footerHeight;
+                float currentY = 10f;
+                float lineSpacing = 5f;
+                float sectionSpacing = 15f;
+                float leftMargin = 20f;
+                float rightMarginContent = width - 20f;
 
-                // Tạo bitmap và graphics
-                using (var bitmap = new System.Drawing.Bitmap(width, height))
-                using (var graphics = System.Drawing.Graphics.FromImage(bitmap))
+                var titleFont = new System.Drawing.Font("Arial", 16, System.Drawing.FontStyle.Bold);
+                var headerFont = new System.Drawing.Font("Arial", 10, System.Drawing.FontStyle.Bold);
+                var normalFont = new System.Drawing.Font("Arial", 9, System.Drawing.FontStyle.Regular);
+                var smallFont = new System.Drawing.Font("Arial", 8, System.Drawing.FontStyle.Regular);
+                var blackBrush = Brushes.Black;
+                var grayBrush = Brushes.Gray;
+
+                var sfCenter = new StringFormat { Alignment = StringAlignment.Center };
+                var sfRight = new StringFormat { Alignment = StringAlignment.Far };
+                var sfLeft = new StringFormat { Alignment = StringAlignment.Near };
+
+                int baseHeight = 430; // Giảm nhẹ baseHeight do bỏ BuyerTaxCode
+                int itemRowHeight = 20;
+                int calculatedHeight = baseHeight + (invoiceData.Items.Count * itemRowHeight) + (invoiceData.Items.Count > 0 ? 20 : 0);
+                int height = Math.Max(580, calculatedHeight); // Giảm chiều cao tối thiểu nếu cần
+
+                using (var bitmap = new Bitmap(width, height))
+                using (var graphics = Graphics.FromImage(bitmap))
                 {
-                    // Vẽ nền trắng
-                    graphics.Clear(System.Drawing.Color.White);
+                    graphics.Clear(Color.White);
+                    graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                    graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
 
-                    // Định dạng font và brush
-                    var titleFont = new System.Drawing.Font("Arial", 20, System.Drawing.FontStyle.Bold);
-                    var headerFont = new System.Drawing.Font("Arial", 12, System.Drawing.FontStyle.Bold);
-                    var normalFont = new System.Drawing.Font("Arial", 10);
-                    var blackBrush = System.Drawing.Brushes.Black;
-                    var grayBrush = new System.Drawing.SolidBrush(System.Drawing.Color.Gray);
+                    var sellerInfo = invoiceData.Seller;
 
-                    // Vẽ tiêu đề
-                    graphics.DrawString("HÓA ĐƠN BÁN HÀNG", titleFont, blackBrush,
-                        new System.Drawing.PointF(width / 2 - 150, 20));
+                    // Vẽ Thông tin người bán
+                    graphics.DrawString(sellerInfo.CompanyName, headerFont, blackBrush, leftMargin, currentY);
+                    currentY += headerFont.GetHeight(graphics) + lineSpacing;
+                    graphics.DrawString(sellerInfo.Address, normalFont, blackBrush, leftMargin, currentY);
+                    currentY += normalFont.GetHeight(graphics) + lineSpacing;
+                    graphics.DrawString(sellerInfo.TaxCode, normalFont, blackBrush, leftMargin, currentY);
+                    currentY += normalFont.GetHeight(graphics) + lineSpacing;
+                    graphics.DrawString(sellerInfo.PhoneNumber, normalFont, blackBrush, leftMargin, currentY);
+                    currentY += normalFont.GetHeight(graphics) + sectionSpacing;
 
-                    // Vẽ thông tin đơn hàng
-                    graphics.DrawString($"Mã đơn hàng: {order.Id}", normalFont, blackBrush, 20, 60);
-                    graphics.DrawString($"Ngày tạo: {order.OrderDate:dd/MM/yyyy HH:mm}", normalFont, blackBrush, 20, 85);
-                    graphics.DrawString($"Khách hàng: {order.Address?.FullName ?? "N/A"}", normalFont, blackBrush, 20, 110);
-                    graphics.DrawString($"Địa chỉ: {order.Address?.AddressLine1 ?? "N/A"}", normalFont, blackBrush, 20, 135);
+                    // Vẽ Thông tin hóa đơn (Mẫu số, Ký hiệu, Số)
+                    float initialYForInvoiceMeta = 10f;
+                    graphics.DrawString($"Mẫu số: {invoiceData.InvoiceTemplateNo}", normalFont, blackBrush, width - 200, initialYForInvoiceMeta, sfLeft);
+                    initialYForInvoiceMeta += normalFont.GetHeight(graphics) + lineSpacing;
+                    graphics.DrawString($"Ký hiệu: {invoiceData.InvoiceSeries}", normalFont, blackBrush, width - 200, initialYForInvoiceMeta, sfLeft);
+                    initialYForInvoiceMeta += normalFont.GetHeight(graphics) + lineSpacing;
+                    graphics.DrawString($"Số: {invoiceData.InvoiceNumberFormatted}", normalFont, blackBrush, width - 200, initialYForInvoiceMeta, sfLeft);
 
-                    // Vẽ tiêu đề bảng
-                    graphics.DrawString("STT", headerFont, blackBrush, 20, 170);
-                    graphics.DrawString("Tên sản phẩm", headerFont, blackBrush, 60, 170);
-                    graphics.DrawString("Số lượng", headerFont, blackBrush, 400, 170);
-                    graphics.DrawString("Đơn giá", headerFont, blackBrush, 500, 170);
-                    graphics.DrawString("Thành tiền", headerFont, blackBrush, 600, 170);
+                    // Vẽ Tiêu đề hóa đơn
+                    string invoiceTitle = "HÓA ĐƠN BÁN HÀNG";
+                    SizeF titleSize = graphics.MeasureString(invoiceTitle, titleFont);
+                    graphics.DrawString(invoiceTitle, titleFont, blackBrush, (width - titleSize.Width) / 2, currentY);
+                    currentY += titleSize.Height + lineSpacing;
+                    SizeF dateSize = graphics.MeasureString(invoiceData.FormattedOrderDate, normalFont);
+                    graphics.DrawString(invoiceData.FormattedOrderDate, normalFont, blackBrush, (width - dateSize.Width) / 2, currentY);
+                    currentY += dateSize.Height + sectionSpacing;
 
-                    // Vẽ đường kẻ ngang dưới tiêu đề
-                    graphics.DrawLine(System.Drawing.Pens.Gray, 20, 190, width - 20, 190);
+                    // Vẽ Thông tin người mua (đã bỏ Mã số thuế)
+                    graphics.DrawString($"Đơn vị mua hàng (Họ tên người mua): {invoiceData.BuyerFullName}", normalFont, blackBrush, leftMargin, currentY);
+                    currentY += normalFont.GetHeight(graphics) + lineSpacing;
+                    graphics.DrawString($"Địa chỉ: {invoiceData.BuyerAddress}", normalFont, blackBrush, leftMargin, currentY);
+                    currentY += normalFont.GetHeight(graphics) + lineSpacing;
+                    graphics.DrawString($"Hình thức thanh toán: {invoiceData.PaymentMethodName}", normalFont, blackBrush, leftMargin, currentY);
+                    currentY += normalFont.GetHeight(graphics) + sectionSpacing;
 
-                    // Vẽ từng sản phẩm
-                    int yPos = 200;
-                    int index = 1;
-                    foreach (var item in order.OrderItems)
+                    // Vẽ Bảng chi tiết sản phẩm (đã bỏ cột ĐVT)
+                    float tableHeaderY = currentY;
+                    float colSttX = leftMargin;
+                    float colProductNameX = colSttX + 40;
+                    float colQuantityX = colProductNameX + 380; // Tăng chiều rộng cột Tên sản phẩm thêm
+                    float colUnitPriceX = colQuantityX + 100;  // Dịch chuyển cột Số lượng
+                    float colAmountX = colUnitPriceX + 100;    // Dịch chuyển cột Đơn giá
+
+                    graphics.DrawLine(Pens.Black, leftMargin, tableHeaderY, rightMarginContent, tableHeaderY);
+                    tableHeaderY += lineSpacing;
+                    graphics.DrawString("STT", headerFont, blackBrush, colSttX, tableHeaderY);
+                    graphics.DrawString("Tên hàng hóa, dịch vụ", headerFont, blackBrush, colProductNameX, tableHeaderY);
+                    graphics.DrawString("Số lượng", headerFont, blackBrush, colQuantityX, tableHeaderY, sfRight);
+                    graphics.DrawString("Đơn giá", headerFont, blackBrush, colUnitPriceX, tableHeaderY, sfRight);
+                    graphics.DrawString("Thành tiền", headerFont, blackBrush, colAmountX, tableHeaderY, sfRight);
+
+                    tableHeaderY += headerFont.GetHeight(graphics) + lineSpacing;
+                    graphics.DrawLine(Pens.Black, leftMargin, tableHeaderY, rightMarginContent, tableHeaderY);
+                    currentY = tableHeaderY;
+
+                    if (invoiceData.Items.Any())
                     {
-                        graphics.DrawString(index.ToString(), normalFont, blackBrush, 20, yPos);
-                        graphics.DrawString(item.ProductVariant.Product.Name, normalFont, blackBrush, 60, yPos);
-                        graphics.DrawString(item.Quantity.ToString(), normalFont, blackBrush, 400, yPos);
-                        graphics.DrawString(item.Price.ToString("N0"), normalFont, blackBrush, 500, yPos);
-                        graphics.DrawString((item.Quantity * item.Price).ToString("N0"), normalFont, blackBrush, 600, yPos);
+                        foreach (var item in invoiceData.Items)
+                        {
+                            currentY += lineSpacing;
+                            graphics.DrawString(item.Index.ToString(), normalFont, blackBrush, colSttX + 5, currentY);
 
-                        yPos += itemHeight;
-                        index++;
+                            // Product name with variant info
+                            string productDisplayName = !string.IsNullOrEmpty(item.ProductName) ? item.ProductName : "Sản phẩm không xác định";
+                            if (!string.IsNullOrEmpty(item.VariantInfo))
+                            {
+                                productDisplayName += $" ({item.VariantInfo})";
+                            }
+                            graphics.DrawString(productDisplayName, normalFont, blackBrush, colProductNameX, currentY, new StringFormat { Trimming = StringTrimming.EllipsisCharacter });
+
+                            graphics.DrawString(item.Quantity.ToString(), normalFont, blackBrush, colQuantityX, currentY, sfRight);
+
+                            // Display price with flash sale info
+                            if (item.IsFlashSale && item.FlashSalePrice.HasValue)
+                            {
+                                // Show original price crossed out and flash sale price
+                                float priceY = currentY;
+                                graphics.DrawString(item.OriginalPrice.ToString("N0"), smallFont, grayBrush, colUnitPriceX, priceY, sfRight);
+
+                                // Draw line through original price
+                                SizeF originalPriceSize = graphics.MeasureString(item.OriginalPrice.ToString("N0"), smallFont);
+                                graphics.DrawLine(Pens.Gray, colUnitPriceX - originalPriceSize.Width, priceY + originalPriceSize.Height / 2, colUnitPriceX, priceY + originalPriceSize.Height / 2);
+
+                                priceY += smallFont.GetHeight(graphics);
+                                graphics.DrawString($"{item.Price:N0} (FLASH)", normalFont, Brushes.Red, colUnitPriceX, priceY, sfRight);
+                            }
+                            else if (item.DiscountPrice.HasValue && item.DiscountPrice != item.OriginalPrice)
+                            {
+                                // Show original price crossed out and discount price
+                                float priceY = currentY;
+                                graphics.DrawString(item.OriginalPrice.ToString("N0"), smallFont, grayBrush, colUnitPriceX, priceY, sfRight);
+
+                                // Draw line through original price
+                                SizeF originalPriceSize = graphics.MeasureString(item.OriginalPrice.ToString("N0"), smallFont);
+                                graphics.DrawLine(Pens.Gray, colUnitPriceX - originalPriceSize.Width, priceY + originalPriceSize.Height / 2, colUnitPriceX, priceY + originalPriceSize.Height / 2);
+
+                                priceY += smallFont.GetHeight(graphics);
+                                graphics.DrawString(item.Price.ToString("N0"), normalFont, Brushes.DarkOrange, colUnitPriceX, priceY, sfRight);
+                            }
+                            else
+                            {
+                                graphics.DrawString(item.Price.ToString("N0"), normalFont, blackBrush, colUnitPriceX, currentY, sfRight);
+                            }
+
+                            graphics.DrawString(item.Amount.ToString("N0"), normalFont, blackBrush, colAmountX, currentY, sfRight);
+                            currentY += itemRowHeight;
+                            graphics.DrawLine(Pens.LightGray, leftMargin, currentY, rightMarginContent, currentY);
+                        }
+                    }
+                    else
+                    {
+                        currentY += itemRowHeight;
+                        graphics.DrawString("Không có sản phẩm/dịch vụ.", normalFont, grayBrush, (width - graphics.MeasureString("Không có sản phẩm/dịch vụ.", normalFont).Width) / 2, currentY);
+                        currentY += itemRowHeight;
+                        graphics.DrawLine(Pens.LightGray, leftMargin, currentY, rightMarginContent, currentY);
                     }
 
-                    // Vẽ tổng cộng
-                    graphics.DrawLine(System.Drawing.Pens.Gray, 20, yPos, width - 20, yPos);
-                    yPos += 10;
-                    graphics.DrawString("TỔNG CỘNG:  ", headerFont, blackBrush, 500, yPos);
-                    graphics.DrawString(order.TotalAmount.ToString("N0"), headerFont, blackBrush, 600, yPos);
+                    // Vẽ Phần tổng cộng
+                    currentY += lineSpacing;
+                    float summaryLabelX = colUnitPriceX - 120; // Điều chỉnh cho phù hợp với cột mới
+                    float summaryValueX = colAmountX;
 
-                    // Vẽ footer
-                    yPos += 30;
-                    graphics.DrawString("Cảm ơn quý khách đã mua hàng!", normalFont, grayBrush,
-                        new System.Drawing.PointF(width / 2 - 100, yPos));
+                    graphics.DrawString("Cộng tiền hàng:", normalFont, blackBrush, summaryLabelX, currentY, sfRight);
+                    graphics.DrawString(invoiceData.SubtotalAmount.ToString("N0"), normalFont, blackBrush, summaryValueX, currentY, sfRight);
+                    currentY += normalFont.GetHeight(graphics) + lineSpacing;
 
-                    // Lưu hình ảnh vào memory stream
+                    if (invoiceData.VatAmount > 0)
+                    {
+                        graphics.DrawString($"Thuế GTGT ({invoiceData.VatRateFormatted}):", normalFont, blackBrush, summaryLabelX, currentY, sfRight);
+                        graphics.DrawString(invoiceData.VatAmount.ToString("N0"), normalFont, blackBrush, summaryValueX, currentY, sfRight);
+                        currentY += normalFont.GetHeight(graphics) + lineSpacing;
+                    }
+
+                    graphics.DrawLine(Pens.Black, summaryLabelX - 70, currentY, rightMarginContent, currentY);
+                    currentY += lineSpacing;
+
+                    graphics.DrawString("TỔNG CỘNG THANH TOÁN:", headerFont, blackBrush, summaryLabelX, currentY, sfRight);
+                    graphics.DrawString(invoiceData.FinalTotalAmount.ToString("N0"), headerFont, blackBrush, summaryValueX, currentY, sfRight);
+                    currentY += headerFont.GetHeight(graphics) + lineSpacing;
+
+                    RectangleF wordsRect = new RectangleF(leftMargin, currentY, width - leftMargin - leftMargin, 40);
+                    graphics.DrawString($"Số tiền viết bằng chữ: {invoiceData.TotalAmountInWords}", normalFont, blackBrush, wordsRect, sfLeft);
+                    currentY += 40 + sectionSpacing;
+
+                    // Vẽ Chữ ký
+                    float signatureY = Math.Max(currentY, height - 100);
+                    float buyerSignatureX = leftMargin + 100; // Điều chỉnh vị trí chữ ký
+                    float sellerSignatureX = width - 100 - graphics.MeasureString("Người bán hàng", headerFont).Width / 2 - 50; // Điều chỉnh
+
+                    graphics.DrawString("Người mua hàng", headerFont, blackBrush, buyerSignatureX, signatureY, sfCenter);
+                    graphics.DrawString("(Ký, ghi rõ họ tên)", smallFont, blackBrush, buyerSignatureX, signatureY + headerFont.GetHeight(graphics) + 2, sfCenter);
+
+                    graphics.DrawString("Người bán hàng", headerFont, blackBrush, sellerSignatureX, signatureY, sfCenter);
+                    graphics.DrawString("(Ký, ghi rõ họ tên, đóng dấu)", smallFont, blackBrush, sellerSignatureX, signatureY + headerFont.GetHeight(graphics) + 2, sfCenter);
+
+                    // Vẽ Footer
+                    string footerMessage = "Xin cảm ơn Quý khách!";
+                    SizeF footerSize = graphics.MeasureString(footerMessage, normalFont);
+                    graphics.DrawString(footerMessage, normalFont, grayBrush, (width - footerSize.Width) / 2, height - footerSize.Height - 10);
+
                     using (var stream = new MemoryStream())
                     {
-                        bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                        bitmap.Save(stream, ImageFormat.Png);
                         stream.Position = 0;
-
-                        // Trả về file hình ảnh
-                        return File(stream.ToArray(), "image/png", $"HoaDon_{order.Id}.png");
+                        return File(stream.ToArray(), "image/png", $"HoaDon_{invoiceData.OrderId}_{DateTime.Now:yyyyMMddHHmmss}.png");
                     }
                 }
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Lỗi khi xuất hóa đơn: {ex.Message}");
+                Console.Error.WriteLine($"Lỗi khi xuất hóa đơn ảnh cho Order ID {id}: {ex.ToString()}");
+                return StatusCode(500, $"Lỗi máy chủ nội bộ khi xuất hóa đơn ảnh: {ex.Message}");
             }
         }
-        private string ConvertToUnsigned(string text)
-        {
-            if (string.IsNullOrWhiteSpace(text))
-                return text;
 
-            text = text.Normalize(NormalizationForm.FormD);
-            var chars = text.Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark).ToArray();
-            return new string(chars).Normalize(NormalizationForm.FormC);
-        }
-
+        // --- HÀM XUẤT HÓA ĐƠN RA PDF ---
         [HttpGet("{id}/export/template")]
-        public async Task<IActionResult> ExportOrderToTemplate(int id)
+        public async Task<IActionResult> ExportOrderToPdf(int id)
         {
             try
             {
-                var order = await _context.Orders
-                    .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.ProductVariant)
-                    .ThenInclude(pv => pv.Product)
-                    .Include(o => o.Address)
-                    .FirstOrDefaultAsync(o => o.Id == id);
-
-                if (order == null)
+                var invoiceData = await PrepareInvoiceViewModel(id);
+                if (invoiceData == null)
                 {
-                    return NotFound("Order not found");
+                    return NotFound("Không tìm thấy đơn hàng hoặc không thể chuẩn bị dữ liệu hóa đơn.");
                 }
 
                 using (var stream = new MemoryStream())
                 {
-                    var document = new Document(PageSize.A4);
-                    var writer = PdfWriter.GetInstance(document, stream);
+                    var document = new Document(PageSize.A4, 30, 30, 30, 30);
+                    PdfWriter writer = PdfWriter.GetInstance(document, stream);
                     document.Open();
 
-                    // Add title
-                    var titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18);
-                    var title = new Paragraph(ConvertToUnsigned("HOA DON BAN HANG"), titleFont)
+                    BaseFont bfBase;
+                    try
                     {
-                        Alignment = Element.ALIGN_CENTER,
-                        SpacingAfter = 20f
-                    };
-                    document.Add(title);
-
-                    // Add order info
-                    var infoFont = FontFactory.GetFont(FontFactory.HELVETICA, 12);
-                    document.Add(new Paragraph(ConvertToUnsigned($"Mã đơn hàng: {order.Id}"), infoFont));
-                    document.Add(new Paragraph(ConvertToUnsigned($"Ngày tạo: {order.OrderDate:dd/MM/yyyy}"), infoFont));
-                    document.Add(new Paragraph(ConvertToUnsigned($"Khách hàng: {order.Address?.FullName ?? "N/A"}"), infoFont));
-                    document.Add(new Paragraph(" "));
-
-                    // Create table
-                    var table = new PdfPTable(5)
+                        string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                        string fontFileName = "times.ttf"; // HOẶC "arial.ttf" - ĐẢM BẢO FILE NÀY TỒN TẠI
+                        string fontPath = Path.Combine(baseDirectory, "Fonts", fontFileName);
+                        if (!System.IO.File.Exists(fontPath))
+                        {
+                            // Thử tìm trong thư mục font hệ thống như một giải pháp dự phòng cuối cùng
+                            string systemFontPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), fontFileName);
+                            if (System.IO.File.Exists(systemFontPath))
+                            {
+                                fontPath = systemFontPath;
+                            }
+                            else
+                            {
+                                throw new FileNotFoundException($"File font '{fontFileName}' không được tìm thấy tại '{Path.Combine(baseDirectory, "Fonts")}' hoặc trong thư mục font hệ thống.");
+                            }
+                        }
+                        bfBase = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                    }
+                    catch (Exception fontEx)
                     {
-                        WidthPercentage = 100,
-                        SpacingBefore = 10f,
-                        SpacingAfter = 10f
-                    };
-
-                    // Table headers
-                    table.AddCell(new PdfPCell(new Phrase(ConvertToUnsigned("STT"), infoFont)));
-                    table.AddCell(new PdfPCell(new Phrase(ConvertToUnsigned("Tên sản phẩm"), infoFont)));
-                    table.AddCell(new PdfPCell(new Phrase(ConvertToUnsigned("Số lượng"), infoFont)));
-                    table.AddCell(new PdfPCell(new Phrase(ConvertToUnsigned("Don Gia"), infoFont)));
-                    table.AddCell(new PdfPCell(new Phrase(ConvertToUnsigned("Thành tiền"), infoFont)));
-
-                    // Table data
-                    int index = 1;
-                    foreach (var item in order.OrderItems)
-                    {
-                        table.AddCell(new PdfPCell(new Phrase(index.ToString(), infoFont)));
-                        table.AddCell(new PdfPCell(new Phrase(ConvertToUnsigned(item.ProductVariant.Product.Name), infoFont)));
-                        table.AddCell(new PdfPCell(new Phrase(item.Quantity.ToString(), infoFont)));
-                        table.AddCell(new PdfPCell(new Phrase(item.Price.ToString("N0"), infoFont)));
-                        table.AddCell(new PdfPCell(new Phrase((item.Quantity * item.Price).ToString("N0"), infoFont)));
-                        index++;
+                        Console.Error.WriteLine($"LỖI nghiêm trọng khi tải font: {fontEx.ToString()}. PDF có thể không hiển thị đúng tiếng Việt. Sử dụng font mặc định.");
+                        bfBase = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.EMBEDDED);
                     }
 
-                    document.Add(table);
+                    iTextSharp.text.Font fontTitle = new iTextSharp.text.Font(bfBase, 18, iTextSharp.text.Font.BOLD);
+                    iTextSharp.text.Font fontHeader = new iTextSharp.text.Font(bfBase, 11, iTextSharp.text.Font.BOLD);
+                    iTextSharp.text.Font fontNormal = new iTextSharp.text.Font(bfBase, 10, iTextSharp.text.Font.NORMAL);
+                    iTextSharp.text.Font fontNormalBold = new iTextSharp.text.Font(bfBase, 10, iTextSharp.text.Font.BOLD);
+                    iTextSharp.text.Font fontSmall = new iTextSharp.text.Font(bfBase, 9, iTextSharp.text.Font.NORMAL);
 
-                    // Add total
-                    var totalFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
-                    document.Add(new Paragraph(ConvertToUnsigned($"Tổng cộng: {order.TotalAmount.ToString("N0")}"), totalFont)
+                    // Vẽ Header (Thông tin người bán & Thông tin hóa đơn)
+                    PdfPTable headerTable = new PdfPTable(2) { WidthPercentage = 100 };
+                    headerTable.SetWidths(new float[] { 60f, 40f });
+                    PdfPCell sellerCell = new PdfPCell { Border = PdfPCell.NO_BORDER, Padding = 5f };
+                    sellerCell.AddElement(new Paragraph(invoiceData.Seller.CompanyName, fontHeader));
+                    sellerCell.AddElement(new Paragraph(invoiceData.Seller.Address, fontNormal));
+                    sellerCell.AddElement(new Paragraph(invoiceData.Seller.TaxCode, fontNormal));
+                    sellerCell.AddElement(new Paragraph(invoiceData.Seller.PhoneNumber, fontNormal));
+                    headerTable.AddCell(sellerCell);
+                    PdfPCell invoiceMetaCell = new PdfPCell { Border = PdfPCell.NO_BORDER, Padding = 5f };
+                    invoiceMetaCell.AddElement(new Paragraph($"Mẫu số: {invoiceData.InvoiceTemplateNo}", fontNormal) { Alignment = Element.ALIGN_RIGHT });
+                    invoiceMetaCell.AddElement(new Paragraph($"Ký hiệu: {invoiceData.InvoiceSeries}", fontNormal) { Alignment = Element.ALIGN_RIGHT });
+                    invoiceMetaCell.AddElement(new Paragraph($"Số: {invoiceData.InvoiceNumberFormatted}", fontNormal) { Alignment = Element.ALIGN_RIGHT });
+                    document.Add(headerTable);
+
+                    // Vẽ Tiêu đề hóa đơn
+                    Paragraph title = new Paragraph("HÓA ĐƠN BÁN HÀNG", fontTitle)
+                    { Alignment = Element.ALIGN_CENTER, SpacingBefore = 10f, SpacingAfter = 5f };
+                    document.Add(title);
+                    Paragraph invoiceDate = new Paragraph(invoiceData.FormattedOrderDate, fontNormal)
+                    { Alignment = Element.ALIGN_CENTER, SpacingAfter = 20f };
+                    document.Add(invoiceDate);
+
+                    // Vẽ Thông tin người mua (đã bỏ Mã số thuế)
+                    document.Add(new Paragraph($"Đơn vị mua hàng (Họ tên người mua): {invoiceData.BuyerFullName}", fontNormal));
+                    document.Add(new Paragraph($"Địa chỉ: {invoiceData.BuyerAddress}", fontNormal));
+                    document.Add(new Paragraph($"Hình thức thanh toán: {invoiceData.PaymentMethodName}", fontNormal));
+                    document.Add(new Paragraph(" ") { SpacingAfter = 5f });
+
+                    // Vẽ Bảng chi tiết sản phẩm (đã bỏ cột ĐVT)
+                    PdfPTable itemsTable = new PdfPTable(5); // 5 cột
+                    itemsTable.WidthPercentage = 100;
+                    itemsTable.SetWidths(new float[] { 5f, 50f, 10f, 15f, 20f }); // STT, Tên, SL, Đơn giá, Thành tiền
+                    itemsTable.SpacingBefore = 10f;
+
+                    string[] tableHeaders = { "STT", "Tên hàng hóa, dịch vụ", "Số lượng", "Đơn giá (VNĐ)", "Thành tiền (VNĐ)" };
+                    foreach (string headerText in tableHeaders)
                     {
-                        Alignment = Element.ALIGN_RIGHT
-                    });
+                        PdfPCell headerCell = new PdfPCell(new Phrase(headerText, fontNormalBold))
+                        { HorizontalAlignment = Element.ALIGN_CENTER, VerticalAlignment = Element.ALIGN_MIDDLE, BackgroundColor = new BaseColor(217, 217, 217), Padding = 5f };
+                        itemsTable.AddCell(headerCell);
+                    }
+
+                    foreach (var item in invoiceData.Items)
+                    {
+                        itemsTable.AddCell(new PdfPCell(new Phrase(item.Index.ToString(), fontNormal)) { Padding = 5f, HorizontalAlignment = Element.ALIGN_CENTER });
+
+                        // Product name with variant info
+                        string productDisplayName = !string.IsNullOrEmpty(item.ProductName) ? item.ProductName : "Sản phẩm không xác định";
+                        if (!string.IsNullOrEmpty(item.VariantInfo))
+                        {
+                            productDisplayName += $"\n({item.VariantInfo})";
+                        }
+
+                        // Add flash sale indicator to product name if applicable
+                        if (item.IsFlashSale)
+                        {
+                            productDisplayName += " [FLASH SALE]";
+                        }
+
+                        PdfPCell productCell = new PdfPCell(new Phrase(productDisplayName, fontNormal)) { Padding = 5f };
+                        itemsTable.AddCell(productCell);
+
+                        itemsTable.AddCell(new PdfPCell(new Phrase(item.Quantity.ToString(), fontNormal)) { Padding = 5f, HorizontalAlignment = Element.ALIGN_RIGHT });
+
+                        // Price cell with original and sale prices
+                        PdfPCell priceCell = new PdfPCell { Padding = 5f, HorizontalAlignment = Element.ALIGN_RIGHT };
+                        if (item.IsFlashSale && item.FlashSalePrice.HasValue)
+                        {
+                            // Original price crossed out
+                            var originalPricePhrase = new Phrase(item.OriginalPrice.ToString("N0"), new iTextSharp.text.Font(bfBase, 8, iTextSharp.text.Font.STRIKETHRU, BaseColor.GRAY));
+                            priceCell.AddElement(originalPricePhrase);
+                            priceCell.AddElement(new Phrase("\n" + item.Price.ToString("N0"), new iTextSharp.text.Font(bfBase, 10, iTextSharp.text.Font.BOLD, BaseColor.RED)));
+                        }
+                        else if (item.DiscountPrice.HasValue && item.DiscountPrice != item.OriginalPrice)
+                        {
+                            // Original price crossed out  
+                            var originalPricePhrase = new Phrase(item.OriginalPrice.ToString("N0"), new iTextSharp.text.Font(bfBase, 8, iTextSharp.text.Font.STRIKETHRU, BaseColor.GRAY));
+                            priceCell.AddElement(originalPricePhrase);
+                            priceCell.AddElement(new Phrase("\n" + item.Price.ToString("N0"), new iTextSharp.text.Font(bfBase, 10, iTextSharp.text.Font.BOLD, BaseColor.ORANGE)));
+                        }
+                        else
+                        {
+                            priceCell.AddElement(new Phrase(item.Price.ToString("N0"), fontNormal));
+                        }
+                        itemsTable.AddCell(priceCell);
+
+                        itemsTable.AddCell(new PdfPCell(new Phrase(item.Amount.ToString("N0"), fontNormal)) { Padding = 5f, HorizontalAlignment = Element.ALIGN_RIGHT });
+                    }
+                    document.Add(itemsTable);
+
+                    // Vẽ Phần tổng kết
+                    PdfPTable summaryTable = new PdfPTable(2) { WidthPercentage = 100, SpacingBefore = 10f };
+                    summaryTable.SetWidths(new float[] { 75f, 25f });
+                    summaryTable.DefaultCell.Border = PdfPCell.NO_BORDER;
+                    summaryTable.DefaultCell.Padding = 3f;
+                    summaryTable.AddCell(new Phrase("Cộng tiền hàng:", fontNormal));
+                    var subtotalCell = new PdfPCell(new Phrase(invoiceData.SubtotalAmount.ToString("N0") + " VNĐ", fontNormal));
+                    subtotalCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+                    summaryTable.AddCell(subtotalCell);
+                    summaryTable.AddCell(new Phrase($"Tiền thuế GTGT ({invoiceData.VatRateFormatted}):", fontNormal));
+                    var vatAmountCell = new PdfPCell(new Phrase(invoiceData.VatAmount.ToString("N0") + " VNĐ", fontNormal));
+                    vatAmountCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+                    summaryTable.AddCell(vatAmountCell);
+                    summaryTable.AddCell(new Phrase("Tổng cộng tiền thanh toán:", fontNormalBold));
+                    var finalTotalCell = new PdfPCell(new Phrase(invoiceData.FinalTotalAmount.ToString("N0") + " VNĐ", fontNormalBold));
+                    finalTotalCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+                    summaryTable.AddCell(finalTotalCell);
+                    document.Add(summaryTable);
+
+                    Paragraph amountInWords = new Paragraph($"Số tiền viết bằng chữ: {invoiceData.TotalAmountInWords}", fontNormal)
+                    { SpacingBefore = 5f, SpacingAfter = 20f };
+                    document.Add(amountInWords);
+
+                    // Vẽ Chữ ký
+                    PdfPTable signatureTable = new PdfPTable(2) { WidthPercentage = 100, SpacingBefore = 30f };
+                    signatureTable.SetWidths(new float[] { 50f, 50f });
+                    signatureTable.DefaultCell.Border = PdfPCell.NO_BORDER;
+                    PdfPCell buyerSignCellPdf = new PdfPCell { Border = PdfPCell.NO_BORDER, HorizontalAlignment = Element.ALIGN_CENTER };
+                    buyerSignCellPdf.AddElement(new Paragraph("Người mua hàng", fontNormalBold) { Alignment = Element.ALIGN_CENTER });
+                    buyerSignCellPdf.AddElement(new Paragraph("(Ký, ghi rõ họ tên)", fontSmall) { Alignment = Element.ALIGN_CENTER });
+                    signatureTable.AddCell(buyerSignCellPdf);
+                    PdfPCell sellerSignCellPdf = new PdfPCell { Border = PdfPCell.NO_BORDER, HorizontalAlignment = Element.ALIGN_CENTER };
+                    sellerSignCellPdf.AddElement(new Paragraph("Người bán hàng", fontNormalBold) { Alignment = Element.ALIGN_CENTER });
+                    sellerSignCellPdf.AddElement(new Paragraph("(Ký, ghi rõ họ tên, đóng dấu)", fontSmall) { Alignment = Element.ALIGN_CENTER });
+                    signatureTable.AddCell(sellerSignCellPdf);
+                    document.Add(signatureTable);
 
                     document.Close();
                     writer.Close();
 
-                    return File(stream.ToArray(), "application/pdf", $"HoaDon_{order.Id}.pdf");
+                    return File(stream.ToArray(), "application/pdf", $"HoaDon_{invoiceData.OrderId}_{DateTime.Now:yyyyMMddHHmmss}.pdf");
                 }
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error exporting to template: {ex.Message}");
+                Console.Error.WriteLine($"Lỗi khi xuất hóa đơn PDF cho Order ID {id}: {ex.ToString()}");
+                return StatusCode(500, $"Lỗi máy chủ nội bộ khi xuất hóa đơn PDF: {ex.Message}");
             }
         }
         // Lấy địa chỉ theo đơn
@@ -1349,23 +1796,32 @@ namespace SHN_Gear.Controllers
                         summary = new
                         {
                             TotalSales = salesData.Sum(x => x.Sales),
-                            AverageDailySales = salesData.Average(x => x.Sales)
+                            TotalOrders = salesData.Sum(x => x.OrderCount),
+                            AverageDailySales = salesData.Average(x => x.Sales),
+                            BestDay = salesData.OrderByDescending(x => x.Sales).FirstOrDefault()?.FormattedPeriod,
+                            WorstDay = salesData.OrderBy(x => x.Sales).Where(x => x.Sales > 0).FirstOrDefault()?.FormattedPeriod
                         };
                         break;
                     case "month":
                         summary = new
                         {
                             TotalSales = salesData.Sum(x => x.Sales),
-                            AverageDailySales = salesData.Average(x => x.Sales)
+                            TotalOrders = salesData.Sum(x => x.OrderCount),
+                            AverageDailySales = salesData.Average(x => x.Sales),
+                            BestDay = salesData.OrderByDescending(x => x.Sales).FirstOrDefault()?.FormattedPeriod,
+                            WorstDay = salesData.OrderBy(x => x.Sales).Where(x => x.Sales > 0).FirstOrDefault()?.FormattedPeriod,
+                            DaysWithSales = salesData.Count(x => x.Sales > 0)
                         };
                         break;
                     case "year":
                         summary = new
                         {
                             TotalSales = salesData.Sum(x => x.Sales),
+                            TotalOrders = salesData.Sum(x => x.OrderCount),
                             AverageMonthlySales = salesData.Average(x => x.Sales),
                             BestMonth = salesData.OrderByDescending(x => x.Sales).FirstOrDefault()?.FormattedPeriod,
-                            WorstMonth = salesData.OrderBy(x => x.Sales).FirstOrDefault()?.FormattedPeriod
+                            WorstMonth = salesData.OrderBy(x => x.Sales).Where(x => x.Sales > 0).FirstOrDefault()?.FormattedPeriod,
+                            MonthsWithSales = salesData.Count(x => x.Sales > 0)
                         };
                         break;
                     default:
@@ -1387,6 +1843,54 @@ namespace SHN_Gear.Controllers
                 return StatusCode(500, new { Message = "Lỗi khi lấy dữ liệu tổng quan bán hàng", Error = ex.Message });
             }
         }
+
+        // Thống kê doanh số theo danh mục sản phẩm
+        [HttpGet("sales-by-category")]
+        public async Task<IActionResult> GetSalesByCategory()
+        {
+            try
+            {
+                var salesByCategory = await _context.OrderItems
+                    .Include(oi => oi.Order)
+                    .Include(oi => oi.ProductVariant)
+                        .ThenInclude(pv => pv.Product)
+                            .ThenInclude(p => p.Category)
+                    .Where(oi => oi.Order.OrderStatus == "Delivered")
+                    .GroupBy(oi => new
+                    {
+                        CategoryId = oi.ProductVariant.Product.CategoryId,
+                        CategoryName = oi.ProductVariant.Product.Category.Name
+                    })
+                    .Select(g => new
+                    {
+                        categoryId = g.Key.CategoryId,
+                        categoryName = g.Key.CategoryName ?? "Khác",
+                        totalSales = g.Sum(oi => oi.Price * oi.Quantity),
+                        totalOrders = g.Count(),
+                        totalQuantity = g.Sum(oi => oi.Quantity)
+                    })
+                    .OrderByDescending(x => x.totalSales)
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    data = salesByCategory,
+                    summary = new
+                    {
+                        totalCategories = salesByCategory.Count,
+                        totalSales = salesByCategory.Sum(x => x.totalSales),
+                        totalOrders = salesByCategory.Sum(x => x.totalOrders),
+                        totalQuantity = salesByCategory.Sum(x => x.totalQuantity)
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetSalesByCategory: {ex.Message}");
+                return BadRequest(new { message = "Lỗi khi lấy dữ liệu thống kê theo danh mục", error = ex.Message });
+            }
+        }
+
         // Đếm tổng số đơn hàng
         [HttpGet("total-count")]
         public async Task<IActionResult> GetTotalOrderCount()
@@ -1431,6 +1935,19 @@ namespace SHN_Gear.Controllers
             {
                 return StatusCode(500, new { Message = "Lỗi khi lấy thống kê", Error = ex.Message });
             }
+        }
+
+        [HttpGet("user/{userId}/has-purchased/{productId}")]
+        public async Task<ActionResult<bool>> HasUserPurchasedProduct(int userId, int productId)
+        {
+            var hasPurchased = await _context.OrderItems
+                .Include(oi => oi.Order)
+                .Include(oi => oi.ProductVariant)
+                .AnyAsync(oi => oi.Order.UserId == userId &&
+                                oi.ProductVariant.ProductId == productId &&
+                                oi.Order.OrderStatus == "Delivered");
+
+            return Ok(hasPurchased);
         }
         [HttpGet("revenue-year")]
         public async Task<IActionResult> GetRevenueDataYear([FromQuery] string range = "year")
@@ -1510,7 +2027,163 @@ namespace SHN_Gear.Controllers
     }
 
 
+    public static class NumberToTextVN
+    {
+        private static readonly string[] ChuSo = { "không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín" };
+        private static readonly string[] DonVi = { "", "nghìn", "triệu", "tỷ" }; // Mở rộng nếu cần (nghìn tỷ, triệu tỷ,...)
 
+        private static string DocNhomBaChuSo(int baChuSo)
+        {
+            string tram, chuc, donViStr; // Đổi tên 'donVi' để tránh trùng với mảng 'DonVi'
+            string ketQua = "";
+
+            if (baChuSo < 0 || baChuSo > 999) return ""; // Chỉ xử lý số có 3 chữ số
+
+            tram = ChuSo[baChuSo / 100];
+            chuc = ChuSo[(baChuSo % 100) / 10];
+            donViStr = ChuSo[baChuSo % 10];
+
+            if (baChuSo == 0) return ""; // Nhóm ba số là 000 thì không đọc gì
+
+            // Đọc hàng trăm
+            if (baChuSo / 100 > 0)
+            {
+                ketQua += tram + " trăm ";
+                if ((baChuSo % 100) == 0) return ketQua.Trim(); // Nếu là xxx00 (ví dụ: một trăm)
+            }
+
+            // Đọc hàng chục và đơn vị
+            int phanDuTram = baChuSo % 100;
+            if (phanDuTram / 10 > 0) // Có hàng chục (từ 10-99)
+            {
+                if (chuc == "một") ketQua += "mười "; // 1x -> mười
+                else ketQua += chuc + " mươi ";    // 2x-9x -> hai mươi, ba mươi...
+
+                if (phanDuTram % 10 == 0) return ketQua.Trim(); // Nếu là xx0 (ví dụ: hai mươi)
+
+                if (phanDuTram % 10 == 5 && chuc != "không") ketQua += "lăm"; // x5 (trừ 05) -> lăm
+                else if (phanDuTram % 10 == 1 && chuc != "không" && chuc != "một") ketQua += "mốt"; // x1 (trừ 01, 11) -> mốt
+                else if (phanDuTram % 10 > 0) ketQua += donViStr;
+            }
+            else // Hàng chục là 0 (số dạng x0x)
+            {
+                // Nếu có hàng trăm và hàng đơn vị > 0 (ví dụ 101, 205) thì thêm "linh"
+                if (baChuSo / 100 > 0 && (phanDuTram % 10) > 0) ketQua += "linh ";
+
+                if ((phanDuTram % 10) > 0) ketQua += donViStr; // Đọc hàng đơn vị (ví dụ "một" trong "một trăm linh một", hoặc "một" nếu số là 1)
+            }
+            return ketQua.Trim();
+        }
+
+        public static string DocSo(long soTien)
+        {
+            if (soTien == 0) return ChuSo[0]; // "không"
+            if (soTien < 0) return "Âm " + DocSo(Math.Abs(soTien)); // Viết hoa "Âm"
+
+            string chuoiSo = "";
+            int i = 0; // Index cho mảng DonVi (đơn vị nghìn, triệu, tỷ)
+
+            if (soTien == 0) return ChuSo[0]; // Xử lý trường hợp 0
+
+            while (soTien > 0)
+            {
+                long soDu = soTien % 1000; // Lấy 3 số cuối (nhóm ba chữ số)
+                soTien /= 1000;      // Loại bỏ 3 số cuối đã xử lý
+
+                if (soDu > 0) // Chỉ đọc nhóm này nếu nó khác 000
+                {
+                    string strNhomBa = DocNhomBaChuSo((int)soDu);
+                    // Thêm đơn vị (nghìn, triệu, tỷ) nếu có và không phải là nhóm đơn vị cuối cùng (i > 0)
+                    // Hoặc nếu là nhóm đơn vị cuối cùng nhưng strNhomBa không rỗng (tức là đọc số từ 1-999)
+                    chuoiSo = strNhomBa + (i > 0 ? (" " + DonVi[i]) : "") + (string.IsNullOrEmpty(chuoiSo) ? "" : " ") + chuoiSo;
+                }
+
+
+                i++;
+                if (i >= DonVi.Length && soTien > 0) // Nếu vượt quá đơn vị tỷ và vẫn còn số
+                {
+                    // Cần mở rộng mảng DonVi hoặc xử lý đặc biệt cho số quá lớn
+                    // Hiện tại sẽ dừng ở "tỷ"
+                    Console.Error.WriteLine("Số tiền quá lớn, vượt quá khả năng đọc của đơn vị 'tỷ'.");
+                    break;
+                }
+            }
+
+            chuoiSo = chuoiSo.Trim();
+
+            // Dọn dẹp khoảng trắng thừa và các cụm từ không mong muốn
+            chuoiSo = Regex.Replace(chuoiSo, @"\s+", " "); // Chuẩn hóa khoảng trắng
+            // Các lệnh Regex sau có thể không cần thiết nếu DocNhomBaChuSo và logic vòng lặp đã chuẩn
+            // Ví dụ: "không trăm linh" -> "linh" (nếu là đầu chuỗi)
+            if (chuoiSo.StartsWith("không trăm linh ")) chuoiSo = chuoiSo.Substring("không trăm linh ".Length);
+            else if (chuoiSo.StartsWith("không trăm ")) chuoiSo = chuoiSo.Substring("không trăm ".Length);
+            // "mươi không" -> "mươi"
+            chuoiSo = chuoiSo.Replace(" mươi không ", " mươi ");
+            if (chuoiSo.EndsWith(" mươi không")) chuoiSo = chuoiSo.Substring(0, chuoiSo.Length - " không".Length);
+
+
+            // Viết hoa chữ cái đầu tiên của chuỗi kết quả
+            if (!string.IsNullOrEmpty(chuoiSo))
+            {
+                chuoiSo = char.ToUpper(chuoiSo[0]) + chuoiSo.Substring(1);
+            }
+
+            return chuoiSo;
+        }
+    }
+
+    // Đặt các lớp ViewModel này trong namespace DTOs của bạn hoặc trong cùng file controller nếu tiện
+    public class OrderInvoiceViewModel
+    {
+        public int OrderId { get; set; }
+        public DateTime OrderDate { get; set; }
+        public string FormattedOrderDate => $"Ngày {OrderDate:dd} tháng {OrderDate:MM} năm {OrderDate:yyyy}";
+
+        public SellerInfo Seller { get; set; }
+
+        public string BuyerFullName { get; set; }
+        public string BuyerAddress { get; set; }
+        // public string BuyerTaxCode { get; set; } // <<<< LOẠI BỎ DÒNG NÀY
+        public string PaymentMethodName { get; set; }
+
+        public List<InvoiceItemViewModel> Items { get; set; }
+
+        public decimal SubtotalAmount { get; set; }
+        public decimal VatRate { get; set; }
+        public string VatRateFormatted => $"{VatRate * 100:N0}%";
+        public decimal VatAmount { get; set; }
+        public decimal FinalTotalAmount { get; set; }
+        public string TotalAmountInWords { get; set; }
+
+        public string InvoiceTemplateNo => Seller.InvoiceTemplateNo;
+        public string InvoiceSeries => Seller.InvoiceSeries;
+        public string InvoiceNumberFormatted => OrderId.ToString("D7");
+    }
+
+    // InvoiceItemViewModel giữ nguyên như lần cập nhật trước (đã bỏ Unit)
+    public class InvoiceItemViewModel
+    {
+        public int Index { get; set; }
+        public string ProductName { get; set; } = null!;
+        public string? VariantInfo { get; set; }
+        public int Quantity { get; set; }
+        public decimal Price { get; set; } // Final price paid
+        public decimal OriginalPrice { get; set; }
+        public decimal? DiscountPrice { get; set; }
+        public decimal? FlashSalePrice { get; set; }
+        public bool IsFlashSale { get; set; }
+        public decimal Amount => Quantity * Price;
+    }
+
+    public class SellerInfo
+    {
+        public string CompanyName { get; set; } = "CÔNG TY TNHH SHN GEAR";
+        public string Address { get; set; } = "117 Đường Nguyễn Thông, Quận 3, TP.HCM";
+        public string TaxCode { get; set; } = "0123456789";
+        public string PhoneNumber { get; set; } = "0778 706 084";
+        public string InvoiceTemplateNo { get; set; } = "01GTKT0/001";
+        public string InvoiceSeries { get; set; } = "AA/22E";
+    }
 
     public class MoMoCallbackModel
     {

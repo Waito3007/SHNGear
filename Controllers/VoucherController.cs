@@ -171,10 +171,23 @@ namespace SHN_Gear.Controllers
             var userVoucher = await _context.UserVouchers
                 .FirstOrDefaultAsync(uv => uv.VoucherId == voucher.Id);
 
-            // Nếu voucher chưa được gán cho bất kỳ ai
+            // Nếu voucher chưa được gán cho bất kỳ ai, cho phép bất kỳ ai sử dụng 1 lần
             if (userVoucher == null)
             {
-                return BadRequest("Voucher này chưa được gán cho người dùng nào.");
+                // Tạo bản ghi UserVoucher mới để "reserve" voucher cho user này
+                // Nhưng chưa đánh dấu IsUsed = true (sẽ đánh dấu khi đơn hàng thành công)
+                var newUserVoucher = new UserVoucher
+                {
+                    UserId = dto.UserId,
+                    VoucherId = voucher.Id,
+                    IsUsed = false, // Chưa sử dụng, chỉ reserve
+                    UsedAt = DateTime.UtcNow // Thời gian reserve
+                };
+
+                _context.UserVouchers.Add(newUserVoucher);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { discountAmount = voucher.DiscountAmount });
             }
 
             // Nếu voucher đã được gán, kiểm tra xem người dùng hiện tại có phải là chủ sở hữu không
@@ -190,6 +203,7 @@ namespace SHN_Gear.Controllers
             }
 
             // Nếu IsUsed = false và UserId khớp, cho phép áp dụng
+            // Không đánh dấu IsUsed = true ở đây, sẽ đánh dấu khi đơn hàng thành công
             return Ok(new { discountAmount = voucher.DiscountAmount });
         }
     }

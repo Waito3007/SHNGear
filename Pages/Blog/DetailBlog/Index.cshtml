@@ -1,0 +1,62 @@
+@page "{id:int}"
+@model SHNGear.Pages.Blog.DetailBlog.IndexModel
+@{
+    ViewData["Title"] = Model.BlogPost?.Title ?? "Chi tiết Blog";
+}
+
+@if (Model.BlogPost == null)
+{
+    <div class="container py-5">
+        <div class="alert alert-danger text-center">Không tìm thấy bài viết.</div>
+    </div>
+}
+else
+{
+    <div class="container py-5 blog-detail">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <h1 class="mb-3">@Model.BlogPost.Title</h1>
+                <div class="mb-2 text-muted">
+                    <span><i class="bi bi-person"></i> @Model.BlogPost.AuthorName</span> &nbsp;|&nbsp;
+                    <span><i class="bi bi-calendar"></i> @Model.BlogPost.CreatedAt.ToString("dd/MM/yyyy")</span>
+                </div>
+                <div class="blog-content mb-5">
+                    @Html.Raw(Model.BlogPost.Content)
+                </div>
+                <a href="/Blog" class="btn btn-outline-secondary">← Quay lại danh sách</a>
+            </div>
+        </div>
+    </div>
+}
+<link rel="stylesheet" href="/css/blog-list.css" />
+<style>
+body, .container, .blog-detail {
+    background: #181818 !important;
+    color: #fff;
+    font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+}
+.blog-detail {
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 32px;
+    padding-right: 32px;
+}
+h1 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #fff;
+}
+.blog-content {
+    font-size: 1.15rem;
+    color: #eee;
+}
+.btn-outline-secondary {
+    border-color: #fff;
+    color: #fff;
+}
+.btn-outline-secondary:hover {
+    background: #fff;
+    color: #181818;
+}
+</style>

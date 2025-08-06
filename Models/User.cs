@@ -25,6 +25,8 @@ namespace SHN_Gear.Models
 
         // Quan hệ với UserVoucher
         public ICollection<UserVoucher> UserVouchers { get; set; } = new List<UserVoucher>();
+        public ICollection<Review> Reviews { get; set; } = new List<Review>();
+
     }
 
 }

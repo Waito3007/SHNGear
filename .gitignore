@@ -231,5 +231,10 @@ _Pvt_Extensions
 # FAKE - F# Make
 .fake/
 
+# Environment variables
+.env
+.env.local
+.env.production
+
 appsettings.json
 appsettings.json

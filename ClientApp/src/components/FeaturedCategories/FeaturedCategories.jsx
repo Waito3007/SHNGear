@@ -1,47 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
-import { useNavigate } from "react-router-dom"; // Hook điều hướng
+import { useNavigate } from "react-router-dom";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "aos/dist/aos.css";
 import AOS from "aos";
 import CategoryLarge from "./CategoryLarge";
+import { useCategories } from "@/hooks/api/useCategories";
 
 const FeaturedCategories = () => {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate(); // Hook điều hướng
+  const { categories, loading, error } = useCategories();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/categories`);
-        if (!response.ok) throw new Error("Không thể tải danh mục");
-        const data = await response.json();
-        console.log("Dữ liệu từ API:", data);
-
-        const categoriesArray = Array.isArray(data.$values)
-          ? data.$values
-          : Array.isArray(data)
-          ? data
-          : [];
-        setCategories(categoriesArray);
-      } catch (error) {
-        console.error("Lỗi khi lấy danh mục:", error);
-        setError("Không thể tải danh mục: " + error.message);
-        setCategories([]);
-      } finally {
-        setLoading(false);
-      }
-
-      AOS.init({ duration: 1000 });
-    };
-
-    fetchCategories();
+  React.useEffect(() => {
+    AOS.init({ duration: 1000 });
   }, []);
 
   if (loading) {

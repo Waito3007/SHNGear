@@ -1,26 +1,10 @@
 import React, { useState } from "react";
 import { FaTrash } from "react-icons/fa";
+import { useCart } from "@/hooks/api/useCart";
 
 const CartItem = ({ item }) => {
   const [quantity, setQuantity] = useState(item.quantity || 1);
-
-  const addToCart = async (productVariantId, quantity) => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/cart/add`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ productVariantId, quantity }),
-        credentials: "include",
-      });
-
-      const data = await response.json();
-      console.log("Thêm vào giỏ hàng:", data);
-    } catch (error) {
-      console.error("Lỗi khi thêm vào giỏ hàng:", error);
-    }
-  };
+  const { addToCart } = useCart();
 
   const handleIncrease = async () => {
     const newQuantity = quantity + 1;
@@ -47,9 +31,34 @@ const CartItem = ({ item }) => {
             Màu: {item.color || "Không xác định"}
           </span>
         </div>
-        <span className="text-red-500 font-bold text-lg">
-          {item.price ? item.price.toLocaleString() : "0"} đ
-        </span>
+        <div className="text-right">
+          {item.isFlashSale && item.productPrice !== item.productDiscountPrice ? (
+            <>
+              <span className="text-gray-400 line-through text-sm">
+                {item.productPrice ? item.productPrice.toLocaleString() : "0"} đ
+              </span>
+              <br />
+              <span className="text-red-500 font-bold text-lg">
+                {item.productDiscountPrice ? item.productDiscountPrice.toLocaleString() : "0"} đ
+              </span>
+              <span className="bg-red-500 text-white text-xs px-1 ml-1 rounded">FLASH SALE</span>
+            </>
+          ) : item.productDiscountPrice && item.productPrice !== item.productDiscountPrice ? (
+            <>
+              <span className="text-gray-400 line-through text-sm">
+                {item.productPrice ? item.productPrice.toLocaleString() : "0"} đ
+              </span>
+              <br />
+              <span className="text-red-500 font-bold text-lg">
+                {item.productDiscountPrice ? item.productDiscountPrice.toLocaleString() : "0"} đ
+              </span>
+            </>
+          ) : (
+            <span className="text-red-500 font-bold text-lg">
+              {item.productPrice ? item.productPrice.toLocaleString() : "0"} đ
+            </span>
+          )}
+        </div>
         <div className="flex items-center">
           <button
             onClick={() => setQuantity(quantity > 1 ? quantity - 1 : 1)}

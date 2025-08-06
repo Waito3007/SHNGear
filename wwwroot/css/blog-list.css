@@ -1,0 +1,80 @@
+/* Blog List Custom CSS - rực rỡ, hiện đại */
+.blog-card .card {
+    border-radius: 18px;
+    border: none;
+    transition: box-shadow 0.2s, transform 0.2s;
+    background: linear-gradient(135deg, #f8ffae 0%, #43c6ac 100%);
+    box-shadow: 0 2px 16px 0 rgba(67,198,172,0.13);
+    overflow: hidden;
+}
+.blog-card .card:hover {
+    box-shadow: 0 8px 32px 0 rgba(67,198,172,0.25);
+    transform: translateY(-6px) scale(1.02);
+}
+.blog-card .card-img-top {
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    min-height: 180px;
+    max-height: 220px;
+    object-fit: cover;
+    background: #f8f9fa;
+    border-bottom: 4px solid #43c6ac;
+}
+.blog-card .card-title a {
+    color: #222;
+    font-weight: 700;
+    transition: color 0.2s;
+    letter-spacing: 0.5px;
+}
+.blog-card .card-title a:hover {
+    color: #43c6ac;
+    text-decoration: underline;
+}
+.blog-card .card-text {
+    color: #333;
+    font-size: 1.08em;
+    background: rgba(255,255,255,0.7);
+    border-radius: 8px;
+    padding: 6px 10px;
+}
+.blog-card .btn-outline-primary {
+    border-radius: 20px;
+    padding: 4px 18px;
+    font-size: 1em;
+    border-color: #43c6ac;
+    color: #43c6ac;
+    background: #fff;
+    font-weight: 600;
+    transition: background 0.2s, color 0.2s;
+}
+.blog-card .btn-outline-primary:hover {
+    background: #43c6ac;
+    color: #fff;
+}
+.blog-card .mb-2.text-muted {
+    color: #888 !important;
+}
+.blog-card .blog-thumbs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+.blog-card .blog-thumbs img {
+    width: 38px;
+    height: 38px;
+    object-fit: cover;
+    border-radius: 7px;
+    border: 2px solid #43c6ac;
+    background: #fff;
+    cursor: pointer;
+    transition: border 0.2s, box-shadow 0.2s;
+}
+.blog-card .blog-thumbs img:hover {
+    border: 2px solid #222;
+    box-shadow: 0 2px 8px 0 rgba(67,198,172,0.18);
+}
+@media (max-width: 767px) {
+    .blog-card .card-title { font-size: 1.1em; }
+    .blog-card .card-text { font-size: 0.98em; }
+}

@@ -1,0 +1,11 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "Add EF Core migration for Slider status bool",
+			"command": "dotnet ef migrations add ChangeSliderStatusToBool",
+			"group": "build"
+		}
+	]
+}

@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Authorization;
+using SHN_Gear.Configuration;
 
 namespace SHN_Gear.Controllers
 {
@@ -86,7 +87,7 @@ namespace SHN_Gear.Controllers
         // 🔹 API lấy thông tin người dùng đang đăng nhập
         [HttpGet("profile")]
         [Authorize]
-        public async Task<IActionResult> GetProfile()
+        public IActionResult GetProfile()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -165,7 +166,11 @@ namespace SHN_Gear.Controllers
         // Tạo JWT Token
         private string GenerateJwtToken(User user)
         {
-            var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]);
+            var jwtKey = EnvironmentConfig.Jwt.SecretKey 
+                ?? _config["Jwt:Key"]
+                ?? throw new InvalidOperationException("JWT Key not configured");
+            
+            var key = Encoding.UTF8.GetBytes(jwtKey);
             var roleName = user.Role?.Name ?? "User";
 
             var claims = new[]
@@ -181,8 +186,8 @@ namespace SHN_Gear.Controllers
             };
 
             var token = new JwtSecurityToken(
-                issuer: _config["Jwt:Issuer"],
-                audience: _config["Jwt:Audience"],
+                issuer: EnvironmentConfig.Jwt.Issuer ?? _config["Jwt:Issuer"],
+                audience: EnvironmentConfig.Jwt.Audience ?? _config["Jwt:Audience"],
                 claims: claims,
                 expires: DateTime.UtcNow.AddHours(3),
                 signingCredentials: new SigningCredentials(

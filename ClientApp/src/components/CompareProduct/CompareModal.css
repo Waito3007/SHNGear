@@ -1,0 +1,468 @@
+/* Tech-Style Specification Comparison Styles */
+.spec-comparison-table {
+  width: 100%;
+  overflow: hidden;
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+  border: 3px solid #000000;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.spec-comparison-table::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    #000000 0%,
+    #404040 25%,
+    #808080 50%,
+    #404040 75%,
+    #000000 100%
+  );
+  z-index: 2;
+}
+
+.spec-comparison-header {
+  background: linear-gradient(135deg, #000000 0%, #333333 100%);
+  color: #ffffff;
+  padding: 20px;
+  border-bottom: 3px solid #000000;
+  font-family: "Roboto Mono", monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  position: relative;
+}
+
+.spec-comparison-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+      45deg,
+      transparent 48%,
+      rgba(255, 255, 255, 0.03) 49%,
+      rgba(255, 255, 255, 0.03) 51%,
+      transparent 52%
+    ),
+    linear-gradient(
+      -45deg,
+      transparent 48%,
+      rgba(255, 255, 255, 0.03) 49%,
+      rgba(255, 255, 255, 0.03) 51%,
+      transparent 52%
+    );
+  background-size: 20px 20px;
+  animation: techMatrix 20s linear infinite;
+  pointer-events: none;
+}
+
+.spec-comparison-row {
+  border-bottom: 2px solid #e0e0e0;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.spec-comparison-row:hover {
+  background: linear-gradient(135deg, #f8f9fa 0%, #f0f0f0 100%);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.spec-comparison-row:nth-child(even) {
+  background: linear-gradient(135deg, #f8f9fa 0%, #f5f5f5 100%);
+}
+
+.spec-comparison-cell {
+  padding: 16px;
+  text-align: center;
+  font-family: "Roboto Mono", monospace;
+  font-weight: 500;
+  color: #000000;
+}
+
+.spec-comparison-label {
+  padding: 16px;
+  font-family: "Roboto Mono", monospace;
+  font-weight: 700;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 14px;
+  position: sticky;
+  left: 0;
+  background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+  border-right: 2px solid #000000;
+  position: relative;
+}
+
+.spec-comparison-label::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 60%;
+  background: #000000;
+  border-radius: 2px;
+}
+
+.spec-value-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-family: "Roboto Mono", monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: 2px solid #000000;
+  transition: all 0.3s ease;
+}
+
+.spec-value-available {
+  background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+  color: #000000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.spec-value-available:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.spec-value-unavailable {
+  background: linear-gradient(135deg, #cccccc 0%, #999999 100%);
+  color: #666666;
+  opacity: 0.7;
+}
+
+.spec-comparison-legend {
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #f0f0f0 100%);
+  border-top: 3px solid #000000;
+  font-family: "Roboto Mono", monospace;
+  position: relative;
+}
+
+.spec-comparison-legend::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 20px;
+  right: 20px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.2) 20%,
+    rgba(0, 0, 0, 0.2) 80%,
+    transparent 100%
+  );
+}
+
+.product-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  margin-right: 8px;
+  border: 1px solid #000000;
+}
+
+.product-indicator-1 {
+  background: linear-gradient(135deg, #000000 0%, #333333 100%);
+}
+.product-indicator-2 {
+  background: linear-gradient(135deg, #404040 0%, #666666 100%);
+}
+.product-indicator-3 {
+  background: linear-gradient(135deg, #666666 0%, #888888 100%);
+}
+.product-indicator-4 {
+  background: linear-gradient(135deg, #808080 0%, #aaaaaa 100%);
+}
+
+/* Tech Animation classes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateX(-100%) skewX(-12deg);
+  }
+  50% {
+    transform: translateX(100%) skewX(-12deg);
+  }
+}
+
+@keyframes techMatrix {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 100%;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes techPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes techGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3), 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5), 0 0 25px rgba(0, 0, 0, 0.2);
+  }
+}
+
+@keyframes techScan {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+.animate-scaleIn {
+  animation: scaleIn 0.3s ease-out;
+}
+.animate-bounceIn {
+  animation: bounceIn 0.6s ease-out;
+}
+.animate-slideUp {
+  animation: slideUp 0.4s ease-out;
+}
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Custom backdrop blur */
+.backdrop-blur-custom {
+  backdrop-filter: blur(20px);
+}
+
+/* Text gradient - Tech Style */
+.text-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Shadow glow - Tech Style */
+.shadow-glow {
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Line clamp utilities */
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* Tech-style scrollbar */
+.spec-comparison-table::-webkit-scrollbar {
+  height: 12px;
+  width: 12px;
+}
+
+.spec-comparison-table::-webkit-scrollbar-track {
+  background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+  border-radius: 6px;
+  border: 1px solid #cccccc;
+}
+
+.spec-comparison-table::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #000000 0%, #333333 100%);
+  border-radius: 6px;
+  border: 1px solid #666666;
+}
+
+.spec-comparison-table::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #333333 0%, #666666 100%);
+}
+
+.spec-comparison-table::-webkit-scrollbar-corner {
+  background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+}
+
+/* Mobile responsive - Tech Style */
+@media (max-width: 768px) {
+  .spec-comparison-label {
+    min-width: 150px;
+    font-size: 12px;
+    padding: 12px;
+  }
+
+  .spec-comparison-cell {
+    min-width: 120px;
+    padding: 12px 8px;
+  }
+
+  .spec-value-badge {
+    font-size: 11px;
+    padding: 6px 12px;
+  }
+
+  .spec-comparison-header {
+    padding: 16px;
+    font-size: 14px;
+  }
+}
+
+/* Compare products responsive layout - Tech Style */
+@media (max-width: 640px) {
+  .compare-modal-container {
+    margin: 8px;
+  }
+
+  .compare-product-grid {
+    gap: 16px;
+  }
+
+  .compare-product-card {
+    min-height: auto;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .compare-product-card {
+    min-height: 650px;
+  }
+}
+
+@media (min-width: 1025px) {
+  .compare-product-card {
+    min-height: 700px;
+  }
+}
+
+/* Tech grid pattern utilities */
+.tech-grid-bg {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.tech-circuit-pattern {
+  background-image: radial-gradient(
+      circle at 25% 25%,
+      rgba(0, 0, 0, 0.03) 0%,
+      transparent 50%
+    ),
+    radial-gradient(circle at 75% 75%, rgba(0, 0, 0, 0.03) 0%, transparent 50%);
+}
+
+/* Roboto Mono font class */
+.roboto-mono {
+  font-family: "Roboto Mono", monospace;
+}
+
+/* Tech hover effects */
+.tech-hover-glow:hover {
+  animation: techGlow 2s ease-in-out infinite;
+}
+
+.tech-scanline {
+  position: relative;
+  overflow: hidden;
+}
+
+.tech-scanline::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.8) 50%,
+    transparent 100%
+  );
+  animation: techScan 3s ease-in-out infinite;
+  z-index: 1;
+}

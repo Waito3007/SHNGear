@@ -22,6 +22,7 @@ namespace SHN_Gear.Services
             var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]);
             var tokenHandler = new JwtSecurityTokenHandler();
 
+            // Đặt thời gian sống token tối đa 60 phút
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[]
@@ -31,7 +32,7 @@ namespace SHN_Gear.Services
                     new Claim(ClaimTypes.Email, user.Email),
                     new Claim(ClaimTypes.Role, user.Role.Name)
                 }),
-                Expires = DateTime.UtcNow.AddMinutes(int.Parse(_config["Jwt:ExpireMinutes"])),
+                Expires = DateTime.UtcNow.AddMinutes(60), // Giới hạn token 60 phút
                 Issuer = _config["Jwt:Issuer"],
                 Audience = _config["Jwt:Audience"],
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)

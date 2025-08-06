@@ -1,0 +1,29 @@
+@page
+@model SHN_Gear.Pages.Admin.BlogModel
+@{
+    ViewData["Title"] = "Blog Management";
+}
+
+<div id="react-blog-root"></div>
+
+@section Scripts {
+    <script>
+        // This script will be responsible for rendering the React app into the div above.
+        // In a typical setup, your main React app (index.js) would handle routing.
+        // For this specific Razor Page, we'll ensure the React app is mounted correctly.
+        // This assumes your React app is set up to render based on the URL path.
+        // For example, if you navigate to /admin/blog, your React Router should pick up /admin/blog route.
+
+        // You might need to adjust your ClientApp/src/index.js or App.js
+        // to ensure it can be mounted to a specific DOM element and handles its own routing.
+        // For simplicity, we assume the main React app will handle the routing for /admin/blog
+        // when it's loaded.
+
+        // If your React app is not set up to be mounted this way, you might need to
+        // create a specific entry point for the admin blog section in your React app
+        // and load it here.
+
+        // For now, this Razor Page simply provides the container for the React app.
+        // The actual rendering logic is handled by the React app's main entry point (e.g., index.js).
+    </script>
+}

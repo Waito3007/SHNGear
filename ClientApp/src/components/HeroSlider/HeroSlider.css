@@ -5,6 +5,116 @@
   margin-top: 10px;
 }
 
+.hero-slider-full {
+  width: 100%;
+  height: auto;
+  min-height: 400px;
+}
+
+.hero-slider-full .swiper-wrapper {
+  width: 100%;
+  height: auto;
+  align-items: center;
+}
+
+.hero-slider-full .swiper-slide {
+  width: 100% !important;
+  height: auto !important;
+  flex-shrink: 0;
+  background: transparent !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-slider-full .swiper-slide img {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+  background: transparent;
+}
+
+.hero-slider-full .swiper-button-prev,
+.hero-slider-full .swiper-button-next {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  color: #333;
+  margin-top: -25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.hero-slider-full .swiper-button-prev:hover,
+.hero-slider-full .swiper-button-next:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.hero-slider-full .swiper-button-prev {
+  left: 20px;
+}
+
+.hero-slider-full .swiper-button-next {
+  right: 20px;
+}
+
+.hero-slider-full .swiper-button-prev:after,
+.hero-slider-full .swiper-button-next:after {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.hero-slider-full .swiper-pagination {
+  bottom: 20px !important;
+}
+
+.hero-slider-full .swiper-pagination-bullet {
+  width: 12px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  opacity: 1;
+  margin: 0 6px;
+  transition: all 0.3s ease;
+}
+
+.hero-slider-full .swiper-pagination-bullet-active {
+  background: #ffffff;
+  transform: scale(1.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.hero-slider-full .swiper-pagination-bullet:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: scale(1.1);
+}
+
+/* Debug và fix image display issues */
+.hero-slider-full .swiper-slide {
+  background: transparent !important;
+}
+
+.hero-slider-full .swiper-slide img {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  background: transparent !important;
+  z-index: 1;
+}
+
+.hero-slider-full .swiper-slide .absolute {
+  z-index: 2;
+}
+
+/* Ensure gradient overlays don't interfere with image */
+.hero-slider-full .bg-gradient-to-t {
+  z-index: 2;
+  pointer-events: none;
+}
+
 .custom-swiper {
   border-radius: 12px;
   overflow: hidden;
@@ -16,6 +126,7 @@
   object-fit: cover;
   border-radius: 12px;
 }
+
 .swiper-pagination {
   display: none !important;
 }
