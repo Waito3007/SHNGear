@@ -1,5 +1,6 @@
 using PayPalCheckoutSdk.Core;
 using PayPalCheckoutSdk.Orders;
+using PayPalHttp;
 using System.Text.Json;
 using System.Globalization;
 using SHN_Gear.Configuration;
@@ -96,6 +97,8 @@ namespace SHN_Gear.Services
         {
             try
             {
+                _logger.LogInformation($"Attempting to capture PayPal order: {orderId}");
+                
                 var request = new OrdersCaptureRequest(orderId);
                 request.RequestBody(new OrderActionRequest());
                 request.Prefer("return=representation");
@@ -104,18 +107,40 @@ namespace SHN_Gear.Services
                 var result = response.Result<Order>();
 
                 var transactionId = result.PurchaseUnits?[0]?.Payments?.Captures?[0]?.Id;
-                _logger.LogInformation($"Captured PayPal Order: {orderId}, Transaction ID: {transactionId}");
+                _logger.LogInformation($"Successfully captured PayPal Order: {orderId}, Transaction ID: {transactionId}, Status: {result.Status}");
 
                 return new PayPalCaptureResult
                 {
                     Success = result.Status == "COMPLETED",
                     TransactionId = transactionId,
-                    RawResponse = JsonSerializer.Serialize(result)
+                    RawResponse = System.Text.Json.JsonSerializer.Serialize(result)
+                };
+            }
+            catch (PayPalHttp.HttpException httpEx)
+            {
+                _logger.LogError(httpEx, $"PayPal HTTP error when capturing order {orderId}: {httpEx.Message}");
+                
+                // Parse error details from PayPal response
+                var errorDetails = "";
+                try
+                {
+                    // Use Headers or Message for error information since ResponseBody may not be available
+                    errorDetails = httpEx.Message;
+                }
+                catch (Exception parseEx)
+                {
+                    _logger.LogWarning(parseEx, "Failed to parse PayPal error response");
+                }
+
+                return new PayPalCaptureResult
+                {
+                    Success = false,
+                    ErrorMessage = $"PayPal HTTP Error: {httpEx.Message}. Details: {errorDetails}"
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Failed to capture PayPal order {orderId}");
+                _logger.LogError(ex, $"Unexpected error when capturing PayPal order {orderId}");
                 return new PayPalCaptureResult
                 {
                     Success = false,
