@@ -1,6 +1,7 @@
 # SHN-Gear E-commerce Platform
 
 **🌐 Language / Ngôn ngữ:**
+
 - **English** (Current) | [Tiếng Việt](README.vi.md)
 
 ---
@@ -11,22 +12,23 @@ A key highlight of this project is the integration of the Google Gemini API, whi
 
 ## Architectural Overview
 
-| Component             | Technology/Service                               | Purpose                                                              |
-| --------------------- | ------------------------------------------------ | -------------------------------------------------------------------- |
-| **Backend Framework** | ASP.NET Core 8                                   | Building robust, high-performance web APIs and server-side logic.    |
-| **Frontend Library**  | React (with Craco)                               | Creating a dynamic, responsive, and modern Single Page Application.  |
-| **Database ORM**      | Entity Framework Core                            | Managing data, migrations, and interactions with the SQL database.   |
-| **Configuration**     | `.env` file (DotNetEnv)                          | Managing environment variables for security and flexibility.         |
-| **Real-time Engine**  | SignalR                                          | Powering real-time features like the AI Chat service.                |
-| **AI Service**        | Google Gemini API                                | Providing intelligent chatbot capabilities for customer support.     |
-| **Authentication**    | JWT (JSON Web Tokens)                            | Securing API endpoints and managing user sessions.                   |
-| **Payment Gateways**  | PayPal, MoMo                                     | Offering multiple secure payment options for checkout.               |
-| **File Storage**      | Cloudinary                                       | Handling cloud-based storage and delivery of images and media.       |
-| **Styling**           | Tailwind CSS                                     | Utilizing a utility-first CSS framework for rapid UI development.    |
+| Component             | Technology/Service      | Purpose                                                             |
+| --------------------- | ----------------------- | ------------------------------------------------------------------- |
+| **Backend Framework** | ASP.NET Core 8          | Building robust, high-performance web APIs and server-side logic.   |
+| **Frontend Library**  | React (with Craco)      | Creating a dynamic, responsive, and modern Single Page Application. |
+| **Database ORM**      | Entity Framework Core   | Managing data, migrations, and interactions with the SQL database.  |
+| **Configuration**     | `.env` file (DotNetEnv) | Managing environment variables for security and flexibility.        |
+| **Real-time Engine**  | SignalR                 | Powering real-time features like the AI Chat service.               |
+| **AI Service**        | Google Gemini API       | Providing intelligent chatbot capabilities for customer support.    |
+| **Authentication**    | JWT (JSON Web Tokens)   | Securing API endpoints and managing user sessions.                  |
+| **Payment Gateways**  | PayPal, MoMo            | Offering multiple secure payment options for checkout.              |
+| **File Storage**      | Cloudinary              | Handling cloud-based storage and delivery of images and media.      |
+| **Styling**           | Tailwind CSS            | Utilizing a utility-first CSS framework for rapid UI development.   |
 
 ## Key Features
 
 ### 🛒 **E-commerce Core Features**
+
 - **Product Management**: Comprehensive catalog for phones, laptops, and headphones
 - **Shopping Cart & Checkout**: Streamlined purchasing process with multiple payment options
 - **Order Management**: Complete order tracking and management system
@@ -34,9 +36,11 @@ A key highlight of this project is the integration of the Google Gemini API, whi
 - **Review & Rating System**: Customer feedback and product ratings
 
 ### 🤖 **AI-Powered Customer Support (RAG System)**
+
 The platform features an intelligent chatbot powered by **Google Gemini API** with **Retrieval-Augmented Generation (RAG)** capabilities that can access and query the following database tables:
 
 #### **📊 Database Tables Accessible by AI Chatbot:**
+
 - **`Products`** - Product information, specifications, pricing, and availability
 - **`Categories`** - Product categories and classification
 - **`Brands`** - Brand information and details
@@ -50,6 +54,7 @@ The platform features an intelligent chatbot powered by **Google Gemini API** wi
 - **`LoyaltyPoints`** - Customer loyalty program data
 
 #### **🧠 AI Capabilities:**
+
 - **Intent Recognition**: Automatically detects customer queries (product search, order status, technical support, etc.)
 - **Context Awareness**: Maintains conversation history and user context
 - **Product Recommendations**: Suggests products based on user preferences and queries
@@ -58,11 +63,13 @@ The platform features an intelligent chatbot powered by **Google Gemini API** wi
 - **Escalation Handling**: Seamlessly transfers complex queries to human agents
 
 ### 💳 **Payment & Loyalty**
+
 - **Multiple Payment Gateways**: PayPal, MoMo, credit cards, and COD
 - **Loyalty Program**: Points system with spin wheel rewards
 - **Voucher System**: Discount codes and promotional offers
 
 ### 🎨 **Modern UI/UX**
+
 - **Responsive Design**: Optimized for all devices using Tailwind CSS
 - **Real-time Updates**: Live notifications via SignalR
 - **Admin Dashboard**: Comprehensive management interface
@@ -70,6 +77,7 @@ The platform features an intelligent chatbot powered by **Google Gemini API** wi
 ## Getting Started
 
 ### Prerequisites
+
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 - [Node.js and npm](https://nodejs.org/en/) (v18.x or later)
 - [Git](https://git-scm.com/)
@@ -78,17 +86,20 @@ The platform features an intelligent chatbot powered by **Google Gemini API** wi
 ### 1. Backend Setup (ASP.NET Core)
 
 1.  **Clone the repository:**
+
     ```bash
-    git clone <your-repository-url>
-    cd SHNGear-2
+    git clone https://github.com/Waito3007/SHNGear.git
+    cd SHNGear
     ```
 
 2.  **Configure Environment Variables:**
+
     - In the project root, create a file named `.env`.
     - Copy the content from `.env.example` and paste it into your new `.env` file.
     - **Crucially, update the variables** in `.env` with your actual credentials and settings. The application reads these variables at runtime.
 
     **Example `.env` configuration for the database:**
+
     ```dotenv
     # Database Configuration - Update with your credentials
     DB_SERVER=your_sql_server_address
@@ -106,6 +117,7 @@ The platform features an intelligent chatbot powered by **Google Gemini API** wi
 
 3.  **Apply Database Migrations:**
     Once your `.env` file is configured, use the Entity Framework Core CLI to create the database schema. The application will construct the connection string from your environment variables.
+
     ```bash
     dotnet ef database update
     ```
@@ -119,18 +131,22 @@ The platform features an intelligent chatbot powered by **Google Gemini API** wi
 ### 2. Frontend Setup (React)
 
 1.  **Navigate to the ClientApp directory:**
+
     ```bash
     cd ClientApp
     ```
 
 2.  **Install dependencies:**
+
     ```bash
     npm install
     ```
 
 3.  **Configure Environment Variables:**
+
     - Create a file named `.env.development.local` in the `ClientApp` directory.
     - Add the following line, ensuring the URL matches your running backend API.
+
     ```
     REACT_APP_API_BASE_URL=https://localhost:7032
     ```
@@ -144,26 +160,29 @@ The platform features an intelligent chatbot powered by **Google Gemini API** wi
 ## 🤖 AI Chatbot & RAG System
 
 ### Overview
+
 The SHN-Gear platform features an advanced AI-powered chatbot that uses **Retrieval-Augmented Generation (RAG)** to provide intelligent customer support. The system combines the power of Google Gemini API with a comprehensive knowledge base to deliver accurate, contextual responses.
 
 ### Database Tables Accessible by AI
+
 The chatbot can read and query the following database tables to provide comprehensive assistance:
 
-| Table | Purpose | AI Usage |
-|-------|---------|----------|
-| `Products` | Product catalog | Product recommendations, specifications, pricing |
-| `Categories` | Product classification | Category-based searches and filtering |
-| `Brands` | Brand information | Brand-specific queries and comparisons |
-| `ProductSpecifications` | Technical details | Detailed technical support and comparisons |
-| `Orders` | Order management | Order status, tracking, history queries |
-| `Reviews` | Customer feedback | Product quality insights and recommendations |
-| `Users` | User profiles | Personalized recommendations and support |
-| `ChatMessages` & `ChatSessions` | Conversation data | Context maintenance and conversation flow |
-| `AIKnowledgeBase` | FAQ and policies | Standard responses and policy information |
-| `Vouchers` | Promotions | Discount information and promotional offers |
-| `LoyaltyPoints` | Loyalty program | Points balance and reward information |
+| Table                           | Purpose                | AI Usage                                         |
+| ------------------------------- | ---------------------- | ------------------------------------------------ |
+| `Products`                      | Product catalog        | Product recommendations, specifications, pricing |
+| `Categories`                    | Product classification | Category-based searches and filtering            |
+| `Brands`                        | Brand information      | Brand-specific queries and comparisons           |
+| `ProductSpecifications`         | Technical details      | Detailed technical support and comparisons       |
+| `Orders`                        | Order management       | Order status, tracking, history queries          |
+| `Reviews`                       | Customer feedback      | Product quality insights and recommendations     |
+| `Users`                         | User profiles          | Personalized recommendations and support         |
+| `ChatMessages` & `ChatSessions` | Conversation data      | Context maintenance and conversation flow        |
+| `AIKnowledgeBase`               | FAQ and policies       | Standard responses and policy information        |
+| `Vouchers`                      | Promotions             | Discount information and promotional offers      |
+| `LoyaltyPoints`                 | Loyalty program        | Points balance and reward information            |
 
 ### How It Works
+
 1. **Intent Recognition**: AI analyzes user messages to understand their intent
 2. **Knowledge Retrieval**: System queries relevant database tables and knowledge base
 3. **Context Building**: Combines retrieved information with conversation history
@@ -171,6 +190,7 @@ The chatbot can read and query the following database tables to provide comprehe
 5. **Confidence Scoring**: System evaluates response quality and escalates when needed
 
 ### Key Capabilities
+
 - **Real-time Product Search**: Instant product recommendations and comparisons
 - **Order Support**: Check order status, tracking, and delivery information
 - **Technical Assistance**: Detailed product specifications and troubleshooting
@@ -246,6 +266,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ---
 
 **🌐 Language / Ngôn ngữ:**
+
 - **English** (Current) | [Tiếng Việt](README.vi.md)
 
-*This document provides comprehensive setup instructions and technical details for the SHN-Gear e-commerce platform with AI-powered customer support.*
+_This document provides comprehensive setup instructions and technical details for the SHN-Gear e-commerce platform with AI-powered customer support._

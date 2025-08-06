@@ -1,6 +1,7 @@
 # Nền tảng Thương mại điện tử SHN-Gear
 
 **🌐 Language / Ngôn ngữ:**
+
 - [English](README.md) | **Tiếng Việt** (Hiện tại)
 
 ---
@@ -11,22 +12,23 @@ Dự án SHN-Gear là một nền tảng thương mại điện tử (E-commerce
 
 ## Bảng tổng quan kiến trúc
 
-| Thành phần            | Công nghệ/Dịch vụ                                | Mục đích                                                              |
-| --------------------- | ------------------------------------------------ | --------------------------------------------------------------------- |
-| **Backend Framework** | ASP.NET Core 8                                   | Xây dựng API và logic phía máy chủ mạnh mẽ, hiệu suất cao.             |
-| **Frontend Library**  | React (với Craco)                                | Tạo ứng dụng trang đơn (SPA) năng động, đáp ứng và hiện đại.          |
-| **Database ORM**      | Entity Framework Core                            | Quản lý dữ liệu, migrations và tương tác với cơ sở dữ liệu SQL.        |
-| **Cấu hình**          | File `.env` (DotNetEnv)                          | Quản lý các biến môi trường an toàn và linh hoạt.                      |
-| **Real-time Engine**  | SignalR                                          | Cung cấp các tính năng thời gian thực như dịch vụ AI Chat.             |
-| **Dịch vụ AI**        | Google Gemini API                                | Cung cấp khả năng chatbot thông minh để hỗ trợ khách hàng.             |
-| **Xác thực**          | JWT (JSON Web Tokens)                            | Bảo mật các API endpoint và quản lý phiên làm việc của người dùng.      |
-| **Cổng thanh toán**   | PayPal, MoMo                                     | Cung cấp nhiều tùy chọn thanh toán an toàn khi thanh toán.             |
-| **Lưu trữ file**      | Cloudinary                                       | Xử lý lưu trữ và phân phối hình ảnh, media trên nền tảng đám mây.      |
-| **Styling**           | Tailwind CSS                                     | Sử dụng framework CSS utility-first để phát triển giao diện nhanh chóng.|
+| Thành phần            | Công nghệ/Dịch vụ       | Mục đích                                                                 |
+| --------------------- | ----------------------- | ------------------------------------------------------------------------ |
+| **Backend Framework** | ASP.NET Core 8          | Xây dựng API và logic phía máy chủ mạnh mẽ, hiệu suất cao.               |
+| **Frontend Library**  | React (với Craco)       | Tạo ứng dụng trang đơn (SPA) năng động, đáp ứng và hiện đại.             |
+| **Database ORM**      | Entity Framework Core   | Quản lý dữ liệu, migrations và tương tác với cơ sở dữ liệu SQL.          |
+| **Cấu hình**          | File `.env` (DotNetEnv) | Quản lý các biến môi trường an toàn và linh hoạt.                        |
+| **Real-time Engine**  | SignalR                 | Cung cấp các tính năng thời gian thực như dịch vụ AI Chat.               |
+| **Dịch vụ AI**        | Google Gemini API       | Cung cấp khả năng chatbot thông minh để hỗ trợ khách hàng.               |
+| **Xác thực**          | JWT (JSON Web Tokens)   | Bảo mật các API endpoint và quản lý phiên làm việc của người dùng.       |
+| **Cổng thanh toán**   | PayPal, MoMo            | Cung cấp nhiều tùy chọn thanh toán an toàn khi thanh toán.               |
+| **Lưu trữ file**      | Cloudinary              | Xử lý lưu trữ và phân phối hình ảnh, media trên nền tảng đám mây.        |
+| **Styling**           | Tailwind CSS            | Sử dụng framework CSS utility-first để phát triển giao diện nhanh chóng. |
 
 ## Tính năng chính
 
 ### 🛒 **Tính năng Thương mại điện tử Cốt lõi**
+
 - **Quản lý Sản phẩm**: Catalog toàn diện cho điện thoại, laptop và tai nghe
 - **Giỏ hàng & Thanh toán**: Quy trình mua hàng được tối ưu với nhiều phương thức thanh toán
 - **Quản lý Đơn hàng**: Hệ thống theo dõi và quản lý đơn hàng hoàn chỉnh
@@ -34,9 +36,11 @@ Dự án SHN-Gear là một nền tảng thương mại điện tử (E-commerce
 - **Hệ thống Đánh giá**: Phản hồi khách hàng và đánh giá sản phẩm
 
 ### 🤖 **Hỗ trợ Khách hàng thông qua AI (Hệ thống RAG)**
+
 Nền tảng tích hợp chatbot thông minh được hỗ trợ bởi **Google Gemini API** với khả năng **Retrieval-Augmented Generation (RAG)** có thể truy cập và truy vấn các bảng cơ sở dữ liệu sau:
 
 #### **📊 Các Bảng Cơ sở Dữ liệu mà AI Chatbot có thể đọc:**
+
 - **`Products`** - Thông tin sản phẩm, thông số kỹ thuật, giá cả và tình trạng có sẵn
 - **`Categories`** - Danh mục sản phẩm và phân loại
 - **`Brands`** - Thông tin và chi tiết thương hiệu
@@ -50,6 +54,7 @@ Nền tảng tích hợp chatbot thông minh được hỗ trợ bởi **Google 
 - **`LoyaltyPoints`** - Dữ liệu chương trình khách hàng thân thiết
 
 #### **🧠 Khả năng AI:**
+
 - **Nhận diện Ý định**: Tự động phát hiện truy vấn khách hàng (tìm kiếm sản phẩm, trạng thái đơn hàng, hỗ trợ kỹ thuật, v.v.)
 - **Nhận thức Ngữ cảnh**: Duy trì lịch sử cuộc trò chuyện và ngữ cảnh người dùng
 - **Gợi ý Sản phẩm**: Đề xuất sản phẩm dựa trên preferences và truy vấn của người dùng
@@ -58,11 +63,13 @@ Nền tảng tích hợp chatbot thông minh được hỗ trợ bởi **Google 
 - **Xử lý Chuyển tiếp**: Chuyển giao liền mạch các truy vấn phức tạp cho nhân viên
 
 ### 💳 **Thanh toán & Khách hàng thân thiết**
+
 - **Nhiều Cổng Thanh toán**: PayPal, MoMo, thẻ tín dụng và COD
 - **Chương trình Khách hàng thân thiết**: Hệ thống điểm với phần thưởng vòng quay
 - **Hệ thống Voucher**: Mã giảm giá và ưu đãi khuyến mãi
 
 ### 🎨 **UI/UX Hiện đại**
+
 - **Thiết kế Responsive**: Tối ưu cho mọi thiết bị sử dụng Tailwind CSS
 - **Cập nhật Thời gian thực**: Thông báo trực tiếp qua SignalR
 - **Dashboard Quản trị**: Giao diện quản lý toàn diện
@@ -70,6 +77,7 @@ Nền tảng tích hợp chatbot thông minh được hỗ trợ bởi **Google 
 ## Hướng dẫn cài đặt chi tiết
 
 ### Yêu cầu tiên quyết
+
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 - [Node.js và npm](https://nodejs.org/en/) (phiên bản 18.x trở lên)
 - [Git](https://git-scm.com/)
@@ -78,17 +86,20 @@ Nền tảng tích hợp chatbot thông minh được hỗ trợ bởi **Google 
 ### 1. Cài đặt Backend (ASP.NET Core)
 
 1.  **Clone repository về máy:**
+
     ```bash
-    git clone <your-repository-url>
-    cd SHNGear-2
+    git clone https://github.com/Waito3007/SHNGear.git
+    cd SHNGear
     ```
 
 2.  **Cấu hình biến môi trường (Rất quan trọng):**
+
     - Tại thư mục gốc của dự án, tạo một file mới tên là `.env`.
     - Sao chép toàn bộ nội dung từ file `.env.example` và dán vào file `.env` vừa tạo.
     - **Cập nhật các giá trị** trong file `.env` bằng thông tin cấu hình thực tế của bạn. Ứng dụng sẽ đọc các biến này khi khởi chạy để kết nối dịch vụ.
 
     **Ví dụ cấu hình database trong file `.env`:**
+
     ```dotenv
     # Cấu hình Database - Thay bằng thông tin của bạn
     DB_SERVER=your_sql_server_address
@@ -106,6 +117,7 @@ Nền tảng tích hợp chatbot thông minh được hỗ trợ bởi **Google 
 
 3.  **Áp dụng Database Migrations:**
     Sau khi đã cấu hình file `.env`, hãy dùng công cụ dòng lệnh của Entity Framework Core để tạo cơ sở dữ liệu. Ứng dụng sẽ tự động xây dựng chuỗi kết nối từ các biến môi trường bạn đã cung cấp.
+
     ```bash
     dotnet ef database update
     ```
@@ -119,18 +131,22 @@ Nền tảng tích hợp chatbot thông minh được hỗ trợ bởi **Google 
 ### 2. Cài đặt Frontend (React)
 
 1.  **Điều hướng đến thư mục `ClientApp`:**
+
     ```bash
     cd ClientApp
     ```
 
 2.  **Cài đặt dependencies:**
+
     ```bash
     npm install
     ```
 
 3.  **Cấu hình biến môi trường cho Frontend:**
+
     - Trong thư mục `ClientApp`, tạo một file tên là `.env.development.local`.
     - Thêm dòng sau vào file, đảm bảo URL trỏ đúng đến địa chỉ API backend đang chạy.
+
     ```
     REACT_APP_API_BASE_URL=https://localhost:7032
     ```
@@ -144,26 +160,29 @@ Nền tảng tích hợp chatbot thông minh được hỗ trợ bởi **Google 
 ## 🤖 AI Chatbot & Hệ thống RAG
 
 ### Tổng quan
+
 Nền tảng SHN-Gear tích hợp chatbot AI tiên tiến sử dụng **Retrieval-Augmented Generation (RAG)** để cung cấp hỗ trợ khách hàng thông minh. Hệ thống kết hợp sức mạnh của Google Gemini API với cơ sở tri thức toàn diện để đưa ra các phản hồi chính xác và phù hợp ngữ cảnh.
 
 ### Các Bảng Cơ sở Dữ liệu mà AI có thể truy cập
+
 Chatbot có thể đọc và truy vấn các bảng cơ sở dữ liệu sau để cung cấp hỗ trợ toàn diện:
 
-| Bảng | Mục đích | Sử dụng AI |
-|------|----------|------------|
-| `Products` | Catalog sản phẩm | Gợi ý sản phẩm, thông số kỹ thuật, giá cả |
-| `Categories` | Phân loại sản phẩm | Tìm kiếm và lọc theo danh mục |
-| `Brands` | Thông tin thương hiệu | Truy vấn và so sánh thương hiệu |
-| `ProductSpecifications` | Chi tiết kỹ thuật | Hỗ trợ kỹ thuật chi tiết và so sánh |
-| `Orders` | Quản lý đơn hàng | Trạng thái, theo dõi, lịch sử đơn hàng |
-| `Reviews` | Phản hồi khách hàng | Đánh giá chất lượng và gợi ý sản phẩm |
-| `Users` | Hồ sơ người dùng | Gợi ý cá nhân hóa và hỗ trợ |
-| `ChatMessages` & `ChatSessions` | Dữ liệu cuộc trò chuyện | Duy trì ngữ cảnh và luồng trò chuyện |
-| `AIKnowledgeBase` | FAQ và chính sách | Phản hồi chuẩn và thông tin chính sách |
-| `Vouchers` | Khuyến mãi | Thông tin giảm giá và ưu đãi |
-| `LoyaltyPoints` | Chương trình khách hàng thân thiết | Số dư điểm và thông tin phần thưởng |
+| Bảng                            | Mục đích                           | Sử dụng AI                                |
+| ------------------------------- | ---------------------------------- | ----------------------------------------- |
+| `Products`                      | Catalog sản phẩm                   | Gợi ý sản phẩm, thông số kỹ thuật, giá cả |
+| `Categories`                    | Phân loại sản phẩm                 | Tìm kiếm và lọc theo danh mục             |
+| `Brands`                        | Thông tin thương hiệu              | Truy vấn và so sánh thương hiệu           |
+| `ProductSpecifications`         | Chi tiết kỹ thuật                  | Hỗ trợ kỹ thuật chi tiết và so sánh       |
+| `Orders`                        | Quản lý đơn hàng                   | Trạng thái, theo dõi, lịch sử đơn hàng    |
+| `Reviews`                       | Phản hồi khách hàng                | Đánh giá chất lượng và gợi ý sản phẩm     |
+| `Users`                         | Hồ sơ người dùng                   | Gợi ý cá nhân hóa và hỗ trợ               |
+| `ChatMessages` & `ChatSessions` | Dữ liệu cuộc trò chuyện            | Duy trì ngữ cảnh và luồng trò chuyện      |
+| `AIKnowledgeBase`               | FAQ và chính sách                  | Phản hồi chuẩn và thông tin chính sách    |
+| `Vouchers`                      | Khuyến mãi                         | Thông tin giảm giá và ưu đãi              |
+| `LoyaltyPoints`                 | Chương trình khách hàng thân thiết | Số dư điểm và thông tin phần thưởng       |
 
 ### Cách hoạt động
+
 1. **Nhận diện Ý định**: AI phân tích tin nhắn người dùng để hiểu ý định
 2. **Truy xuất Tri thức**: Hệ thống truy vấn các bảng dữ liệu và cơ sở tri thức liên quan
 3. **Xây dựng Ngữ cảnh**: Kết hợp thông tin truy xuất với lịch sử cuộc trò chuyện
@@ -171,6 +190,7 @@ Chatbot có thể đọc và truy vấn các bảng cơ sở dữ liệu sau đ�
 5. **Đánh giá Độ tin cậy**: Hệ thống đánh giá chất lượng phản hồi và chuyển tiếp khi cần
 
 ### Khả năng chính
+
 - **Tìm kiếm Sản phẩm Thời gian thực**: Gợi ý và so sánh sản phẩm tức thì
 - **Hỗ trợ Đơn hàng**: Kiểm tra trạng thái, theo dõi và thông tin giao hàng
 - **Hỗ trợ Kỹ thuật**: Thông số kỹ thuật chi tiết và khắc phục sự cố
@@ -246,6 +266,7 @@ Dự án này được cấp phép theo Giấy phép MIT - xem file LICENSE đ�
 ---
 
 **🌐 Language / Ngôn ngữ:**
+
 - [English](README.md) | **Tiếng Việt** (Hiện tại)
 
-*Tài liệu này cung cấp hướng dẫn cài đặt toàn diện và chi tiết kỹ thuật cho nền tảng thương mại điện tử SHN-Gear với hỗ trợ khách hàng bằng AI.*
+_Tài liệu này cung cấp hướng dẫn cài đặt toàn diện và chi tiết kỹ thuật cho nền tảng thương mại điện tử SHN-Gear với hỗ trợ khách hàng bằng AI._
