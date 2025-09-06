@@ -1,0 +1,43 @@
+# Ignore các thư mục không cần thiết để giảm context size
+bin/
+obj/
+out/
+.vs/
+.vscode/
+node_modules/
+wwwroot/lib/
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+README*
+
+# Test files
+Tests/
+*.Tests/
+
+# Docker files
+Dockerfile*
+.dockerignore
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Logs
+logs/
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# ClientApp build artifacts (nếu không cần build frontend trong container)
+ClientApp/node_modules/
+ClientApp/build/
+ClientApp/dist/
