@@ -16,6 +16,7 @@ import { useCategories } from "@/hooks/api/useCategories";
 import { useBrands } from "@/hooks/api/useBrands";
 import { useSearch } from "@/hooks/api/useSearch";
 import { useAuthModal } from "@/contexts/AuthModalContext";
+import { useCart } from "@/contexts/CartContext";
 import menuIcon from "@/assets/icon/menu.svg";
 // import logo from "@/assets/img/Phone/logo.png";
 import CartDrawer from "@/components/shoppingcart/CartDrawer"; // Import Drawer
@@ -29,13 +30,13 @@ const Navbar = () => {
   const searchRef = useRef(null);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
-  const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Custom hooks
   const { user, initUserId, fetchUserProfile } = useUserProfile();
   const { categories } = useCategories();
   const { brands } = useBrands();
   const { openAuthModal } = useAuthModal();
+  const { isCartOpen, openCart, closeCart } = useCart();
   const {
     results: searchResults,
     loading: searchLoading,
@@ -948,7 +949,7 @@ const Navbar = () => {
             {/* Enhanced Tech Cart Button */}
             <button
               className="flex items-center justify-center leading-[1.4] rounded-[14px] p-2 text-sm font-mono font-semibold cursor-pointer transition-all duration-300 gap-0 whitespace-nowrap w-11 h-11 sm:w-11 sm:h-11 border-[2px] border-black relative overflow-hidden min-h-[44px] min-w-[44px] bg-white backdrop-blur-[20px] text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px]"
-              onClick={() => setIsCartOpen(true)}
+              onClick={() => openCart()}
             >
               {/* Tech pattern background */}
               <div
@@ -974,7 +975,7 @@ const Navbar = () => {
           </div>
         </div>
 
-        <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+        <CartDrawer isOpen={isCartOpen} onClose={() => closeCart()} />
       </nav>
     </div>
   );

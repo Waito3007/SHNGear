@@ -23,6 +23,7 @@ import {
 } from "@mui/icons-material";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
+import { useCart } from "@/contexts/CartContext";
 
 const ProductVariants = ({ variants, onAddToCart }) => {
   // Safe initialization with fallbacks
@@ -31,6 +32,7 @@ const ProductVariants = ({ variants, onAddToCart }) => {
   );
 
   const [selectedStorage, setSelectedStorage] = useState("");
+  const { openCart } = useCart();
 
   // Memoize available storages to prevent unnecessary re-calculations
   const availableStorages = useMemo(() => {
@@ -206,6 +208,16 @@ const ProductVariants = ({ variants, onAddToCart }) => {
         showSnackbar(`❌ Lỗi: ${error.message}`, "error");
       }
     }
+  };
+
+  const handleBuyNow = async () => {
+    // Thêm sản phẩm vào giỏ hàng trước
+    await handleAddToCart();
+    
+    // Sau đó mở CartDrawer
+    setTimeout(() => {
+      openCart();
+    }, 500); // Đợi một chút để snackbar hiển thị trước
   };
 
   const showSnackbar = (message, severity) => {
@@ -697,7 +709,7 @@ const ProductVariants = ({ variants, onAddToCart }) => {
               THÊM VÀO GIỎ
             </Button>
             <Button
-              onClick={handleAddToCart}
+              onClick={handleBuyNow}
               variant="contained"
               sx={{
                 flex: 2,
