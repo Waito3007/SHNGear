@@ -33,7 +33,7 @@ namespace SHN_Gear.Controllers
             var approvedReviews = _context.Reviews
                 .Where(r => r.ProductId == product.Id && r.IsApproved)
                 .ToList();
-            
+
             var reviewCount = approvedReviews.Count;
             var averageRating = reviewCount > 0 ? approvedReviews.Average(r => r.Rating) : 0;
 
@@ -76,10 +76,22 @@ namespace SHN_Gear.Controllers
             };
         }
 
-        // Lấy danh sách sản phẩm (có hỗ trợ lọc theo danh mục)
+        // Lấy danh sách sản phẩm (có hỗ trợ lọc theo danh mục và phân trang)
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts([FromQuery] int? categoryId = null)
+        public async Task<ActionResult<PaginatedResponseDto<ProductDto>>> GetProducts(
+            [FromQuery] int? categoryId = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 6,
+            [FromQuery] string sortBy = "name",
+            [FromQuery] string sortOrder = "asc",
+            [FromQuery] decimal? minPrice = null,
+            [FromQuery] decimal? maxPrice = null,
+            [FromQuery] int? brandId = null)
         {
+            // Validate parameters
+            if (page < 1) page = 1;
+            if (pageSize < 1 || pageSize > 100) pageSize = 6;
+
             var query = _context.Products
                 .Include(p => p.Images)
                 .Include(p => p.Variants)
@@ -87,13 +99,60 @@ namespace SHN_Gear.Controllers
                 .Include(p => p.Brand)
                 .AsQueryable();
 
+            // Apply filters
             if (categoryId.HasValue)
             {
                 query = query.Where(p => p.CategoryId == categoryId.Value);
             }
 
-            var products = await query.ToListAsync();
-            return Ok(products.Select(p => MapProductToDto(p)));
+            if (brandId.HasValue)
+            {
+                query = query.Where(p => p.BrandId == brandId.Value);
+            }
+
+            if (minPrice.HasValue || maxPrice.HasValue)
+            {
+                query = query.Where(p => p.Variants.Any(v =>
+                    (!minPrice.HasValue || v.Price >= minPrice.Value) &&
+                    (!maxPrice.HasValue || v.Price <= maxPrice.Value)));
+            }
+
+            // Apply sorting
+            query = sortBy.ToLower() switch
+            {
+                "price" => sortOrder.ToLower() == "desc"
+                    ? query.OrderByDescending(p => p.Variants.Min(v => v.Price))
+                    : query.OrderBy(p => p.Variants.Min(v => v.Price)),
+                "createdat" => sortOrder.ToLower() == "desc"
+                    ? query.OrderByDescending(p => p.Id)
+                    : query.OrderBy(p => p.Id),
+                _ => sortOrder.ToLower() == "desc"
+                    ? query.OrderByDescending(p => p.Name)
+                    : query.OrderBy(p => p.Name)
+            };
+
+            // Get total count for pagination
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+            // Apply pagination
+            var products = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var response = new PaginatedResponseDto<ProductDto>
+            {
+                Data = products.Select(p => MapProductToDto(p)),
+                TotalItems = totalItems,
+                TotalPages = totalPages,
+                CurrentPage = page,
+                PageSize = pageSize,
+                HasPreviousPage = page > 1,
+                HasNextPage = page < totalPages
+            };
+
+            return Ok(response);
         }
 
         // Lấy thông tin chi tiết sản phẩm theo ID

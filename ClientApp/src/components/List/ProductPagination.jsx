@@ -210,7 +210,7 @@ const ProductPagination = ({
   totalPages,
   onPageChange,
   totalProducts,
-  productsPerPage = 9,
+  productsPerPage = 6,
   loading = false,
 }) => {
   if (loading || totalPages <= 1) {
@@ -322,7 +322,7 @@ const ProductPagination = ({
           <StyledPagination
             count={totalPages}
             page={currentPage}
-            onChange={(event, page) => onPageChange(page)}
+            onChange={(event, page) => onPageChange(page, true)} // Add shouldScrollToTop=true for pagination clicks
             size="large"
             siblingCount={1}
             boundaryCount={1}
@@ -373,7 +373,16 @@ const ProductPagination = ({
                 >
                   <Box
                     component="button"
-                    onClick={item.onClick}
+                    onClick={(e) => {
+                      if (item.onClick) {
+                        item.onClick(e);
+                        // For navigation buttons, also scroll to top
+                        if (item.type === 'first' || item.type === 'last' || 
+                            item.type === 'previous' || item.type === 'next') {
+                          // The onChange handler will already handle scrolling
+                        }
+                      }
+                    }}
                     disabled={item.disabled}
                     sx={{
                       ...StyledPagination.defaultProps?.sx?.[
