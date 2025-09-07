@@ -19,7 +19,7 @@ namespace SHN_Gear.Controllers
         private readonly PayPalService _payPalService;
         private readonly ILogger<PayPalController> _logger;
         private const decimal VND_TO_USD_RATE = 25000m;
-        private const string CLIENT_URL = "https://localhost:44479";
+        private const string CLIENT_URL = "https://shngear-backend-gzeqggf5becgh8ag.eastasia-01.azurewebsites.net";
 
         public PayPalController(
             AppDbContext context,
@@ -58,7 +58,7 @@ namespace SHN_Gear.Controllers
                     amountInUSD,
                     "USD",
                     $"SHN{order.Id}-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString("N")[..8]}",
-                    $"https://localhost:7107/api/paypal/capture-order?orderId={order.Id}",
+                    $"https://shngear-backend-gzeqggf5becgh8ag.eastasia-01.azurewebsites.net/api/paypal/capture-order?orderId={order.Id}",
                     $"{CLIENT_URL}/payment-canceled?orderId={order.Id}"
                 );
 
@@ -207,7 +207,7 @@ namespace SHN_Gear.Controllers
                     order.OrderStatus = "PaymentFailed";
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
-                    
+
                     var errorMessage = Uri.EscapeDataString(captureResult.ErrorMessage ?? "Payment capture failed");
                     return new RedirectResult($"{CLIENT_URL}/payment-failed?orderId={order.Id}&error={errorMessage}", true);
                 }
