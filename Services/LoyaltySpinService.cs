@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using SHN_Gear.Data;
 using SHN_Gear.Models;
+using SHN_Gear.DTOs;
 
 namespace SHN_Gear.Services
 {
@@ -96,7 +97,7 @@ namespace SHN_Gear.Services
         }
 
         // Thực hiện quay may mắn
-        public async Task<SpinHistory> SpinAsync(int userId)
+        public async Task<SpinResultDto> SpinAsync(int userId)
         {
             var config = await GetSpinConfigAsync();
             var items = await GetSpinItemsAsync();
@@ -123,6 +124,38 @@ namespace SHN_Gear.Services
             // Trừ điểm
             lp.Points -= config.SpinCost;
             lp.LastUpdated = DateTime.UtcNow;
+
+            // Nếu vật phẩm có voucher, tạo voucher và gán cho user
+            Voucher? newVoucher = null;
+            UserVoucher? userVoucher = null;
+            if (!string.IsNullOrEmpty(selected.VoucherCode))
+            {
+                // Parse giá trị voucher từ code (ví dụ: VOUCHER20K -> 20000, VOUCHER500K -> 500000)
+                decimal voucherAmount = ParseVoucherAmount(selected.VoucherCode);
+                
+                // Tạo mã voucher ngẫu nhiên
+                var voucherCode = selected.VoucherCode + "-" + Guid.NewGuid().ToString().Substring(0, 8);
+                newVoucher = new Voucher
+                {
+                    Code = voucherCode,
+                    DiscountAmount = voucherAmount > 0 ? voucherAmount : config.SpinCost,
+                    ExpiryDate = DateTime.UtcNow.AddDays(30), // voucher có hạn 30 ngày
+                    IsActive = true
+                };
+                _context.Vouchers.Add(newVoucher);
+                await _context.SaveChangesAsync();
+
+                userVoucher = new UserVoucher
+                {
+                    UserId = userId,
+                    VoucherId = newVoucher.Id,
+                    UsedAt = DateTime.UtcNow,
+                    IsUsed = false
+                };
+                _context.UserVouchers.Add(userVoucher);
+                await _context.SaveChangesAsync();
+            }
+
             var history = new SpinHistory
             {
                 UserId = userId,
@@ -132,13 +165,60 @@ namespace SHN_Gear.Services
             };
             _context.SpinHistories.Add(history);
             await _context.SaveChangesAsync();
-            return history;
+
+            // Trả về DTO với thông tin voucher
+            return new SpinResultDto
+            {
+                Id = history.Id,
+                UserId = history.UserId,
+                SpinItemId = history.SpinItemId,
+                SpinAt = history.SpinAt,
+                PointsUsed = history.PointsUsed,
+                HasVoucher = newVoucher != null,
+                VoucherCode = newVoucher?.Code,
+                VoucherAmount = newVoucher?.DiscountAmount,
+                VoucherExpiryDate = newVoucher?.ExpiryDate
+            };
         }
 
         // Lấy lịch sử quay của user
         public async Task<List<SpinHistory>> GetUserSpinHistoryAsync(int userId)
         {
             return await _context.SpinHistories.Where(x => x.UserId == userId).OrderByDescending(x => x.SpinAt).ToListAsync();
+        }
+
+        // Parse giá trị voucher từ mã code (VOUCHER20K -> 20000, VOUCHER500K -> 500000)
+        private decimal ParseVoucherAmount(string voucherCode)
+        {
+            try
+            {
+                // Tìm vị trí của chữ "VOUCHER" và phần số + đơn vị
+                var upperCode = voucherCode.ToUpper();
+                if (!upperCode.StartsWith("VOUCHER")) return 0;
+
+                // Lấy phần sau "VOUCHER"
+                var amountPart = upperCode.Substring(7); // Bỏ qua "VOUCHER"
+                
+                // Parse số và đơn vị (K = nghìn)
+                if (amountPart.EndsWith("K"))
+                {
+                    var numberPart = amountPart.Substring(0, amountPart.Length - 1);
+                    if (decimal.TryParse(numberPart, out decimal amount))
+                    {
+                        return amount * 1000; // K = nghìn
+                    }
+                }
+                else if (decimal.TryParse(amountPart, out decimal directAmount))
+                {
+                    return directAmount; // Số trực tiếp
+                }
+
+                return 0;
+            }
+            catch
+            {
+                return 0;
+            }
         }
     }
 }

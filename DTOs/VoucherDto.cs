@@ -13,6 +13,10 @@ namespace SHN_Gear.DTOs
         public int UserId { get; set; }
         public int VoucherId { get; set; }
         public DateTime UsedAt { get; set; } // Thời gian sử dụng voucher
+        public string? Code { get; set; } // Mã voucher
+        public decimal? DiscountAmount { get; set; } // Số tiền giảm giá
+        public DateTime? ExpiryDate { get; set; } // Ngày hết hạn
+        public bool? IsActive { get; set; } // Trạng thái hoạt động
     }
     public class ApplyVoucherDto
     {

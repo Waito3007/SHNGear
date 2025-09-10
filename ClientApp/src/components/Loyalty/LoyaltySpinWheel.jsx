@@ -93,13 +93,18 @@ const LoyaltySpinWheel = ({ userId, onPointsUpdate }) => {
             
             for (let i = 0; i < times; i++) {
                 const response = await axios.post(`${apiBase}/api/LoyaltySpin/spin/${userId}`);
-                const spinHistory = response.data;
+                const spinResult = response.data;
                 
                 // Tìm item tương ứng
-                const item = spinItems.find(item => item.id === spinHistory.spinItemId);
+                const item = spinItems.find(item => item.id === spinResult.spinItemId);
                 results.push({
-                    ...spinHistory,
-                    item
+                    ...spinResult,
+                    item,
+                    // Thông tin voucher từ backend
+                    hasVoucher: spinResult.hasVoucher,
+                    voucherCode: spinResult.voucherCode,
+                    voucherAmount: spinResult.voucherAmount,
+                    voucherExpiryDate: spinResult.voucherExpiryDate
                 });
 
                 // Delay để tạo hiệu ứng
