@@ -170,7 +170,6 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
-builder.Services.AddRazorPages();
 // 🔹 JSON vòng lặp
 builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>
@@ -182,7 +181,6 @@ builder.Services.AddControllersWithViews()
     });
 
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
@@ -257,7 +255,6 @@ app.MapControllers();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller}/{action=Index}/{id?}");
-app.MapRazorPages();
 app.MapFallbackToFile("index.html");
 
 // 🔹 Map SignalR Hub với CORS policy riêng
