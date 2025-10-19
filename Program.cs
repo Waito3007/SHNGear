@@ -63,6 +63,13 @@ builder.Services.AddScoped<MoMoPaymentService>();
 builder.Services.AddScoped<LoyaltySpinService>();
 builder.Services.AddScoped<BlogPostService>();
 
+// 🔹 Repositories
+builder.Services.AddScoped(typeof(SHN_Gear.Repositories.IRepository<>), typeof(SHN_Gear.Repositories.Repository<>));
+builder.Services.AddScoped<SHN_Gear.Features.Products.IProductRepository, SHN_Gear.Features.Products.ProductRepository>();
+
+// 🔹 Feature Services
+builder.Services.AddScoped<SHN_Gear.Features.Products.IProductService, SHN_Gear.Features.Products.ProductService>();
+
 // 🔹 Chat & AI Services
 builder.Services.AddScoped<ContextManager>();
 builder.Services.AddScoped<KnowledgeBaseService>();
