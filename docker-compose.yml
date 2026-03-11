@@ -1,6 +1,6 @@
 services:
   shngear-backend:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     container_name: shngear-backend
@@ -11,23 +11,23 @@ services:
     environment:
       # Database Configuration
       - ConnectionStrings__DefaultConnection=Server=${DB_SERVER};Database=${DB_NAME};User Id=${DB_USER};Password=${DB_PASSWORD};Encrypt=${DB_ENCRYPT};TrustServerCertificate=${DB_TRUST_SERVER_CERTIFICATE};MultipleActiveResultSets=${DB_MULTIPLE_ACTIVE_RESULT_SETS}
-      
-      # JWT Configuration  
+
+      # JWT Configuration
       - JWT__SecretKey=${JWT_SECRET_KEY}
       - JWT__Issuer=${JWT_ISSUER}
       - JWT__Audience=${JWT_AUDIENCE}
-      
+
       # Email Configuration
       - EmailSettings__SmtpHost=${SMTP_HOST}
       - EmailSettings__SmtpPort=${SMTP_PORT}
       - EmailSettings__SenderEmail=${SENDER_EMAIL}
       - EmailSettings__SenderPassword=${SENDER_PASSWORD}
-      
+
       # Cloudinary Configuration
       - Cloudinary__CloudName=${CLOUDINARY_CLOUD_NAME}
       - Cloudinary__ApiKey=${CLOUDINARY_API_KEY}
       - Cloudinary__ApiSecret=${CLOUDINARY_API_SECRET}
-      
+
       # MoMo Payment Configuration
       - MoMo__PartnerCode=${MOMO_PARTNER_CODE}
       - MoMo__AccessKey=${MOMO_ACCESS_KEY}
@@ -35,29 +35,29 @@ services:
       - MoMo__ApiEndpoint=${MOMO_API_ENDPOINT}
       - MoMo__ReturnUrl=${MOMO_RETURN_URL}
       - MoMo__NotifyUrl=${MOMO_NOTIFY_URL}
-      
+
       # PayPal Configuration
       - PayPal__ClientId=${PAYPAL_CLIENT_ID}
       - PayPal__Secret=${PAYPAL_SECRET}
       - PayPal__Mode=${PAYPAL_MODE}
-      
+
       # AI Configuration
       - Gemini__ApiKey=${GEMINI_API_KEY}
       - Gemini__Model=${GEMINI_MODEL}
       - Gemini__MaxTokens=${GEMINI_MAX_TOKENS}
       - Gemini__Temperature=${GEMINI_TEMPERATURE}
       - Gemini__BaseUrl=${GEMINI_BASE_URL}
-      
+
       # App URLs
       - APP_URL=${APP_URL:-http://localhost:8080}
       - CLIENT_URL=${CLIENT_URL:-http://localhost:3000}
-      
+
       # ASP.NET Core Configuration - chỉ HTTP cho container
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
-    
+
     restart: unless-stopped
-    
+
     # Health check
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
