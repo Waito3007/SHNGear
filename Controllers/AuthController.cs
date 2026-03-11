@@ -208,10 +208,10 @@ namespace SHN_Gear.Controllers
         // Tạo JWT Token
         private string GenerateJwtToken(User user)
         {
-            var jwtKey = EnvironmentConfig.Jwt.SecretKey 
+            var jwtKey = EnvironmentConfig.Jwt.SecretKey
                 ?? _config["Jwt:Key"]
                 ?? throw new InvalidOperationException("JWT Key not configured");
-            
+
             var key = Encoding.UTF8.GetBytes(jwtKey);
             var roleName = user.Role?.Name ?? "User";
 
