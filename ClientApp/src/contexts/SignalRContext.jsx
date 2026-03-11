@@ -24,14 +24,21 @@ export const SignalRProvider = ({ children }) => {
     connection.onreconnected(() => setConnectionState("Connected"));
     connection.onclose(() => setConnectionState("Disconnected"));
 
+    let retryCount = 0;
+    const MAX_RETRIES = 5;
+
     const start = async () => {
       try {
         await connection.start();
         setConnectionState("Connected");
+        retryCount = 0;
       } catch (err) {
         setConnectionState("Disconnected");
-        // Retry after 5s if initial connection fails
-        setTimeout(start, 5000);
+        if (retryCount < MAX_RETRIES) {
+          retryCount++;
+          setTimeout(start, 5000);
+        }
+        // Stop retrying after MAX_RETRIES — withAutomaticReconnect handles reconnects post-connect
       }
     };
 

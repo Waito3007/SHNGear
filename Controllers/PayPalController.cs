@@ -7,6 +7,7 @@ using PayPalCheckoutSdk.Orders;
 using Microsoft.Extensions.Logging;
 using SHN_Gear.Data;
 using SHN_Gear.Services;
+using SHN_Gear.Configuration;
 using System.Globalization;
 
 namespace SHN_Gear.Controllers
@@ -19,7 +20,6 @@ namespace SHN_Gear.Controllers
         private readonly PayPalService _payPalService;
         private readonly ILogger<PayPalController> _logger;
         private const decimal VND_TO_USD_RATE = 25000m;
-        private const string CLIENT_URL = "https://shngear-backend-gzeqggf5becgh8ag.eastasia-01.azurewebsites.net";
 
         public PayPalController(
             AppDbContext context,
@@ -58,8 +58,8 @@ namespace SHN_Gear.Controllers
                     amountInUSD,
                     "USD",
                     $"SHN{order.Id}-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString("N")[..8]}",
-                    $"https://shngear-backend-gzeqggf5becgh8ag.eastasia-01.azurewebsites.net/api/paypal/capture-order?orderId={order.Id}",
-                    $"{CLIENT_URL}/payment-canceled?orderId={order.Id}"
+                    $"{EnvironmentConfig.App.AppUrl}/api/paypal/capture-order?orderId={order.Id}",
+                    $"{EnvironmentConfig.App.ClientUrl}/payment-canceled?orderId={order.Id}"
                 );
 
                 if (string.IsNullOrEmpty(payPalOrderId))
@@ -192,11 +192,13 @@ namespace SHN_Gear.Controllers
                 }
 
                 // Check if order is already processed
+                var clientUrl = EnvironmentConfig.App.ClientUrl;
+
                 if (order.OrderStatus == "Paid")
                 {
                     _logger.LogInformation($"Order {orderId} is already paid, redirecting to success page");
                     await transaction.CommitAsync();
-                    return new RedirectResult($"{CLIENT_URL}/payment-success?orderId={order.Id}", true);
+                    return new RedirectResult($"{clientUrl}/payment-success?orderId={order.Id}", true);
                 }
 
                 var captureResult = await _payPalService.CaptureOrder(token);
@@ -209,7 +211,7 @@ namespace SHN_Gear.Controllers
                     await transaction.CommitAsync();
 
                     var errorMessage = Uri.EscapeDataString(captureResult.ErrorMessage ?? "Payment capture failed");
-                    return new RedirectResult($"{CLIENT_URL}/payment-failed?orderId={order.Id}&error={errorMessage}", true);
+                    return new RedirectResult($"{clientUrl}/payment-failed?orderId={order.Id}&error={errorMessage}", true);
                 }
 
                 // Update order status
@@ -223,15 +225,16 @@ namespace SHN_Gear.Controllers
                 _logger.LogInformation($"Successfully processed payment for order {orderId}, transaction: {captureResult.TransactionId}");
 
                 // Redirect to payment success page
-                var redirectUrl = $"{CLIENT_URL}/payment-success?orderId={order.Id}";
+                var redirectUrl = $"{clientUrl}/payment-success?orderId={order.Id}";
                 return new RedirectResult(redirectUrl, true);
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
                 _logger.LogError(ex, $"Failed to capture PayPal payment for order {orderId}");
+                var clientUrl = EnvironmentConfig.App.ClientUrl;
                 var errorMessage = Uri.EscapeDataString(ex.Message);
-                return Redirect($"{CLIENT_URL}/payment-error?orderId={orderId}&message={errorMessage}");
+                return Redirect($"{clientUrl}/payment-error?orderId={orderId}&message={errorMessage}");
             }
         }
     }

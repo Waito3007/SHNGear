@@ -209,16 +209,13 @@ const App = () => {
   return (
     <CartProvider>
       <AuthModalProvider>
-        <AppContent />
+        <SignalRProvider>
+          <ChatProvider>
+            <AppContent />
+          </ChatProvider>
+        </SignalRProvider>
       </AuthModalProvider>
     </CartProvider>
-    <AuthModalProvider>
-      <SignalRProvider>
-        <ChatProvider>
-          <AppContent />
-        </ChatProvider>
-      </SignalRProvider>
-    </AuthModalProvider>
   );
 };
 

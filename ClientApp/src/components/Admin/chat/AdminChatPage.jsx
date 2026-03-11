@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Badge, Button, Layout, Switch, Typography } from "antd";
+import { Badge, Layout, Switch, Typography } from "antd";
 import { MessageOutlined } from "@ant-design/icons";
 import useAdminChat from "@/hooks/useAdminChat";
 import AdminChatSessionList from "./AdminChatSessionList";

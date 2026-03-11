@@ -23,7 +23,7 @@ const Notification = () => {
             </div>
           </li>
           <li className="pr-4">
-            <a className="flex items-center b2-medium" href="https://shngear-backend-gzeqggf5becgh8ag.eastasia-01.azurewebsites.net/ProductList?brandId=1">
+            <a className="flex items-center b2-medium" href="/ProductList?brandId=1">
               <img 
                 alt="Xả kho giá sốc, số lượng có hạn!" 
                 loading="lazy" 

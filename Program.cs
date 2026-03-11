@@ -148,9 +148,8 @@ builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-        // Ensure UTC DateTimes are serialized with 'Z' suffix for proper timezone handling
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.WriteIndented = false;
-        // Default converter will serialize DateTime as ISO 8601 with 'Z' for UTC
     });
 
 builder.Services.AddHttpContextAccessor();

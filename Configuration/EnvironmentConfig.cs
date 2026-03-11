@@ -68,6 +68,12 @@ namespace SHN_Gear.Configuration
             public static string Mode => Environment.GetEnvironmentVariable("PAYPAL_MODE") ?? "Sandbox";
         }
 
+        public static class App
+        {
+            public static string AppUrl => Environment.GetEnvironmentVariable("APP_URL") ?? "https://localhost:7107";
+            public static string ClientUrl => Environment.GetEnvironmentVariable("CLIENT_URL") ?? "https://localhost:3000";
+        }
+
         public static class Gemini
         {
             public static string ApiKey => Environment.GetEnvironmentVariable("GEMINI_API_KEY") ?? string.Empty;
