@@ -20,6 +20,9 @@ import ComparePage from "@/components/CompareProduct/ComparePage";
 import Unauthorized from "@/pages/Unauthorized/Unauthorized";
 import { jwtDecode } from "jwt-decode";
 import { AuthModalProvider } from "@/contexts/AuthModalContext";
+import { CartProvider } from "@/contexts/CartContext";
+
+// Import Chat Components
 import { SignalRProvider } from "@/contexts/SignalRContext";
 import { ChatProvider } from "@/contexts/ChatContext";
 import ChatWidget from "@/components/Chat/ChatWidget";
@@ -204,6 +207,11 @@ const AppContent = () => {
 // Main App component with AuthModalProvider
 const App = () => {
   return (
+    <CartProvider>
+      <AuthModalProvider>
+        <AppContent />
+      </AuthModalProvider>
+    </CartProvider>
     <AuthModalProvider>
       <SignalRProvider>
         <ChatProvider>

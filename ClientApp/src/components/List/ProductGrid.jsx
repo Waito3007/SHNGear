@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import ProductHoverPreview from "./ProductHoverPreview";
 import ProductPagination from "./ProductPagination";
@@ -136,10 +136,12 @@ const ProductGrid = ({
   selectedPriceRange,
   selectedBrand,
   viewMode,
+  currentPage,
+  onPageChange,
 }) => {
   const [products, setProducts] = useState([]);
-  const [allProducts, setAllProducts] = useState([]); // Lưu tất cả sản phẩm
-  const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [hoveredProduct, setHoveredProduct] = useState(null);
@@ -150,8 +152,10 @@ const ProductGrid = ({
   const [toastNotification, setToastNotification] = useState(null);
   const [loadingStates, setLoadingStates] = useState({});
   const navigate = useNavigate();
+  const isFirstRender = useRef(true);
+  const prevFilters = useRef({ selectedCategory, selectedPriceRange, selectedBrand });
 
-  const PRODUCTS_PER_PAGE = 9;
+  const PRODUCTS_PER_PAGE = 6;
 
   // Handle mouse interaction
   const handleMouseEnter = async (product, event) => {
@@ -211,57 +215,44 @@ const ProductGrid = ({
     }));
   };
   useEffect(() => {
-    const fetchProductsAndBrands = async () => {
+    const fetchProducts = async () => {
       setLoading(true);
       try {
-        const [productsRes, brandsRes] = await Promise.all([
-          fetch(`${process.env.REACT_APP_API_BASE_URL}/api/Products`),
-          fetch(`${process.env.REACT_APP_API_BASE_URL}/api/brands`),
-        ]);
-
-        if (!productsRes.ok || !brandsRes.ok) {
-          throw new Error("Không thể tải dữ liệu");
-        }
-
-        const productsData = await productsRes.json();
-        const brandsData = await brandsRes.json();
-
-        const brandsMap = (brandsData.$values || brandsData || []).reduce(
-          (acc, brand) => {
-            acc[brand.id] = brand;
-            return acc;
-          },
-          {}
-        );
-
-        let filteredProducts = productsData.$values || productsData || [];
+        // Build query parameters
+        const params = new URLSearchParams({
+          page: currentPage.toString(),
+          pageSize: PRODUCTS_PER_PAGE.toString(),
+          sortBy: 'name',
+          sortOrder: 'asc'
+        });
 
         if (selectedCategory) {
-          filteredProducts = filteredProducts.filter(
-            (product) => product.categoryId === selectedCategory
-          );
+          params.append('categoryId', selectedCategory.toString());
         }
 
         if (selectedBrand) {
-          filteredProducts = filteredProducts.filter(
-            (product) => product.brandId === selectedBrand
-          );
+          params.append('brandId', selectedBrand.toString());
         }
 
+        // Handle price range
         if (selectedPriceRange && selectedPriceRange !== "all") {
-          const [minPrice, maxPrice] = selectedPriceRange
-            .split("-")
-            .map(Number);
-          filteredProducts = filteredProducts.filter((product) => {
-            const price =
-              product.variants?.[0]?.discountPrice ||
-              product.variants?.[0]?.price ||
-              0;
-            return price >= minPrice && price <= maxPrice;
-          });
+          const [minPrice, maxPrice] = selectedPriceRange.split("-").map(Number);
+          if (minPrice !== undefined) params.append('minPrice', minPrice.toString());
+          if (maxPrice !== undefined) params.append('maxPrice', maxPrice.toString());
         }
 
-        const processedProducts = filteredProducts.map((product) => {
+        const response = await fetch(
+          `${process.env.REACT_APP_API_BASE_URL}/api/Products?${params.toString()}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Không thể tải dữ liệu sản phẩm");
+        }
+
+        const data = await response.json();
+
+        // Process products data
+        const processedProducts = (data.data || []).map((product) => {
           const variant = product.variants?.[0] || {};
           const image =
             product.images?.[0]?.imageUrl ||
@@ -272,8 +263,6 @@ const ProductGrid = ({
           const discount =
             oldPrice > 0 ? Math.round((discountAmount / oldPrice) * 100) : 0;
 
-          const brand = brandsMap[product.brandId];
-
           return {
             id: product.id,
             name: product.name,
@@ -282,7 +271,7 @@ const ProductGrid = ({
             discount,
             discountAmount,
             image,
-            brand,
+            brand: product.brand,
             rating: product.averageRating || 0,
             ratingCount: product.reviewCount || 0,
             variant,
@@ -290,8 +279,9 @@ const ProductGrid = ({
           };
         });
 
-        setAllProducts(processedProducts);
-        setCurrentPage(1); // Reset về trang đầu khi filter thay đổi
+        setProducts(processedProducts);
+        setTotalItems(data.totalItems || 0);
+        setTotalPages(data.totalPages || 0);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -299,28 +289,25 @@ const ProductGrid = ({
       }
     };
 
-    fetchProductsAndBrands();
-  }, [selectedCategory, selectedPriceRange, selectedBrand]);
+    // Don't fetch on initial render if currentPage is being reset
+    fetchProducts();
+  }, [selectedCategory, selectedPriceRange, selectedBrand, currentPage]);
 
-  // Effect để cập nhật sản phẩm hiển thị dựa trên trang hiện tại
+  // Reset page when filters change (without scrolling), but only if filters actually changed
   useEffect(() => {
-    const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
-    const endIndex = startIndex + PRODUCTS_PER_PAGE;
-    setProducts(allProducts.slice(startIndex, endIndex));
-  }, [allProducts, currentPage]);
+    const filtersChanged = 
+      prevFilters.current.selectedCategory !== selectedCategory ||
+      prevFilters.current.selectedPriceRange !== selectedPriceRange ||
+      prevFilters.current.selectedBrand !== selectedBrand;
 
-  // Hàm xử lý thay đổi trang
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-    // Scroll to top when page changes
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
+    if (filtersChanged && !isFirstRender.current && currentPage !== 1) {
+      onPageChange(1, false); // Don't scroll to top when resetting due to filter change
+    }
 
-  // Tính tổng số trang
-  const totalPages = Math.ceil(allProducts.length / PRODUCTS_PER_PAGE);
+    // Update previous filters
+    prevFilters.current = { selectedCategory, selectedPriceRange, selectedBrand };
+    isFirstRender.current = false;
+  }, [selectedCategory, selectedPriceRange, selectedBrand, onPageChange, currentPage]);
 
   // Theo dõi số lượng sản phẩm trong compareList
   useEffect(() => {
@@ -597,7 +584,7 @@ const ProductGrid = ({
 
       <div className="max-w-7xl mx-auto px-4 py-8 relative z-10">
         {" "}
-        {allProducts.length === 0 ? (
+        {products.length === 0 ? (
           <div
             className="text-center py-24"
             style={{
@@ -1173,8 +1160,8 @@ const ProductGrid = ({
             <ProductPagination
               currentPage={currentPage}
               totalPages={totalPages}
-              onPageChange={handlePageChange}
-              totalProducts={allProducts.length}
+              onPageChange={onPageChange}
+              totalProducts={totalItems}
               productsPerPage={PRODUCTS_PER_PAGE}
               loading={loading}
             />

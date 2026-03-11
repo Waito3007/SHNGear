@@ -82,6 +82,18 @@ const ProductList = () => {
     }
   };
 
+  // Hàm xử lý thay đổi trang
+  const handlePageChange = (page, shouldScrollToTop = true) => {
+    setCurrentPage(page);
+    // Only scroll to top when explicitly requested (e.g., actual page navigation)
+    if (shouldScrollToTop) {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+  };
+
   const trigger = useScrollTrigger({
     disableHysteresis: true,
     threshold: 100,
@@ -337,8 +349,8 @@ const ProductList = () => {
                   selectedPriceRange={selectedPriceRange}
                   selectedBrand={selectedBrand}
                   viewMode={viewMode}
-                  currentPage={currentPage} // Truyền currentPage vào đây
-                  onPageChange={setCurrentPage} // Hàm để thay đổi trang
+                  currentPage={currentPage}
+                  onPageChange={handlePageChange}
                 />
               </motion.div>
             </Box>
