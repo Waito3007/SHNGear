@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   shngear-backend:
     build: 
@@ -49,6 +47,10 @@ services:
       - Gemini__MaxTokens=${GEMINI_MAX_TOKENS}
       - Gemini__Temperature=${GEMINI_TEMPERATURE}
       - Gemini__BaseUrl=${GEMINI_BASE_URL}
+      
+      # App URLs
+      - APP_URL=${APP_URL:-http://localhost:8080}
+      - CLIENT_URL=${CLIENT_URL:-http://localhost:3000}
       
       # ASP.NET Core Configuration - chỉ HTTP cho container
       - ASPNETCORE_ENVIRONMENT=Production

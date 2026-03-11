@@ -1,17 +1,17 @@
 # Sử dụng official .NET runtime image cho production
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 WORKDIR /app
 EXPOSE 8080
 
 # Sử dụng SDK image để build application với Node.js
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
 # Cài đặt Node.js và npm (cần cho ClientApp)
 RUN apt-get update && \
     apt-get install -y curl && \
-    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/*
 
@@ -36,7 +36,7 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 
 # Tạo non-root user cho security
-RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app
+RUN useradd --create-home appuser && chown -R appuser /app
 USER appuser
 
 ENTRYPOINT ["dotnet", "SHN-Gear.dll"]
