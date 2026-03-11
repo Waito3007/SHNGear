@@ -77,13 +77,55 @@ namespace SHN_Gear.Controllers
         {
             if (!ModelState.IsValid || string.IsNullOrEmpty(otpDto.Email))
                 return BadRequest(new { message = "Email không hợp lệ" });
-
             var success = await _emailService.SendOTPAsync(otpDto.Email);
             if (!success)
                 return BadRequest(new { message = "Gửi OTP thất bại" });
 
             return Ok(new { message = "OTP đã được gửi" });
         }
+
+        // Quên mật khẩu — gửi link đặt lại qua email
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Email))
+                return BadRequest(new { message = "Email không hợp lệ" });
+
+            var token = await _userService.GeneratePasswordResetTokenAsync(dto.Email);
+
+            // Luôn trả về OK để tránh lộ thông tin email có tồn tại hay không
+            if (token != null)
+            {
+                var frontendUrl = $"{Request.Scheme}://{Request.Host}";
+                var resetLink = $"{frontendUrl}/reset-password?token={token}";
+                try
+                {
+                    await _emailService.SendPasswordResetEmailAsync(dto.Email, resetLink);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Lỗi gửi email đặt lại mật khẩu: {ex.Message}");
+                    return StatusCode(500, new { message = "Không thể gửi email. Vui lòng thử lại sau." });
+                }
+            }
+
+            return Ok(new { message = "Nếu email tồn tại trong hệ thống, link đặt lại mật khẩu đã được gửi." });
+        }
+
+        // Đặt lại mật khẩu bằng token từ email
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Token) || string.IsNullOrWhiteSpace(dto.NewPassword))
+                return BadRequest(new { message = "Dữ liệu không hợp lệ" });
+
+            var success = await _userService.ResetPasswordAsync(dto.Token, dto.NewPassword);
+            if (!success)
+                return BadRequest(new { message = "Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn (1 giờ)." });
+
+            return Ok(new { message = "Đặt lại mật khẩu thành công!" });
+        }
+
         // 🔹 API lấy thông tin người dùng đang đăng nhập
         [HttpGet("profile")]
         [Authorize]

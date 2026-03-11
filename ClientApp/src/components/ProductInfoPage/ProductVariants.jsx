@@ -734,7 +734,6 @@ const ProductVariants = ({ variants, onAddToCart }) => {
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbarSeverity}
-          elevation={6}
           variant="filled"
           sx={{ width: "100%" }}
         >

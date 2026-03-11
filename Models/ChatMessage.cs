@@ -1,48 +1,32 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace SHN_Gear.Models
 {
     public class ChatMessage
     {
+        [Key]
         public int Id { get; set; }
+
         public int ChatSessionId { get; set; }
-        public ChatSession ChatSession { get; set; } = null!;
-        public string Content { get; set; } = null!;
-        public MessageType Type { get; set; }
-        public MessageSender Sender { get; set; }
-        public int? SenderId { get; set; } // UserId nếu từ user hoặc admin
-        public User? SenderUser { get; set; }
+
+        public int? SenderUserId { get; set; }
+
+        [Required]
+        [MaxLength(2000)]
+        public string Content { get; set; } = string.Empty;
+
         public DateTime SentAt { get; set; } = DateTime.UtcNow;
+
+        public bool IsFromAdmin { get; set; } = false;
+
         public bool IsRead { get; set; } = false;
 
-        // AI specific fields
-        public decimal? AIConfidenceScore { get; set; } // Độ tin cậy của câu trả lời AI
-        public string? AIIntent { get; set; } // Intent mà AI detect được
-        public string? AIContext { get; set; } // Context mà AI sử dụng
-        public bool RequiresEscalation { get; set; } = false; // AI không trả lời được
+        // Navigation properties
+        [ForeignKey(nameof(ChatSessionId))]
+        public ChatSession ChatSession { get; set; } = null!;
 
-        // Rich content support
-        public string? AttachmentsJson { get; set; } // JSON cho attachments, images, product links
-        public string? SuggestedActionsJson { get; set; } // JSON cho quick replies, buttons
-
-        // Metadata
-        public string? MetadataJson { get; set; } // Additional data (product IDs, order IDs, etc.)
-    }
-
-    public enum MessageType
-    {
-        Text,
-        Image,
-        ProductRecommendation,
-        OrderInfo,
-        QuickReply,
-        SystemMessage,
-        EscalationNotice
-    }
-
-    public enum MessageSender
-    {
-        User,
-        AI,
-        Admin,
-        System
+        [ForeignKey(nameof(SenderUserId))]
+        public User? SenderUser { get; set; }
     }
 }

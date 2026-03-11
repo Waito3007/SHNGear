@@ -277,6 +277,8 @@ const RelatedProducts = ({ currentProductId, categoryId, brandId }) => {
                     background: "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
                     transition: "all 0.3s ease",
                     cursor: "pointer",
+                    display: "flex",
+                    flexDirection: "column",
                     "&:hover": {
                       borderColor: "#000000",
                       transform: "translateY(-4px)",
@@ -286,7 +288,7 @@ const RelatedProducts = ({ currentProductId, categoryId, brandId }) => {
                 >
                   <CardActionArea
                     onClick={() => navigate(`/product/${product.id}`)}
-                    sx={{ height: "100%" }}
+                    sx={{ flexGrow: 1 }}
                   >
                     <Box sx={{ position: "relative" }}>
                       {/* Discount Badge */}
@@ -351,7 +353,7 @@ const RelatedProducts = ({ currentProductId, categoryId, brandId }) => {
                       </Box>
                     </Box>
 
-                    <CardContent sx={{ p: 3, height: "calc(100% - 200px)" }}>
+                    <CardContent sx={{ p: 3, flexGrow: 1 }}>
                       {/* Brand */}
                       {product.brand && (
                         <Typography
@@ -435,47 +437,43 @@ const RelatedProducts = ({ currentProductId, categoryId, brandId }) => {
                         )}
                       </Box>
 
-                      {/* Action Buttons */}
-                      <Box sx={{ display: "flex", gap: 1, mt: "auto" }}>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          startIcon={<Visibility />}
-                          sx={{
-                            flex: 1,
-                            borderColor: "#000000",
-                            color: "#000000",
-                            "&:hover": {
-                              borderColor: "#000000",
-                              bgcolor: "rgba(0,0,0,0.04)",
-                            },
-                          }}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            navigate(`/product/${product.id}`);
-                          }}
-                        >
-                          Xem
-                        </Button>
-                        <Button
-                          variant="contained"
-                          size="small"
-                          startIcon={<ShoppingCart />}
-                          sx={{
-                            bgcolor: "#000000",
-                            color: "#ffffff",
-                            "&:hover": {
-                              bgcolor: "#333333",
-                            },
-                          }}
-                          onClick={(e) => handleAddToCart(e, product)}
-                        >
-                          Mua
-                        </Button>
-                      </Box>
                     </CardContent>
                   </CardActionArea>
+                  {/* Action Buttons — outside CardActionArea to avoid button-in-button */}
+                  <Box sx={{ display: "flex", gap: 1, p: 2, pt: 0 }}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<Visibility />}
+                      sx={{
+                        flex: 1,
+                        borderColor: "#000000",
+                        color: "#000000",
+                        "&:hover": {
+                          borderColor: "#000000",
+                          bgcolor: "rgba(0,0,0,0.04)",
+                        },
+                      }}
+                      onClick={() => navigate(`/product/${product.id}`)}
+                    >
+                      Xem
+                    </Button>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      startIcon={<ShoppingCart />}
+                      sx={{
+                        bgcolor: "#000000",
+                        color: "#ffffff",
+                        "&:hover": {
+                          bgcolor: "#333333",
+                        },
+                      }}
+                      onClick={(e) => handleAddToCart(e, product)}
+                    >
+                      Mua
+                    </Button>
+                  </Box>
                 </Card>
               </Grid>
             );

@@ -229,5 +229,53 @@ namespace SHN_Gear.Services
 </html>";
             return html;
         }
+
+        public async Task SendPasswordResetEmailAsync(string recipientEmail, string resetLink)
+        {
+            string smtpHost = EnvironmentConfig.Email.SmtpHost ?? _config["EmailSettings:SMTPHost"] ?? "smtp.gmail.com";
+            int smtpPort = EnvironmentConfig.Email.SmtpPort > 0 ? EnvironmentConfig.Email.SmtpPort : int.Parse(_config["EmailSettings:SMTPPort"] ?? "587");
+            string senderEmail = EnvironmentConfig.Email.SenderEmail ?? _config["EmailSettings:SenderEmail"] ?? throw new InvalidOperationException("Sender email not configured");
+            string senderPassword = EnvironmentConfig.Email.SenderPassword ?? _config["EmailSettings:SenderPassword"] ?? throw new InvalidOperationException("Sender password not configured");
+
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("SHN Gear", senderEmail));
+            message.To.Add(new MailboxAddress("", recipientEmail));
+            message.Subject = "Đặt lại mật khẩu SHN Gear";
+
+            var bodyBuilder = new BodyBuilder
+            {
+                HtmlBody = $@"
+<!DOCTYPE html>
+<html>
+<head><meta charset='UTF-8'></head>
+<body style='font-family: monospace; background:#f4f4f4; padding:40px;'>
+  <div style='max-width:500px; margin:auto; background:#ffffff; border:2px solid #000; padding:32px;'>
+    <div style='background:#000; color:#fff; padding:16px; margin-bottom:24px;'>
+      <h2 style='margin:0; letter-spacing:2px;'>SHN GEAR // ĐẶT LẠI MẬT KHẨU</h2>
+    </div>
+    <p style='color:#333;'>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản <strong>{recipientEmail}</strong>.</p>
+    <p style='color:#333;'>Nhấn vào nút bên dưới để đặt lại mật khẩu. Link có hiệu lực trong <strong>1 giờ</strong>.</p>
+    <div style='text-align:center; margin:32px 0;'>
+      <a href='{resetLink}' style='background:#000; color:#fff; padding:14px 32px; text-decoration:none; font-weight:bold; letter-spacing:1px; border:2px solid #000; display:inline-block;'>
+        ĐẶT LẠI MẬT KHẨU
+      </a>
+    </div>
+    <p style='color:#666; font-size:12px;'>Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này.</p>
+    <p style='color:#666; font-size:12px;'>Link: {resetLink}</p>
+    <div style='border-top:2px solid #000; margin-top:24px; padding-top:16px;'>
+      <p style='color:#999; font-size:11px; margin:0;'>© SHN GEAR — Không trả lời email này.</p>
+    </div>
+  </div>
+</body>
+</html>"
+            };
+            message.Body = bodyBuilder.ToMessageBody();
+
+            using var client = new SmtpClient();
+            await client.ConnectAsync(smtpHost, smtpPort, SecureSocketOptions.StartTls);
+            await client.AuthenticateAsync(senderEmail, senderPassword);
+            await client.SendAsync(message);
+            await client.DisconnectAsync(true);
+        }
     }
 }

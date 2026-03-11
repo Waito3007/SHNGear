@@ -10,6 +10,7 @@ const AuthModal = ({ isOpen, onClose }) => {
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -84,6 +85,29 @@ const AuthModal = ({ isOpen, onClose }) => {
     setIsLoading(false);
   };
 
+  const handleForgotPassword = async () => {
+    if (!email) return setError("Vui long nhap email!");
+    if (!isValidEmail(email)) return setError("Email khong hop le!");
+
+    setError("");
+    setSuccessMessage("");
+    setIsLoading(true);
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_BASE_URL}/api/Auth/forgot-password`,
+        { email }
+      );
+      setSuccessMessage("Link dat lai mat khau da duoc gui den email cua ban. Vui long kiem tra hop thu (ca thu muc Spam).");
+    } catch (err) {
+      if (err.response?.status === 500) {
+        setError("Khong the gui email. Vui long thu lai sau.");
+      } else {
+        setError("Co loi xay ra. Vui long thu lai.");
+      }
+    }
+    setIsLoading(false);
+  };
+
   const getStepTitle = () => {
     switch (step) {
       case 0:
@@ -94,6 +118,8 @@ const AuthModal = ({ isOpen, onClose }) => {
         return "THONG TIN CA NHAN";
       case 3:
         return "DANG KY";
+      case 4:
+        return "QUEN MAT KHAU";
       default:
         return "SYSTEM.AUTH";
     }
@@ -189,6 +215,17 @@ const AuthModal = ({ isOpen, onClose }) => {
             </div>
           )}
 
+          {/* Success Display */}
+          {successMessage && (
+            <div className="bg-green-50 border-2 border-green-500 p-3 mb-6">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="font-bold text-black">THANH CONG</span>
+              </div>
+              <p className="text-black mt-1 text-sm">{successMessage}</p>
+            </div>
+          )}
+
           {/* Form Content */}
           <div className="space-y-4">
             {/* Step 0: Email Input */}
@@ -264,6 +301,12 @@ const AuthModal = ({ isOpen, onClose }) => {
                   ) : (
                     "DANG NHAP"
                   )}
+                </button>
+                <button
+                  onClick={() => { setError(""); setSuccessMessage(""); setStep(4); }}
+                  className="w-full text-sm text-black underline hover:text-gray-600 text-center py-1"
+                >
+                  Quen mat khau?
                 </button>
               </>
             )}
@@ -362,13 +405,53 @@ const AuthModal = ({ isOpen, onClose }) => {
                 </button>
               </>
             )}
+
+            {/* Step 4: Forgot Password */}
+            {step === 4 && (
+              <>
+                {!successMessage && (
+                  <>
+                    <p className="text-sm text-black mb-4">
+                      Nhap dia chi email dang ky. Chung toi se gui link dat lai mat khau den email cua ban.
+                    </p>
+                    <div>
+                      <label className="block text-sm font-bold text-black mb-2">
+                        EMAIL
+                      </label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="VD: user@example.com"
+                        className="w-full px-4 py-3 border-2 border-black font-mono text-black focus:outline-none focus:ring-0 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                        onKeyPress={(e) => e.key === "Enter" && handleForgotPassword()}
+                      />
+                    </div>
+                    <button
+                      onClick={handleForgotPassword}
+                      disabled={isLoading}
+                      className="w-full px-6 py-3 bg-black text-white font-bold border-2 border-black hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-200"
+                    >
+                      {isLoading ? (
+                        <div className="flex items-center justify-center space-x-2">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <span>DANG GUI...</span>
+                        </div>
+                      ) : (
+                        "GUI LINK DAT LAI MAT KHAU"
+                      )}
+                    </button>
+                  </>
+                )}
+              </>
+            )}
           </div>
 
           {/* System Stats Footer */}
           <div className="mt-8 pt-4 border-t-2 border-gray-200">
             <div className="flex justify-between items-center text-xs text-black">
               <div className="flex space-x-4">
-                <span>STEP: {step + 1}/4</span>
+                <span>STEP: {step + 1}/5</span>
                 <span>STATUS: ACTIVE</span>
                 <span>VERSION: 2.1.0</span>
               </div>

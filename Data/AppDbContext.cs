@@ -30,10 +30,6 @@ namespace SHN_Gear.Data
         public DbSet<Slider> Sliders { get; set; }
         public DbSet<Banner> Banners { get; set; }
 
-        // Chat System DbSets
-        public DbSet<ChatSession> ChatSessions { get; set; }
-        public DbSet<ChatMessage> ChatMessages { get; set; }
-        public DbSet<AIKnowledgeBase> AIKnowledgeBases { get; set; }
         public DbSet<BlogPost> BlogPosts { get; set; }
 
         // Loyalty Spin
@@ -41,6 +37,10 @@ namespace SHN_Gear.Data
         public DbSet<SpinConfig> SpinConfigs { get; set; }
         public DbSet<SpinItem> SpinItems { get; set; }
         public DbSet<SpinHistory> SpinHistories { get; set; }
+
+        // Chat
+        public DbSet<ChatSession> ChatSessions { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -164,30 +164,37 @@ namespace SHN_Gear.Data
         entity.Property(v => v.DiscountAmount).HasColumnType("decimal(18, 2)");
     });
 
-            // ✅ Chat System decimal configurations
-            modelBuilder.Entity<AIKnowledgeBase>(entity =>
+
+            // Thêm các quan hệ khác tương tự ở đây.
+
+            // Chat
+            modelBuilder.Entity<ChatSession>(entity =>
             {
-                entity.Property(a => a.EscalationThreshold).HasPrecision(5, 3); // 0.000 to 99.999
-                entity.Property(a => a.MinConfidenceScore).HasPrecision(5, 3); // 0.000 to 99.999
+                entity.HasOne(cs => cs.User)
+                    .WithMany()
+                    .HasForeignKey(cs => cs.UserId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasIndex(cs => cs.UserId).HasDatabaseName("IX_ChatSessions_UserId");
+                entity.HasIndex(cs => cs.LastMessageAt).HasDatabaseName("IX_ChatSessions_LastMessageAt");
+                entity.HasIndex(cs => cs.IsResolved).HasDatabaseName("IX_ChatSessions_IsResolved");
             });
 
             modelBuilder.Entity<ChatMessage>(entity =>
             {
-                entity.Property(cm => cm.AIConfidenceScore).HasPrecision(5, 3); // 0.000 to 99.999
+                entity.HasOne(cm => cm.ChatSession)
+                    .WithMany(cs => cs.Messages)
+                    .HasForeignKey(cm => cm.ChatSessionId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                // Configure relationship with SenderUser
                 entity.HasOne(cm => cm.SenderUser)
-                      .WithMany()
-                      .HasForeignKey(cm => cm.SenderId)
-                      .OnDelete(DeleteBehavior.SetNull);
-            });
+                    .WithMany()
+                    .HasForeignKey(cm => cm.SenderUserId)
+                    .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity<ChatSession>(entity =>
-            {
-                entity.Property(cs => cs.ConfidenceScore).HasPrecision(5, 3); // 0.000 to 99.999
+                entity.HasIndex(cm => cm.ChatSessionId).HasDatabaseName("IX_ChatMessages_ChatSessionId");
+                entity.HasIndex(cm => cm.SentAt).HasDatabaseName("IX_ChatMessages_SentAt");
             });
-
-            // Thêm các quan hệ khác tương tự ở đây.
 
             // Add indexes for query optimization
             modelBuilder.Entity<Product>(entity =>

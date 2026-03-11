@@ -20,10 +20,11 @@ import ComparePage from "@/components/CompareProduct/ComparePage";
 import Unauthorized from "@/pages/Unauthorized/Unauthorized";
 import { jwtDecode } from "jwt-decode";
 import { AuthModalProvider } from "@/contexts/AuthModalContext";
-
-// Import Chat Components
+import { SignalRProvider } from "@/contexts/SignalRContext";
+import { ChatProvider } from "@/contexts/ChatContext";
 import ChatWidget from "@/components/Chat/ChatWidget";
-import AdminChatDashboard from "@/components/Chat/AdminChatDashboard";
+
+import ResetPasswordPage from "@/pages/ResetPassword/ResetPasswordPage";
 
 // Protected Route Component - Phiên bản tối ưu
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -50,23 +51,11 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   }
 };
 
-// Component to conditionally render ChatWidget
-const ConditionalChatWidget = () => {
-  const location = useLocation();
-  const isAdminPage = location.pathname.startsWith("/admin");
-
-  // Don't show ChatWidget on admin pages
-  if (isAdminPage) {
-    return null;
-  }
-
-  return <ChatWidget />;
-};
-
 // Functional App component để dùng hook
 const AppContent = () => {
   const { sessionExpired, logout } = useAuthContext();
   const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
 
   useEffect(() => {
     if (sessionExpired) {
@@ -84,6 +73,7 @@ const AppContent = () => {
         open={sessionExpired}
         onLogin={handleLoginRedirect}
       />
+      {!isAdminRoute && <ChatWidget />}
       <Routes>
         {/* Các route đặc biệt không cần bảo vệ */}
         <Route
@@ -164,17 +154,9 @@ const AppContent = () => {
             </DefaultLayout>
           }
         />
-
-        {/* Admin Chat Dashboard Route */}
         <Route
-          path="/admin/chat"
-          element={
-            <ProtectedRoute adminOnly={true}>
-              <AdminLayout>
-                <AdminChatDashboard />
-              </AdminLayout>
-            </ProtectedRoute>
-          }
+          path="/reset-password"
+          element={<ResetPasswordPage />}
         />
 
         {/* Protected Profile routes */}
@@ -214,8 +196,7 @@ const AppContent = () => {
         })}
       </Routes>
 
-      {/* Chat Widget - ẩn trên các trang admin */}
-      <ConditionalChatWidget />
+
     </>
   );
 };
@@ -224,7 +205,11 @@ const AppContent = () => {
 const App = () => {
   return (
     <AuthModalProvider>
-      <AppContent />
+      <SignalRProvider>
+        <ChatProvider>
+          <AppContent />
+        </ChatProvider>
+      </SignalRProvider>
     </AuthModalProvider>
   );
 };

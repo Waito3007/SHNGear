@@ -106,5 +106,30 @@ namespace SHN_Gear.Services
             await _context.SaveChangesAsync();
             return user;
         }
+
+        public async Task<string?> GeneratePasswordResetTokenAsync(string email)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null) return null;
+
+            var token = $"{Guid.NewGuid():N}{Guid.NewGuid():N}";
+            user.OtpCode = token;
+            user.OtpExpiry = DateTime.UtcNow.AddHours(1);
+            await _context.SaveChangesAsync();
+            return token;
+        }
+
+        public async Task<bool> ResetPasswordAsync(string token, string newPassword)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u =>
+                u.OtpCode == token && u.OtpExpiry > DateTime.UtcNow);
+            if (user == null) return false;
+
+            user.Password = HashPassword(newPassword);
+            user.OtpCode = null;
+            user.OtpExpiry = null;
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

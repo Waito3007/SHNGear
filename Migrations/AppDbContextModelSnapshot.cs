@@ -22,67 +22,6 @@ namespace SHN_Gear.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("SHN_Gear.Models.AIKnowledgeBase", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Answer")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("BrandIds")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Category")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("EscalationThreshold")
-                        .HasPrecision(5, 3)
-                        .HasColumnType("decimal(5,3)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.PrimitiveCollection<string>("Keywords")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("MinConfidenceScore")
-                        .HasPrecision(5, 3)
-                        .HasColumnType("decimal(5,3)");
-
-                    b.Property<int>("Priority")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ProductCategoryIds")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Question")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("RequiresLogin")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Topic")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("AIKnowledgeBases");
-                });
-
             modelBuilder.Entity("SHN_Gear.Models.Address", b =>
                 {
                     b.Property<int>("Id")
@@ -330,55 +269,35 @@ namespace SHN_Gear.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal?>("AIConfidenceScore")
-                        .HasPrecision(5, 3)
-                        .HasColumnType("decimal(5,3)");
-
-                    b.Property<string>("AIContext")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AIIntent")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AttachmentsJson")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("ChatSessionId")
                         .HasColumnType("int");
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool>("IsFromAdmin")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsRead")
                         .HasColumnType("bit");
 
-                    b.Property<string>("MetadataJson")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("RequiresEscalation")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("Sender")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("SenderId")
+                    b.Property<int?>("SenderUserId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("SentAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("SuggestedActionsJson")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("ChatSessionId");
+                    b.HasIndex("ChatSessionId")
+                        .HasDatabaseName("IX_ChatMessages_ChatSessionId");
 
-                    b.HasIndex("SenderId");
+                    b.HasIndex("SenderUserId");
+
+                    b.HasIndex("SentAt")
+                        .HasDatabaseName("IX_ChatMessages_SentAt");
 
                     b.ToTable("ChatMessages");
                 });
@@ -391,49 +310,36 @@ namespace SHN_Gear.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("AssignedAdminId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal?>("ConfidenceScore")
-                        .HasPrecision(5, 3)
-                        .HasColumnType("decimal(5,3)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("GuestEmail")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("GuestName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.Property<DateTime>("LastActivityAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("RequiresHumanSupport")
+                    b.Property<bool>("IsResolved")
                         .HasColumnType("bit");
 
-                    b.Property<string>("SessionId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserContext")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime>("LastMessageAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<int?>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AssignedAdminId");
+                    b.HasIndex("IsResolved")
+                        .HasDatabaseName("IX_ChatSessions_IsResolved");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("LastMessageAt")
+                        .HasDatabaseName("IX_ChatSessions_LastMessageAt");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_ChatSessions_UserId");
 
                     b.ToTable("ChatSessions");
                 });
@@ -1249,7 +1155,7 @@ namespace SHN_Gear.Migrations
 
                     b.HasOne("SHN_Gear.Models.User", "SenderUser")
                         .WithMany()
-                        .HasForeignKey("SenderId")
+                        .HasForeignKey("SenderUserId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("ChatSession");
@@ -1259,15 +1165,10 @@ namespace SHN_Gear.Migrations
 
             modelBuilder.Entity("SHN_Gear.Models.ChatSession", b =>
                 {
-                    b.HasOne("SHN_Gear.Models.User", "AssignedAdmin")
-                        .WithMany()
-                        .HasForeignKey("AssignedAdminId");
-
                     b.HasOne("SHN_Gear.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId");
-
-                    b.Navigation("AssignedAdmin");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("User");
                 });

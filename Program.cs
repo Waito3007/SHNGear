@@ -10,6 +10,7 @@ using SHN_Gear.Services;
 using Microsoft.OpenApi.Models;
 using SHN_Gear.Middleware;
 using SHN_Gear.Configuration;
+using SHN_Gear.Hubs;
 // using SHN_Gear.Export; // KnowledgeExportService nằm trong SHN_Gear.Services, không cần dòng này
 
 var builder = WebApplication.CreateBuilder(args);
@@ -62,32 +63,15 @@ builder.Services.AddSingleton<PayPalService>();
 builder.Services.AddScoped<MoMoPaymentService>();
 builder.Services.AddScoped<LoyaltySpinService>();
 builder.Services.AddScoped<BlogPostService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 
-// 🔹 Chat & AI Services
-builder.Services.AddScoped<ContextManager>();
-builder.Services.AddScoped<KnowledgeBaseService>();
-builder.Services.AddScoped<AIService>();
-
-// Đăng ký KnowledgeExportService để export tri thức từ DB
-// Ensure KnowledgeExportService exists in your project and the correct namespace is used above.
-// If it does not exist, comment out or remove the following line:
-// builder.Services.AddScoped<KnowledgeExportService>();
-builder.Services.AddScoped<KnowledgeExportService>();
-builder.Services.AddScoped<ChatService>();
 builder.Services.AddScoped<DatabaseSeeder>();
 
-// 🔹 HttpClient for external API calls
-builder.Services.AddHttpClient<GeminiService>();
-builder.Services.AddMemoryCache();
+// 🔹 SignalR
+builder.Services.AddSignalR();
 
-// 🔹 SignalR for real-time chat
-builder.Services.AddSignalR(options =>
-{
-    options.EnableDetailedErrors = true;
-}).AddJsonProtocol(options =>
-{
-    options.PayloadSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-});
+// 🔹 HttpClient for external API calls
+builder.Services.AddMemoryCache();
 
 // 🔹 JWT Authentication - sử dụng environment variables
 var jwtKey = EnvironmentConfig.Jwt.SecretKey
@@ -109,24 +93,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             RoleClaimType = System.Security.Claims.ClaimTypes.Role
         };
 
-
-        // Configure for SignalR
-        options.Events = new JwtBearerEvents
+        // Allow SignalR to read JWT from query string
+        options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
         {
             OnMessageReceived = context =>
             {
                 var accessToken = context.Request.Query["access_token"];
                 var path = context.HttpContext.Request.Path;
-
-                // If the request is for our hub and there's a token, use it
                 if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chatHub"))
-                {
                     context.Token = accessToken;
-                }
-
                 return Task.CompletedTask;
             }
         };
+
     });
 
 // 🔹 CORS Configuration
@@ -189,8 +168,7 @@ if (app.Environment.IsDevelopment())
     app.UseMiddleware<CorsDebugMiddleware>();
 }
 
-// Thêm middleware rate limit đơn giản cho API Gemini/chat
-app.UseMiddleware<SimpleRateLimitMiddleware>();
+
 
 // 🔹 Middlewares (đúng thứ tự)
 if (!app.Environment.IsDevelopment())
@@ -219,42 +197,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseDeveloperExceptionPage();
 
-// Tự động export tri thức website ra file JSON khi khởi động (đồng bộ, đảm bảo chắc chắn export xong trước khi app chạy)
-try
-{
-    using (var scope = app.Services.CreateScope())
-    {
-        var exportService = scope.ServiceProvider.GetService<KnowledgeExportService>();
-        if (exportService != null)
-        {
-            // Đảm bảo export ra đúng thư mục Data ở gốc project
-            var projectRoot = AppContext.BaseDirectory;
-            while (!string.IsNullOrEmpty(projectRoot) && !File.Exists(Path.Combine(projectRoot, "SHNGear.sln")))
-            {
-                projectRoot = Directory.GetParent(projectRoot)?.FullName ?? "";
-            }
-            var dataDir = Path.Combine(projectRoot, "Data");
-            if (!Directory.Exists(dataDir)) Directory.CreateDirectory(dataDir);
-            var knowledgePath = Path.Combine(dataDir, "WebsiteKnowledgeBase.json");
-            exportService.ExportWebsiteKnowledgeBaseAsync(knowledgePath).GetAwaiter().GetResult();
-            Console.WriteLine($"[KnowledgeExport] Exported tri thức website ra {knowledgePath}");
-        }
-    }
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"[KnowledgeExport] Export failed: {ex.Message}");
-}
-
+app.MapHub<ChatHub>("/chatHub");
 app.MapControllers();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller}/{action=Index}/{id?}");
 app.MapRazorPages();
 app.MapFallbackToFile("index.html");
-
-// 🔹 Map SignalR Hub với CORS policy riêng
-app.MapHub<SHN_Gear.Hubs.ChatHub>("/chatHub").RequireCors("SignalRPolicy");
 
 // 🔹 Seed database on startup if requested
 if (args.Contains("--seed-data"))

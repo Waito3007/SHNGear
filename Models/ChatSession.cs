@@ -1,41 +1,31 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace SHN_Gear.Models
 {
     public class ChatSession
     {
+        [Key]
         public int Id { get; set; }
-        public int? UserId { get; set; } // Null cho guest users
-        public User? User { get; set; }
-        public string SessionId { get; set; } = Guid.NewGuid().ToString(); // Unique session ID
-        public string? GuestName { get; set; } // Tên khách nếu không đăng nhập
-        public string? GuestEmail { get; set; } // Email khách nếu có
+
+        public int? UserId { get; set; }
+
+        [MaxLength(100)]
+        public string? GuestName { get; set; }
+
+        [MaxLength(200)]
+        public string? GuestEmail { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime LastActivityAt { get; set; } = DateTime.UtcNow;
-        public ChatSessionStatus Status { get; set; } = ChatSessionStatus.Active;
-        public ChatType Type { get; set; } = ChatType.AI; // AI hoặc Admin
-        public int? AssignedAdminId { get; set; } // Admin được gán
-        public User? AssignedAdmin { get; set; }
 
-        // Context để AI hiểu về user
-        public string? UserContext { get; set; } // JSON context về user preferences, cart, etc.
-        public decimal? ConfidenceScore { get; set; } // Độ tin cậy của AI
-        public bool RequiresHumanSupport { get; set; } = false; // Cần chuyển sang admin
+        public DateTime LastMessageAt { get; set; } = DateTime.UtcNow;
 
-        public ICollection<ChatMessage> Messages { get; set; } = new List<ChatMessage>();
-    }
+        public bool IsResolved { get; set; } = false;
 
-    public enum ChatSessionStatus
-    {
-        Active,
-        Resolved,
-        Escalated, // Chuyển lên admin
-        Closed
-    }
+        // Navigation properties
+        [ForeignKey(nameof(UserId))]
+        public User? User { get; set; }
 
-    public enum ChatType
-    {
-        AI,
-        Admin,
-        Mixed // Cả AI và Admin
+        public ICollection<ChatMessage> Messages { get; set; } = [];
     }
 }

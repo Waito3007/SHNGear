@@ -73,15 +73,6 @@ export {
 } from "./api/useAdmin";
 
 export {
-  useChat,
-  useChatConnection,
-  useChatHistory,
-  useChatActions,
-  useAdminChat,
-  useChatNotifications,
-} from "./api/useChat";
-
-export {
   useFeatures,
   useFlashSales,
   useLoyaltyProgram,

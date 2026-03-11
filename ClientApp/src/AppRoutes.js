@@ -26,6 +26,7 @@ import BlogPostDetail from "@/components/Admin/blog/BlogPostDetail";
 import PinnedProductKanban from "@/components/Admin/home/PinnedProductKanban";
 import SliderAdminPage from "@/pages/Admin/Home/SliderAdminPage";
 import BannerAdminPage from "@/pages/Admin/Home/BannerAdminPage";
+import AdminChatPage from "@/components/Admin/chat/AdminChatPage";
 const AppRoutes = [
   {
     path: "/admin/reviews",
@@ -149,6 +150,11 @@ const AppRoutes = [
   {
     path: "/admin/banners",
     element: <BannerAdminPage />,
+    requiresAdmin: true,
+  },
+  {
+    path: "/admin/chat",
+    element: <AdminChatPage />,
     requiresAdmin: true,
   },
   {
